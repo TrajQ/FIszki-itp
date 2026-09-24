@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Warsztat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Warsztat</h1>
+    <p>Zestaw niezależnych narzędzi.</p>
+    <ul class="lista-modulow">
+        <li>
+            <a href="{{ url_for('atlas.index') }}">Atlas</a>
+            — wskaźniki GUS BDL dla gmin, kartogramy, generowanie opisów
+        </li>
+        <li>
+            <a href="{{ url_for('mpzp.index') }}">MPZP</a>
+            — czytnik planów miejscowych, działka → przeznaczenie
+        </li>
+        <li>
+            <a href="{{ url_for('fiszki.index') }}">Fiszki</a>
+            — generator fiszek z PDF z kotwicą w źródle
+        </li>
+        <li>
+            <a href="{{ url_for('dostepnosc.index') }}">Dostępność</a>
+            — analiza dostępności pieszej, siatka H3
+        </li>
+    </ul>
+</body>
+</html>

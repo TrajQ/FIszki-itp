@@ -1,0 +1,10 @@
+body {
+    font-family: sans-serif;
+    max-width: 40rem;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.lista-modulow {
+    line-height: 1.8;
+}
