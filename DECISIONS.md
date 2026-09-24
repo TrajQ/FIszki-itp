@@ -26,3 +26,67 @@ eliminuje ryzyko przypadkowego wystawienia aplikacji na sieć.
 - Flask-SQLAlchemy jako ORM — odłożone; żaden moduł jeszcze nie ma schematu,
   decyzja o ORM vs. surowy `sqlite3` zapadnie przy pierwszym module, który
   faktycznie zapisuje dane.
+
+## D-002 — Zależność: google-genai (SDK do Gemini API)
+Data: 2026-09-24
+
+**Decyzja:** Warstwa `dane/gemini.py` korzysta z oficjalnego pakietu
+`google-genai` (import `from google import genai`), przypiętego w
+`requirements.txt` na wersji `2.25.0`.
+
+**Uzasadnienie:** Moduł fiszki potrzebuje wywołać Gemini, żeby na
+podstawie zaznaczonego fragmentu PDF-a zaproponować pytanie/odpowiedź.
+`google-genai` to oficjalny SDK Google do tego API — sprawdzony przez
+Context7 (`/googleapis/python-genai`), z prostym wzorcem
+`genai.Client(api_key=...).models.generate_content(...)` i dedykowanym
+wyjątkiem `google.genai.errors.APIError` do obsługi błędów sieci/API.
+
+**Odrzucone alternatywy:**
+- Ręczne wywołania REST przez `requests` — więcej kodu do utrzymania
+  (autoryzacja, format żądania) bez żadnej korzyści, skoro oficjalny SDK
+  istnieje i jest aktualnie utrzymywany.
+
+## D-003 — Zależność: pdf.js wektorowany lokalnie
+Data: 2026-09-24
+
+**Decyzja:** Widok PDF-a w module fiszki korzysta z `pdf.js`
+(pakiet `pdfjs-dist`, wersja `6.3.289`), wektorowanego lokalnie do
+`fiszki/static/pdfjs/` (`pdf.min.mjs`, `pdf.worker.min.mjs`,
+`text_layer.css`) — bez CDN, bez `node_modules`/kroku budowania. Wersja
+przypięta w `VERSION.txt` w tym samym folderze.
+
+**Uzasadnienie:** Renderowanie PDF-a w przeglądarce i natywne zaznaczanie
+tekstu myszką (potrzebne do kotwicy fiszki) wymaga silnika PDF po stronie
+klienta — nie ma sensownej alternatywy bez JS-owej biblioteki. `pdf.js` to
+biblioteka referencyjna (ten sam silnik co w Firefoksie), a jej rdzeń
+(`build/pdf.mjs`) eksportuje samodzielną klasę `TextLayer`, więc nie trzeba
+dociągać pełnego `web/pdf_viewer.mjs`/`.css` (kompletnego "viewera" ze
+swoim UI, którego nie używamy). Zgodne z podejściem do Leafleta z ETAPu 1:
+biblioteka trzymana lokalnie w repo, wersja jawnie przypięta.
+
+**Odrzucone alternatywy:**
+- CDN (np. cdnjs) — odrzucone zgodnie z zasadą CLAUDE.md o Leaflet: brak
+  CDN, żeby aplikacja działała offline i nie zależała od zewnętrznego
+  hosta.
+- Pełny bundle `web/pdf_viewer.mjs` + `pdf_viewer.css` (gotowy "viewer" z
+  paskiem narzędzi, wyszukiwaniem itd.) — odrzucone jako zbędny ciężar;
+  potrzebujemy tylko renderowania strony na canvasie i warstwy tekstowej
+  do zaznaczania, co daje sam rdzeń biblioteki.
+
+## D-004 — Baza modułu fiszki: surowy sqlite3, bez ORM
+Data: 2026-09-24
+
+**Decyzja:** Moduł fiszki zapisuje dane przez surowy `sqlite3` z biblioteki
+standardowej (`fiszki/baza.py`), bez ORM. Baza: `instance/fiszki/fiszki.db`
+(dwie tabele: `pdfy`, `fiszki`). Pliki PDF trzymane osobno na dysku, w
+`instance/fiszki/pliki/`.
+
+**Uzasadnienie:** Rozstrzyga odłożoną kwestię z D-001. Schemat jest mały
+(dwie tabele, proste relacje), projekt jednoosobowy — ORM (np.
+Flask-SQLAlchemy) dodałby zależność i warstwę abstrakcji bez realnej
+korzyści przy tak małym zakresie zapytań.
+
+**Odrzucone alternatywy:**
+- Flask-SQLAlchemy — odrzucone jako niepotrzebny ciężar przy dwóch
+  tabelach; do rozważenia dopiero, gdyby kolejny moduł potrzebował
+  bardziej złożonych relacji/migracji.

@@ -8,6 +8,25 @@
 <body>
     <p><a href="{{ url_for('index') }}">← strona główna</a></p>
     <h1>Fiszki</h1>
-    <p>Moduł w budowie.</p>
+
+    <h2>Wgraj PDF</h2>
+    <form action="{{ url_for('fiszki.upload') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="plik" accept="application/pdf" required>
+        <button type="submit">Wgraj</button>
+    </form>
+
+    <h2>Wgrane pliki</h2>
+    {% if pdfy %}
+    <ul class="lista-pdfow">
+        {% for pdf in pdfy %}
+        <li>
+            <a href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) }}">{{ pdf['nazwa_oryginalna'] }}</a>
+            — dodano {{ pdf['data_dodania'] }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Brak wgranych plików.</p>
+    {% endif %}
 </body>
 </html>

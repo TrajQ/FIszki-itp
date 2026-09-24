@@ -1,1 +1,53 @@
-/* Style modułu fiszki — uzupełniane w kolejnych ETAPach. */
+/* Style modułu fiszki. */
+
+#widok-glowny {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+#widok-pdf {
+    position: relative;
+}
+
+#nawigacja-stron {
+    margin-bottom: 0.5rem;
+}
+
+#warstwa-pdf {
+    position: relative;
+    display: inline-block;
+    border: 1px solid #ccc;
+}
+
+#canvas-pdf {
+    display: block;
+}
+
+#przycisk-zaproponuj {
+    position: absolute;
+    z-index: 10;
+}
+
+#panel-fiszek {
+    width: 22rem;
+    flex-shrink: 0;
+}
+
+#formularz-fiszki textarea {
+    width: 100%;
+    min-height: 4rem;
+    box-sizing: border-box;
+}
+
+#lista-fiszek {
+    list-style: none;
+    padding: 0;
+}
+
+#lista-fiszek li {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ pdf['nazwa_oryginalna'] }} — Fiszki</title>
+    <link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">
+    <link rel="stylesheet" href="{{ url_for('fiszki.static', filename='pdfjs/text_layer.css') }}">
+</head>
+<body>
+    <p><a href="{{ url_for('fiszki.index') }}">← lista plików</a></p>
+    <h1>{{ pdf['nazwa_oryginalna'] }}</h1>
+
+    <div id="widok-glowny">
+        <div id="widok-pdf">
+            <div id="nawigacja-stron">
+                <button id="strona-poprzednia" type="button">← poprzednia</button>
+                <span id="numer-strony"></span>
+                <button id="strona-nastepna" type="button">następna →</button>
+            </div>
+            <div id="warstwa-pdf">
+                <canvas id="canvas-pdf"></canvas>
+                <div id="warstwa-tekstu" class="textLayer"></div>
+            </div>
+            <button id="przycisk-zaproponuj" type="button" hidden>Zaproponuj fiszkę</button>
+        </div>
+
+        <aside id="panel-fiszek">
+            <div id="formularz-fiszki" hidden>
+                <h2>Nowa fiszka</h2>
+                <p><strong>Fragment:</strong> <span id="podglad-fragmentu"></span></p>
+                <p id="status-gemini"></p>
+                <label>Pytanie<br><textarea id="pole-pytanie"></textarea></label>
+                <label>Odpowiedź<br><textarea id="pole-odpowiedz"></textarea></label>
+                <button id="zapisz-fiszke" type="button">Zapisz</button>
+                <button id="anuluj-fiszke" type="button">Anuluj</button>
+            </div>
+
+            <h2>Fiszki z tego pliku</h2>
+            <ul id="lista-fiszek"></ul>
+        </aside>
+    </div>
+
+    <script>
+        const PDF_ID = {{ pdf['id'] }};
+        const URL_PLIK = "{{ url_for('fiszki.plik_pdf', pdf_id=pdf['id']) }}";
+        const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
+        const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
+        const URL_WORKER = "{{ url_for('fiszki.static', filename='pdfjs/pdf.worker.min.mjs') }}";
+    </script>
+    <script type="module" src="{{ url_for('fiszki.static', filename='fiszki.js') }}"></script>
+</body>
+</html>

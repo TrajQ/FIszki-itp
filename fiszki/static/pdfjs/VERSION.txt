@@ -1,0 +1,5 @@
+pdfjs-dist 6.3.289
+Źródło: https://www.npmjs.com/package/pdfjs-dist
+Pliki: pdf.min.mjs, pdf.worker.min.mjs (build core, bez pełnego web/pdf_viewer)
+Wektorowane lokalnie zgodnie z zasadą CLAUDE.md: bez CDN, bez node_modules.
+Licencja: Apache-2.0 (LICENSE w tym folderze)
