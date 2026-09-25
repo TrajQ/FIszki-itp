@@ -2,3 +2,5 @@ Flask==3.0.3
 python-dotenv==1.0.1
 pytest==8.2.2
 google-genai==2.25.0
+requests==2.34.2
+shapely==2.1.2

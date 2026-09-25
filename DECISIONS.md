@@ -90,3 +90,23 @@ korzyści przy tak małym zakresie zapytań.
 - Flask-SQLAlchemy — odrzucone jako niepotrzebny ciężar przy dwóch
   tabelach; do rozważenia dopiero, gdyby kolejny moduł potrzebował
   bardziej złożonych relacji/migracji.
+
+## D-005 — Zależności: requests i shapely
+Data: 2026-09-25
+
+**Decyzja:** Moduł mpzp korzysta z `requests==2.34.2` (klient HTTP do
+ULDK i WFS gminy) oraz `shapely==2.1.2` (parsowanie geometrii WKT/GML,
+point-in-polygon, indeks przestrzenny `STRtree`).
+
+**Uzasadnienie:** `requests` jest czytelniejszy niż `urllib` z biblioteki
+standardowej przy obsłudze zapytań GET z parametrami i statusami błędów.
+`shapely` eliminuje ręczne parsowanie geometrii regexem i implementację
+point-in-polygon od zera — sprawdzona biblioteka do geometrii
+obliczeniowej, używana też przez GeoPandas i inne narzędzia GIS.
+
+**Odrzucone alternatywy:**
+- `urllib` z biblioteki standardowej — odrzucone, więcej kodu
+  obsługującego błędy sieci/HTTP bez realnej korzyści.
+- Ręczne parsowanie WKT/GML i własna implementacja point-in-polygon —
+  odrzucone jako wynajdywanie koła na nowo przy dostępnej, dojrzałej
+  bibliotece.
