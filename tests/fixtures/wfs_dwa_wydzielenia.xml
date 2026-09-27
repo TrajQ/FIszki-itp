@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"
+    xmlns:gml="http://www.opengis.net/gml/3.2"
+    xmlns:app="https://gis.mpu.pl/app"
+    numberMatched="2" numberReturned="2">
+  <wfs:member>
+    <app:MPZP gml:id="app.MPZP.1">
+      <app:symb_t>MN</app:symb_t>
+      <app:shape>
+        <gml:MultiSurface gml:id="app.MPZP.1.pl" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:surfaceMember>
+            <gml:Polygon gml:id="app.MPZP.1.pl.0">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>52.400 16.900 52.400 16.910 52.410 16.910 52.410 16.900 52.400 16.900</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </app:shape>
+    </app:MPZP>
+  </wfs:member>
+  <wfs:member>
+    <app:MPZP gml:id="app.MPZP.2">
+      <app:symb_t>ZP</app:symb_t>
+      <app:shape>
+        <gml:MultiSurface gml:id="app.MPZP.2.pl" srsName="urn:ogc:def:crs:EPSG::4326">
+          <gml:surfaceMember>
+            <gml:Polygon gml:id="app.MPZP.2.pl.0">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:posList>52.400 16.920 52.400 16.930 52.410 16.930 52.410 16.920 52.400 16.920</gml:posList>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:surfaceMember>
+        </gml:MultiSurface>
+      </app:shape>
+    </app:MPZP>
+  </wfs:member>
+</wfs:FeatureCollection>
