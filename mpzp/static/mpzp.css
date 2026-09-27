@@ -1,1 +1,40 @@
-/* Style modułu mpzp — uzupełniane w kolejnych ETAPach. */
+#uklad {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+#mapa {
+    width: 70%;
+    height: 600px;
+    border: 1px solid #ccc;
+}
+
+#panel-wyniku {
+    width: 30%;
+    min-height: 600px;
+    border: 1px solid #ccc;
+    padding: 0.75rem;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+}
+
+#panel-wyniku table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#panel-wyniku th, #panel-wyniku td {
+    text-align: left;
+    padding: 0.25rem 0.4rem;
+    border-bottom: 1px solid #eee;
+    word-break: break-word;
+}
+
+#panel-wyniku .blad {
+    color: #b00020;
+}
+
+#pasek-narzedzi {
+    margin: 0.5rem 0;
+}

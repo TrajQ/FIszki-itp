@@ -3,11 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>MPZP — Warsztat</title>
+    <link rel="stylesheet" href="{{ url_for('mpzp.static', filename='leaflet/leaflet.css') }}">
     <link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">
 </head>
 <body>
     <p><a href="{{ url_for('index') }}">← strona główna</a></p>
-    <h1>MPZP</h1>
-    <p>Moduł w budowie.</p>
+    <h1>MPZP — działka i przeznaczenie</h1>
+    <p>Kliknij punkt na mapie, żeby sprawdzić działkę i jej przeznaczenie
+    w planie miejscowym (obsługiwana gmina pilotażowa: Poznań).</p>
+
+    <div id="pasek-narzedzi">
+        <button id="przycisk-odswiez" type="button">Odśwież dane gminy</button>
+    </div>
+
+    <div id="uklad">
+        <div id="mapa"></div>
+        <div id="panel-wyniku">
+            <p>Kliknij punkt na mapie.</p>
+        </div>
+    </div>
+
+    <script>
+        const URL_SPRAWDZ = "{{ url_for('mpzp.sprawdz') }}";
+        const URL_ODSWIEZ = "{{ url_for('mpzp.odswiez') }}";
+    </script>
+    <script src="{{ url_for('mpzp.static', filename='leaflet/leaflet.js') }}"></script>
+    <script src="{{ url_for('mpzp.static', filename='mpzp.js') }}"></script>
 </body>
 </html>
