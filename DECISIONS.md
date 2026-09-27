@@ -110,3 +110,21 @@ obliczeniowej, używana też przez GeoPandas i inne narzędzia GIS.
 - Ręczne parsowanie WKT/GML i własna implementacja point-in-polygon —
   odrzucone jako wynajdywanie koła na nowo przy dostępnej, dojrzałej
   bibliotece.
+
+## D-006 — Leaflet wektorowany lokalnie
+Data: 2026-09-25
+
+**Decyzja:** Mapa w module mpzp korzysta z Leaflet 1.9.4, wektorowanego
+lokalnie do `mpzp/static/leaflet/` (`leaflet.js`, `leaflet.css`, obrazy
+markerów/warstw) — bez CDN, bez `node_modules`/kroku budowania. Wersja
+przypięta w `VERSION.txt` w tym samym folderze.
+
+**Uzasadnienie:** Zgodne z zasadą CLAUDE.md (żadnego CDN dla Leafleta) i
+z podejściem do `pdf.js` z ETAPu 2 (D-003) — biblioteka trzymana lokalnie
+w repo, aplikacja działa offline dla warstwy UI niezależnie od
+zewnętrznego hosta biblioteki. (Kafelki mapy bazowej nadal wymagają
+połączenia z internetem — to dane, nie kod, więc reguła anty-CDN ich nie
+dotyczy, podobnie jak zapytania do WFS/ULDK.)
+
+**Odrzucone alternatywy:**
+- CDN (np. unpkg, cdnjs) — odrzucone zgodnie z zasadą CLAUDE.md.

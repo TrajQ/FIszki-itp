@@ -1,0 +1,7 @@
+Leaflet 1.9.4
+Źródło: https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz
+Pliki: leaflet.js, leaflet.css, images/ (layers-2x.png, layers.png,
+marker-icon-2x.png, marker-icon.png, marker-shadow.png) — build dist,
+bez node_modules/kroku budowania.
+Wektorowane lokalnie zgodnie z zasadą CLAUDE.md: bez CDN.
+Licencja: BSD-2-Clause (LICENSE w tym folderze)
