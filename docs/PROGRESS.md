@@ -43,4 +43,46 @@ edycja treści fiszki po zapisaniu, eksport (Anki/CSV).
 Testy: 11 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap2_20260924.zip
 
-Następny krok: wybór kolejnego modułu do realnej implementacji.
+## ETAP 3 — Moduł mpzp (działka → przeznaczenie, gmina pilotażowa Poznań)
+Data: 2026-09-25
+Status: zamknięty
+
+Zrobione:
+- Klient ULDK (`dane/uldk.py`): `znajdz_dzialke(lat, lon)`, parsuje
+  odpowiedź tekstową ULDK (sukces/brak wyników/błąd), zwraca geometrię
+  jako obiekt shapely, błędy jako `BladULDK`
+- Rejestr gmin (`mpzp/gminy.py`): jedna pozycja — Poznań (WFS
+  `gis.mpu.pl`, warstwa `WydzieleniePlanistyczne.MPZP`, atrybut
+  przeznaczenia `symb_t`)
+- Klient WFS (`mpzp/wfs.py`): pobiera całą warstwę gminy raz (WFS
+  Poznania nie honoruje filtrów przestrzennych — zwracały 0 wyników w
+  rozpoznaniu), parsuje GML (obsługa dziur i wielokątów złożonych z kilku
+  części), indeksuje `shapely.STRtree`, point-in-polygon przez `covers()`
+  (żeby kliknięcie dokładnie na granicy też trafiało), błędy jako
+  `BladWFS`
+- Endpointy `mpzp/routes.py`: `GET /mpzp/sprawdz?lat=..&lon=..` (działka +
+  przeznaczenie albo czytelny komunikat błędu), `POST /mpzp/odswiez`
+  (wymuszenie ponownego pobrania warstwy WFS)
+- Frontend (`mpzp.js` + `index.html` + `mpzp.css`): mapa Leaflet
+  wektorowana lokalnie, klik na mapie, rysowanie działki i wydzielenia,
+  panel wyniku z surowymi atrybutami WFS, przycisk odświeżenia danych
+  gminy
+- Testy (mockowane ULDK i WFS, zero realnych wywołań sieciowych):
+  parsowanie odpowiedzi ULDK (sukces/brak/błąd), parsowanie GML z WFS
+  (proste wydzielenia, dziura w wydzieleniu, wielokąt złożony z kilku
+  części, stronicowanie, pusta warstwa, błędy sieci/XML), wszystkie
+  ścieżki endpointu `/mpzp/sprawdz` (brak współrzędnych, brak działki,
+  inna gmina, brak planu, sukces, błędy ULDK/WFS jako 502) i
+  `/mpzp/odswiez`
+- `DECISIONS.md`: D-005 (`requests`, `shapely`), D-006 (Leaflet lokalnie)
+
+Poza zakresem (świadomie odłożone): obsługa więcej niż jednej gminy,
+słownik symboli MPZP (tłumaczenie `ZP`/`MN`/itd.), użycie Gemini w mpzp,
+historia sprawdzonych działek, wybór działki po numerze ewidencyjnym,
+naprawa filtra przestrzennego WFS (obejście: pobranie całej warstwy).
+
+Testy: 38 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap3_20260925.zip
+
+Następny krok: wybór kolejnego modułu do realnej implementacji (atlas
+albo dostepnosc).

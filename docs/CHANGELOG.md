@@ -19,3 +19,18 @@
 - Dodano zależność `google-genai` (`requirements.txt`).
 - Dodano `DECISIONS.md` D-002, D-003, D-004.
 - Dodano testy modułu fiszki (Gemini mockowany, bez realnych wywołań API).
+
+## ETAP 3 — 2026-09-25
+- Dodano moduł mpzp: klik na mapie Leaflet znajduje działkę ewidencyjną
+  (ULDK) i sprawdza jej przeznaczenie w planie miejscowym gminy Poznań
+  (WFS).
+- Dodano warstwę `dane/uldk.py` (klient krajowej usługi ULDK).
+- Dodano `mpzp/gminy.py` (rejestr gmin, na start tylko Poznań) i
+  `mpzp/wfs.py` (klient WFS z lokalnym indeksem przestrzennym
+  `shapely.STRtree`).
+- Dodano endpointy `GET /mpzp/sprawdz` i `POST /mpzp/odswiez`.
+- Dodano zależności `requests` i `shapely` (`requirements.txt`).
+- Dodano Leaflet 1.9.4 wektorowany lokalnie (`mpzp/static/leaflet/`).
+- Dodano `DECISIONS.md` D-005, D-006.
+- Dodano testy modułu mpzp (ULDK i WFS mockowane, bez realnych wywołań
+  sieciowych).
