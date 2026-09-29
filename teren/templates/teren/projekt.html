@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block tytul %}{{ projekt.nazwa }} — Teren — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block klasa_body %}strona--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('teren.static', filename='teren.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('teren.index') }}">‹ Projekty</a>
+        <h1 id="nazwa-projektu">{{ projekt.nazwa }}</h1>
+        <p id="podsumowanie">Wczytywanie punktów…</p>
+    </div>
+    <div class="rzad">
+        <a class="przycisk" href="{{ url_for('teren.formularz', projekt_id=projekt.id) }}">📱 Pobierz formularz na telefon</a>
+        <a class="przycisk przycisk--drugi" href="{{ url_for('teren.eksport_geojson', projekt_id=projekt.id) }}" title="Punkty z położeniem — przeciągnij do QGIS">GeoJSON</a>
+        <a class="przycisk przycisk--drugi" href="{{ url_for('teren.eksport_csv', projekt_id=projekt.id) }}">CSV</a>
+    </div>
+</div>
+
+<p id="komunikat" class="komunikat" hidden></p>
+
+<div class="uklad-terenu">
+    <section class="karta karta-mapy-terenu"><div id="mapa-terenu"></div></section>
+
+    <aside class="stos panel-terenu">
+        <section class="karta stos">
+            <h3>Import z telefonu</h3>
+            <form id="formularz-importu" class="rzad">
+                <input id="plik-importu" type="file" accept=".json,application/json" required>
+                <button type="submit" class="przycisk--drugi">Importuj</button>
+            </form>
+            <p class="wyciszony opis">Plik JSON z przycisku „Eksportuj plik” w formularzu na telefonie. Punkty już zaimportowane są pomijane.</p>
+        </section>
+
+        <section class="karta stos">
+            <h3>Filtr</h3>
+            <select id="filtr-pola" aria-label="Pole do filtrowania"></select>
+            <div id="legenda" class="legenda"></div>
+        </section>
+
+        <details class="karta stos edycja-pol">
+            <summary><h3>Pola formularza</h3></summary>
+            <p class="wyciszony opis">Po zmianie pól pobierz formularz na telefon jeszcze raz. Punkty z telefonu zachowują wartości pól o tych samych nazwach.</p>
+            <label>Nazwa projektu <input id="pole-nazwa" type="text" maxlength="80" value="{{ projekt.nazwa }}"></label>
+            <ol id="edytor-pol" class="edytor-pol"></ol>
+            <div class="rzad">
+                <button id="dodaj-pole" type="button" class="przycisk--drugi">+ Pole</button>
+                <button id="zapisz-pola" type="button">Zapisz pola</button>
+            </div>
+            <button id="usun-projekt" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń projekt z punktami i zdjęciami</button>
+        </details>
+    </aside>
+</div>
+
+<section class="karta stos">
+    <h3>Punkty</h3>
+    <div class="tabela-punktow-wrap">
+        <table class="tabela tabela-punktow">
+            <thead id="naglowek-tabeli"></thead>
+            <tbody id="tabela-punktow"></tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const PROJEKT = {{ {"id": projekt.id, "nazwa": projekt.nazwa, "pola": projekt.pola} | tojson }};
+    const TYPY = {{ typy | tojson }};
+    const URL_PROJEKTU = "{{ url_for('teren.zmien_projekt', projekt_id=projekt.id) }}";
+    const URL_LISTY = "{{ url_for('teren.index') }}";
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('teren.static', filename='teren.js') }}"></script>
+{% endblock %}

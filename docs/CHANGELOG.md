@@ -470,3 +470,13 @@
   działki i z nagłówka MPZP.
 - Dodano `dane/ortofoto.py`, `mpzp/trasy_kronika.py`, ustawienie
   `ORTO_ARCHIWALNA_WMS` (`.env.example`), `DECISIONS.md` D-070 i 7 testów.
+
+## ETAP 65 — 2026-09-29
+- Nowy moduł **Teren** (menu, karta na stronie głównej): projekty
+  inwentaryzacji z polami formularza (wzory: zieleń, stan zabudowy,
+  przestrzeń publiczna, albo własne), samodzielny formularz HTML na
+  telefon działający bez internetu (GPS z dokładnością, pola, zdjęcie,
+  uwagi, pamięć w telefonie, eksport/udostępnienie pliku), import pliku
+  bez dublowania punktów, mapa punktów z kolorem wg pola i legendą,
+  dymki ze zdjęciem, tabela, eksport GeoJSON i CSV, edycja pól.
+- Dodano `DECISIONS.md` D-071 i 12 testów.

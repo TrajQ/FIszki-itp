@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1d1f">
+<title>{{ projekt.nazwa }} — teren</title>
+{#
+  Formularz terenowy Warsztatu (ETAP 65). Jeden plik bez zależności:
+  działa na telefonie bez internetu. Punkty trzyma w pamięci przeglądarki
+  telefonu (IndexedDB), eksportuje do pliku JSON, który importuje się w
+  Warsztacie (moduł Teren → projekt → Import).
+#}
+<style>
+    :root {
+        --tlo: #f5f5f7; --karta: #ffffff; --tekst: #1d1d1f; --drugi: #6e6e73; --linia: #d2d2d7;
+        --akcent: #0071e3; --akcent-tlo: rgba(0, 113, 227, 0.12); --blad: #d70015; --ok: #1d8a3a;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --tlo: #000000; --karta: #1c1c1e; --tekst: #f5f5f7; --drugi: #a1a1a6; --linia: #3a3a3c;
+            --akcent: #2997ff; --akcent-tlo: rgba(41, 151, 255, 0.18); --blad: #ff6961; --ok: #32d74b;
+        }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px 12px 90px; background: var(--tlo); color: var(--tekst);
+           font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    h1 { margin: 4px 4px 2px; font-size: 22px; }
+    h2 { margin: 0 0 8px; font-size: 17px; }
+    .wyciszony { color: var(--drugi); font-size: 13px; }
+    .karta { margin: 12px 0; padding: 14px; border-radius: 16px; background: var(--karta); }
+    button, .przycisk { display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+             padding: 8px 16px; border: 0; border-radius: 12px; background: var(--akcent-tlo); color: var(--akcent);
+             font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+    button.glowny { width: 100%; background: var(--akcent); color: #fff; font-size: 17px; }
+    button:disabled { opacity: 0.5; }
+    label { display: block; margin: 12px 0 4px; font-size: 14px; font-weight: 600; }
+    input[type=text], input[type=number], input[type=search], textarea {
+        width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--linia); border-radius: 10px;
+        background: var(--tlo); color: var(--tekst); font: inherit; }
+    textarea { min-height: 70px; resize: vertical; }
+    .opcje { display: flex; flex-wrap: wrap; gap: 6px; }
+    .opcje input { position: absolute; opacity: 0; pointer-events: none; }
+    .opcje span { display: inline-block; padding: 9px 14px; border: 1px solid var(--linia); border-radius: 999px; font-size: 15px; }
+    .opcje input:checked + span { border-color: var(--akcent); background: var(--akcent); color: #fff; }
+    .opcje input:focus-visible + span { outline: 2px solid var(--akcent); outline-offset: 2px; }
+    .gps { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .gps__stan { font-size: 14px; }
+    .gps__stan strong { font-variant-numeric: tabular-nums; }
+    .dobra { color: var(--ok); } .slaba { color: var(--blad); }
+    .rzad { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rzad > * { flex: 1; }
+    .podglad { display: block; max-width: 100%; max-height: 220px; margin-top: 8px; border-radius: 10px; }
+    .komunikat { margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; }
+    .komunikat--blad { background: rgba(215, 0, 21, 0.12); color: var(--blad); }
+    .komunikat--ok { background: rgba(52, 199, 89, 0.14); color: var(--ok); }
+    .lista { margin: 0; padding: 0; list-style: none; }
+    .lista li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--linia); font-size: 14px; }
+    .lista li div { flex: 1; min-width: 0; }
+    .lista img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
+    .lista button { min-height: 36px; padding: 4px 10px; color: var(--blad); background: transparent; }
+    .dol { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+           background: var(--karta); border-top: 1px solid var(--linia); }
+    details summary { color: var(--akcent); font-size: 14px; cursor: pointer; margin-top: 10px; }
+    [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<h1>{{ projekt.nazwa }}</h1>
+<p class="wyciszony" style="margin: 0 4px">Formularz terenowy Warsztatu · działa bez internetu · punkty zostają w tym telefonie, dopóki ich nie wyeksportujesz.</p>
+
+<form id="formularz" class="karta" autocomplete="off">
+    <h2>Nowy punkt</h2>
+    <div class="gps">
+        <div id="gps-stan" class="gps__stan">Położenie: brak</div>
+        <button id="gps" type="button">📍 Pobierz</button>
+    </div>
+    <details id="reczne">
+        <summary>Wpisz współrzędne ręcznie (gdy GPS nie działa)</summary>
+        <div class="rzad">
+            <div><label for="lat">Szerokość (N)</label><input id="lat" type="number" step="any" inputmode="decimal" placeholder="52.40640"></div>
+            <div><label for="lng">Długość (E)</label><input id="lng" type="number" step="any" inputmode="decimal" placeholder="16.92520"></div>
+        </div>
+    </details>
+
+    <div id="pola"></div>
+
+    <label for="zdjecie">Zdjęcie</label>
+    <input id="zdjecie" type="file" accept="image/*" capture="environment">
+    <img id="podglad" class="podglad" alt="Podgląd zdjęcia" hidden>
+
+    <label for="uwagi">Uwagi</label>
+    <textarea id="uwagi" maxlength="2000"></textarea>
+    <p id="komunikat" class="komunikat" hidden></p>
+</form>
+
+<section class="karta">
+    <h2>Zapisane punkty: <span id="liczba">0</span></h2>
+    <ul id="lista" class="lista"></ul>
+    <div class="rzad" style="margin-top: 10px">
+        <button id="eksport" type="button">⬇ Eksportuj plik</button>
+        <button id="udostepnij" type="button" hidden>↗ Udostępnij</button>
+    </div>
+    <p class="wyciszony">Plik przenieś na komputer (kabel, e-mail, dysk w chmurze) i zaimportuj w Warsztacie: Teren → „{{ projekt.nazwa }}” → Import. Ponowny import tego samego pliku nie dubluje punktów.</p>
+    <details>
+        <summary>Wyczyść pamięć telefonu (po udanym imporcie)</summary>
+        <button id="wyczysc" type="button" style="margin-top: 8px; color: var(--blad)">Usuń wszystkie punkty z telefonu</button>
+    </details>
+</section>
+
+<div class="dol"><button id="zapisz" type="button" class="glowny">Zapisz punkt</button></div>
+
+<script>
+(function () {
+    "use strict";
+
+    const PROJEKT = {{ {"nazwa": projekt.nazwa, "klucz": projekt.klucz, "pola": projekt.pola} | tojson }};
+    const FORMAT = {{ format_pliku | tojson }};
+    const MAKS_BOK_ZDJECIA = 1600;
+    const DOBRA_DOKLADNOSC_M = 10;
+    const CZAS_GPS_MS = 30000;
+
+    const $ = (id) => document.getElementById(id);
+    let polozenie = null; // {lat, lng, dokladnosc_m}
+    let zdjecie = null; // data URL JPEG
+    let obserwator = null;
+
+    function element(tag, atrybuty, tekst) {
+        const el = document.createElement(tag);
+        Object.assign(el, atrybuty || {});
+        if (tekst !== undefined) el.textContent = tekst;
+        return el;
+    }
+
+    function komunikat(tekst, rodzaj) {
+        const k = $("komunikat");
+        k.textContent = tekst;
+        k.className = `komunikat komunikat--${rodzaj || "ok"}`;
+        k.hidden = !tekst;
+    }
+
+    // ---------- pamięć telefonu: IndexedDB (osobna baza dla projektu) ----------
+
+    let baza = null;
+    function otworzBaze() {
+        return new Promise((ok, blad) => {
+            const z = indexedDB.open(`warsztat-teren-${PROJEKT.klucz}`, 1);
+            z.onupgradeneeded = () => z.result.createObjectStore("punkty", { keyPath: "uid" });
+            z.onsuccess = () => ok(z.result);
+            z.onerror = () => blad(z.error);
+        });
+    }
+    function transakcja(tryb, dzialanie) {
+        return new Promise((ok, blad) => {
+            const t = baza.transaction("punkty", tryb);
+            const wynik = dzialanie(t.objectStore("punkty"));
+            t.oncomplete = () => ok(wynik && wynik.result);
+            t.onerror = () => blad(t.error);
+        });
+    }
+    const wszystkie = () => transakcja("readonly", (s) => s.getAll());
+
+    // ---------- położenie ----------
+
+    function pokazPolozenie() {
+        const stan = $("gps-stan");
+        if (!polozenie) {
+            stan.textContent = "Położenie: brak";
+            return;
+        }
+        stan.replaceChildren("± ", element("strong", { className: polozenie.dokladnosc_m <= DOBRA_DOKLADNOSC_M ? "dobra" : "slaba" }, `${Math.round(polozenie.dokladnosc_m)} m`),
+            ` · ${polozenie.lat.toFixed(5)}, ${polozenie.lng.toFixed(5)}`);
+    }
+
+    function zatrzymajGps() {
+        if (obserwator !== null) navigator.geolocation.clearWatch(obserwator);
+        obserwator = null;
+        $("gps").textContent = "📍 Ponów";
+    }
+
+    $("gps").addEventListener("click", () => {
+        if (obserwator !== null) return zatrzymajGps();
+        if (!("geolocation" in navigator)) return komunikat("Ta przeglądarka nie udostępnia GPS — wpisz współrzędne ręcznie.", "blad");
+        polozenie = null;
+        $("gps").textContent = "■ Stop";
+        $("gps-stan").textContent = "Szukam satelitów…";
+        // Śledzimy położenie, aż dokładność będzie dobra albo minie 30 s — zostaje najlepszy odczyt.
+        obserwator = navigator.geolocation.watchPosition(
+            (p) => {
+                if (!polozenie || p.coords.accuracy < polozenie.dokladnosc_m) {
+                    polozenie = { lat: p.coords.latitude, lng: p.coords.longitude, dokladnosc_m: p.coords.accuracy };
+                    pokazPolozenie();
+                }
+                if (p.coords.accuracy <= DOBRA_DOKLADNOSC_M) zatrzymajGps();
+            },
+            (e) => {
+                zatrzymajGps();
+                komunikat(e.code === 1 ? "Brak zgody na położenie. Zezwól przeglądarce na lokalizację albo wpisz współrzędne ręcznie." : "Nie udało się ustalić położenia — spróbuj na otwartej przestrzeni albo wpisz ręcznie.", "blad");
+                $("reczne").open = true;
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: CZAS_GPS_MS }
+        );
+        setTimeout(() => obserwator !== null && zatrzymajGps(), CZAS_GPS_MS);
+    });
+
+    // ---------- pola formularza z projektu ----------
+
+    function rysujPola() {
+        const pojemnik = $("pola");
+        PROJEKT.pola.forEach((pole, i) => {
+            const id = `pole-${i}`;
+            if (pole.typ === "wybor" || pole.typ === "tak_nie") {
+                pojemnik.appendChild(element("label", {}, pole.nazwa));
+                const opcje = element("div", { className: "opcje", role: "radiogroup" });
+                const wartosci = pole.typ === "wybor" ? pole.opcje.map((o) => [o, o]) : [["tak", "tak"], ["nie", "nie"]];
+                for (const [wartosc, napis] of wartosci) {
+                    const l = element("label", { className: "" });
+                    l.style.margin = "0";
+                    l.style.fontWeight = "400";
+                    const r = element("input", { type: "radio", name: id, value: wartosc });
+                    // Drugie dotknięcie zaznaczonej opcji ją odznacza (pole zostaje puste).
+                    r.addEventListener("click", () => {
+                        if (r.dataset.zaznaczony === "1") r.checked = false;
+                        pojemnik.querySelectorAll(`input[name="${id}"]`).forEach((x) => (x.dataset.zaznaczony = x.checked ? "1" : ""));
+                    });
+                    l.append(r, element("span", {}, napis));
+                    opcje.appendChild(l);
+                }
+                pojemnik.appendChild(opcje);
+            } else {
+                pojemnik.appendChild(element("label", { htmlFor: id }, pole.nazwa));
+                const input = element("input", { id, type: pole.typ === "liczba" ? "number" : "text" });
+                if (pole.typ === "liczba") {
+                    input.step = "any";
+                    input.inputMode = "decimal";
+                }
+                pojemnik.appendChild(input);
+            }
+        });
+    }
+
+    function wartosciPol() {
+        const wynik = {};
+        PROJEKT.pola.forEach((pole, i) => {
+            const id = `pole-${i}`;
+            if (pole.typ === "wybor" || pole.typ === "tak_nie") {
+                const r = document.querySelector(`input[name="${id}"]:checked`);
+                if (r) wynik[pole.nazwa] = pole.typ === "tak_nie" ? r.value === "tak" : r.value;
+            } else {
+                const v = $(id).value.trim();
+                if (v !== "") wynik[pole.nazwa] = pole.typ === "liczba" ? Number(v) : v;
+            }
+        });
+        return wynik;
+    }
+
+    // ---------- zdjęcie: zmniejszone w telefonie, żeby plik był mały ----------
+
+    $("zdjecie").addEventListener("change", () => {
+        const plik = $("zdjecie").files[0];
+        if (!plik) return;
+        const url = URL.createObjectURL(plik);
+        const obraz = new Image();
+        obraz.onload = () => {
+            const skala = Math.min(1, MAKS_BOK_ZDJECIA / Math.max(obraz.width, obraz.height));
+            const plotno = element("canvas", { width: Math.round(obraz.width * skala), height: Math.round(obraz.height * skala) });
+            plotno.getContext("2d").drawImage(obraz, 0, 0, plotno.width, plotno.height);
+            zdjecie = plotno.toDataURL("image/jpeg", 0.8);
+            URL.revokeObjectURL(url);
+            $("podglad").src = zdjecie;
+            $("podglad").hidden = false;
+        };
+        obraz.onerror = () => komunikat("Nie udało się odczytać zdjęcia.", "blad");
+        obraz.src = url;
+    });
+
+    // ---------- zapis punktu ----------
+
+    function nowyUid() {
+        const bajty = new Uint8Array(12);
+        crypto.getRandomValues(bajty);
+        return Array.from(bajty, (b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    $("zapisz").addEventListener("click", async () => {
+        let lat = polozenie && polozenie.lat, lng = polozenie && polozenie.lng, dokladnosc = polozenie && polozenie.dokladnosc_m;
+        if ($("lat").value && $("lng").value) {
+            lat = Number($("lat").value);
+            lng = Number($("lng").value);
+            dokladnosc = null;
+        }
+        if (lat === null || lat === undefined) {
+            if (!confirm("Punkt nie ma położenia. Zapisać mimo to? (Nie pojawi się na mapie w Warsztacie.)")) return;
+            lat = lng = null;
+        }
+        const punkt = {
+            uid: nowyUid(), lat, lng, dokladnosc_m: dokladnosc, czas: new Date().toISOString(),
+            wartosci: wartosciPol(), uwagi: $("uwagi").value.trim(), zdjecie,
+        };
+        try {
+            await transakcja("readwrite", (s) => s.add(punkt));
+        } catch (e) {
+            return komunikat(`Nie zapisano: ${e && e.name === "QuotaExceededError" ? "pamięć telefonu pełna — wyeksportuj i wyczyść punkty" : e}`, "blad");
+        }
+        $("formularz").reset();
+        $("podglad").hidden = true;
+        zdjecie = null;
+        polozenie = null;
+        pokazPolozenie();
+        document.querySelectorAll(".opcje input").forEach((x) => (x.dataset.zaznaczony = ""));
+        komunikat("Zapisano punkt.", "ok");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        await pokazListe();
+    });
+
+    async function pokazListe() {
+        const punkty = (await wszystkie()).sort((a, b) => b.czas.localeCompare(a.czas));
+        $("liczba").textContent = punkty.length;
+        const lista = $("lista");
+        lista.replaceChildren();
+        for (const p of punkty) {
+            const li = element("li");
+            if (p.zdjecie) li.appendChild(element("img", { src: p.zdjecie, alt: "" }));
+            const opis = element("div");
+            const pierwsza = Object.values(p.wartosci)[0];
+            opis.append(element("strong", {}, pierwsza === undefined ? "(bez wartości)" : String(pierwsza === true ? "tak" : pierwsza === false ? "nie" : pierwsza)),
+                element("div", { className: "wyciszony" }, `${new Date(p.czas).toLocaleString("pl-PL")}${p.lat === null ? " · bez położenia" : ""}`));
+            const usun = element("button", { type: "button" }, "Usuń");
+            usun.addEventListener("click", async () => {
+                if (!confirm("Usunąć ten punkt z telefonu?")) return;
+                await transakcja("readwrite", (s) => s.delete(p.uid));
+                pokazListe();
+            });
+            li.append(opis, usun);
+            lista.appendChild(li);
+        }
+    }
+
+    // ---------- eksport ----------
+
+    async function plikEksportu() {
+        const punkty = await wszystkie();
+        const dane = { format: FORMAT, wersja: 1, projekt_klucz: PROJEKT.klucz, projekt_nazwa: PROJEKT.nazwa, eksport: new Date().toISOString(), punkty };
+        const d = new Date();
+        const znacznik = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}_${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+        return new File([JSON.stringify(dane)], `teren_${znacznik}_${punkty.length}pkt.json`, { type: "application/json" });
+    }
+
+    $("eksport").addEventListener("click", async () => {
+        const plik = await plikEksportu();
+        const a = element("a", { href: URL.createObjectURL(plik), download: plik.name });
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            URL.revokeObjectURL(a.href);
+            a.remove();
+        }, 1000);
+    });
+
+    // Udostępnianie pliku (np. do poczty albo dysku) — tylko gdy telefon to umie.
+    if (navigator.canShare && navigator.canShare({ files: [new File(["{}"], "x.json", { type: "application/json" })] })) {
+        $("udostepnij").hidden = false;
+        $("udostepnij").addEventListener("click", async () => {
+            try {
+                await navigator.share({ files: [await plikEksportu()], title: PROJEKT.nazwa });
+            } catch (e) {
+                // anulowane przez użytkownika
+            }
+        });
+    }
+
+    $("wyczysc").addEventListener("click", async () => {
+        if (!confirm("Usunąć WSZYSTKIE punkty z telefonu? Zrób to dopiero po udanym imporcie w Warsztacie.")) return;
+        await transakcja("readwrite", (s) => s.clear());
+        pokazListe();
+    });
+
+    // ---------- start ----------
+
+    rysujPola();
+    otworzBaze()
+        .then((b) => {
+            baza = b;
+            // Prośba, żeby przeglądarka nie czyściła danych przy braku miejsca.
+            if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+            return pokazListe();
+        })
+        .catch(() => komunikat("Ta przeglądarka nie pozwala zapisywać danych z pliku. Otwórz formularz w Chrome albo Firefoksie.", "blad"));
+})();
+</script>
+</body>
+</html>

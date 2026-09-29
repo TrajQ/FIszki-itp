@@ -1321,3 +1321,21 @@ Status: zamknięty
   do sprawdzenia u autora; jeśli lat nie ma, komunikat wskazuje
   ustawienie ORTO_ARCHIWALNA_WMS
 - `DECISIONS.md`: D-070
+
+## ETAP 65 — Teren: inwentaryzacja w terenie
+Data: 2026-09-29
+Status: zamknięty
+
+- `teren/`: `projekt.py` (pola, wzory, sprawdzanie pliku z telefonu),
+  `baza.py` (projekty, punkty, zdjęcia), `routes.py`, szablony
+  `index.html`, `projekt.html`, `telefon.html` (samodzielny formularz),
+  `teren.js`, `teren.css`
+- Sprawdzone w przeglądarce cały obieg: projekt → pobranie formularza →
+  otwarcie pliku lokalnie w emulacji telefonu z GPS → 2 punkty (jeden ze
+  zdjęciem) → przeładowanie (punkty zostają) → eksport → import (2
+  dodane) → ponowny import (2 pominięte) → mapa, legenda, dymek, tabela
+  (jasny i ciemny motyw)
+- Nie sprawdzone tutaj: prawdziwy telefon (otwieranie pliku HTML z
+  pamięci telefonu i zgoda na GPS zależą od przeglądarki) — do
+  sprawdzenia u autora
+- `DECISIONS.md`: D-071

@@ -21,10 +21,10 @@ kogoś, kto wróci do niego za trzy miesiące.
                 raport do druku i porównanie wariantów
 - przepisy    — akty prawne z PDF: artykuły, wyszukiwarka, pytania do
                 Gemini z cytatami sprawdzanymi w tekście i kotwicą w PDF
+- teren       — inwentaryzacja w terenie: samodzielny formularz HTML na
+                telefon (bez internetu), import pliku, mapa punktów
 
-Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
-- teren       — nowy moduł: inwentaryzacja w terenie (telefon zbiera dane
-                bez połączenia z Warsztatem — ten działa tylko na 127.0.0.1)
+Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 
 ## Stack — nie zmieniaj bez pytania
 - Python 3.11+, Flask, blueprinty
@@ -59,6 +59,6 @@ Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 64 (mpzp: kronika zmian — zamknięty)
-Ostatni ZIP: releases/warsztat_etap64_20260929.zip
-Testy: 389 passed / 0 failed
+ETAP: 65 (teren: inwentaryzacja w terenie — zamknięty)
+Ostatni ZIP: releases/warsztat_etap65_20260929.zip
+Testy: 401 passed / 0 failed

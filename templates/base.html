@@ -14,7 +14,7 @@
         <nav class="pasek-nawigacji__wnetrze">
             <a class="logo" href="{{ url_for('index') }}">Warsztat</a>
             <ul class="menu">
-                {% for modul, nazwa in [('atlas', 'Atlas'), ('mpzp', 'MPZP'), ('fiszki', 'Fiszki'), ('dostepnosc', 'Dostępność'), ('osiedle', 'Osiedle'), ('przepisy', 'Przepisy')] %}
+                {% for modul, nazwa in [('atlas', 'Atlas'), ('mpzp', 'MPZP'), ('fiszki', 'Fiszki'), ('dostepnosc', 'Dostępność'), ('osiedle', 'Osiedle'), ('przepisy', 'Przepisy'), ('teren', 'Teren')] %}
                 <li>
                     <a href="{{ url_for(modul ~ '.index') }}"
                        class="{{ 'aktywny' if request.blueprint == modul }}">{{ nazwa }}</a>

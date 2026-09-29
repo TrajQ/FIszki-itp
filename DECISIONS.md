@@ -1519,3 +1519,37 @@ wystarczy wpis w `.env`.
 - Lista lat w kodzie — zgadywanie i starzenie się listy.
 - Pobieranie kafelków przez serwer Warsztatu — niepotrzebne pośrednictwo;
   pozostałe mapy też biorą kafelki wprost z usług.
+
+## D-071 — Moduł teren: samodzielny formularz HTML na telefon i import pliku
+Data: 2026-09-29
+
+**Decyzja:** Nowy moduł `teren` (baza `instance/teren/teren.db`, zdjęcia
+w `instance/teren/zdjecia/`). Projekt inwentaryzacji ma pola formularza
+(lista wyboru, tekst, liczba, tak/nie; trzy wzory: zieleń, stan
+zabudowy, przestrzeń publiczna) i losowy klucz. Warsztat generuje
+**jeden samodzielny plik HTML** (cały CSS i JS w środku, bez zasobów z
+sieci), który użytkownik przenosi na telefon i otwiera w przeglądarce.
+Formularz działa bez internetu: położenie z GPS (śledzenie do ±10 m albo
+30 s, najlepszy odczyt; współrzędne ręczne jako zapas), pola, zdjęcie
+zmniejszane na telefonie do 1600 px (JPEG 0,8), uwagi; punkty w
+IndexedDB telefonu (osobna baza na projekt). Eksport: plik JSON
+(`format: warsztat-teren`, wersja 1, klucz projektu, punkty z uid).
+Import w Warsztacie sprawdza każde pole (typy, opcje z listy, zakresy
+współrzędnych, zdjęcie tylko JPEG do 4 MB) — cały plik albo nic; punkty
+o znanym uid są pomijane, więc ponowny import nie dubluje. Mapa punktów
+(kolor wg pola wyboru, legenda z ukrywaniem), tabela, eksport GeoJSON i
+CSV.
+
+**Uzasadnienie:** Warsztat nasłuchuje tylko na 127.0.0.1 (CLAUDE.md:
+nie bindować na 0.0.0.0), więc telefon nie może wysyłać danych do
+aplikacji. Plik HTML + plik JSON to najprostszy obieg bez serwera, bez
+konta i bez internetu w terenie. Klucz projektu chroni przed
+zaimportowaniem pliku do złego projektu.
+
+**Odrzucone alternatywy:**
+- Udostępnienie Warsztatu w sieci lokalnej — sprzeczne z zasadą
+  127.0.0.1.
+- Gotowe aplikacje (QField, Mergin) — dobre, ale wymagają osobnej
+  konfiguracji projektu QGIS; do rozważenia jako uzupełnienie.
+- Podkład mapy w formularzu na telefonie — kafelki wymagają internetu;
+  współrzędne i dokładność wystarczą, mapa jest w Warsztacie.

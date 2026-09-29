@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block tytul %}Teren — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('teren.static', filename='teren.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Inwentaryzacja w terenie</h1>
+        <p>Załóż projekt, pobierz formularz na telefon, zbieraj punkty bez internetu i zaimportuj je z powrotem.</p>
+    </div>
+</div>
+
+{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+
+<section class="karta stos">
+    <h3>Nowy projekt</h3>
+    <form class="nowy-projekt" method="post" action="{{ url_for('teren.nowy_projekt') }}">
+        <label>Nazwa <input name="nazwa" type="text" maxlength="80" required placeholder="np. Zieleń — Park Wilsona"></label>
+        <label>Pola formularza
+            <select name="wzor">
+                {% for klucz, w in wzory.items() %}<option value="{{ klucz }}">wzór: {{ w.nazwa }} ({{ w.pola | map(attribute='nazwa') | join(', ') }})</option>{% endfor %}
+                <option value="">własne — zacznę od jednego pola tekstowego</option>
+            </select>
+        </label>
+        <button type="submit">Utwórz</button>
+    </form>
+    <p class="wyciszony opis">Pola zmienisz później na stronie projektu (przed pobraniem formularza na telefon).</p>
+</section>
+
+<section class="karta stos">
+    <h3>Twoje projekty</h3>
+    {% if projekty %}
+    <ul class="lista-projektow">
+        {% for p in projekty %}
+        <li>
+            <a href="{{ url_for('teren.widok_projektu', projekt_id=p.id) }}">{{ p.nazwa }}</a>
+            <span class="wyciszony">{{ p.liczba_punktow }} pkt · {{ p.pola | length }} pól{% if p.ostatni_pomiar %} · ostatni pomiar {{ p.ostatni_pomiar[:10] }}{% endif %}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="wyciszony">Jeszcze nie ma projektów.</p>
+    {% endif %}
+</section>
+
+<section class="karta stos">
+    <h3>Jak to działa</h3>
+    <ol class="kroki">
+        <li>Utwórz projekt i ustaw pola formularza.</li>
+        <li>Na stronie projektu kliknij <strong>Pobierz formularz na telefon</strong> i przenieś plik HTML na telefon (kabel, e-mail, dysk w chmurze).</li>
+        <li>Na telefonie otwórz plik w Chrome albo Firefoksie. Działa bez internetu: położenie z GPS, pola, zdjęcie, uwagi.</li>
+        <li>Po pracy: <strong>Eksportuj plik</strong> na telefonie, przenieś plik JSON na komputer i zaimportuj go na stronie projektu.</li>
+    </ol>
+    <p class="wyciszony opis">Warsztat działa tylko na tym komputerze (127.0.0.1), dlatego telefon nie łączy się z nim bezpośrednio.</p>
+</section>
+{% endblock %}
