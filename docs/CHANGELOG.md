@@ -276,3 +276,11 @@
 - Fiszki: prognoza powtórek na najbliższe 7 dni na stronie modułu;
   skuteczność liczy „trudne” jako zapamiętane.
 - Dodano `DECISIONS.md` D-045 i 5 testów.
+
+## ETAP 40 — 2026-09-29
+- Atlas: wybór metody klasyfikacji (kwantyle, Jenks, równe przedziały,
+  odchylenie standardowe) i liczby klas 3–7; GVF i liczebność klas w
+  legendzie; endpoint `/atlas/klasy`.
+- Atlas: 7-stopniowa skala kolorów.
+- Atlas: szybki wybór popularnych wskaźników (frazy do wyszukiwarki BDL).
+- Dodano `DECISIONS.md` D-046 i 5 testów.

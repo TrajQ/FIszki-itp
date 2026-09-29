@@ -55,14 +55,50 @@ def wojewodztwa():
 def dane():
     try:
         parametry = _parametry_zapytania(request.args)
+        metoda, liczba_klas = _parametry_klasyfikacji(request.args)
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
     try:
-        return jsonify(_policz_dane(**parametry))
+        wynik = _policz_dane(**parametry)
     except BladBDL as e:
         return jsonify({"blad": str(e)}), 502
     except LookupError as e:
         return jsonify({"blad": str(e)}), 404
+    wynik["klasyfikacja"] = statystyki.klasyfikuj([g["wartosc"] for g in wynik["gminy"]], metoda, liczba_klas)
+    return jsonify(wynik)
+
+
+def _parametry_klasyfikacji(zrodlo) -> tuple[str, int]:
+    metoda = zrodlo.get("metoda") or "kwantyle"
+    try:
+        liczba_klas = int(zrodlo.get("klasy") or statystyki.LICZBA_KLAS)
+    except ValueError:
+        raise ValueError("Liczba klas musi być liczbą.")
+    if metoda not in statystyki.METODY_KLASYFIKACJI:
+        raise ValueError("Nieznana metoda klasyfikacji.")
+    if not statystyki.MIN_KLAS <= liczba_klas <= statystyki.MAKS_KLAS:
+        raise ValueError(f"Liczba klas od {statystyki.MIN_KLAS} do {statystyki.MAKS_KLAS}.")
+    return metoda, liczba_klas
+
+
+@atlas_bp.route("/klasy")
+def klasy():
+    """Podział na klasy inną metodą albo liczbą klas — bez przeładowania
+    całych danych (wartości biorą się z cache BDL)."""
+    try:
+        parametry = _parametry_zapytania(request.args)
+        metoda, liczba_klas = _parametry_klasyfikacji(request.args)
+        wartosci = [
+            g["wartosc"]
+            for g in _wartosci_wskaznika(
+                parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"]
+            )
+        ]
+        return jsonify(statystyki.klasyfikuj(wartosci, metoda, liczba_klas))
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
 
 
 @atlas_bp.route("/gmina/<gmina_bdl_id>")
@@ -245,6 +281,7 @@ def _policz_dane(
         "gminy": gminy,
         "statystyki": statystyki.statystyki(gminy),
         "progi_klas": statystyki.progi_klas([g["wartosc"] for g in gminy]),
+        "klasyfikacja": statystyki.klasyfikuj([g["wartosc"] for g in gminy]),
     }
     if rok_bazowy is not None:
         porownanie = statystyki.porownaj(

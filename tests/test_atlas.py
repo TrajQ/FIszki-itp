@@ -676,3 +676,55 @@ def test_profil_gminy_wzgledny(client, monkeypatch):
     monkeypatch.setattr(atlas_routes.bdl, "szereg_gminy", szereg)
     dane = client.get("/atlas/gmina/011212161011?zmienna=72305&mianownik=1000&mnoznik=1000").get_json()
     assert [p["wartosc"] for p in dane["szereg"]] == [pytest.approx(10.0), pytest.approx(5.0)]
+
+
+# ---------- ETAP 40: metody klasyfikacji ----------
+
+TRZY_SKUPISKA = [1.0, 2.0, 3.0, 10.0, 11.0, 12.0, 20.0, 21.0, 22.0]
+
+
+def test_jenks_znajduje_naturalne_skupiska():
+    assert statystyki.progi_jenks(TRZY_SKUPISKA, 3) == [3.0, 12.0]
+
+
+def test_jenks_ma_najwyzsze_gvf():
+    import random
+
+    random.seed(7)
+    liczby = [random.lognormvariate(9, 0.8) for _ in range(150)]
+    gvf = {m: statystyki.klasyfikuj(liczby, m, 5)["gvf"] for m in statystyki.METODY_KLASYFIKACJI}
+    assert gvf["jenks"] == max(gvf.values())
+    assert 0 < gvf["kwantyle"] < 1
+
+
+def test_rowne_przedzialy_i_odchylenie():
+    assert statystyki.progi_rowne([0.0, 10.0, 100.0], 4) == [25.0, 50.0, 75.0]
+    liczby = [float(x) for x in range(1, 101)]  # średnia 50,5, σ ≈ 28,87
+    progi = statystyki.progi_odchylenia(liczby, 4)
+    assert progi == pytest.approx([50.5 - 28.866, 50.5, 50.5 + 28.866], abs=0.01)
+    # 7 klas: granice ±2,5σ wypadają poza zakres — zostają tylko wewnętrzne
+    assert len(statystyki.progi_odchylenia(liczby, 7)) == 4
+
+
+def test_klasyfikuj_liczebnosci_i_bledy():
+    wynik = statystyki.klasyfikuj(TRZY_SKUPISKA, "jenks", 3)
+    assert wynik["liczebnosci"] == [3, 3, 3]
+    assert wynik["gvf"] == pytest.approx(1 - 6 / sum((v - 34 / 3) ** 2 for v in TRZY_SKUPISKA))
+    assert statystyki.klasyfikuj([5.0, 5.0], "jenks", 3)["progi"] == []
+    with pytest.raises(ValueError):
+        statystyki.klasyfikuj(TRZY_SKUPISKA, "magia", 3)
+    with pytest.raises(ValueError):
+        statystyki.klasyfikuj(TRZY_SKUPISKA, "jenks", 9)
+
+
+def test_dane_i_klasy_z_metoda(client):
+    dane = client.get(f"/atlas/dane?{ZAPYTANIE}&metoda=rowne&klasy=3").get_json()
+    assert dane["klasyfikacja"]["metoda"] == "rowne" and dane["klasyfikacja"]["klasy"] == 3
+    assert sum(dane["klasyfikacja"]["liczebnosci"]) == len(dane["gminy"])
+
+    klasy = client.get(f"/atlas/klasy?{ZAPYTANIE}&metoda=jenks&klasy=4").get_json()
+    assert klasy["metoda"] == "jenks"
+    assert client.licznik["dane"] == 1  # /klasy korzysta z cache BDL
+
+    assert client.get(f"/atlas/klasy?{ZAPYTANIE}&metoda=x").status_code == 400
+    assert client.get(f"/atlas/dane?{ZAPYTANIE}&klasy=2").status_code == 400

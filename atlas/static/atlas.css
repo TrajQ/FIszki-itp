@@ -607,3 +607,68 @@ button.przelacznik__opcja--aktywna:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* Metoda klasyfikacji (ETAP 40) */
+.klasyfikacja {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.klasyfikacja label {
+    font-size: 12px;
+}
+
+.klasyfikacja select {
+    min-width: 0;
+}
+
+.klasyfikacja__gvf {
+    padding: 6px 10px;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+    color: var(--tekst-drugi);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: help;
+}
+
+.klasyfikacja--nieaktywna {
+    opacity: 0.45;
+}
+
+.legenda__liczebnosc {
+    margin-left: auto;
+    padding-left: 10px;
+    color: var(--tekst-drugi);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Szybki wybór popularnych wskaźników (ETAP 40) */
+.szybki-wybor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    grid-column: 1 / -1;
+    order: 1; /* pod rzędem pól, choć w HTML stoi przy wyszukiwarce */
+}
+
+.panel-wyboru .wiersz-wzgledny {
+    order: 2;
+}
+
+.szybki-wybor__fraza {
+    padding: 4px 12px;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+    color: var(--tekst);
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.szybki-wybor__fraza:hover {
+    background: var(--akcent-tlo);
+    color: var(--akcent);
+}

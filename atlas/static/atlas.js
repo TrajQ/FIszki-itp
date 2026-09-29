@@ -8,7 +8,8 @@
     "use strict";
 
     // Wartość: skala sekwencyjna 5 klas, od jasnego do ciemnego niebieskiego.
-    const KOLORY_KLAS = ["#d6e8ff", "#9ecbff", "#5aa7ff", "#1f7ae0", "#0b4fa8"];
+    // 7 kolorów — przy mniejszej liczbie klas brane równomiernie z całej skali.
+    const KOLORY_KLAS = ["#e3efff", "#b9d8ff", "#86bbff", "#4f97f5", "#1f73de", "#0b53ab", "#06336e"];
     // Zmiana: skala rozbieżna — spadek (pomarańcz), bez zmian (szary), wzrost (niebieski).
     const KOLORY_ZMIANY = ["#c2410c", "#fb923c", "#d1d1d6", "#60a5fa", "#1d4ed8"];
     const KOLOR_BRAK = "#c7c7cc";
@@ -155,7 +156,7 @@
             if (gmina.zmiana_proc === null || gmina.zmiana_proc === undefined) return KOLOR_BRAK;
             return KOLORY_ZMIANY[numerKlasy(gmina.zmiana_proc, biezaceDane.porownanie.progi_zmiany_proc)];
         }
-        const progi = biezaceDane.progi_klas;
+        const progi = biezaceDane.klasyfikacja.progi;
         const liczbaKlas = progi.length + 1;
         const i = numerKlasy(gmina.wartosc, progi);
         // Przy mniejszej liczbie klas rozciągamy kolory na całą skalę.
@@ -203,6 +204,16 @@
         }
         opoznienieSzukania = setTimeout(() => szukajZmiennych(fraza), 350);
     });
+
+    // Szybki wybór popularnych wskaźników: wpisuje frazę i od razu szuka.
+    for (const przycisk of document.querySelectorAll(".szybki-wybor__fraza")) {
+        przycisk.addEventListener("click", () => {
+            poleSzukaj.value = przycisk.dataset.fraza;
+            clearTimeout(opoznienieSzukania);
+            poleSzukaj.focus();
+            szukajZmiennych(przycisk.dataset.fraza);
+        });
+    }
 
     async function szukajZmiennych(fraza) {
         podpowiedzi.replaceChildren(elementPodpowiedzi("Szukam…", null));
@@ -312,6 +323,9 @@
                 parametry.set("mianownik", mianownik.id);
                 parametry.set("mnoznik", poleMnoznik.value);
             }
+            const parametryDanych = new URLSearchParams(parametry);
+            parametry.set("metoda", poleMetoda.value);
+            parametry.set("klasy", poleKlasy.value);
             const dane = await pobierzJson(`${URL_DANE}?${parametry}`);
             if (numer !== numerZapytania) return;
             if (dane.gminy.length === 0) {
@@ -320,6 +334,8 @@
                 return;
             }
             biezaceDane = dane;
+            biezaceParametry = parametryDanych;
+            numerKlas += 1; // starsze odpowiedzi /klasy dotyczą poprzednich danych
             wybranyWskaznikEl.textContent = `Na mapie: ${dane.zmienna.nazwa} [${dane.zmienna.jednostka || "–"}], ${dane.rok}`;
             linkEksport.href = `${URL_EKSPORT}?${parametry}`;
             document.getElementById("link-geojson").href = `${URL_GEOJSON}?${parametry}`;
@@ -359,7 +375,45 @@
         if (przycisk && przycisk.dataset.tryb !== tryb) ustawTryb(przycisk.dataset.tryb);
     });
 
+    // ---------- metoda klasyfikacji (ETAP 40) ----------
+    // Progi liczy serwer (atlas/statystyki.py); zmiana metody albo liczby
+    // klas pobiera tylko nowe progi i przerysowuje mapę.
+
+    const poleMetoda = document.getElementById("pole-metoda");
+    const poleKlasy = document.getElementById("pole-klasy");
+    const gvfEl = document.getElementById("gvf");
+    const klasyfikacjaEl = document.getElementById("klasyfikacja");
+    let biezaceParametry = null; // parametry danych na mapie (bez metody)
+    let numerKlas = 0;
+
+    function pokazGvf() {
+        const k = biezaceDane.klasyfikacja;
+        gvfEl.textContent = k.gvf === null ? "" : `GVF ${k.gvf.toLocaleString("pl-PL", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
+        klasyfikacjaEl.classList.toggle("klasyfikacja--nieaktywna", tryb === "zmiana");
+        poleMetoda.disabled = poleKlasy.disabled = tryb === "zmiana";
+    }
+
+    async function zmienKlasyfikacje() {
+        if (!biezaceDane || !biezaceParametry) return;
+        const numer = ++numerKlas;
+        const parametry = new URLSearchParams(biezaceParametry);
+        parametry.set("metoda", poleMetoda.value);
+        parametry.set("klasy", poleKlasy.value);
+        try {
+            const klasyfikacja = await pobierzJson(`${URL_KLASY}?${parametry}`);
+            if (numer !== numerKlas || !biezaceDane) return;
+            biezaceDane.klasyfikacja = klasyfikacja;
+            odswiezWidok();
+        } catch (e) {
+            pokazKomunikat(e.message);
+        }
+    }
+
+    poleMetoda.addEventListener("change", zmienKlasyfikacje);
+    poleKlasy.addEventListener("change", zmienKlasyfikacje);
+
     function odswiezWidok() {
+        pokazGvf();
         pokazRozklad();
         pokazStatystyki();
         pokazRanking();
@@ -622,15 +676,16 @@
             return;
         }
         const s = biezaceDane.statystyki;
-        const progiLegendy = [s.min.wartosc, ...biezaceDane.progi_klas, s.max.wartosc];
+        const k = biezaceDane.klasyfikacja;
+        const progiLegendy = [s.min.wartosc, ...k.progi, s.max.wartosc];
         legendaEl.appendChild(element("div", "legenda__tytul", biezaceDane.zmienna.jednostka || "wartość"));
         for (let i = 0; i < progiLegendy.length - 1; i += 1) {
-            legendaEl.appendChild(
-                wierszLegendy(
-                    kolorGminy({ wartosc: progiLegendy[i + 1] }),
-                    `${formatLiczby.format(progiLegendy[i])} – ${formatLiczby.format(progiLegendy[i + 1])}`
-                )
+            const wiersz = wierszLegendy(
+                kolorGminy({ wartosc: progiLegendy[i + 1] }),
+                `${formatLiczby.format(progiLegendy[i])} – ${formatLiczby.format(progiLegendy[i + 1])}`
             );
+            wiersz.appendChild(element("span", "legenda__liczebnosc", `${k.liczebnosci[i]}`));
+            legendaEl.appendChild(wiersz);
         }
     }
 

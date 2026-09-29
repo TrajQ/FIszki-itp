@@ -936,3 +936,24 @@ a 5-literowy rdzeń wystarcza na polską odmianę w typowych definicjach.
   czytelny dla studenta i działa; „trudne” daje większość korzyści.
 - Ocena wpisanej odpowiedzi przez Gemini — odrzucone: koszt, opóźnienie,
   a werdykt modelu łatwo wziąć za pewnik.
+
+## D-046 — Cztery metody klasyfikacji kartogramu i GVF
+Data: 2026-09-29
+
+**Decyzja:** Kartogram atlasu ma do wyboru metodę podziału na klasy —
+kwantyle (dotychczasowa, domyślna), naturalne przerwy Jenksa, równe
+przedziały, odchylenie standardowe — i liczbę klas 3–7. Serwer zwraca
+progi, liczebność klas i GVF (goodness of variance fit). Jenks liczony
+dokładnie (programowanie dynamiczne Fishera, O(k·n²)), bez biblioteki.
+
+**Uzasadnienie:** Dobór metody klasyfikacji to podstawa kartografii
+tematycznej — ta sama zmienna na mapie z kwantylami i z równymi
+przedziałami wygląda zupełnie inaczej, a student powinien to widzieć i
+umieć uzasadnić wybór. GVF daje liczbową ocenę podziału. Dla gmin
+jednego województwa (≤ ~320) dokładny Jenks trwa ułamek sekundy, więc
+biblioteka (jenkspy, mapclassify) byłaby zbędną zależnością.
+
+**Odrzucone alternatywy:**
+- mapclassify — odrzucone: ciągnie numpy/scipy dla czterech funkcji.
+- Przybliżony Jenks (iteracyjny) — odrzucone: dokładny jest wystarczająco
+  szybki i daje powtarzalny wynik.

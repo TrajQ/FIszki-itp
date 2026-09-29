@@ -21,6 +21,13 @@
         <input id="pole-szukaj" type="search" placeholder="np. ludność, bezrobocie, mieszkania…" autocomplete="off">
         <ul id="podpowiedzi" class="podpowiedzi" hidden></ul>
     </label>
+    {# Szybki wybór: tylko frazy do wyszukiwarki BDL, nie identyfikatory
+       zmiennych — lista podpowiedzi pokaże, co GUS ma pod daną nazwą. #}
+    <div class="szybki-wybor" aria-label="Popularne wskaźniki">
+        {% for fraza in ['ludność', 'gęstość zaludnienia', 'saldo migracji', 'przyrost naturalny', 'mieszkania oddane', 'bezrobotni', 'podmioty gospodarki', 'dochody', 'wydatki'] %}
+        <button type="button" class="szybki-wybor__fraza" data-fraza="{{ fraza }}">{{ fraza }}</button>
+        {% endfor %}
+    </div>
     <label>Województwo
         <select id="pole-woj" required><option value="">Wczytywanie…</option></select>
     </label>
@@ -56,6 +63,22 @@
         <div id="przelacznik-trybu" class="przelacznik" role="tablist" hidden>
             <button type="button" data-tryb="wartosc" class="przelacznik__opcja przelacznik__opcja--aktywna">Wartość</button>
             <button type="button" data-tryb="zmiana" class="przelacznik__opcja">Zmiana</button>
+        </div>
+        <div id="klasyfikacja" class="klasyfikacja">
+            <label>Podział na klasy
+                <select id="pole-metoda">
+                    <option value="kwantyle">kwantyle (równe liczebności)</option>
+                    <option value="jenks">naturalne przerwy (Jenks)</option>
+                    <option value="rowne">równe przedziały</option>
+                    <option value="odchylenie">odchylenie standardowe</option>
+                </select>
+            </label>
+            <label>Klas
+                <select id="pole-klasy">
+                    {% for n in range(3, 8) %}<option value="{{ n }}" {{ 'selected' if n == 5 }}>{{ n }}</option>{% endfor %}
+                </select>
+            </label>
+            <span id="gvf" class="klasyfikacja__gvf" title="Goodness of Variance Fit: jaką część zmienności wartości wyjaśnia podział na klasy (1 = idealnie). Najwyższy daje zwykle metoda Jenksa."></span>
         </div>
         <div class="rzad">
             <a id="link-eksport" class="przycisk przycisk--drugi" href="#">Pobierz CSV</a>
@@ -157,6 +180,7 @@
     const URL_OPIS = "{{ url_for('atlas.opis') }}";
     const URL_EKSPORT = "{{ url_for('atlas.eksport_csv') }}";
     const URL_GEOJSON = "{{ url_for('atlas.eksport_geojson') }}";
+    const URL_KLASY = "{{ url_for('atlas.klasy') }}";
     const URL_KORELACJA = "{{ url_for('atlas.korelacja') }}";
     const URL_PROFIL = "{{ url_for('atlas.profil_gminy', gmina_bdl_id='000000000000') }}";
 </script>

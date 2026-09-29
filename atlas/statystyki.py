@@ -7,6 +7,13 @@ fakty z tego modułu i ma je tylko opisać słowami.
 import statistics
 
 LICZBA_KLAS = 5
+MIN_KLAS, MAKS_KLAS = 3, 7
+METODY_KLASYFIKACJI = {
+    "kwantyle": "kwantyle (równe liczebności)",
+    "rowne": "równe przedziały",
+    "jenks": "naturalne przerwy (Jenks)",
+    "odchylenie": "odchylenie standardowe",
+}
 
 
 def statystyki(wartosci: list[dict]) -> dict:
@@ -122,6 +129,139 @@ def progi_klas(liczby: list[float], liczba_klas: int = LICZBA_KLAS) -> list[floa
         if prog not in progi and min(liczby) <= prog < max(liczby):
             progi.append(prog)
     return progi
+
+
+# ---------- metody klasyfikacji (ETAP 40) ----------
+# Wszystkie zwracają rosnące górne granice klas bez maksimum — tak jak
+# progi_klas — więc mapa i legenda działają dla każdej metody tak samo.
+
+
+def _tylko_wewnatrz(progi: list[float], liczby: list[float]) -> list[float]:
+    wynik = []
+    for prog in sorted(progi):
+        if min(liczby) <= prog < max(liczby) and prog not in wynik:
+            wynik.append(prog)
+    return wynik
+
+
+def progi_rowne(liczby: list[float], liczba_klas: int) -> list[float]:
+    """Równe przedziały: rozstęp podzielony na liczba_klas części."""
+    if len(set(liczby)) < 2:
+        return []
+    najmniejsza, najwieksza = min(liczby), max(liczby)
+    krok = (najwieksza - najmniejsza) / liczba_klas
+    return _tylko_wewnatrz([najmniejsza + i * krok for i in range(1, liczba_klas)], liczby)
+
+
+def progi_odchylenia(liczby: list[float], liczba_klas: int) -> list[float]:
+    """Klasy szerokości jednego odchylenia standardowego wokół średniej.
+
+    Dla nieparzystej liczby klas środkowa klasa to średnia ± 0,5σ, dla
+    parzystej średnia jest granicą. Granice poza zakresem danych odpadają.
+    """
+    if len(set(liczby)) < 2:
+        return []
+    srednia = statistics.fmean(liczby)
+    sigma = statistics.pstdev(liczby)
+    return _tylko_wewnatrz([srednia + sigma * (i - liczba_klas / 2) for i in range(1, liczba_klas)], liczby)
+
+
+def progi_jenks(liczby: list[float], liczba_klas: int) -> list[float]:
+    """Naturalne przerwy Jenksa (optymalne, programowanie dynamiczne Fishera).
+
+    Szukamy podziału posortowanych wartości na klasy o najmniejszej sumie
+    kwadratów odchyleń od średnich klas (SDCM). Złożoność O(k·n²) — dla
+    gmin jednego województwa (do ~320) to ułamek sekundy.
+    """
+    wartosci = sorted(liczby)
+    n = len(wartosci)
+    k = min(liczba_klas, len(set(wartosci)))
+    if k < 2:
+        return []
+    # sumy prefiksowe → SDCM dowolnego przedziału w O(1)
+    s1 = [0.0]
+    s2 = [0.0]
+    for v in wartosci:
+        s1.append(s1[-1] + v)
+        s2.append(s2[-1] + v * v)
+
+    def sdcm(i: int, j: int) -> float:  # wartości[i:j]
+        suma = s1[j] - s1[i]
+        return (s2[j] - s2[i]) - suma * suma / (j - i)
+
+    nieskonczonosc = float("inf")
+    # koszt[c][j] — najlepszy podział pierwszych j wartości na c klas
+    koszt = [[nieskonczonosc] * (n + 1) for _ in range(k + 1)]
+    podzial = [[0] * (n + 1) for _ in range(k + 1)]
+    koszt[0][0] = 0.0
+    for c in range(1, k + 1):
+        for j in range(c, n + 1):
+            for i in range(c - 1, j):
+                kandydat = koszt[c - 1][i] + sdcm(i, j)
+                if kandydat < koszt[c][j]:
+                    koszt[c][j], podzial[c][j] = kandydat, i
+    granice = []
+    j = n
+    for c in range(k, 1, -1):
+        j = podzial[c][j]
+        granice.append(wartosci[j - 1])  # górna granica klasy c-1
+    return _tylko_wewnatrz(granice, liczby)
+
+
+def klasyfikuj(liczby: list[float], metoda: str = "kwantyle", liczba_klas: int = LICZBA_KLAS) -> dict:
+    """Progi wybraną metodą + liczebności klas + GVF (jakość podziału)."""
+    if metoda not in METODY_KLASYFIKACJI:
+        raise ValueError("Nieznana metoda klasyfikacji.")
+    if not MIN_KLAS <= liczba_klas <= MAKS_KLAS:
+        raise ValueError(f"Liczba klas od {MIN_KLAS} do {MAKS_KLAS}.")
+    funkcja = {
+        "kwantyle": progi_klas,
+        "rowne": progi_rowne,
+        "jenks": progi_jenks,
+        "odchylenie": progi_odchylenia,
+    }[metoda]
+    progi = funkcja(liczby, liczba_klas) if liczby else []
+    return {
+        "metoda": metoda,
+        "nazwa_metody": METODY_KLASYFIKACJI[metoda],
+        "klasy": liczba_klas,
+        "progi": progi,
+        "liczebnosci": liczebnosci_klas(liczby, progi),
+        "gvf": gvf(liczby, progi),
+    }
+
+
+def liczebnosci_klas(liczby: list[float], progi: list[float]) -> list[int]:
+    """Ile wartości w każdej klasie (klasa i: (progi[i-1], progi[i]])."""
+    wynik = [0] * (len(progi) + 1)
+    for v in liczby:
+        i = 0
+        while i < len(progi) and v > progi[i]:
+            i += 1
+        wynik[i] += 1
+    return wynik
+
+
+def gvf(liczby: list[float], progi: list[float]) -> float | None:
+    """Goodness of Variance Fit: 1 − SDCM/SDAM, od 0 do 1.
+
+    Mówi, jaką część zmienności wartości „wyjaśnia” podział na klasy:
+    blisko 1 — klasy dobrze grupują podobne gminy.
+    """
+    if len(liczby) < 2:
+        return None
+    srednia = statistics.fmean(liczby)
+    sdam = sum((v - srednia) ** 2 for v in liczby)
+    if sdam == 0:
+        return None
+    klasy: list[list[float]] = [[] for _ in range(len(progi) + 1)]
+    for v in liczby:
+        i = 0
+        while i < len(progi) and v > progi[i]:
+            i += 1
+        klasy[i].append(v)
+    sdcm = sum(sum((v - statistics.fmean(k)) ** 2 for v in k) for k in klasy if k)
+    return 1 - sdcm / sdam
 
 
 def format_liczby(liczba: float) -> str:

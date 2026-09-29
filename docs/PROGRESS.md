@@ -967,3 +967,18 @@ Status: zamknięty
 
 Testy: 269 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap39_20260929.zip
+
+## ETAP 40 — Atlas: metody klasyfikacji
+Data: 2026-09-29
+Status: zamknięty
+
+- `statystyki.klasyfikuj` (+ `progi_rowne`, `progi_odchylenia`,
+  `progi_jenks`, `liczebnosci_klas`, `gvf`)
+- `/atlas/dane?metoda=&klasy=`, `/atlas/klasy` (z cache BDL, bez
+  przeładowania strony); numerowanie zapytań o klasy
+- Szybki wybór: frazy, nie identyfikatory zmiennych (bez zgadywania ID)
+- Sprawdzone w przeglądarce: Jenks ma najwyższe GVF
+- `DECISIONS.md`: D-046
+
+Testy: 274 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap40_20260929.zip
