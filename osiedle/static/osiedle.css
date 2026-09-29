@@ -417,3 +417,21 @@ button.przycisk--niebezpieczny-tekst {
     object-fit: cover;
     border-radius: 8px;
 }
+
+/* ETAP 75: obszar z działek */
+.obszar-z-dzialek summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--akcent);
+}
+
+.obszar-z-dzialek[open] {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.obszar-z-dzialek textarea {
+    width: 100%;
+    font: 13px ui-monospace, monospace;
+}

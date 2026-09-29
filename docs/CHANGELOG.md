@@ -551,3 +551,9 @@
   bez dublowania, nowsza powtórka z komputera wygrywa).
 - Dodano `fiszki/telefon.py`, `fiszki/trasy_telefon.py`,
   `DECISIONS.md` D-080, D-081 i 9 testów.
+
+## ETAP 75 — 2026-09-29
+- Osiedle: obszar opracowania z działek ewidencyjnych — identyfikatory
+  działek → granice z ULDK → jeden obszar (zastępuje obecny, tereny
+  zostają).
+- Dodano `DECISIONS.md` D-082 i 1 test.

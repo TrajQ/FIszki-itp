@@ -511,6 +511,26 @@
         if (rysunek.getLayers().length) mapa.fitBounds(rysunek.getBounds(), { padding: [30, 30], maxZoom: 18 });
     }
 
+    // Obszar z działek ewidencyjnych (ETAP 75): granice z ULDK liczy serwer.
+    document.getElementById("obszar-z-dzialek").addEventListener("click", async (e) => {
+        if (!koncepcja) return;
+        const dzialki = document.getElementById("dzialki-obszaru").value.split(/[\n,;]+/).map((d) => d.trim()).filter(Boolean);
+        if (!dzialki.length) return pokazKomunikat("Wpisz identyfikator co najmniej jednej działki.");
+        e.target.disabled = true;
+        stanZapisu.textContent = "Pobieram granice z ULDK…";
+        try {
+            await dokonczZapis(); // najpierw zaległe zmiany rysunku
+            await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}/obszar-z-dzialek`, { method: "POST", body: JSON.stringify({ dzialki }) });
+            await otworz(koncepcja.id); // przerysowanie z nowym obszarem i przybliżenie do niego
+            stanZapisu.textContent = "Zapisano";
+        } catch (err) {
+            stanZapisu.textContent = "";
+            pokazKomunikat(err.message);
+        } finally {
+            e.target.disabled = false;
+        }
+    });
+
     wyborKoncepcji.addEventListener("change", () => otworz(wyborKoncepcji.value).catch((e) => pokazKomunikat(e.message)));
 
     formularzNowej.addEventListener("submit", async (e) => {

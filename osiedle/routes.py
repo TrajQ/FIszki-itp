@@ -3,7 +3,11 @@
 import json
 
 from flask import Blueprint, Response, abort, jsonify, render_template, request
+from shapely.geometry import mapping
+from shapely.ops import unary_union
 from werkzeug.utils import secure_filename
+
+from dane import uldk
 
 from . import baza
 from .bilans import FUNKCJE, OBSZAR, BladKoncepcji, bilans
@@ -18,6 +22,10 @@ osiedle_bp = Blueprint(
 )
 
 MAKS_DLUGOSC_NAZWY = 80
+MAKS_DZIALEK = 50
+
+# Na poziomie modułu, żeby testy mogły podmienić usługę ULDK.
+znajdz_dzialke_po_id = uldk.znajdz_dzialke_po_id
 
 
 def _koncepcja_albo_404(koncepcja_id: int) -> dict:
@@ -94,6 +102,40 @@ def zapisz_koncepcje(koncepcja_id):
     except BladKoncepcji as e:
         return jsonify({"blad": str(e)}), 400
     baza.zapisz(koncepcja_id, nazwa, geojson, ustawienia)
+    return jsonify({**baza.pobierz(koncepcja_id), "bilans": wynik})
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>/obszar-z-dzialek", methods=["POST"])
+def obszar_z_dzialek(koncepcja_id):
+    """Obszar opracowania = suma granic działek ewidencyjnych z ULDK
+    (ETAP 75). Zastępuje dotychczasowy obszar; tereny zostają."""
+    k = _koncepcja_albo_404(koncepcja_id)
+    surowe = (request.get_json(silent=True) or {}).get("dzialki")
+    if not isinstance(surowe, list) or not surowe:
+        return jsonify({"blad": "Podaj co najmniej jeden identyfikator działki."}), 400
+    identyfikatory = list(dict.fromkeys(" ".join(str(d).split()) for d in surowe if str(d).strip()))
+    if len(identyfikatory) > MAKS_DZIALEK:
+        return jsonify({"blad": f"Najwyżej {MAKS_DZIALEK} działek naraz."}), 400
+    geometrie = []
+    for dzialka_id in identyfikatory:
+        try:
+            dzialka = znajdz_dzialke_po_id(dzialka_id)
+        except ValueError as e:
+            return jsonify({"blad": f"{dzialka_id}: {e}"}), 400
+        except uldk.BladULDK as e:
+            return jsonify({"blad": str(e)}), 502
+        if dzialka is None:
+            return jsonify({"blad": f"ULDK nie zna działki {dzialka_id}."}), 404
+        geometrie.append(dzialka.geometria)
+    obszar = unary_union(geometrie)
+    cechy = [c for c in k["geojson"]["features"] if (c.get("properties") or {}).get("funkcja") != OBSZAR]
+    cechy.insert(0, {"type": "Feature", "properties": {"funkcja": OBSZAR, "dzialki": identyfikatory}, "geometry": mapping(obszar)})
+    geojson = {"type": "FeatureCollection", "features": cechy}
+    try:
+        wynik = bilans(geojson, k["ustawienia"])
+    except BladKoncepcji as e:
+        return jsonify({"blad": str(e)}), 400
+    baza.zapisz(koncepcja_id, geojson=geojson)
     return jsonify({**baza.pobierz(koncepcja_id), "bilans": wynik})
 
 

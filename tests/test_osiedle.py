@@ -253,3 +253,41 @@ def test_projekt_terenu_w_ustawieniach(client):
     client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
     assert client.get("/teren/projekty.json").get_json() == [{"id": 1, "nazwa": "Zieleń", "liczba_punktow": 0}]
     assert "/teren/projekty.json" in client.get("/osiedle/").get_data(as_text=True)
+
+
+# ---------- ETAP 75: obszar z działek ewidencyjnych ----------
+
+
+def test_obszar_z_dzialek(client, monkeypatch):
+    from shapely.geometry import shape
+
+    from dane.uldk import BladULDK, Dzialka
+    from osiedle import routes as osiedle_routes
+
+    dzialki = {
+        "306401_1.0001.1": shape(prostokat(0, 0, 50, 100, "x")["geometry"]),
+        "306401_1.0001.2": shape(prostokat(50, 0, 50, 100, "x")["geometry"]),
+    }
+
+    def znajdz(dzialka_id):
+        if dzialka_id == "zly":
+            raise ValueError("Zły format identyfikatora.")
+        if dzialka_id == "awaria":
+            raise BladULDK("ULDK nie odpowiada")
+        return Dzialka(dzialka_id, dzialki[dzialka_id], "3064011") if dzialka_id in dzialki else None
+
+    monkeypatch.setattr(osiedle_routes, "znajdz_dzialke_po_id", znajdz)
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Z działek"}).get_json()
+    url = f"/osiedle/koncepcje/{k['id']}"
+    client.put(url, json={"geojson": kolekcja(prostokat(0, 0, 10, 10, "obszar"), prostokat(0, 0, 30, 100, "MW"))})
+
+    odp = client.post(url + "/obszar-z-dzialek", json={"dzialki": ["306401_1.0001.1", " 306401_1.0001.2 ", "306401_1.0001.1"]}).get_json()
+    assert odp["bilans"]["obszar_m2"] == pytest.approx(10_000, rel=1e-3)  # dwie przyległe działki, duplikat pominięty
+    obszary = [c for c in odp["geojson"]["features"] if c["properties"]["funkcja"] == "obszar"]
+    assert len(obszary) == 1 and obszary[0]["properties"]["dzialki"] == ["306401_1.0001.1", "306401_1.0001.2"]
+    assert any(c["properties"]["funkcja"] == "MW" for c in odp["geojson"]["features"])  # tereny zostają
+
+    assert client.post(url + "/obszar-z-dzialek", json={"dzialki": ["306401_1.0001.9"]}).status_code == 404
+    assert client.post(url + "/obszar-z-dzialek", json={"dzialki": ["zly"]}).status_code == 400
+    assert client.post(url + "/obszar-z-dzialek", json={"dzialki": ["awaria"]}).status_code == 502
+    assert client.post(url + "/obszar-z-dzialek", json={"dzialki": []}).status_code == 400

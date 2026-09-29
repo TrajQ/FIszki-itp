@@ -58,6 +58,12 @@
                     <span class="funkcja__probka" style="background: {{ f.kolor }}"></span> <strong>{{ kod }}</strong> {{ f.nazwa }}</label>
                 {% endfor %}
             </div>
+            <details class="obszar-z-dzialek">
+                <summary>Obszar opracowania z działek ewidencyjnych</summary>
+                <p class="wyciszony opis-panelu">Identyfikatory działek (po jednym w wierszu albo po przecinku), np. <code>306401_1.0012.18/14</code> — znajdziesz je w module MPZP. Granica przyjdzie z ULDK i zastąpi obecny obszar.</p>
+                <textarea id="dzialki-obszaru" rows="3" aria-label="Identyfikatory działek"></textarea>
+                <button id="obszar-z-dzialek" type="button" class="przycisk--drugi">Ustaw obszar z działek</button>
+            </details>
             <div id="wybrany-teren" class="wybrany-teren" hidden>
                 <h4>Zaznaczony teren</h4>
                 <select id="funkcja-terenu" aria-label="Funkcja zaznaczonego terenu">

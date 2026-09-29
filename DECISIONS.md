@@ -1757,3 +1757,23 @@ a nie wymyślaniem nowych.
 
 **Uzasadnienie:** Wyraźne polecenie autora; zapis tutaj, żeby kolejna
 sesja wiedziała, skąd zmiana trybu pracy.
+
+## D-082 — Osiedle: obszar opracowania z działek ewidencyjnych (ULDK)
+Data: 2026-09-29
+
+**Decyzja:** Panel „Co rysujesz” ma pole na identyfikatory działek; POST
+`/osiedle/koncepcje/<id>/obszar-z-dzialek` pobiera granice z ULDK (klient
+`dane/uldk.py`, wspólna warstwa danych, bez sięgania do modułu mpzp),
+łączy je (`unary_union`) i zapisuje jako obszar opracowania — zastępuje
+dotychczasowy, tereny zostają. Identyfikatory działek zapisane we
+właściwościach obszaru (widać je w eksporcie GeoJSON). Do 50 działek;
+duplikaty pomijane; pierwszy błąd (zły format, brak działki, awaria
+ULDK) przerywa bez zmian w koncepcji.
+
+**Uzasadnienie:** Koncepcja na prawdziwych granicach ewidencyjnych jest
+dokładniejsza niż obrys rysowany na podkładzie; identyfikatory student
+ma z modułu MPZP.
+
+**Odrzucone alternatywy:**
+- Klikanie działek na mapie osiedla — więcej zapytań ULDK i kodu mapy;
+  lista identyfikatorów wystarcza na start.

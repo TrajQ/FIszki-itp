@@ -1438,3 +1438,14 @@ Status: zamknięty
   sesji) → przeładowanie (stan zachowany) → eksport → import (4) →
   ponowny import (0 nowych, 4 pominięte)
 - `DECISIONS.md`: D-080; D-081 — zgoda autora na samodzielny wybór ETAPów
+
+## ETAP 75 — Osiedle: obszar z działek
+Data: 2026-09-29
+Status: zamknięty
+
+- trasa `obszar-z-dzialek` w `osiedle/routes.py`, pole w panelu, obsługa w
+  `osiedle.js`
+- Sprawdzone w przeglądarce z podstawionym ULDK: dwie działki → obszar
+  15 000 m², nieznana działka → komunikat
+- Nie sprawdzone tutaj: prawdziwe ULDK (sieć zablokowana)
+- `DECISIONS.md`: D-082
