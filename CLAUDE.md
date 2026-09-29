@@ -60,7 +60,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 75 (osiedle: obszar z działek ewidencyjnych — zamknięty)
-Ostatni ZIP: releases/warsztat_etap75_20260929.zip
-Testy: 428 passed / 0 failed
+ETAP: 76 (atlas: porównanie gmin i CSV w raporcie — zamknięty)
+Ostatni ZIP: releases/warsztat_etap76_20260929.zip
+Testy: 429 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -13,6 +13,8 @@ Funkcje z routes.py wołamy przez moduł (routes._wartosci_wskaznika),
 
 from dataclasses import asdict
 
+import csv
+import io
 import os
 
 from flask import Response, abort, jsonify, render_template, request
@@ -131,20 +133,69 @@ def przesun_wskaznik_raportu(wskaznik_id):
 # ---------- raport ----------
 
 
+def _gmina_do_porownania(gmina_bdl_id: str) -> tuple[dict, dict] | None:
+    """Druga gmina z parametru ?porownaj= (ETAP 76) albo None."""
+    druga = request.args.get("porownaj") or ""
+    if not druga or druga == gmina_bdl_id:
+        return None
+    return _gmina_albo_404(druga)
+
+
 @atlas_bp.route("/raport-gminy/<gmina_bdl_id>")
 def raport_gminy(gmina_bdl_id):
     try:
         gmina, wojewodztwo = _gmina_albo_404(gmina_bdl_id)
+        porownanie = _gmina_do_porownania(gmina_bdl_id)
     except BladBDL as e:
-        return render_template("atlas/raport_gminy.html", blad=str(e), gmina=None, wojewodztwo=None, wskazniki=[]), 502
+        return render_template("atlas/raport_gminy.html", blad=str(e), gmina=None, wojewodztwo=None, wskazniki=[], porownanie=None), 502
     return render_template(
         "atlas/raport_gminy.html",
         blad=None,
         gmina=gmina,
         wojewodztwo=wojewodztwo,
+        porownanie=porownanie,
         wskazniki=[_wskaznik_dla_strony(w) for w in baza.wskazniki_raportu()],
         lat_wstecz=raport.LAT_WSTECZ,
     )
+
+
+@atlas_bp.route("/raport-gminy/<gmina_bdl_id>.csv")
+def raport_gminy_csv(gmina_bdl_id):
+    """Tabela raportu (i opcjonalnie gminy do porównania) jako CSV (ETAP 76)."""
+    try:
+        gmina, wojewodztwo = _gmina_albo_404(gmina_bdl_id)
+        porownanie = _gmina_do_porownania(gmina_bdl_id)
+        gminy = [(gmina, wojewodztwo)] + ([porownanie] if porownanie else [])
+        wiersze = [
+            (w, [_podsumowanie(w, g["bdl_id"]) for g, _ in gminy]) for w in baza.wskazniki_raportu()
+        ]
+    except BladBDL as e:
+        return Response(str(e), status=502, mimetype="text/plain")
+    wyjscie = io.StringIO()
+    zapis = csv.writer(wyjscie, delimiter=";")
+    naglowek = ["wskaznik", "jednostka"]
+    for g, woj in gminy:
+        przedrostek = g["nazwa"]
+        naglowek += [f"{przedrostek}: rok", f"{przedrostek}: wartosc", f"{przedrostek}: zmiana_proc", f"{przedrostek}: zmiana_od_roku",
+                     f"{przedrostek}: miejsce w woj. {woj['nazwa']}", f"{przedrostek}: liczba gmin", f"{przedrostek}: mediana woj."]
+    zapis.writerow(naglowek)
+
+    def liczba(x):
+        return "" if x is None else str(round(x, 4)).replace(".", ",")  # przecinek — polski Excel
+
+    for w, podsumowania in wiersze:
+        wiersz = [_nazwa_wskaznika(w), "" if w["mianownik_id"] else w["jednostka"]]
+        for s in podsumowania:
+            if s is None:
+                wiersz += [""] * 7
+                continue
+            zmiana = s["zmiana"] or {}
+            wiersz += [s["rok"], liczba(s["wartosc"]), liczba(zmiana.get("zmiana_proc")), zmiana.get("od", ""),
+                       s["pozycja"] or "", s["liczba_gmin"], liczba(s["mediana_wojewodztwa"])]
+        zapis.writerow(wiersz)
+    nazwa = f"raport_{gmina['teryt']}" + (f"_{porownanie[0]['teryt']}" if porownanie else "") + ".csv"
+    return Response("\ufeff" + wyjscie.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename={nazwa}"})
 
 
 @atlas_bp.route("/raport-gminy/<gmina_bdl_id>/wskaznik/<int:wskaznik_id>")

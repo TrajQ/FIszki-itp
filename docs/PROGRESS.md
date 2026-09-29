@@ -1449,3 +1449,13 @@ Status: zamknięty
   15 000 m², nieznana działka → komunikat
 - Nie sprawdzone tutaj: prawdziwe ULDK (sieć zablokowana)
 - `DECISIONS.md`: D-082
+
+## ETAP 76 — Atlas: porównanie gmin i CSV w raporcie
+Data: 2026-09-29
+Status: zamknięty
+
+- `trasy_raport.py` (`?porownaj=`, trasa `.csv`), kolumny w szablonie,
+  wybór gminy i pobieranie drugiej gminy w `raport_gminy.js`
+- Sprawdzone w przeglądarce z podstawionym BDL (jasny i ciemny motyw),
+  pobranie CSV
+- `DECISIONS.md`: D-083

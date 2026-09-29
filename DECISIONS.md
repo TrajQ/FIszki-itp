@@ -1777,3 +1777,20 @@ ma z modułu MPZP.
 **Odrzucone alternatywy:**
 - Klikanie działek na mapie osiedla — więcej zapytań ULDK i kodu mapy;
   lista identyfikatorów wystarcza na start.
+
+## D-083 — Raport gminy: porównanie z drugą gminą i CSV
+Data: 2026-09-29
+
+**Decyzja:** Raport gminy przyjmuje `?porownaj=<id BDL>` — druga gmina z
+dowolnego województwa; tabela dostaje jej wartość i miejsce we WŁASNYM
+województwie (miejsca z różnych województw nie są porównywalne wprost,
+dlatego nagłówek podaje województwo, gdy jest inne). Wybór gminy nad
+raportem (województwo → gmina). `/atlas/raport-gminy/<id>.csv` — tabela
+(obu gmin) w CSV z przecinkiem dziesiętnym i BOM dla polskiego Excela.
+Dane z tych samych, zapamiętanych odpowiedzi BDL co raport na ekranie.
+
+**Uzasadnienie:** Diagnoza uwarunkowań zwykle porównuje gminę z
+sąsiednią albo podobną; CSV — do tabel w pracy.
+
+**Odrzucone alternatywy:**
+- Więcej niż dwie gminy naraz — tabela przestaje się mieścić na A4.

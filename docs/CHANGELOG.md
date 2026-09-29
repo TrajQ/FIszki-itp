@@ -557,3 +557,8 @@
   działek → granice z ULDK → jeden obszar (zastępuje obecny, tereny
   zostają).
 - Dodano `DECISIONS.md` D-082 i 1 test.
+
+## ETAP 76 — 2026-09-29
+- Atlas: Raport gminy — porównanie z drugą gminą (wartość i miejsce w jej
+  województwie, wyróżnione kolumny), eksport CSV (jedna albo dwie gminy).
+- Dodano `DECISIONS.md` D-083 i 1 test.

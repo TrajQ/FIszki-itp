@@ -1012,3 +1012,40 @@ button.przelacznik__opcja--aktywna:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ETAP 76: porównanie z drugą gminą */
+.porownanie-gmin {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.porownanie-gmin select {
+    max-width: 220px;
+    font-size: 13px;
+}
+
+.porownanie-gmin select[hidden] {
+    display: none;
+}
+
+.raport-gminy__porownanie {
+    margin: 4px 0 0;
+    font-size: 15px;
+}
+
+.tabela-raportu .raport-gminy__druga {
+    background: var(--akcent-tlo);
+}
+
+@media print {
+    .porownanie-gmin {
+        display: none;
+    }
+
+    .tabela-raportu .raport-gminy__druga {
+        background: #eef4ff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

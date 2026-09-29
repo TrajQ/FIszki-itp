@@ -1047,3 +1047,26 @@ def test_trasa_mapy_raportu_gminy(raport_client, monkeypatch):
     monkeypatch.setattr(granice, "granice_gmin", blad)
     r = raport_client.get(f"/atlas/raport-gminy/{GMINA}/mapa.svg")
     assert r.status_code == 502 and "PRG" in r.get_data(as_text=True)
+
+
+# ---------- ETAP 76: porównanie z drugą gminą i CSV ----------
+
+
+def test_raport_gminy_porownanie_i_csv(raport_client):
+    c = raport_client
+    c.post("/atlas/raport-wskazniki", json={"zmienna": 1})
+    c.post("/atlas/raport-wskazniki", json={"zmienna": 2, "mianownik": 1, "mnoznik": 1000})
+    druga = "011212105033"
+    html = c.get(f"/atlas/raport-gminy/{GMINA}?porownaj={druga}").get_data(as_text=True)
+    assert "Porównanie z: <strong>Alwernia</strong>" in html and 'data-pole="druga-wartosc"' in html
+    assert f"/atlas/raport-gminy/{druga}/wskaznik/" in html
+    assert c.get(f"/atlas/raport-gminy/{GMINA}?porownaj=011212105099").status_code == 404
+    assert "Porównanie z" not in c.get(f"/atlas/raport-gminy/{GMINA}?porownaj={GMINA}").get_data(as_text=True)
+
+    r = c.get(f"/atlas/raport-gminy/{GMINA}.csv?porownaj={druga}")
+    assert r.headers["Content-Disposition"] == "attachment; filename=raport_1261011_1212033.csv"
+    wiersze = r.get_data(as_text=True).lstrip("﻿").strip().split("\r\n")
+    assert wiersze[0].startswith("wskaznik;jednostka;Kraków: rok;Kraków: wartosc;") and "Alwernia: wartosc" in wiersze[0]
+    assert wiersze[1].startswith("ludność ogółem;osoba;2023;800,0;-20,0;2013;2;2;")
+    assert wiersze[2].startswith("bezrobotni na 1 000 (ludność ogółem);;2023;50,0;")
+    assert len(c.get(f"/atlas/raport-gminy/{GMINA}.csv").get_data(as_text=True).splitlines()[0].split(";")) == 9

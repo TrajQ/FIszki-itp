@@ -8,7 +8,17 @@
 <div class="raport-gminy">
     <div class="raport-gminy__akcje">
         <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.raport_gminy_wybor') }}">‹ Wybór gminy i wskaźników</a>
-        {% if gmina %}<button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>{% endif %}
+        {% if gmina %}
+        <div class="rzad">
+            <form id="formularz-porownania" class="rzad porownanie-gmin" method="get">
+                <select id="porownaj-woj" aria-label="Województwo gminy do porównania"><option value="">porównaj z gminą…</option></select>
+                <select id="porownaj-gmina" name="porownaj" aria-label="Gmina do porównania" hidden></select>
+                {% if porownanie %}<a class="przycisk przycisk--tekst" href="{{ url_for('atlas.raport_gminy', gmina_bdl_id=gmina.bdl_id) }}">bez porównania</a>{% endif %}
+            </form>
+            <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.raport_gminy_csv', gmina_bdl_id=gmina.bdl_id, porownaj=porownanie[0].bdl_id if porownanie else None) }}">CSV</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>
+        {% endif %}
     </div>
 
     {% if blad %}
@@ -22,6 +32,7 @@
                     {{ {'1': 'gmina miejska', '2': 'gmina wiejska', '3': 'gmina miejsko-wiejska'}[gmina.bdl_id[-1]] }}
                     · województwo {{ wojewodztwo.nazwa }} · TERYT {{ gmina.teryt }}
                 </p>
+                {% if porownanie %}<p class="raport-gminy__porownanie">Porównanie z: <strong>{{ porownanie[0].nazwa }}</strong> <span class="wyciszony">(województwo {{ porownanie[1].nazwa }}, TERYT {{ porownanie[0].teryt }})</span></p>{% endif %}
             </div>
             <figure class="raport-gminy__polozenie">
                 <img id="mapa-polozenia" src="{{ url_for('atlas.raport_gminy_mapa', gmina_bdl_id=gmina.bdl_id) }}" alt="Położenie gminy {{ gmina.nazwa }} w województwie {{ wojewodztwo.nazwa }}" width="420" height="360">
@@ -38,6 +49,7 @@
                     <th>Wskaźnik</th><th class="liczba">Rok</th><th class="liczba">Wartość</th>
                     <th class="liczba">Zmiana w {{ lat_wstecz }} lat</th><th class="liczba">Miejsce w woj.</th>
                     <th class="liczba">Mediana woj.</th><th>Trend</th>
+                    {% if porownanie %}<th class="liczba raport-gminy__druga">{{ porownanie[0].nazwa }}</th><th class="liczba raport-gminy__druga">Miejsce w woj.{% if porownanie[1].bdl_id != wojewodztwo.bdl_id %} {{ porownanie[1].nazwa }}{% endif %}</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -50,6 +62,7 @@
                     <td class="liczba" data-pole="pozycja"></td>
                     <td class="liczba" data-pole="mediana"></td>
                     <td data-pole="trend" class="raport-gminy__trend"></td>
+                    {% if porownanie %}<td class="liczba raport-gminy__druga" data-pole="druga-wartosc"></td><td class="liczba raport-gminy__druga" data-pole="druga-pozycja"></td>{% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -75,10 +88,14 @@
 {% endblock %}
 
 {% block skrypty %}
-{% if gmina and wskazniki %}
+{% if gmina %}
 <script>
     const URL_WSKAZNIK = "{{ url_for('atlas.raport_gminy_wskaznik', gmina_bdl_id=gmina.bdl_id, wskaznik_id=0) }}".replace(/0$/, "");
+    const URL_WSKAZNIK_DRUGIEJ = {{ (url_for('atlas.raport_gminy_wskaznik', gmina_bdl_id=porownanie[0].bdl_id, wskaznik_id=0)[:-1]) | tojson if porownanie else 'null' }};
     const URL_OPIS = "{{ url_for('atlas.raport_gminy_opis', gmina_bdl_id=gmina.bdl_id) }}";
+    const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
+    const URL_GMINY = "{{ url_for('atlas.gminy_wojewodztwa', woj_bdl_id='000000000000') }}";
+    const GMINA_ID = "{{ gmina.bdl_id }}";
 </script>
 <script src="{{ url_for('atlas.static', filename='raport_gminy.js') }}"></script>
 {% endif %}

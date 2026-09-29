@@ -75,13 +75,34 @@
         pole("trend").replaceChildren(trend(s.szereg));
     }
 
-    async function wczytaj(wiersz) {
+    async function pobierzPodsumowanie(url) {
         try {
-            const odpowiedz = await fetch(URL_WSKAZNIK + wiersz.dataset.wskaznik);
-            wypelnij(wiersz, await odpowiedz.json().catch(() => ({ blad: `Błąd ${odpowiedz.status}` })));
+            const odpowiedz = await fetch(url);
+            return await odpowiedz.json().catch(() => ({ blad: `Błąd ${odpowiedz.status}` }));
         } catch (e) {
-            wypelnij(wiersz, { blad: "Brak połączenia z aplikacją." });
+            return { blad: "Brak połączenia z aplikacją." };
         }
+    }
+
+    // Druga gmina (ETAP 76): wartość i miejsce w jej własnym województwie.
+    function wypelnijDruga(wiersz, dane) {
+        const wartosc = wiersz.querySelector('[data-pole="druga-wartosc"]');
+        const pozycja = wiersz.querySelector('[data-pole="druga-pozycja"]');
+        const s = dane.podsumowanie;
+        if (dane.blad || !s) {
+            wartosc.replaceChildren(element("span", dane.blad ? "komunikat--blad-tekst" : "wyciszony", dane.blad ? "błąd" : "brak danych"));
+            if (dane.blad) wartosc.title = dane.blad;
+            return;
+        }
+        wartosc.textContent = liczba.format(s.wartosc);
+        wartosc.title = `rok ${s.rok}`;
+        pozycja.textContent = s.pozycja ? `${s.pozycja} / ${s.liczba_gmin}` : "—";
+    }
+
+    async function wczytaj(wiersz) {
+        const id = wiersz.dataset.wskaznik;
+        wypelnij(wiersz, await pobierzPodsumowanie(URL_WSKAZNIK + id));
+        if (URL_WSKAZNIK_DRUGIEJ) wypelnijDruga(wiersz, await pobierzPodsumowanie(URL_WSKAZNIK_DRUGIEJ + id));
     }
 
     async function wczytajWszystkie() {
@@ -94,9 +115,27 @@
 
     // ---------- opis Gemini ----------
 
-    const przycisk = document.getElementById("przycisk-opis");
+    // ---------- wybór gminy do porównania (ETAP 76) ----------
+
+    const porownajWoj = document.getElementById("porownaj-woj");
+    const porownajGmina = document.getElementById("porownaj-gmina");
+    fetch(URL_WOJEWODZTWA)
+        .then((r) => r.json())
+        .then((woj) => woj.forEach((w) => porownajWoj.appendChild(new Option(w.nazwa, w.bdl_id))))
+        .catch(() => (porownajWoj.hidden = true));
+    porownajWoj.addEventListener("change", async () => {
+        porownajGmina.hidden = true;
+        if (!porownajWoj.value) return;
+        const gminy = await fetch(URL_GMINY.replace("000000000000", porownajWoj.value)).then((r) => r.json()).catch(() => []);
+        porownajGmina.replaceChildren(new Option("— gmina —", ""));
+        for (const g of gminy) if (g.bdl_id !== GMINA_ID) porownajGmina.appendChild(new Option(g.nazwa, g.bdl_id));
+        porownajGmina.hidden = false;
+    });
+    porownajGmina.addEventListener("change", () => porownajGmina.value && porownajGmina.form.submit());
+
+    const przycisk = document.getElementById("przycisk-opis"); // brak, gdy zestaw wskaźników jest pusty
     const opis = document.getElementById("opis");
-    przycisk.addEventListener("click", async () => {
+    if (przycisk) przycisk.addEventListener("click", async () => {
         przycisk.disabled = true;
         opis.className = "wyciszony";
         opis.textContent = "Gemini pisze opis…";
