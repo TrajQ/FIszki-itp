@@ -1,6 +1,7 @@
 // Moduł ES (nie IIFE) — wymagane przez pdf.js, który jest wektorowany
 // wyłącznie jako .mjs. Tag <script type="module"> daje ten sam efekt
 // izolacji zasięgu co IIFE, więc nie łamie to duchu konwencji z CLAUDE.md.
+import "./polyfill_map.mjs"; // musi być przed pdf.js
 import * as pdfjsLib from "./pdfjs/pdf.min.mjs";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = URL_WORKER;

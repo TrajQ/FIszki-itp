@@ -149,3 +149,25 @@ zależności, format czytelny i łatwy do sprawdzenia w edytorze. Kolumna
 - Jeden wspólny CSV dla arkusza i Anki — odrzucone, Anki i arkusze
   inaczej traktują nowe linie i HTML w polach.
 
+## D-008 — Polyfill `Map.getOrInsertComputed` dla pdf.js 6.x
+Data: 2026-09-29
+
+**Decyzja:** Zostajemy przy pdf.js 6.3.289 i dokładamy własny polyfill
+(`fiszki/static/polyfill_map.mjs`) dla `Map`/`WeakMap.prototype.getOrInsert`
+i `getOrInsertComputed`. Polyfill jest importowany jako pierwszy w
+`fiszki.js` i w `fiszki/static/pdf_worker.mjs` — nowym punkcie wejścia
+workera, który po polyfillu importuje oryginalny `pdf.worker.min.mjs`.
+Metody są dodawane tylko wtedy, gdy przeglądarka ich nie ma.
+
+**Uzasadnienie:** Bez tych metod przeglądarka na Linux Mint nie rysowała
+strony PDF ani warstwy tekstu. Polyfill to ~25 linii, nie zmienia
+wektorowanych plików pdf.js (aktualizacja biblioteki dalej polega na
+podmianie plików), a gdy przeglądarki dogonią standard — staje się
+martwym kodem do usunięcia bez skutków ubocznych.
+
+**Odrzucone alternatywy:**
+- Powrót do pdf.js 5.x — odrzucone, wymaga ponownego wektorowania i
+  sprawdzania zmian API `TextLayer`, więcej ryzyka niż polyfill.
+- Łatanie `pdf.min.mjs` / `pdf.worker.min.mjs` — odrzucone, zmiany w
+  zminifikowanym kodzie zewnętrznym ginęłyby przy każdej aktualizacji.
+

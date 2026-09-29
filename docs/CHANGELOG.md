@@ -43,5 +43,7 @@
 - Naprawiono wczytywanie PDF-a: wywołanie `getDocument` dostosowane do
   pdf.js 6.x.
 - Usunięto przypadkowy gitlink `FIszki-itp` (zagnieżdżone repozytorium).
-- Dodano `DECISIONS.md` D-007.
+- Naprawiono pusty podgląd PDF-a: polyfill `Map.getOrInsertComputed`
+  (`polyfill_map.mjs`) i punkt wejścia workera `pdf_worker.mjs`.
+- Dodano `DECISIONS.md` D-007, D-008.
 - Dodano testy edycji i eksportu.

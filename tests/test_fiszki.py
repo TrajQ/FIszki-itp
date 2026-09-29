@@ -201,3 +201,16 @@ def test_eksport_anki_escapuje_html_tabulatory_i_nowe_linie(client):
 def test_eksport_nieistniejacego_pdf_to_404(client):
     assert client.get("/fiszki/7/eksport.csv").status_code == 404
     assert client.get("/fiszki/7/eksport.txt").status_code == 404
+
+
+def test_widok_pdf_laduje_worker_z_polyfillem(client):
+    # pdf.js 6.x wymaga Map.getOrInsertComputed — worker musi startować przez
+    # pdf_worker.mjs, który najpierw ładuje polyfill (D-008).
+    wgraj_pdf(client)
+    strona = client.get("/fiszki/1/").get_data(as_text=True)
+    assert "pdf_worker.mjs" in strona
+    assert "pdf.worker.min.mjs" not in strona
+
+    worker = client.get("/fiszki/static/pdf_worker.mjs").get_data(as_text=True)
+    assert worker.index("polyfill_map.mjs") < worker.index("pdf.worker.min.mjs")
+    assert client.get("/fiszki/static/polyfill_map.mjs").status_code == 200
