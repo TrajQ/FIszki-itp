@@ -57,3 +57,10 @@
 - `/mpzp/sprawdz` zwraca dodatkowo `wydzielenie.przeznaczenie`.
 - Lista PDF-ów w fiszkach pokazuje liczbę fiszek.
 - Dodano `DECISIONS.md` D-011.
+
+## ETAP 6 — 2026-09-29
+- Dodano powtórki fiszek w systemie Leitnera (5 pudełek): sesja z
+  kartą, skróty klawiszowe, pasek postępu, link do źródła.
+- Dodano tabelę `powtorki` i endpointy `/fiszki/powtorka*`.
+- Lista plików pokazuje liczbę fiszek do powtórki i rozkład pudełek.
+- Dodano `DECISIONS.md` D-012 i testy powtórek.

@@ -171,7 +171,7 @@ async function odswiezListeFiszek() {
         pusto.className = "wyciszony";
         pusto.textContent = "Jeszcze nie ma fiszek. Zaznacz fragment tekstu w PDF-ie.";
         listaFiszekEl.appendChild(pusto);
-        return;
+        return fiszki;
     }
 
     for (const fiszka of fiszki) {
@@ -205,6 +205,7 @@ async function odswiezListeFiszek() {
         li.appendChild(akcje);
         listaFiszekEl.appendChild(li);
     }
+    return fiszki;
 }
 
 function przycisk(tekst, klasa, poKliknieciu) {
@@ -288,5 +289,13 @@ function podswietlFragment(fragment) {
     }
 }
 
-wczytajDokument();
-odswiezListeFiszek();
+// Link z sesji powtórki: /fiszki/<pdf>/?fiszka=<id> od razu pokazuje fiszkę w źródle.
+async function start() {
+    await wczytajDokument();
+    const fiszki = await odswiezListeFiszek();
+    const idZAdresu = Number(new URLSearchParams(window.location.search).get("fiszka"));
+    const fiszka = fiszki.find((f) => f.id === idZAdresu);
+    if (dokumentPdf && fiszka) await pokazWZrodle(fiszka);
+}
+
+start();

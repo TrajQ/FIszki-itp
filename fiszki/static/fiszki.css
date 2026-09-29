@@ -2,13 +2,75 @@
 
 /* ---------- Lista plików ---------- */
 
+/* Góra strony: karta powtórek i wgrywanie obok siebie. */
+.gora-fiszek {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
 .wgrywanie {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 40px;
+}
+
+.karta-powtorek {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    align-items: end;
+    gap: 16px 24px;
+}
+
+.karta-powtorek > .przycisk,
+.karta-powtorek > .wyciszony {
+    grid-column: 1 / -1;
+    justify-self: start;
+}
+
+.liczba-duza {
+    margin: 0;
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+}
+
+/* Mini-wykres słupkowy: ile fiszek w każdym pudełku. */
+.pudelka {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    height: 90px;
+}
+
+.pudelka__kolumna {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
+    min-height: 0;
+}
+
+.pudelka__slupek {
+    width: 100%;
+    min-height: 3px;
+    border-radius: 6px 6px 2px 2px;
+    background: linear-gradient(180deg, #bf5af2, #5e5ce6);
+}
+
+.pudelka__ile {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.pudelka__nr {
+    color: var(--tekst-drugi);
+    font-size: 0.7rem;
 }
 
 .wgrywanie h3,
@@ -184,6 +246,134 @@
 .fiszka-podswietlenie {
     background: rgba(255, 214, 10, 0.55);
     border-radius: 2px;
+}
+
+/* ---------- Sesja powtórki ---------- */
+
+.powtorka {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.pasek-postepu {
+    height: 6px;
+    margin-bottom: 24px;
+    border-radius: 3px;
+    background: var(--linia-slaba);
+    overflow: hidden;
+}
+
+#pasek-postepu-wypelnienie {
+    width: 0;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--akcent);
+    transition: width 0.4s ease;
+}
+
+.karta-powtorki {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 420px;
+    padding: 32px;
+}
+
+.karta-powtorki--wejscie {
+    animation: wejscie-karty 0.35s ease;
+}
+
+@keyframes wejscie-karty {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+}
+
+.karta-powtorki__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.karta-powtorki__meta a {
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+}
+
+.karta-powtorki__tresc {
+    flex: 1;
+}
+
+.karta-powtorki__etykieta {
+    margin: 0 0 4px;
+    color: var(--tekst-drugi);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.karta-powtorki__pytanie {
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.karta-powtorki__odpowiedz {
+    font-size: 1.2rem;
+}
+
+.karta-powtorki__fragment {
+    margin: 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--linia);
+    color: var(--tekst-drugi);
+    font-size: 0.85rem;
+}
+
+.karta-powtorki__akcje {
+    display: flex;
+    justify-content: center;
+}
+
+.karta-powtorki__akcje .rzad {
+    justify-content: center;
+}
+
+kbd {
+    padding: 0.05em 0.45em;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.22);
+    font-family: var(--czcionka);
+    font-size: 0.75em;
+}
+
+button.przycisk--ocena-zle {
+    background: var(--blad);
+}
+
+button.przycisk--ocena-dobrze {
+    background: var(--sukces);
+}
+
+button.przycisk--ocena-zle:hover,
+button.przycisk--ocena-dobrze:hover {
+    filter: brightness(1.08);
+}
+
+.koniec-ikona {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--sukces-tlo);
+    color: var(--sukces);
+    font-size: 2rem;
 }
 
 @media (max-width: 1000px) {

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block tytul %}Powtórka — Fiszki{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="powtorka">
+    <div class="naglowek-strony">
+        <div>
+            <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) if pdf else url_for('fiszki.index') }}">‹ {{ 'Wróć do pliku' if pdf else 'Fiszki' }}</a>
+            <h1>Powtórka</h1>
+            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }}</p>
+        </div>
+        <span id="postep-tekst" class="etykieta etykieta--akcent"></span>
+    </div>
+
+    <div class="pasek-postepu"><div id="pasek-postepu-wypelnienie"></div></div>
+
+    <p id="blad-powtorki" class="komunikat komunikat--blad" hidden></p>
+
+    <section id="karta-powtorki" class="karta karta-powtorki" hidden>
+        <div class="karta-powtorki__meta">
+            <span id="pudelko-fiszki" class="etykieta"></span>
+            <a id="zrodlo-fiszki" class="przycisk przycisk--tekst" target="_blank"></a>
+        </div>
+        <div class="karta-powtorki__tresc">
+            <p class="karta-powtorki__etykieta">Pytanie</p>
+            <p id="pytanie-powtorki" class="karta-powtorki__pytanie"></p>
+            <div id="odpowiedz-blok" hidden>
+                <p class="karta-powtorki__etykieta">Odpowiedź</p>
+                <p id="odpowiedz-powtorki" class="karta-powtorki__odpowiedz"></p>
+                <blockquote id="fragment-powtorki" class="karta-powtorki__fragment"></blockquote>
+            </div>
+        </div>
+        <div class="karta-powtorki__akcje">
+            <button id="przycisk-pokaz" type="button" class="przycisk--duzy">Pokaż odpowiedź <kbd>spacja</kbd></button>
+            <div id="przyciski-oceny" class="rzad" hidden>
+                <button id="przycisk-nie-umiem" type="button" class="przycisk--duzy przycisk--ocena-zle">Nie umiem <kbd>1</kbd></button>
+                <button id="przycisk-umiem" type="button" class="przycisk--duzy przycisk--ocena-dobrze">Umiem <kbd>2</kbd></button>
+            </div>
+        </div>
+    </section>
+
+    <section id="koniec-powtorki" class="karta pusty-stan" hidden>
+        <div class="koniec-ikona">✓</div>
+        <h2 id="koniec-tytul">Wszystko powtórzone</h2>
+        <p id="koniec-opis" class="wyciszony"></p>
+        <a class="przycisk" href="{{ url_for('fiszki.index') }}">Wróć do fiszek</a>
+    </section>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_KOLEJKA = "{{ url_for('fiszki.kolejka_powtorki', pdf_id=pdf['id']) if pdf else url_for('fiszki.kolejka_powtorki') }}";
+    const URL_POWTORKA = "{{ url_for('fiszki.powtorka') }}";
+    const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
+</script>
+<script src="{{ url_for('fiszki.static', filename='powtorka.js') }}"></script>
+{% endblock %}

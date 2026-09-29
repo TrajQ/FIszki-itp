@@ -20,6 +20,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke
 
+from . import powtorki
 from .baza import folder_plikow, get_db
 
 fiszki_bp = Blueprint(
@@ -41,12 +42,45 @@ def _pobierz_pdf_albo_404(pdf_id):
 @fiszki_bp.route("/")
 def index():
     db = get_db()
+    dzis = powtorki.dzisiaj().isoformat()
     pdfy = db.execute(
-        """SELECT pdfy.*, COUNT(fiszki.id) AS liczba_fiszek
-           FROM pdfy LEFT JOIN fiszki ON fiszki.pdf_id = pdfy.id
-           GROUP BY pdfy.id ORDER BY pdfy.data_dodania DESC"""
+        f"""SELECT pdfy.*,
+                  COUNT(fiszki.id) AS liczba_fiszek,
+                  COALESCE(SUM({_WARUNEK_DO_POWTORKI}), 0) AS do_powtorki
+           FROM pdfy
+           LEFT JOIN fiszki ON fiszki.pdf_id = pdfy.id
+           LEFT JOIN powtorki ON powtorki.fiszka_id = fiszki.id
+           GROUP BY pdfy.id ORDER BY pdfy.data_dodania DESC""",
+        {"dzis": dzis},
     ).fetchall()
-    return render_template("fiszki/index.html", pdfy=pdfy)
+    return render_template(
+        "fiszki/index.html",
+        pdfy=pdfy,
+        do_powtorki=sum(p["do_powtorki"] for p in pdfy),
+        pudelka=_liczby_w_pudelkach(),
+    )
+
+
+# Fiszka jest do powtórki, gdy nie ma jeszcze stanu (nowa) albo termin minął.
+# Używane w SQL z parametrem :dzis (data ISO — porównanie tekstowe działa).
+_WARUNEK_DO_POWTORKI = (
+    "fiszki.id IS NOT NULL AND "
+    "(powtorki.fiszka_id IS NULL OR powtorki.nastepna_powtorka <= :dzis)"
+)
+
+
+def _liczby_w_pudelkach() -> list[int]:
+    """Ile fiszek jest w każdym pudełku (indeks 0 = pudełko 1)."""
+    db = get_db()
+    wiersze = db.execute(
+        """SELECT COALESCE(powtorki.pudelko, 1) AS pudelko, COUNT(*) AS ile
+           FROM fiszki LEFT JOIN powtorki ON powtorki.fiszka_id = fiszki.id
+           GROUP BY 1"""
+    ).fetchall()
+    liczby = [0] * powtorki.PUDELKO_MAX
+    for w in wiersze:
+        liczby[w["pudelko"] - 1] = w["ile"]
+    return liczby
 
 
 @fiszki_bp.route("/upload", methods=["POST"])
@@ -235,4 +269,74 @@ def eksport_anki(pdf_id):
         headers={
             "Content-Disposition": f"attachment; filename={_nazwa_pliku_eksportu(pdf, 'txt')}"
         },
+    )
+
+
+# ---------- Powtórki (ETAP 6, system Leitnera — zob. powtorki.py) ----------
+
+
+@fiszki_bp.route("/powtorka")
+def powtorka():
+    pdf_id = request.args.get("pdf_id", type=int)
+    pdf = _pobierz_pdf_albo_404(pdf_id) if pdf_id is not None else None
+    return render_template("fiszki/powtorka.html", pdf=pdf)
+
+
+@fiszki_bp.route("/powtorka/kolejka")
+def kolejka_powtorki():
+    """Fiszki do powtórki dziś: najpierw z niższych pudełek (słabiej znane)."""
+    pdf_id = request.args.get("pdf_id", type=int)
+    parametry = {"dzis": powtorki.dzisiaj().isoformat()}
+    filtr_pdf = ""
+    if pdf_id is not None:
+        filtr_pdf = "AND fiszki.pdf_id = :pdf_id"
+        parametry["pdf_id"] = pdf_id
+
+    db = get_db()
+    wiersze = db.execute(
+        f"""SELECT fiszki.*, pdfy.nazwa_oryginalna,
+                   COALESCE(powtorki.pudelko, 1) AS pudelko
+            FROM fiszki
+            JOIN pdfy ON pdfy.id = fiszki.pdf_id
+            LEFT JOIN powtorki ON powtorki.fiszka_id = fiszki.id
+            WHERE {_WARUNEK_DO_POWTORKI} {filtr_pdf}
+            ORDER BY pudelko, fiszki.id""",
+        parametry,
+    ).fetchall()
+    return jsonify([dict(w) for w in wiersze])
+
+
+@fiszki_bp.route("/powtorka/<int:fiszka_id>", methods=["POST"])
+def zapisz_powtorke(fiszka_id):
+    dane = request.get_json(silent=True) or {}
+    wynik = dane.get("wynik")
+    if wynik not in powtorki.WYNIKI:
+        return jsonify({"blad": "Wynik musi być 'umiem' albo 'nie_umiem'."}), 400
+
+    db = get_db()
+    if db.execute("SELECT 1 FROM fiszki WHERE id = ?", (fiszka_id,)).fetchone() is None:
+        abort(404)
+
+    stan = db.execute(
+        "SELECT pudelko FROM powtorki WHERE fiszka_id = ?", (fiszka_id,)
+    ).fetchone()
+    pudelko = stan["pudelko"] if stan else powtorki.PUDELKO_MIN
+
+    dzis = powtorki.dzisiaj()
+    nowe_pudelko, nastepna = powtorki.nastepny_stan(pudelko, wynik, dzis)
+
+    db.execute(
+        """INSERT INTO powtorki (fiszka_id, pudelko, nastepna_powtorka, liczba_powtorek, ostatnia_powtorka)
+           VALUES (?, ?, ?, 1, ?)
+           ON CONFLICT(fiszka_id) DO UPDATE SET
+               pudelko = excluded.pudelko,
+               nastepna_powtorka = excluded.nastepna_powtorka,
+               liczba_powtorek = powtorki.liczba_powtorek + 1,
+               ostatnia_powtorka = excluded.ostatnia_powtorka""",
+        (fiszka_id, nowe_pudelko, nastepna.isoformat(), dzis.isoformat()),
+    )
+    db.commit()
+
+    return jsonify(
+        {"fiszka_id": fiszka_id, "pudelko": nowe_pudelko, "nastepna_powtorka": nastepna.isoformat()}
     )

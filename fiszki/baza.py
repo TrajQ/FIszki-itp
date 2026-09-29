@@ -22,6 +22,18 @@ CREATE TABLE IF NOT EXISTS fiszki (
     odpowiedz TEXT NOT NULL,
     data_utworzenia TEXT NOT NULL
 );
+
+-- ETAP 6: stan powtórek (system Leitnera, zob. fiszki/powtorki.py).
+-- Osobna tabela zamiast nowych kolumn w `fiszki`, bo CREATE TABLE IF NOT
+-- EXISTS nie dodaje kolumn do istniejącej bazy — tak stare bazy działają
+-- bez migracji. Brak wiersza = fiszka nowa (pudełko 1, do powtórki).
+CREATE TABLE IF NOT EXISTS powtorki (
+    fiszka_id INTEGER PRIMARY KEY REFERENCES fiszki(id) ON DELETE CASCADE,
+    pudelko INTEGER NOT NULL,
+    nastepna_powtorka TEXT NOT NULL,
+    liczba_powtorek INTEGER NOT NULL DEFAULT 0,
+    ostatnia_powtorka TEXT
+);
 """
 
 

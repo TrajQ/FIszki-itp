@@ -13,6 +13,7 @@
         <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.index') }}">‹ Wszystkie pliki</a>
         <h1 class="tytul-pdf">{{ pdf['nazwa_oryginalna'] }}</h1>
     </div>
+    <a class="przycisk" href="{{ url_for('fiszki.powtorka', pdf_id=pdf['id']) }}">Powtórz fiszki z tego pliku</a>
 </div>
 
 <div id="widok-glowny">

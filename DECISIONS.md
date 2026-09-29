@@ -245,3 +245,24 @@ modułów. Tokeny kolorów pozwalają mieć tryb ciemny bez dublowania reguł.
   Tailwind wymaga kroku budowania (zakazane w CLAUDE.md).
 - Fonty SF Pro / Inter pobierane z sieci — odrzucone: licencja SF Pro
   i zasada „bez CDN”; stos czcionek systemowych wygląda natywnie.
+
+## D-012 — Powtórki w systemie Leitnera, osobna tabela stanu
+Data: 2026-09-29
+
+**Decyzja:** Powtórki według systemu Leitnera: 5 pudełek, stałe odstępy
+1/2/4/8/16 dni, „nie umiem” cofa do pudełka 1 z terminem na dziś. Stan
+w osobnej tabeli `powtorki` (klucz = `fiszka_id`, `ON DELETE CASCADE`),
+a nie w nowych kolumnach tabeli `fiszki`. Logika w czystych funkcjach
+(`fiszki/powtorki.py`), SQL w `routes.py`.
+
+**Uzasadnienie:** Leitner da się wytłumaczyć w dwóch zdaniach i
+sprawdzić ręcznie w bazie, a to projekt uczący się. Osobna tabela
+tworzy się przez `CREATE TABLE IF NOT EXISTS` w istniejącej bazie —
+bez skryptu migracji; brak wiersza oznacza fiszkę nową.
+
+**Odrzucone alternatywy:**
+- SM-2 (algorytm Anki/SuperMemo) — odrzucone: współczynnik łatwości i
+  cztery oceny to więcej logiki i trudniejsze testy; eksport do Anki
+  (D-007) jest dla tych, którzy chcą SM-2.
+- Kolumny `pudelko`/`nastepna_powtorka` w `fiszki` — odrzucone:
+  wymagałyby `ALTER TABLE` w istniejących bazach.

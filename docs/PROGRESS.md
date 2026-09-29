@@ -158,3 +158,31 @@ Zrobione:
 
 Testy: 46 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap5_20260929.zip
+
+## ETAP 6 — Fiszki: powtórki (system Leitnera)
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `fiszki/powtorki.py`: 5 pudełek, odstępy 1/2/4/8/16 dni; „umiem” →
+  następne pudełko, „nie umiem” → pudełko 1 z powtórką jeszcze dziś;
+  `dzisiaj()` jako osobna funkcja (podmieniana w testach)
+- Tabela `powtorki` (osobna, z `ON DELETE CASCADE`) — stare bazy działają
+  bez migracji; fiszka bez wpisu = nowa, do powtórki od razu
+- Endpointy: `GET /fiszki/powtorka` (strona sesji, opcjonalnie
+  `?pdf_id=`), `GET /fiszki/powtorka/kolejka` (JSON, najpierw niższe
+  pudełka), `POST /fiszki/powtorka/<id>` (`{"wynik": "umiem"|"nie_umiem"}`)
+- Sesja powtórki (`powtorka.html`, `powtorka.js`): karta z pytaniem,
+  odsłanianie odpowiedzi i fragmentu źródła, skróty klawiszowe
+  (spacja / 1 / 2), pasek postępu, „nie umiem” wraca na koniec sesji,
+  link do źródła otwiera PDF z podświetlonym fragmentem
+  (`/fiszki/<pdf>/?fiszka=<id>`)
+- Lista plików: karta „Do powtórki dziś” z wykresem pudełek, licznik
+  fiszek do powtórki na karcie każdego PDF-a; w widoku PDF-a przycisk
+  „Powtórz fiszki z tego pliku”
+- Testy: logika Leitnera, kolejka (nowe, termin, kolejność, filtr PDF),
+  zapis oceny, błędy 400/404, kaskadowe usuwanie, strony i liczniki
+- `DECISIONS.md`: D-012
+
+Testy: 57 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap6_20260929.zip

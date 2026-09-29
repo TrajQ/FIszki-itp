@@ -11,6 +11,29 @@
     </div>
 </div>
 
+<div class="gora-fiszek">
+<section class="karta karta-powtorek">
+    <div>
+        <p class="karta__opis">Do powtórki dziś</p>
+        <p class="liczba-duza">{{ do_powtorki }}</p>
+    </div>
+    <div class="pudelka" title="Liczba fiszek w pudełkach Leitnera (1 — nowe i słabo znane, 5 — opanowane)">
+        {% set najwiecej = [pudelka | max, 1] | max %}
+        {% for ile in pudelka %}
+        <div class="pudelka__kolumna">
+            <div class="pudelka__slupek" style="height: {{ (ile / najwiecej * 100) | round }}%"></div>
+            <span class="pudelka__ile">{{ ile }}</span>
+            <span class="pudelka__nr">{{ loop.index }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% if do_powtorki %}
+    <a class="przycisk przycisk--duzy" href="{{ url_for('fiszki.powtorka') }}">Zacznij powtórkę</a>
+    {% else %}
+    <span class="wyciszony">Na dziś wszystko powtórzone.</span>
+    {% endif %}
+</section>
+
 <form class="karta wgrywanie" action="{{ url_for('fiszki.upload') }}" method="post" enctype="multipart/form-data">
     <div>
         <h3>Wgraj PDF</h3>
@@ -21,6 +44,7 @@
         <button type="submit">Wgraj</button>
     </div>
 </form>
+</div>
 
 <h2 class="naglowek-sekcji">Twoje pliki</h2>
 {% if pdfy %}
@@ -31,7 +55,10 @@
         <h3>{{ pdf['nazwa_oryginalna'] }}</h3>
         {% set n = pdf['liczba_fiszek'] %}
         <p class="karta__opis">{{ n }} {% if n == 1 %}fiszka{% elif n % 10 in [2, 3, 4] and n % 100 not in [12, 13, 14] %}fiszki{% else %}fiszek{% endif %}</p>
-        <span class="karta__meta">Dodano {{ pdf['data_dodania'][:10] }}</span>
+        <span class="karta__meta rzad">
+            Dodano {{ pdf['data_dodania'][:10] }}
+            {% if pdf['do_powtorki'] %}<span class="etykieta etykieta--akcent">{{ pdf['do_powtorki'] }} do powtórki</span>{% endif %}
+        </span>
     </a>
     {% endfor %}
 </div>
