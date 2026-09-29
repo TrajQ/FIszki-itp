@@ -241,3 +241,11 @@
   ewidencyjne” (WMS GUGiK); endpoint `/mpzp/warstwy-krajowe`.
 - Przełącznik warstw Leafleta w stylu aplikacji (także tryb ciemny).
 - Dodano `DECISIONS.md` D-042 i 13 testów.
+
+## ETAP 36 — 2026-09-29
+- MPZP: współrzędne klikniętego punktu w WGS84, PL-1992 i PL-2000 (z
+  przyciskiem „Kopiuj”), `mpzp/uklady.py`.
+- MPZP: pomiar odległości i powierzchni na mapie (przycisk z linijką,
+  „Cofnij punkt”, Esc kończy), `POST /mpzp/pomiar`.
+- MPZP: link „Geoportal ↗” — działka w geoportal.gov.pl.
+- Dodano `DECISIONS.md` D-043 i 16 testów.

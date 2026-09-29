@@ -534,3 +534,128 @@ button.wpis-historii:hover {
     font-weight: 600;
     padding: 6px 0;
 }
+
+/* Współrzędne punktu (ETAP 36) */
+.wspolrzedne summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+}
+
+.wspolrzedne__lista {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Układ nad wartością, przycisk „Kopiuj” z prawej, na całą wysokość wiersza. */
+.wspolrzedne__wiersz {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--linia-slaba);
+}
+
+.wspolrzedne__wiersz:last-child {
+    border-bottom: 0;
+}
+
+.wspolrzedne__wiersz .przycisk-kopiuj {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+}
+
+.wspolrzedne__uklad {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.wspolrzedne__epsg {
+    font-size: 11px;
+    color: var(--tekst-drugi);
+}
+
+.wspolrzedne__wartosc {
+    font-family: var(--czcionka-mono);
+    font-size: 12px;
+    white-space: pre;
+    overflow-wrap: anywhere;
+}
+
+.przycisk-kopiuj {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+    color: var(--akcent);
+}
+
+.przycisk-kopiuj:hover {
+    background: var(--akcent-tlo);
+}
+
+/* Pomiar na mapie (ETAP 36) */
+.leaflet-container .pomiar {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.leaflet-container .pomiar .pomiar__przycisk {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-karty);
+    color: var(--tekst);
+    box-shadow: var(--cien-mocny);
+}
+
+.leaflet-container .pomiar .pomiar__przycisk:hover {
+    background: var(--tlo-wyciszone);
+}
+
+.leaflet-container .pomiar .pomiar__przycisk--aktywny {
+    background: #ff9f0a;
+    color: #ffffff;
+}
+
+.pomiar__wynik {
+    min-width: 220px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--pasek-tlo);
+    color: var(--tekst);
+    box-shadow: var(--cien-mocny);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    font: 13px/1.5 var(--czcionka);
+}
+
+.pomiar__wiersz {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.pomiar__uwaga {
+    margin: 6px 0 0;
+    color: var(--ostrzezenie);
+}
+
+.pomiar__wynik button {
+    margin-top: 6px;
+    padding: 0;
+    font-size: 13px;
+}
+
+.mapa--pomiar,
+.mapa--pomiar .leaflet-interactive {
+    cursor: crosshair;
+}

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from flask import Blueprint, Response, abort, jsonify, render_template, request
 from shapely.errors import GEOSException
-from shapely.geometry import Point, mapping
+from shapely.geometry import LineString, Point, Polygon, mapping
 
 from dane.uldk import BladULDK, Dzialka
 from dane.uldk import znajdz_dzialke as _znajdz_dzialke
@@ -13,12 +13,12 @@ from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
-from . import krajowe, skala, zabudowa
+from . import krajowe, skala, uklady, zabudowa
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
 from .wfs import wydzielenia_dzialki as _wydzielenia_dzialki
-from .geometria import powierzchnia_m2, szkic_svg
+from .geometria import powierzchnia_m2, szkic_svg, w_metrach
 from .wfs import znajdz_przeznaczenie as _znajdz_przeznaczenie
 
 mpzp_bp = Blueprint(
@@ -186,7 +186,11 @@ def lista_historii():
 
 def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
     """Wspólna ścieżka dla kliknięcia i wyszukania po identyfikatorze."""
-    dane = {"dzialka": _dzialka_na_json(dzialka), "punkt": {"lat": punkt.y, "lon": punkt.x}}
+    dane = {
+        "dzialka": _dzialka_na_json(dzialka),
+        "punkt": {"lat": punkt.y, "lon": punkt.x},
+        "wspolrzedne": _wspolrzedne(punkt.y, punkt.x),
+    }
 
     gmina = znajdz_gmine(dzialka.teryt_gminy)
     if gmina is None:
@@ -215,6 +219,51 @@ def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
         dane["udzialy"] = []  # główne przeznaczenie już mamy — udziały są dodatkiem
     zapisz_w_historii(dzialka.id, przeznaczenie, punkt.y, punkt.x)
     return jsonify(dane), 200
+
+
+def _wspolrzedne(lat: float, lon: float) -> list[dict]:
+    """Punkt w WGS84 i w polskich układach płaskich (ETAP 36)."""
+    wynik = [{"uklad": "WGS84", "epsg": 4326, "szerokosc": round(lat, 6), "dlugosc": round(lon, 6)}]
+    if uklady.w_polsce(lat, lon):
+        for uklad in (uklady.pl1992(lat, lon), uklady.pl2000(lat, lon)):
+            wynik.append({**uklad, "x": round(uklad["x"], 2), "y": round(uklad["y"], 2)})
+    return wynik
+
+
+MAKS_PUNKTOW_POMIARU = 500
+
+
+@mpzp_bp.route("/pomiar", methods=["POST"])
+def pomiar():
+    """Długość łamanej i powierzchnia wieloboku z punktów klikniętych na mapie.
+
+    Te same wzory co powierzchnia działki (mpzp/geometria.py) — lokalna
+    skala na średniej szerokości; dla odległości do kilkunastu km błąd
+    jest znikomy.
+    """
+    dane = request.get_json(silent=True) or {}
+    try:
+        punkty = [(_liczba_skonczona(p[1]), _liczba_skonczona(p[0])) for p in dane.get("punkty") or []]
+    except (TypeError, ValueError, IndexError, KeyError):
+        return jsonify({"blad": "Punkty to lista par [szerokość, długość]."}), 400
+    if not 2 <= len(punkty) <= MAKS_PUNKTOW_POMIARU:
+        return jsonify({"blad": f"Pomiar wymaga od 2 do {MAKS_PUNKTOW_POMIARU} punktów."}), 400
+    if any(not (-180 <= lon <= 180 and -90 <= lat <= 90) for lon, lat in punkty):
+        return jsonify({"blad": "Współrzędne poza zakresem."}), 400
+
+    szerokosc = sum(lat for _, lat in punkty) / len(punkty)
+    linia = w_metrach(LineString(punkty), szerokosc)
+    wynik = {
+        "dlugosc_m": round(linia.length, 2),
+        "ostatni_odcinek_m": round(LineString(linia.coords[-2:]).length, 2),
+    }
+    if len(punkty) >= 3:
+        wielobok = w_metrach(Polygon(punkty), szerokosc)
+        wynik["powierzchnia_m2"] = round(wielobok.area, 1)
+        wynik["obwod_m"] = round(wielobok.exterior.length, 2)
+        if not wielobok.is_valid:
+            wynik["uwaga"] = "Obrys przecina sam siebie — powierzchnia jest niewiarygodna."
+    return jsonify(wynik)
 
 
 def _plan_krajowy_na_json(obiekty: list) -> dict:

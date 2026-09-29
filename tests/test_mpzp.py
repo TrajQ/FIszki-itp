@@ -507,3 +507,52 @@ def test_eksport_geojson_dzialki(client, monkeypatch):
     assert {c["properties"].get("przeznaczenie") for c in cechy[1:]} == {"1MN", "2KDD"}
     assert cechy[1]["properties"]["wfs_symb_t"] in {"1MN", "2KDD"}
     assert "dzialka_306401_1_0051_AR_18_14.geojson" in odp.headers["Content-Disposition"]
+
+
+# ---------- ETAP 36: współrzędne i pomiar ----------
+
+
+def test_sprawdz_podaje_wspolrzedne_w_ukladach_polskich(client, monkeypatch):
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke", lambda lat, lon: _dzialka_warszawa())
+
+    dane = client.get("/mpzp/sprawdz?lat=52.2319&lon=21.0067").get_json()
+
+    uklady = {w["epsg"]: w for w in dane["wspolrzedne"]}
+    assert set(uklady) == {4326, 2180, 2178}
+    # wartości referencyjne z pyproj (EPSG:2180 i 2178), X = północ
+    assert uklady[2180]["x"] == pytest.approx(486991.39, abs=0.01)
+    assert uklady[2180]["y"] == pytest.approx(636999.96, abs=0.01)
+    assert uklady[2178]["uklad"] == "PL-2000 strefa 7"
+
+
+def test_pomiar_prostokata_100_na_50_m(client):
+    from mpzp.geometria import metry_na_stopien
+
+    mx, my = metry_na_stopien(52.0)
+    dx, dy = 100 / mx, 50 / my
+    punkty = [[52.0, 17.0], [52.0, 17.0 + dx], [52.0 + dy, 17.0 + dx], [52.0 + dy, 17.0]]
+
+    dwa = client.post("/mpzp/pomiar", json={"punkty": punkty[:2]}).get_json()
+    assert dwa["dlugosc_m"] == pytest.approx(100, abs=0.05)
+    assert "powierzchnia_m2" not in dwa
+
+    cztery = client.post("/mpzp/pomiar", json={"punkty": punkty}).get_json()
+    assert cztery["dlugosc_m"] == pytest.approx(250, abs=0.2)
+    assert cztery["ostatni_odcinek_m"] == pytest.approx(100, abs=0.1)
+    assert cztery["powierzchnia_m2"] == pytest.approx(5000, abs=5)
+    assert cztery["obwod_m"] == pytest.approx(300, abs=0.2)
+    assert "uwaga" not in cztery
+
+
+def test_pomiar_obrys_przecinajacy_sie_ma_uwage(client):
+    punkty = [[52.0, 17.0], [52.001, 17.001], [52.0, 17.001], [52.001, 17.0]]  # „kokardka”
+    assert "uwaga" in client.post("/mpzp/pomiar", json={"punkty": punkty}).get_json()
+
+
+@pytest.mark.parametrize(
+    "tresc",
+    [{}, {"punkty": [[52, 17]]}, {"punkty": [[52, 17], ["x", 17]]}, {"punkty": [[52, 17], [95, 17]]}, {"punkty": [[52, 17], [52, "nan"]]}, {"punkty": "abc"}],
+)
+def test_pomiar_zle_dane(client, tresc):
+    odpowiedz = client.post("/mpzp/pomiar", json=tresc)
+    assert odpowiedz.status_code == 400 and "blad" in odpowiedz.get_json()

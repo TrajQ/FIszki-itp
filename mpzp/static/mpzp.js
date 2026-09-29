@@ -107,6 +107,52 @@
     const KOLORY_UDZIALOW = ["#34c759", "#ff9f0a", "#0a84ff", "#bf5af2", "#ff375f", "#64d2ff"];
     const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
 
+    let ostatnieWspolrzedne = null; // z ostatniej odpowiedzi serwera (ETAP 36)
+
+    const formatWsp = new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
+
+    // Przycisk „kopiuj” obok wartości — do QGIS-a, operatu, notatek.
+    function przyciskKopiuj(tekst) {
+        const przycisk = element("button", "przycisk-kopiuj", "Kopiuj");
+        przycisk.type = "button";
+        przycisk.title = tekst;
+        przycisk.addEventListener("click", () => {
+            navigator.clipboard.writeText(tekst).then(
+                () => {
+                    przycisk.textContent = "Skopiowano";
+                    setTimeout(() => (przycisk.textContent = "Kopiuj"), 1500);
+                },
+                () => (przycisk.textContent = "Brak dostępu")
+            );
+        });
+        return przycisk;
+    }
+
+    // Współrzędne klikniętego punktu: WGS84 + PL-1992 + PL-2000 (X = północ).
+    function sekcjaWspolrzednych(wspolrzedne) {
+        const szczegoly = element("details", "wspolrzedne");
+        szczegoly.appendChild(element("summary", "", "Współrzędne punktu"));
+        const lista = element("div", "wspolrzedne__lista");
+        for (const w of wspolrzedne) {
+            const wiersz = element("div", "wspolrzedne__wiersz");
+            let wartosc;
+            let doSchowka;
+            if (w.epsg === 4326) {
+                wartosc = `φ ${w.szerokosc.toFixed(6)}°, λ ${w.dlugosc.toFixed(6)}°`;
+                doSchowka = `${w.szerokosc.toFixed(6)}, ${w.dlugosc.toFixed(6)}`;
+            } else {
+                wartosc = `X ${formatWsp.format(w.x)}  Y ${formatWsp.format(w.y)}`;
+                doSchowka = `${w.x.toFixed(2)} ${w.y.toFixed(2)}`;
+            }
+            const opis = element("div", "wspolrzedne__uklad");
+            opis.append(element("strong", "", w.uklad), element("span", "wspolrzedne__epsg", `EPSG:${w.epsg}`));
+            wiersz.append(opis, element("div", "wspolrzedne__wartosc", wartosc), przyciskKopiuj(doSchowka));
+            lista.appendChild(wiersz);
+        }
+        szczegoly.append(lista, element("p", "przypis", "X — oś północna, Y — wschodnia (konwencja geodezyjna; w QGIS kolejność jest odwrotna: najpierw Y). PL-2000: strefa wg południka."));
+        return szczegoly;
+    }
+
     function sekcjaDzialki(dzialka) {
         const sekcja = element("div", "stos");
         const naglowek = element("div", "rzad rzad--miedzy");
@@ -118,8 +164,14 @@
         const geojson = element("a", "przycisk przycisk--tekst", "GeoJSON");
         geojson.href = `${URL_GEOJSON}?id=${encodeURIComponent(dzialka.id)}`;
         geojson.title = "Działka i jej części w przeznaczeniach — do QGIS";
+        // Geoportal otwiera działkę po identyfikatorze (parametr identifyParcel).
+        const geoportal = element("a", "przycisk przycisk--tekst", "Geoportal ↗");
+        geoportal.href = `https://mapy.geoportal.gov.pl/imap/Imgp_2.html?identifyParcel=${encodeURIComponent(dzialka.id)}`;
+        geoportal.target = "_blank";
+        geoportal.rel = "noopener noreferrer";
+        geoportal.title = "Działka w serwisie geoportal.gov.pl (ewidencja, ortofotomapa, plany)";
         const linki = element("div", "rzad");
-        linki.append(kalkulator, raport, geojson);
+        linki.append(kalkulator, raport, geojson, geoportal);
         naglowek.append(element("h3", "", "Działka"), linki);
         sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
         if (dzialka.powierzchnia_m2) {
@@ -127,6 +179,7 @@
                 element("div", "powierzchnia", `Powierzchnia: ${formatM2.format(dzialka.powierzchnia_m2)} m² (${(dzialka.powierzchnia_m2 / 10000).toLocaleString("pl-PL", { maximumFractionDigits: 4 })} ha)`)
             );
         }
+        if (ostatnieWspolrzedne) sekcja.appendChild(sekcjaWspolrzednych(ostatnieWspolrzedne));
         return sekcja;
     }
 
@@ -248,6 +301,7 @@
     // Wspólna obsługa odpowiedzi z /sprawdz i /dzialka.
     function obsluzOdpowiedz(dane, przyblizDoDzialki) {
         wyczyscWarstwy();
+        ostatnieWspolrzedne = dane.wspolrzedne || null;
         if (dane.dzialka) {
             warstwaDzialki = L.geoJSON(dane.dzialka.geometria, {
                 style: { color: "#0071e3", weight: 2, fillOpacity: 0.1 },
@@ -272,6 +326,7 @@
     function zapytaj(url, przyblizDoDzialki) {
         const numer = ++numerZapytania;
         wyczyscWarstwy();
+        ostatnieWspolrzedne = null;
         panelWyniku.innerHTML = "<p class=\"pusty-stan\">Sprawdzam…</p>";
         return fetch(url)
             .then((odpowiedz) => odpowiedz.json())
@@ -288,7 +343,132 @@
         return zapytaj(`${URL_SPRAWDZ}?lat=${lat}&lon=${lon}`, przyblizDoDzialki);
     }
 
-    mapa.on("click", (zdarzenie) => sprawdzPunkt(zdarzenie.latlng.lat, zdarzenie.latlng.lng, false));
+    mapa.on("click", (zdarzenie) => {
+        if (pomiarWlaczony) dodajPunktPomiaru(zdarzenie.latlng);
+        else sprawdzPunkt(zdarzenie.latlng.lat, zdarzenie.latlng.lng, false);
+    });
+
+    // ---------- pomiar odległości i powierzchni (ETAP 36) ----------
+    // W trybie pomiaru kliknięcia dodają wierzchołki zamiast sprawdzać
+    // działkę. Liczby liczy serwer (/pomiar) tymi samymi wzorami co
+    // powierzchnię działki.
+
+    let pomiarWlaczony = false;
+    let punktyPomiaru = [];
+    let warstwaPomiaru = L.layerGroup().addTo(mapa);
+    let numerPomiaru = 0;
+
+    const KontrolkaPomiaru = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd() {
+            const pudelko = L.DomUtil.create("div", "pomiar");
+            L.DomEvent.disableClickPropagation(pudelko);
+            this.przycisk = L.DomUtil.create("a", "pomiar__przycisk", pudelko);
+            this.przycisk.href = "#";
+            this.przycisk.title = "Pomiar odległości i powierzchni (Esc — koniec)";
+            this.przycisk.setAttribute("role", "button");
+            this.przycisk.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>';
+            this.wynik = L.DomUtil.create("div", "pomiar__wynik", pudelko);
+            this.wynik.hidden = true;
+            L.DomEvent.on(this.przycisk, "click", (e) => {
+                L.DomEvent.preventDefault(e);
+                przelaczPomiar(!pomiarWlaczony);
+            });
+            return pudelko;
+        },
+    });
+    const kontrolkaPomiaru = new KontrolkaPomiaru().addTo(mapa);
+
+    function przelaczPomiar(wlacz) {
+        pomiarWlaczony = wlacz;
+        punktyPomiaru = [];
+        numerPomiaru += 1;
+        warstwaPomiaru.clearLayers();
+        kontrolkaPomiaru.przycisk.classList.toggle("pomiar__przycisk--aktywny", wlacz);
+        mapa.getContainer().classList.toggle("mapa--pomiar", wlacz);
+        mapa.doubleClickZoom[wlacz ? "disable" : "enable"]();
+        kontrolkaPomiaru.wynik.hidden = !wlacz;
+        kontrolkaPomiaru.wynik.textContent = "Klikaj kolejne punkty na mapie.";
+    }
+
+    function rysujPomiar() {
+        warstwaPomiaru.clearLayers();
+        const styl = { color: "#ff9f0a", weight: 3, dashArray: "6 6" };
+        if (punktyPomiaru.length >= 3) {
+            L.polygon(punktyPomiaru, { ...styl, fillOpacity: 0.12, interactive: false }).addTo(warstwaPomiaru);
+        } else if (punktyPomiaru.length === 2) {
+            L.polyline(punktyPomiaru, { ...styl, interactive: false }).addTo(warstwaPomiaru);
+        }
+        for (const p of punktyPomiaru) {
+            L.circleMarker(p, { radius: 4, color: "#ff9f0a", fillColor: "#ffffff", fillOpacity: 1, weight: 2, interactive: false }).addTo(warstwaPomiaru);
+        }
+    }
+
+    async function dodajPunktPomiaru(latlng) {
+        punktyPomiaru.push([latlng.lat, latlng.lng]);
+        rysujPomiar();
+        if (punktyPomiaru.length < 2) return;
+        const numer = ++numerPomiaru;
+        try {
+            const odpowiedz = await fetch(URL_POMIAR, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ punkty: punktyPomiaru }),
+            });
+            const dane = await odpowiedz.json();
+            if (numer !== numerPomiaru) return;
+            pokazWynikPomiaru(dane);
+        } catch (e) {
+            if (numer === numerPomiaru) kontrolkaPomiaru.wynik.textContent = "Błąd połączenia z serwerem.";
+        }
+    }
+
+    const formatMetrow = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
+
+    function dlugosc(m) {
+        return m >= 1000 ? `${(m / 1000).toLocaleString("pl-PL", { maximumFractionDigits: 3 })} km` : `${formatMetrow.format(m)} m`;
+    }
+
+    function pokazWynikPomiaru(dane) {
+        const wynik = kontrolkaPomiaru.wynik;
+        wynik.replaceChildren();
+        if (dane.blad) {
+            wynik.textContent = dane.blad;
+            return;
+        }
+        const wiersz = (etykieta, wartosc) => {
+            const w = element("div", "pomiar__wiersz");
+            w.append(element("span", "wyciszony", etykieta), element("strong", "", wartosc));
+            return w;
+        };
+        wynik.append(wiersz("Łamana", dlugosc(dane.dlugosc_m)), wiersz("Ostatni odcinek", dlugosc(dane.ostatni_odcinek_m)));
+        if (dane.powierzchnia_m2 !== undefined) {
+            wynik.append(
+                wiersz("Powierzchnia", `${formatM2.format(dane.powierzchnia_m2)} m² · ${(dane.powierzchnia_m2 / 10000).toLocaleString("pl-PL", { maximumFractionDigits: 4 })} ha`),
+                wiersz("Obwód", dlugosc(dane.obwod_m))
+            );
+        }
+        if (dane.uwaga) wynik.appendChild(element("p", "pomiar__uwaga", dane.uwaga));
+        const cofnij = element("button", "przycisk--tekst", "Cofnij punkt");
+        cofnij.type = "button";
+        cofnij.addEventListener("click", (e) => {
+            e.stopPropagation();
+            punktyPomiaru.pop();
+            rysujPomiar();
+            numerPomiaru += 1;
+            if (punktyPomiaru.length >= 2) {
+                const ostatni = punktyPomiaru.pop();
+                dodajPunktPomiaru({ lat: ostatni[0], lng: ostatni[1] });
+            } else {
+                wynik.textContent = "Klikaj kolejne punkty na mapie.";
+            }
+        });
+        wynik.appendChild(cofnij);
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && pomiarWlaczony) przelaczPomiar(false);
+    });
 
     // ---------- wyszukiwanie z podpowiedziami ----------
     // Wpisujesz „obręb numer” (albo pełny identyfikator), lista podpowiedzi

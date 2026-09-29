@@ -865,3 +865,29 @@ integracja.gugik.gov.pl jest zablokowana. Format odpowiedzi
 (GML MapServera, zapasowo text/plain) sprawdzony tylko na przykładach
 w testach. Jeśli po uruchomieniu u siebie panel pokaże błąd albo puste
 atrybuty — to pierwsze miejsce do poprawki.
+
+## D-043 — Współrzędne PL-1992/PL-2000 własnymi wzorami; pomiar liczony na serwerze
+Data: 2026-09-29
+
+**Decyzja:** Współrzędne klikniętego punktu w PL-1992 (EPSG:2180) i
+PL-2000 (EPSG:2176–2179, strefa wg południka) liczy `mpzp/uklady.py`
+— odwzorowanie Gaussa-Krügera szeregami Krügera (Karney 2011), bez
+nowej zależności. Pomiar odległości i powierzchni na mapie MPZP liczy
+serwer (`POST /mpzp/pomiar`) tymi samymi wzorami co powierzchnię
+działki (`mpzp/geometria.py`).
+
+**Uzasadnienie:** pyproj (z bazą PROJ) to kilkadziesiąt MB dla jednej
+funkcji. Wzory mają ~40 linii i zgadzają się z pyproj co do milimetra
+na 5 punktach w całej Polsce (test `tests/test_uklady.py`; wartości
+wzorcowe policzone pyproj jednorazowo, poza projektem). Pomiar na
+serwerze: jedna implementacja przeliczania stopni na metry w module,
+testowana w pytest, zamiast drugiej w JS.
+
+**Odrzucone alternatywy:**
+- pyproj jako zależność — odrzucone (rozmiar, patrz wyżej).
+- Pomiar w JS (Leaflet nie liczy powierzchni) — odrzucone: druga
+  kopia wzorów, bez testów.
+
+**Pominięte świadomie:** różnica WGS84 ↔ ETRF2000 (rzędu dziesiątek cm)
+— bez znaczenia przy sprawdzaniu działki; do prac geodezyjnych służą
+dane z operatu.

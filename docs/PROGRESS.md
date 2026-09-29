@@ -904,3 +904,18 @@ Status: zamknięty
 
 Testy: 238 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap35_20260929.zip
+
+## ETAP 36 — Narzędzia mapy MPZP
+Data: 2026-09-29
+Status: zamknięty
+
+- Współrzędne punktu: WGS84 + PL-1992 + PL-2000 (strefa wg długości),
+  zgodne z pyproj co do mm; kopiowanie do schowka
+- Pomiar: łamana, ostatni odcinek, powierzchnia i obwód wieloboku;
+  ostrzeżenie przy obrysie przecinającym się; numerowanie zapytań
+- Link do działki w Geoportalu
+- Sprawdzone w przeglądarce (jasny i ciemny motyw)
+- `DECISIONS.md`: D-043
+
+Testy: 254 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap36_20260929.zip
