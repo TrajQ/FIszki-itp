@@ -1,9 +1,13 @@
+import csv
+import html
+import io
 import os
 import uuid
 from datetime import datetime
 
 from flask import (
     Blueprint,
+    Response,
     abort,
     jsonify,
     redirect,
@@ -141,3 +145,90 @@ def usun_fiszke(pdf_id, fiszka_id):
     db.execute("DELETE FROM fiszki WHERE id = ? AND pdf_id = ?", (fiszka_id, pdf_id))
     db.commit()
     return "", 204
+
+
+@fiszki_bp.route("/<int:pdf_id>/fiszki/<int:fiszka_id>", methods=["PUT"])
+def edytuj_fiszke(pdf_id, fiszka_id):
+    _pobierz_pdf_albo_404(pdf_id)
+    dane = request.get_json(silent=True) or {}
+    pytanie = (dane.get("pytanie") or "").strip()
+    odpowiedz = (dane.get("odpowiedz") or "").strip()
+
+    # Edytowalne są tylko pytanie i odpowiedź — strona i fragment to kotwica
+    # w źródle, więc zmiana ich oderwałaby fiszkę od PDF-a.
+    if not pytanie or not odpowiedz:
+        abort(400, "Pytanie i odpowiedź nie mogą być puste.")
+
+    db = get_db()
+    cursor = db.execute(
+        "UPDATE fiszki SET pytanie = ?, odpowiedz = ? WHERE id = ? AND pdf_id = ?",
+        (pytanie, odpowiedz, fiszka_id, pdf_id),
+    )
+    db.commit()
+    if cursor.rowcount == 0:
+        abort(404)
+
+    zmieniona = db.execute("SELECT * FROM fiszki WHERE id = ?", (fiszka_id,)).fetchone()
+    return jsonify(dict(zmieniona))
+
+
+def _fiszki_do_eksportu(pdf_id):
+    db = get_db()
+    return db.execute(
+        "SELECT * FROM fiszki WHERE pdf_id = ? ORDER BY strona, id", (pdf_id,)
+    ).fetchall()
+
+
+def _nazwa_pliku_eksportu(pdf, rozszerzenie):
+    nazwa_bez_pdf = os.path.splitext(secure_filename(pdf["nazwa_oryginalna"]))[0]
+    return f"fiszki_{nazwa_bez_pdf or pdf['id']}.{rozszerzenie}"
+
+
+@fiszki_bp.route("/<int:pdf_id>/eksport.csv")
+def eksport_csv(pdf_id):
+    pdf = _pobierz_pdf_albo_404(pdf_id)
+    bufor = io.StringIO()
+    zapis = csv.writer(bufor)
+    zapis.writerow(["strona", "pytanie", "odpowiedz", "fragment_tekstu", "data_utworzenia"])
+    for f in _fiszki_do_eksportu(pdf_id):
+        zapis.writerow(
+            [f["strona"], f["pytanie"], f["odpowiedz"], f["fragment_tekstu"], f["data_utworzenia"]]
+        )
+
+    # utf-8-sig (z BOM), żeby LibreOffice/Excel poprawnie pokazały polskie znaki.
+    return Response(
+        bufor.getvalue().encode("utf-8-sig"),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={_nazwa_pliku_eksportu(pdf, 'csv')}"
+        },
+    )
+
+
+def _pole_anki(tekst):
+    # Anki czyta pola jako HTML (nagłówek #html:true), więc escapujemy znaki
+    # specjalne, a nowe linie zamieniamy na <br>. Tabulator rozdziela pola,
+    # dlatego w treści zamieniamy go na spację.
+    tekst = html.escape(tekst).replace("\t", " ")
+    return tekst.replace("\r\n", "\n").replace("\n", "<br>")
+
+
+@fiszki_bp.route("/<int:pdf_id>/eksport.txt")
+def eksport_anki(pdf_id):
+    """Plik tekstowy rozdzielany tabulatorami — Anki importuje go przez
+    Plik → Importuj. Kolumny: pytanie, odpowiedź, źródło (plik i strona)."""
+    pdf = _pobierz_pdf_albo_404(pdf_id)
+    wiersze = ["#separator:tab", "#html:true"]
+    for f in _fiszki_do_eksportu(pdf_id):
+        zrodlo = f"{pdf['nazwa_oryginalna']}, s. {f['strona']}"
+        wiersze.append(
+            "\t".join(_pole_anki(t) for t in (f["pytanie"], f["odpowiedz"], zrodlo))
+        )
+
+    return Response(
+        "\n".join(wiersze) + "\n",
+        mimetype="text/plain; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename={_nazwa_pliku_eksportu(pdf, 'txt')}"
+        },
+    )

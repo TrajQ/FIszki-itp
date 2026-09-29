@@ -36,6 +36,11 @@
             </div>
 
             <h2>Fiszki z tego pliku</h2>
+            <p id="eksport-fiszek">
+                Eksport:
+                <a href="{{ url_for('fiszki.eksport_csv', pdf_id=pdf['id']) }}">CSV</a> ·
+                <a href="{{ url_for('fiszki.eksport_anki', pdf_id=pdf['id']) }}">Anki (TXT)</a>
+            </p>
             <ul id="lista-fiszek"></ul>
         </aside>
     </div>

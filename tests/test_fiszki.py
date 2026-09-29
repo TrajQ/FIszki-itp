@@ -1,3 +1,4 @@
+import csv
 import io
 import json
 
@@ -107,3 +108,96 @@ def test_zapis_i_usuwanie_fiszki(client):
 
     lista_po = client.get("/fiszki/1/fiszki").get_json()
     assert lista_po == []
+
+
+def dodaj_fiszke(client, pdf_id=1, **pola):
+    fiszka = {
+        "strona": 2,
+        "fragment_tekstu": "zaznaczony fragment",
+        "pytanie": "Co to jest X?",
+        "odpowiedz": "X to Y.",
+    }
+    fiszka.update(pola)
+    odpowiedz = client.post(
+        f"/fiszki/{pdf_id}/fiszki", data=json.dumps(fiszka), content_type="application/json"
+    )
+    return odpowiedz.get_json()["id"]
+
+
+def test_edycja_fiszki_zmienia_tylko_pytanie_i_odpowiedz(client):
+    wgraj_pdf(client)
+    fiszka_id = dodaj_fiszke(client)
+
+    odpowiedz = client.put(
+        f"/fiszki/1/fiszki/{fiszka_id}",
+        data=json.dumps({"pytanie": "Nowe pytanie?", "odpowiedz": "Nowa odpowiedź.", "strona": 99}),
+        content_type="application/json",
+    )
+    assert odpowiedz.status_code == 200
+    zmieniona = odpowiedz.get_json()
+    assert zmieniona["pytanie"] == "Nowe pytanie?"
+    assert zmieniona["odpowiedz"] == "Nowa odpowiedź."
+    # kotwica w źródle nietknięta
+    assert zmieniona["strona"] == 2
+    assert zmieniona["fragment_tekstu"] == "zaznaczony fragment"
+
+
+def test_edycja_odrzuca_puste_pola(client):
+    wgraj_pdf(client)
+    fiszka_id = dodaj_fiszke(client)
+
+    odpowiedz = client.put(
+        f"/fiszki/1/fiszki/{fiszka_id}",
+        data=json.dumps({"pytanie": "  ", "odpowiedz": "coś"}),
+        content_type="application/json",
+    )
+    assert odpowiedz.status_code == 400
+    assert client.get("/fiszki/1/fiszki").get_json()[0]["pytanie"] == "Co to jest X?"
+
+
+def test_edycja_nieistniejacej_albo_cudzej_fiszki_to_404(client):
+    wgraj_pdf(client)
+    wgraj_pdf(client, nazwa="drugi.pdf")
+    fiszka_z_pdf_2 = dodaj_fiszke(client, pdf_id=2)
+    zmiana = json.dumps({"pytanie": "P?", "odpowiedz": "O."})
+
+    assert client.put("/fiszki/1/fiszki/999", data=zmiana, content_type="application/json").status_code == 404
+    assert (
+        client.put(f"/fiszki/1/fiszki/{fiszka_z_pdf_2}", data=zmiana, content_type="application/json").status_code
+        == 404
+    )
+
+
+def test_eksport_csv(client):
+    wgraj_pdf(client, nazwa="wykład 1.pdf")
+    dodaj_fiszke(client, pytanie="Czym jest MPZP?", odpowiedz="Aktem prawa\nmiejscowego, gmina.")
+
+    odpowiedz = client.get("/fiszki/1/eksport.csv")
+    assert odpowiedz.status_code == 200
+    assert odpowiedz.mimetype == "text/csv"
+    assert "attachment" in odpowiedz.headers["Content-Disposition"]
+    assert odpowiedz.data.startswith(b"\xef\xbb\xbf")
+
+    wiersze = list(csv.reader(io.StringIO(odpowiedz.data.decode("utf-8-sig"))))
+    assert wiersze[0] == ["strona", "pytanie", "odpowiedz", "fragment_tekstu", "data_utworzenia"]
+    assert wiersze[1][:4] == ["2", "Czym jest MPZP?", "Aktem prawa\nmiejscowego, gmina.", "zaznaczony fragment"]
+
+
+def test_eksport_anki_escapuje_html_tabulatory_i_nowe_linie(client):
+    wgraj_pdf(client, nazwa="wyklad.pdf")
+    dodaj_fiszke(client, pytanie="Co znaczy <MN>?", odpowiedz="Zabudowa\tmieszkaniowa\njednorodzinna")
+
+    odpowiedz = client.get("/fiszki/1/eksport.txt")
+    assert odpowiedz.status_code == 200
+    linie = odpowiedz.data.decode("utf-8").splitlines()
+    assert linie[:2] == ["#separator:tab", "#html:true"]
+    assert linie[2].split("\t") == [
+        "Co znaczy &lt;MN&gt;?",
+        "Zabudowa mieszkaniowa<br>jednorodzinna",
+        "wyklad.pdf, s. 2",
+    ]
+
+
+def test_eksport_nieistniejacego_pdf_to_404(client):
+    assert client.get("/fiszki/7/eksport.csv").status_code == 404
+    assert client.get("/fiszki/7/eksport.txt").status_code == 404

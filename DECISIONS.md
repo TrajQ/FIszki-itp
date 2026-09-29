@@ -128,3 +128,24 @@ dotyczy, podobnie jak zapytania do WFS/ULDK.)
 
 **Odrzucone alternatywy:**
 - CDN (np. unpkg, cdnjs) — odrzucone zgodnie z zasadą CLAUDE.md.
+
+## D-007 — Eksport do Anki jako plik tekstowy (TSV), bez genanki
+Data: 2026-09-29
+
+**Decyzja:** Fiszki eksportowane są do Anki jako plik tekstowy
+rozdzielany tabulatorami (`eksport.txt`) z nagłówkami `#separator:tab` i
+`#html:true`, importowany w Anki przez Plik → Importuj. Kolumny:
+pytanie, odpowiedź, źródło (nazwa PDF-a i strona). Pola escapowane jako
+HTML, nowe linie jako `<br>`, tabulatory w treści zamieniane na spacje.
+Obok osobny eksport CSV (UTF-8 z BOM) do arkusza kalkulacyjnego.
+
+**Uzasadnienie:** Anki natywnie importuje pliki tekstowe — zero nowych
+zależności, format czytelny i łatwy do sprawdzenia w edytorze. Kolumna
+źródła zachowuje kotwicę w PDF-ie także po stronie Anki.
+
+**Odrzucone alternatywy:**
+- `.apkg` przez bibliotekę `genanki` — odrzucone, nowa zależność dla
+  wygody jednego kliknięcia przy imporcie.
+- Jeden wspólny CSV dla arkusza i Anki — odrzucone, Anki i arkusze
+  inaczej traktują nowe linie i HTML w polach.
+

@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 3 (moduł mpzp — zamknięty)
-Ostatni ZIP: releases/warsztat_etap3_20260925.zip
-Testy: 38 passed / 0 failed
+ETAP: 4 (fiszki — edycja i eksport — zamknięty)
+Ostatni ZIP: releases/warsztat_etap4_20260929.zip
+Testy: 44 passed / 0 failed

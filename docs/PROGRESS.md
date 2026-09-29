@@ -84,5 +84,43 @@ naprawa filtra przestrzennego WFS (obejście: pobranie całej warstwy).
 Testy: 38 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap3_20260925.zip
 
-Następny krok: wybór kolejnego modułu do realnej implementacji (atlas
-albo dostepnosc).
+Następny krok (po ETAPie 3): wybrano dokończenie modułu fiszki.
+
+## ETAP 4 — Fiszki: edycja i eksport (CSV, Anki)
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- Endpoint `PUT /fiszki/<pdf_id>/fiszki/<id>`: edycja pytania i
+  odpowiedzi. Strona i fragment (kotwica w źródle) celowo nieedytowalne.
+  Puste pola → 400, fiszka nieistniejąca albo z innego PDF-a → 404
+- Eksport `GET /fiszki/<pdf_id>/eksport.csv` (UTF-8 z BOM, nagłówek,
+  kolumny: strona, pytanie, odpowiedz, fragment_tekstu, data_utworzenia)
+- Eksport `GET /fiszki/<pdf_id>/eksport.txt` dla Anki (Plik → Importuj):
+  rozdzielany tabulatorami, nagłówki `#separator:tab` i `#html:true`,
+  kolumny: pytanie, odpowiedź, źródło („plik.pdf, s. N”), znaki HTML
+  escapowane, nowe linie jako `<br>`
+- Frontend: przycisk „edytuj” przy każdej fiszce (edycja w miejscu),
+  linki eksportu nad listą fiszek
+- Poprawka błędu z ETAPu 2: `pdfjsLib.getDocument(URL_PLIK)` →
+  `getDocument({ url: URL_PLIK })` — pdf.js 6.x nie przyjmuje już samego
+  stringa, więc PDF w ogóle się nie wczytywał
+- Testy: edycja (sukces, puste pola, 404 dla cudzej/nieistniejącej
+  fiszki), eksport CSV, eksport Anki (escapowanie HTML, tabulatorów,
+  nowych linii), eksport dla nieistniejącego PDF-a
+- `DECISIONS.md`: D-007 (eksport do Anki jako TSV, bez genanki)
+
+Znany problem (nie naprawiony w tym ETAPie): pdf.js 6.3.289 używa
+`Map.prototype.getOrInsertComputed` — bardzo nowego API JavaScriptu.
+W Chromium użytym do sprawdzenia (Playwright, build 1194) go nie ma,
+więc strona PDF-a i warstwa tekstu się nie rysują. Do sprawdzenia w
+przeglądarce na Linux Mint; jeśli tam też nie działa — decyzja:
+polyfill albo powrót do pdf.js 5.x.
+
+Poza zakresem (świadomie odłożone): system powtórek (planowany ETAP 5),
+eksport .apkg, eksport wszystkich PDF-ów naraz.
+
+Testy: 44 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap4_20260929.zip
+
+Następny krok: ETAP 5 — system powtórek w module fiszki.

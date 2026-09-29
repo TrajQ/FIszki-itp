@@ -28,7 +28,8 @@ let numerStrony = 1;
 let zaznaczonyFragment = null; // { tekst, strona }
 
 async function wczytajDokument() {
-    dokumentPdf = await pdfjsLib.getDocument(URL_PLIK).promise;
+    // pdf.js 6.x przyjmuje wyłącznie obiekt parametrów (sam string z URL już nie działa).
+    dokumentPdf = await pdfjsLib.getDocument({ url: URL_PLIK }).promise;
     await renderujStrone(1);
 }
 
@@ -168,6 +169,12 @@ async function odswiezListeFiszek() {
         przyciskPokaz.addEventListener("click", () => pokazWZrodle(fiszka));
         li.appendChild(przyciskPokaz);
 
+        const przyciskEdytuj = document.createElement("button");
+        przyciskEdytuj.type = "button";
+        przyciskEdytuj.textContent = "edytuj";
+        przyciskEdytuj.addEventListener("click", () => pokazEdycje(li, fiszka));
+        li.appendChild(przyciskEdytuj);
+
         const przyciskUsun = document.createElement("button");
         przyciskUsun.type = "button";
         przyciskUsun.textContent = "usuń";
@@ -179,6 +186,51 @@ async function odswiezListeFiszek() {
 
         listaFiszekEl.appendChild(li);
     }
+}
+
+// Edycja w miejscu: treść fiszki w <li> zastępujemy dwoma polami tekstowymi.
+// Strona i fragment (kotwica w źródle) nie są edytowalne.
+function pokazEdycje(li, fiszka) {
+    li.replaceChildren();
+
+    const polePytanieEdycja = document.createElement("textarea");
+    polePytanieEdycja.value = fiszka.pytanie;
+    const poleOdpowiedzEdycja = document.createElement("textarea");
+    poleOdpowiedzEdycja.value = fiszka.odpowiedz;
+    const statusEdycji = document.createElement("p");
+
+    const przyciskZapiszZmiany = document.createElement("button");
+    przyciskZapiszZmiany.type = "button";
+    przyciskZapiszZmiany.textContent = "zapisz zmiany";
+    przyciskZapiszZmiany.addEventListener("click", async () => {
+        const pytanie = polePytanieEdycja.value.trim();
+        const odpowiedz = poleOdpowiedzEdycja.value.trim();
+        if (!pytanie || !odpowiedz) {
+            statusEdycji.textContent = "Pytanie i odpowiedź nie mogą być puste.";
+            return;
+        }
+        const wynik = await fetch(`${URL_FISZKI}/${fiszka.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pytanie, odpowiedz }),
+        });
+        if (!wynik.ok) {
+            statusEdycji.textContent = "Nie udało się zapisać zmian.";
+            return;
+        }
+        await odswiezListeFiszek();
+    });
+
+    const przyciskAnulujEdycje = document.createElement("button");
+    przyciskAnulujEdycje.type = "button";
+    przyciskAnulujEdycje.textContent = "anuluj";
+    przyciskAnulujEdycje.addEventListener("click", odswiezListeFiszek);
+
+    li.append(
+        "Pytanie", polePytanieEdycja,
+        "Odpowiedź", poleOdpowiedzEdycja,
+        statusEdycji, przyciskZapiszZmiany, przyciskAnulujEdycje,
+    );
 }
 
 function escapeHtml(tekst) {

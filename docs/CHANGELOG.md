@@ -34,3 +34,14 @@
 - Dodano `DECISIONS.md` D-005, D-006.
 - Dodano testy modułu mpzp (ULDK i WFS mockowane, bez realnych wywołań
   sieciowych).
+
+## ETAP 4 — 2026-09-29
+- Dodano edycję pytania i odpowiedzi fiszki (`PUT /fiszki/<pdf_id>/fiszki/<id>`,
+  przycisk „edytuj” w liście fiszek).
+- Dodano eksport fiszek z PDF-a do CSV (`/fiszki/<pdf_id>/eksport.csv`).
+- Dodano eksport fiszek do Anki jako TSV (`/fiszki/<pdf_id>/eksport.txt`).
+- Naprawiono wczytywanie PDF-a: wywołanie `getDocument` dostosowane do
+  pdf.js 6.x.
+- Usunięto przypadkowy gitlink `FIszki-itp` (zagnieżdżone repozytorium).
+- Dodano `DECISIONS.md` D-007.
+- Dodano testy edycji i eksportu.
