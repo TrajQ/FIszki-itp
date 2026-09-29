@@ -140,3 +140,89 @@ def test_prawdziwy_pdf_przez_pypdf(tmp_path):
     pusty.write_bytes(_minimalny_pdf([]))
     with pytest.raises(BladPdf, match="warstwy tekstowej"):
         strony_z_pdf(str(pusty))
+
+
+# ---------- ETAP 62: pytania z cytatami ----------
+
+from dane import gemini  # noqa: E402
+from przepisy.pytania import BladOdpowiedzi, do_porownania, sprawdz  # noqa: E402
+
+JEDNOSTKI = [
+    {"id": 7, "akt_id": 1, "oznaczenie": "Art. 15", "nazwa_aktu": "Ustawa", "strona_od": 2,
+     "tekst": "Art. 15. 2. W planie miejscowym określa się obowiązkowo maksymalną intensywność zabudowy – jako wskaźnik."},
+    {"id": 9, "akt_id": 1, "oznaczenie": "§ 12", "nazwa_aktu": "Rozporządzenie", "strona_od": 5,
+     "tekst": "§ 12. Odległość budynku od granicy działki wynosi 4 m."},
+]
+
+
+def test_sprawdz_cytaty_i_liczby():
+    wynik = sprawdz(
+        {
+            "odpowiedz": "Plan musi określać maksymalną intensywność, a budynek stoi 4 m od granicy (§ 12).",
+            "cytaty": [
+                {"fragment": 1, "cytat": "określa się obowiązkowo  maksymalną intensywność zabudowy - jako"},  # inne spacje i myślnik
+                {"fragment": 2, "cytat": "„Odległość budynku od granicy działki wynosi 4 m.”"},
+                {"fragment": 2, "cytat": "Odległość budynku wynosi 3 m od granicy."},  # wymyślony
+                {"fragment": 5, "cytat": "nie ma takiego fragmentu w ogóle"},
+                "zły format",
+            ],
+        },
+        JEDNOSTKI,
+        "Jaka odległość od granicy?",
+    )
+    assert [c["oznaczenie"] for c in wynik["cytaty"]] == ["Art. 15", "§ 12"]
+    assert wynik["cytaty"][1] == {"cytat": "Odległość budynku od granicy działki wynosi 4 m.", "jednostka_id": 9, "akt_id": 1,
+                                  "oznaczenie": "§ 12", "nazwa_aktu": "Rozporządzenie", "strona": 5}
+    assert wynik["odrzucone_cytaty"] == 3 and wynik["brak_odpowiedzi"] is False
+    assert do_porownania("A „b” – c") == do_porownania('a "b" - c')
+
+
+@pytest.mark.parametrize(
+    "surowa, komunikat",
+    [
+        ({"odpowiedz": "Tak.", "cytaty": [{"fragment": 1, "cytat": "tego nie ma w przepisie wcale"}]}, "cytatu"),
+        ({"odpowiedz": "Odległość to 5 m.", "cytaty": [{"fragment": 2, "cytat": "Odległość budynku od granicy działki"}]}, "5"),
+        ({"odpowiedz": "", "cytaty": []}, "nie podał odpowiedzi"),
+    ],
+)
+def test_sprawdz_odrzuca(surowa, komunikat):
+    with pytest.raises(BladOdpowiedzi, match=komunikat):
+        sprawdz(surowa, JEDNOSTKI, "pytanie")
+
+
+def test_brak_odpowiedzi_bez_cytatow_jest_dozwolony():
+    wynik = sprawdz({"odpowiedz": "Fragmenty nie mówią o linii zabudowy.", "brak_odpowiedzi": True}, JEDNOSTKI, "linia zabudowy?")
+    assert wynik["brak_odpowiedzi"] is True and wynik["cytaty"] == []
+
+
+def test_api_pytania_i_historia(client, monkeypatch):
+    wgraj(client)
+    widziane = {}
+
+    def udawany_model(pytanie, fragmenty):
+        widziane["fragmenty"] = fragmenty
+        return {"odpowiedz": "Obowiązkowo określa się maksymalną intensywność zabudowy.",
+                "cytaty": [{"fragment": 1, "cytat": "określa się obowiązkowo maksymalną intensywność zabudowy"}]}
+
+    monkeypatch.setattr(gemini, "odpowiedz_z_przepisow", udawany_model)
+    r = client.post("/przepisy/pytanie", json={"pytanie": "Co trzeba określić w planie miejscowym o intensywności?"})
+    dane = r.get_json()
+    assert r.status_code == 200 and dane["cytaty"][0]["oznaczenie"] == "Art. 15" and dane["cytaty"][0]["strona"] == 2
+    assert widziane["fragmenty"][0].startswith("Art. 15 — USTAWA")  # najtrafniejsza jednostka pierwsza
+    assert not any(f.startswith("Tytuł") for f in widziane["fragmenty"])
+    html = client.get("/przepisy/").get_data(as_text=True)
+    assert "Co trzeba okre" in html  # historia w stronie (JSON dla skryptu)
+
+    assert client.post("/przepisy/pytanie", json={"pytanie": "  "}).status_code == 400
+    assert client.post("/przepisy/pytanie", json={"pytanie": "x", "akt": 99}).status_code == 400
+    assert client.post("/przepisy/pytanie", json={"pytanie": "kosmiczne rakiety"}).status_code == 404
+
+    def zmyslajacy(pytanie, fragmenty):
+        return {"odpowiedz": "Intensywność wynosi 2,5.", "cytaty": [{"fragment": 1, "cytat": "maksymalną intensywność zabudowy"}]}
+
+    monkeypatch.setattr(gemini, "odpowiedz_z_przepisow", zmyslajacy)
+    r = client.post("/przepisy/pytanie", json={"pytanie": "Jaka intensywność zabudowy?"})
+    assert r.status_code == 502 and "2.5" in r.get_json()["blad"]
+
+    assert client.delete(f"/przepisy/pytania/{dane['id']}").get_json() == {"ok": True}
+    assert client.delete(f"/przepisy/pytania/{dane['id']}").status_code == 404

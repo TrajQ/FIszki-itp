@@ -9,6 +9,7 @@ do indeksu i do zapytań wkładamy tekst po `sprowadz()`, a podgląd z
 podświetleniem liczymy w Pythonie na oryginalnym tekście.
 """
 
+import json
 import os
 import re
 import sqlite3
@@ -42,6 +43,16 @@ CREATE INDEX IF NOT EXISTS jednostki_akt ON jednostki(akt_id, kolejnosc);
 -- (bez polskich znaków), więc nie nadaje się do wyświetlania.
 CREATE VIRTUAL TABLE IF NOT EXISTS jednostki_fts USING fts5(
     tekst, tokenize='unicode61 remove_diacritics 2'
+);
+
+-- ETAP 62: zadane pytania z odpowiedzią (JSON: odpowiedź, cytaty z
+-- oznaczeniem jednostki i stroną — kopia, żeby historia przetrwała zmiany).
+CREATE TABLE IF NOT EXISTS pytania (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pytanie TEXT NOT NULL,
+    akt_id INTEGER,
+    wynik TEXT NOT NULL,
+    data TEXT NOT NULL
 );
 """
 
@@ -253,3 +264,49 @@ def szukaj(tekst: str, akt_id: int | None = None) -> list[dict]:
     ).fetchall()
     szukane = terminy(tekst)
     return [{**dict(w), "podglad": podglad(w["tekst"], szukane)} for w in wiersze]
+
+
+def jednostki_do_pytania(szukane: list[tuple[str, bool]], akt_id: int | None, limit: int) -> list[dict]:
+    """Jednostki z którymkolwiek terminem (OR), najtrafniejsze pierwsze —
+    kandydaci do odpowiedzi na pytanie zadane zwykłym zdaniem."""
+    if not szukane:
+        return []
+    fts = " OR ".join(f'"{t}"' + ("*" if prefiks else "") for t, prefiks in szukane)
+    warunek_aktu = " AND jednostki.akt_id = :akt" if akt_id else ""
+    wiersze = get_db().execute(
+        f"""SELECT jednostki.*, akty.nazwa AS nazwa_aktu
+            FROM jednostki_fts
+            JOIN jednostki ON jednostki.id = jednostki_fts.rowid
+            JOIN akty ON akty.id = jednostki.akt_id
+            WHERE jednostki_fts MATCH :fts AND jednostki.oznaczenie != 'Tytuł'{warunek_aktu}
+            ORDER BY bm25(jednostki_fts) LIMIT :limit""",
+        {"fts": fts, "akt": akt_id, "limit": limit},
+    ).fetchall()
+    return [dict(w) for w in wiersze]
+
+
+# ---------- historia pytań ----------
+
+MAKS_HISTORII = 30
+
+
+def zapisz_pytanie(pytanie: str, akt_id: int | None, wynik: dict) -> int:
+    db = get_db()
+    pytanie_id = db.execute(
+        "INSERT INTO pytania (pytanie, akt_id, wynik, data) VALUES (?, ?, ?, ?)",
+        (pytanie, akt_id, json.dumps(wynik, ensure_ascii=False), datetime.now().isoformat(timespec="seconds")),
+    ).lastrowid
+    db.commit()
+    return pytanie_id
+
+
+def historia_pytan() -> list[dict]:
+    wiersze = get_db().execute("SELECT * FROM pytania ORDER BY id DESC LIMIT ?", (MAKS_HISTORII,)).fetchall()
+    return [{**dict(w), "wynik": json.loads(w["wynik"])} for w in wiersze]
+
+
+def usun_pytanie(pytanie_id: int) -> bool:
+    db = get_db()
+    usuniete = db.execute("DELETE FROM pytania WHERE id = ?", (pytanie_id,)).rowcount
+    db.commit()
+    return bool(usuniete)

@@ -215,3 +215,58 @@ def sprawdz_liczby(opis: str, fakty: list[str]) -> None:
             + ", ".join(sorted(obce))
             + "). Spróbuj ponownie."
         )
+
+
+# ---------- Przepisy: odpowiedź na pytanie z cytatami (ETAP 62) ----------
+
+PROMPT_PRZEPISOW = (
+    "Jesteś asystentem pomagającym studentowi gospodarki przestrzennej czytać "
+    "przepisy. Dostajesz pytanie i ponumerowane fragmenty aktów prawnych "
+    "([1], [2], …). Odpowiedz po polsku, zwięźle (2–6 zdań), WYŁĄCZNIE na "
+    "podstawie tych fragmentów.\n"
+    "ZASADY BEZWZGLĘDNE:\n"
+    "- Każde stwierdzenie oprzyj na cytacie. Cytat to DOSŁOWNY fragment "
+    "(kilka–kilkadziesiąt słów) skopiowany znak w znak z jednego fragmentu.\n"
+    "- Nie dodawaj wiedzy spoza fragmentów, liczb ani terminów, których w nich nie ma.\n"
+    "- Jeśli fragmenty nie odpowiadają na pytanie, ustaw \"brak_odpowiedzi\": true "
+    "i w polu \"odpowiedz\" napisz krótko, czego brakuje.\n"
+    "Odpowiedz WYŁĄCZNIE obiektem JSON: "
+    '{"odpowiedz": "...", "brak_odpowiedzi": false, '
+    '"cytaty": [{"fragment": 1, "cytat": "..."}]}'
+)
+
+
+def odpowiedz_z_przepisow(pytanie: str, fragmenty: list[str]) -> dict:
+    """Surowa odpowiedź modelu: {"odpowiedz", "brak_odpowiedzi", "cytaty"}.
+
+    Czy cytaty naprawdę są w tekście i czy liczby pochodzą ze źródeł,
+    sprawdza wywołujący (przepisy/pytania.py).
+    """
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
+    tresc = "PYTANIE: " + pytanie + "\n\nFRAGMENTY:\n\n" + "\n\n".join(
+        f"[{i}] {f}" for i, f in enumerate(fragmenty, start=1)
+    )
+    try:
+        client = genai.Client(api_key=Config.GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model=Config.GEMINI_MODEL,
+            contents=tresc,
+            config=types.GenerateContentConfig(
+                system_instruction=PROMPT_PRZEPISOW,
+                response_mime_type="application/json",
+            ),
+        )
+    except errors.APIError as e:
+        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+
+    tekst = (response.text or "").strip()
+    if tekst.startswith("```"):
+        tekst = tekst.strip("`").removeprefix("json").strip()
+    try:
+        dane = json.loads(tekst)
+    except json.JSONDecodeError as e:
+        raise BladGemini("Gemini zwrócił odpowiedź, której nie da się odczytać jako JSON.") from e
+    if not isinstance(dane, dict):
+        raise BladGemini("Gemini zwrócił nieoczekiwany format odpowiedzi.")
+    return dane

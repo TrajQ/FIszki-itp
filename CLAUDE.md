@@ -17,8 +17,8 @@ kogoś, kto wróci do niego za trzy miesiące.
 - osiedle     — koncepcja osiedla rysowana na mapie: bilans terenu,
                 wskaźniki zabudowy, zgodność z planem, program osiedla,
                 raport do druku i porównanie wariantów
-- przepisy    — akty prawne z PDF: artykuły, wyszukiwarka z kotwicą w
-                stronie PDF (w budowie: pytania z cytatami — ETAP 62)
+- przepisy    — akty prawne z PDF: artykuły, wyszukiwarka, pytania do
+                Gemini z cytatami sprawdzanymi w tekście i kotwicą w PDF
 
 Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - przepisy    — pytania do PDF-ów z przepisami, odpowiedź zawsze z
@@ -61,6 +61,6 @@ Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 61 (przepisy: moduł, biblioteka aktów, wyszukiwarka — zamknięty)
-Ostatni ZIP: releases/warsztat_etap61_20260929.zip
-Testy: 372 passed / 0 failed
+ETAP: 62 (przepisy: pytania z cytatami — zamknięty)
+Ostatni ZIP: releases/warsztat_etap62_20260929.zip
+Testy: 378 passed / 0 failed

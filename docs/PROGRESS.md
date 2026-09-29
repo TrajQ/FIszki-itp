@@ -1279,3 +1279,16 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: wgranie PDF, spis i filtr, wyszukiwanie
   „intensywnosc zabudowy dzialki”, „art. 2” → skok do artykułu
 - `DECISIONS.md`: D-067
+
+## ETAP 62 — Przepisy: pytania z cytatami i kotwicą w źródle
+Data: 2026-09-29
+Status: zamknięty
+
+- `przepisy/pytania.py` (kandydaci, fragmenty dla modelu, sprawdzenie
+  cytatów i liczb), tabela `pytania`, trasy POST `/przepisy/pytanie` i
+  DELETE `/przepisy/pytania/<id>`, `pytania.js`
+- Sprawdzone w przeglądarce z podstawionym modelem: odpowiedź z dwoma
+  cytatami (trzeci, zmyślony — odrzucony), odrzucenie odpowiedzi bez
+  cytatów, historia po przeładowaniu (jasny i ciemny motyw)
+- Nie sprawdzone tutaj: prawdziwe Gemini (brak klucza w tym środowisku)
+- `DECISIONS.md`: D-068

@@ -1438,3 +1438,30 @@ cytowania przepisów.
   początku słowa daje wystarczające wyniki.
 - Pobieranie aktów z API ISAP — odrzucone na teraz: użytkownik wgrywa
   PDF, który i tak ma pod ręką; do rozważenia później.
+
+## D-068 — Przepisy: odpowiedź modelu tylko z cytatami sprawdzonymi w tekście
+Data: 2026-09-29
+
+**Decyzja:** Pytanie zadane zdaniem → kod wybiera do 8 jednostek (FTS5,
+słowa połączone OR, bez słów pytających z listy `SLOWA_POMIJANE`, bez
+tytułu aktu) → Gemini (`dane/gemini.py: odpowiedz_z_przepisow`) dostaje
+tylko je, ponumerowane, i ma zwrócić JSON: odpowiedź + dosłowne cytaty
+ze wskazaniem fragmentu. `przepisy/pytania.py` sprawdza: cytat musi być
+w tekście wskazanej jednostki (porównanie bez białych znaków, z
+ujednoliconymi cudzysłowami i myślnikami, bez wielkości liter);
+fałszywe cytaty są odrzucane i liczone; odpowiedź bez żadnego
+prawdziwego cytatu nie jest pokazywana (chyba że model sam stwierdził
+brak odpowiedzi); liczba w odpowiedzi, której nie ma w jednostkach ani
+w pytaniu, odrzuca całą odpowiedź. Kotwica: artykuł w stronie aktu i
+strona PDF (początek jednostki). Historia pytań w tabeli `pytania` (z
+kopią cytatów).
+
+**Uzasadnienie:** Przy przepisach zmyślony cytat jest gorszy niż brak
+odpowiedzi. Weryfikacja w kodzie realizuje zasadę CLAUDE.md: model
+tłumaczy i opisuje, treść i liczby pochodzą ze źródła.
+
+**Odrzucone alternatywy:**
+- Wysyłanie modelowi całego aktu — długie ustawy przekraczają rozsądny
+  rozmiar zapytania, a cytaty trudniej sprawdzić.
+- Wyszukiwanie semantyczne (embeddingi) — nowa zależność i koszt;
+  FTS5 z odmianą po początku słowa wystarcza na start.

@@ -14,6 +14,20 @@
 {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
 
 <section class="karta stos">
+    <h3>Zapytaj</h3>
+    <form id="formularz-pytania" class="stos">
+        <textarea id="pole-pytania" rows="2" maxlength="500" placeholder="np. Co określa się obowiązkowo w planie miejscowym?" aria-label="Pytanie do przepisów" {{ 'disabled' if not akty }}></textarea>
+        <div class="rzad">
+            <button id="przycisk-pytania" type="submit" {{ 'disabled' if not akty }}>Zapytaj</button>
+            <span class="wyciszony opis-panelu">Zakres jak w wyszukiwarce niżej. Gemini odpowiada tylko z wybranych artykułów; każdy cytat jest sprawdzany w tekście.</span>
+        </div>
+    </form>
+    <p id="stan-pytania" class="komunikat" hidden></p>
+    <div id="odpowiedzi" class="odpowiedzi"></div>
+    <p class="wyciszony opis-panelu">Pomoc w czytaniu przepisów, nie porada prawna. Sprawdzaj cytat w źródle i aktualność tekstu jednolitego.</p>
+</section>
+
+<section class="karta stos">
     <form id="formularz-szukania" class="szukajka" role="search">
         <input id="pole-szukania" type="search" placeholder="np. intensywność zabudowy, „działka budowlana”, art. 15" aria-label="Szukaj w przepisach" autocomplete="off" {{ 'disabled' if not akty }}>
         <select id="filtr-aktu" aria-label="Szukaj w akcie" {{ 'disabled' if not akty }}>
@@ -52,6 +66,10 @@
 <script>
     const URL_SZUKAJ = "{{ url_for('przepisy.szukaj') }}";
     const URL_AKT = "{{ url_for('przepisy.widok_aktu', akt_id=0) }}".replace(/0$/, "");
+    const URL_PYTANIE = "{{ url_for('przepisy.zadaj_pytanie') }}";
+    const URL_PYTANIA = "{{ url_for('przepisy.usun_pytanie', pytanie_id=0) }}".replace(/0$/, "");
+    const HISTORIA = {{ historia | tojson }};
 </script>
 <script src="{{ url_for('przepisy.static', filename='przepisy.js') }}"></script>
+<script src="{{ url_for('przepisy.static', filename='pytania.js') }}"></script>
 {% endblock %}

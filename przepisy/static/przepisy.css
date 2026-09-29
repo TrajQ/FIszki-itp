@@ -176,3 +176,81 @@ button.przycisk--niebezpieczny-tekst {
         max-width: none;
     }
 }
+
+/* ETAP 62: pytania i odpowiedzi z cytatami */
+#pole-pytania {
+    width: 100%;
+    resize: vertical;
+    font: inherit;
+    font-size: 15px;
+}
+
+.odpowiedzi {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.odpowiedzi:empty {
+    display: none;
+}
+
+.odpowiedz {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.odpowiedz__pasek {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.odpowiedz__data,
+.odpowiedz__uwagi {
+    font-size: 12px;
+}
+
+.odpowiedz__uwagi {
+    margin: 0;
+}
+
+.odpowiedz__tekst {
+    margin: 0;
+    line-height: 1.55;
+}
+
+.odpowiedz__tekst--brak {
+    color: var(--tekst-drugi);
+    font-style: italic;
+}
+
+.cytaty {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 4px 0 0;
+    padding-left: 20px;
+}
+
+.cytat blockquote {
+    margin: 0;
+    padding-left: 10px;
+    border-left: 3px solid var(--akcent);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.cytat__zrodlo {
+    margin: 2px 0 0 13px;
+    font-size: 12px;
+}
+
+.cytat__zrodlo a:first-child {
+    font-weight: 600;
+}

@@ -6,7 +6,9 @@ import uuid
 from flask import Blueprint, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 
-from . import baza
+from dane import gemini
+
+from . import baza, pytania
 from .tekst import BladPdf, podziel, strony_z_pdf
 
 przepisy_bp = Blueprint(
@@ -44,7 +46,12 @@ def podsumowanie() -> dict:
 
 @przepisy_bp.route("/")
 def index():
-    return render_template("przepisy/index.html", akty=baza.lista_aktow(), blad=request.args.get("blad"))
+    return render_template(
+        "przepisy/index.html",
+        akty=baza.lista_aktow(),
+        historia=baza.historia_pytan(),
+        blad=request.args.get("blad"),
+    )
 
 
 @przepisy_bp.route("/akty", methods=["POST"])
@@ -106,3 +113,36 @@ def szukaj():
     tekst = (request.args.get("q") or "").strip()[:300]
     akt_id = request.args.get("akt", type=int)
     return jsonify({"zapytanie": tekst, "wyniki": baza.szukaj(tekst, akt_id) if tekst else []})
+
+
+@przepisy_bp.route("/pytanie", methods=["POST"])
+def zadaj_pytanie():
+    """Pytanie → jednostki z bazy → odpowiedź modelu sprawdzona w źródle."""
+    dane = request.get_json(silent=True) or {}
+    pytanie = " ".join(str(dane.get("pytanie") or "").split())
+    if not pytanie:
+        return jsonify({"blad": "Wpisz pytanie."}), 400
+    if len(pytanie) > pytania.MAKS_DLUGOSC_PYTANIA:
+        return jsonify({"blad": f"Pytanie może mieć najwyżej {pytania.MAKS_DLUGOSC_PYTANIA} znaków."}), 400
+    akt_id = dane.get("akt") or None
+    if akt_id is not None and (not isinstance(akt_id, int) or baza.akt(akt_id) is None):
+        return jsonify({"blad": "Nie ma takiego aktu."}), 400
+
+    jednostki = pytania.kandydaci(pytanie, akt_id)
+    if not jednostki:
+        return jsonify({"blad": "W wgranych aktach nie ma przepisów ze słowami z pytania. Zadaj je innymi słowami albo wgraj właściwy akt."}), 404
+    try:
+        surowa = gemini.odpowiedz_z_przepisow(pytanie, [pytania.fragment_dla_modelu(j) for j in jednostki])
+        wynik = pytania.sprawdz(surowa, jednostki, pytanie)
+    except (gemini.BladGemini, pytania.BladOdpowiedzi) as e:
+        return jsonify({"blad": str(e)}), 502
+    wynik["przeszukane"] = [{"oznaczenie": j["oznaczenie"], "nazwa_aktu": j["nazwa_aktu"]} for j in jednostki]
+    pytanie_id = baza.zapisz_pytanie(pytanie, akt_id, wynik)
+    return jsonify({"id": pytanie_id, "pytanie": pytanie, **wynik})
+
+
+@przepisy_bp.route("/pytania/<int:pytanie_id>", methods=["DELETE"])
+def usun_pytanie(pytanie_id):
+    if not baza.usun_pytanie(pytanie_id):
+        abort(404)
+    return jsonify({"ok": True})

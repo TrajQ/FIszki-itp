@@ -441,3 +441,12 @@
   cudzysłowie, „art. 15” / „§ 4”, podświetlone trafienia, zmiana nazwy
   i usuwanie aktu.
 - Dodano zależność `pypdf`, `DECISIONS.md` D-067 i 6 testów.
+
+## ETAP 62 — 2026-09-29
+- Przepisy: panel „Zapytaj” — odpowiedź Gemini wyłącznie z wybranych
+  artykułów, z dosłownymi cytatami sprawdzanymi w tekście (fałszywe
+  odrzucane), odnośnik do artykułu i strony PDF, odrzucanie odpowiedzi
+  z liczbami spoza przepisów, lista artykułów, które widział model,
+  historia pytań z usuwaniem, zastrzeżenie „nie porada prawna”.
+- Dodano `przepisy/pytania.py`, `dane/gemini.py: odpowiedz_z_przepisow`,
+  `DECISIONS.md` D-068 i 6 testów.
