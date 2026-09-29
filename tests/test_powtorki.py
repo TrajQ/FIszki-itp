@@ -154,3 +154,36 @@ def test_strony_powtorki_i_licznik_na_liscie(client):
     strona = client.get("/fiszki/").get_data(as_text=True)
     assert "2 do powtórki" in strona
     assert "Zacznij powtórkę" in strona
+
+
+# ---------- ETAP 39: „trudne”, tryb przed egzaminem ----------
+
+
+def test_trudne_zostaje_w_pudelku_i_wraca_jutro():
+    assert powtorki.nastepny_stan(3, "trudne", date(2026, 10, 1)) == (3, date(2026, 10, 2))
+    assert powtorki.nastepny_stan(1, "trudne", date(2026, 10, 1)) == (1, date(2026, 10, 2))
+
+
+def test_endpoint_przyjmuje_trudne(client):
+    wgraj_pdf(client)
+    fiszka_id = dodaj_fiszke(client)
+    odpowiedz = ocen(client, fiszka_id, "trudne")
+    assert odpowiedz.status_code == 200
+    assert odpowiedz.get_json()["pudelko"] == 1
+    # jutro, więc dziś już nie ma jej w kolejce
+    assert client.get("/fiszki/powtorka/kolejka").get_json() == []
+
+
+def test_kolejka_przed_egzaminem_ma_wszystkie_fiszki(client):
+    wgraj_pdf(client)
+    pierwsza = dodaj_fiszke(client)
+    druga = dodaj_fiszke(client)
+    ocen(client, pierwsza, "umiem")  # zaplanowana za kilka dni
+
+    zwykla = client.get("/fiszki/powtorka/kolejka").get_json()
+    egzamin = client.get("/fiszki/powtorka/kolejka?wszystkie=1").get_json()
+
+    assert [f["id"] for f in zwykla] == [druga]
+    assert sorted(f["id"] for f in egzamin) == sorted([pierwsza, druga])
+    html = client.get("/fiszki/powtorka?wszystkie=1").get_data(as_text=True)
+    assert "Przed egzaminem" in html and "TRYB_EGZAMINU = true" in html

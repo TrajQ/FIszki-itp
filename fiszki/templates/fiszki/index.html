@@ -34,7 +34,26 @@
         <span class="wyciszony">Na dziś wszystko powtórzone.</span>
         {% endif %}
         <a class="przycisk przycisk--drugi przycisk--duzy" href="{{ url_for('fiszki.quiz') }}">Quiz ABCD</a>
+        <a class="przycisk przycisk--drugi przycisk--duzy" href="{{ url_for('fiszki.powtorka', wszystkie=1) }}"
+           title="Wszystkie fiszki w losowej kolejności, bez zmiany harmonogramu">Przed egzaminem</a>
     </div>
+    {% if nauka.prognoza | map(attribute='fiszki') | sum %}
+    {# Prognoza: ile fiszek wróci w najbliższych dniach (ETAP 39). #}
+    {% set dni_tygodnia = ['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd'] %}
+    {% set najwiecej_prognozy = [nauka.prognoza | map(attribute='fiszki') | max, 1] | max %}
+    <div class="prognoza" aria-label="Powtórki w najbliższych 7 dniach">
+        <span class="prognoza__tytul">Najbliższe 7 dni</span>
+        <div class="prognoza__dni">
+            {% for dzien in nauka.prognoza %}
+            <div class="prognoza__dzien" title="{{ dzien.data }}: {{ dzien.fiszki }}">
+                <span class="prognoza__ile">{{ dzien.fiszki }}</span>
+                <span class="prognoza__slupek" style="--poziom: {{ (dzien.fiszki / najwiecej_prognozy) | round(2) }}"></span>
+                <span class="prognoza__nazwa">{{ 'dziś' if loop.first else dni_tygodnia[dzien.dzien_tygodnia] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </section>
 
 <form class="karta wgrywanie" action="{{ url_for('fiszki.upload') }}" method="post" enctype="multipart/form-data">
@@ -54,7 +73,7 @@
     <div class="nauka__liczby">
         <div><span class="nauka__wartosc">{{ nauka.seria_dni }}</span><span class="nauka__etykieta">{{ 'dzień' if nauka.seria_dni == 1 else 'dni' }} z rzędu</span></div>
         <div><span class="nauka__wartosc">{{ nauka.dzis }}</span><span class="nauka__etykieta">powtórek dziś</span></div>
-        <div><span class="nauka__wartosc">{{ '%.0f' % nauka.skutecznosc_proc }}%</span><span class="nauka__etykieta">„umiem” w 30 dni</span></div>
+        <div><span class="nauka__wartosc">{{ '%.0f' % nauka.skutecznosc_proc }}%</span><span class="nauka__etykieta">zapamiętane w 30 dni</span></div>
         <div><span class="nauka__wartosc">{{ nauka.opanowane }}</span><span class="nauka__etykieta">opanowane (pudełko 5)</span></div>
     </div>
     <div class="nauka__aktywnosc" aria-label="Powtórki w ostatnich 30 dniach">

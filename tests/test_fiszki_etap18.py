@@ -147,3 +147,34 @@ def test_bez_powtorek_statystyki_puste_i_karta_ukryta(client):
     s = client.get("/fiszki/statystyki").get_json()
     assert s["powtorki_30_dni"] == 0 and s["skutecznosc_proc"] is None and s["seria_dni"] == 0
     assert "dni z rzędu" not in client.get("/fiszki/").get_data(as_text=True)
+
+
+def test_prognoza_7_dni_zalegle_na_dzis(client):
+    from fiszki import statystyki_nauki
+    from fiszki.baza import get_db
+
+    ids = [dodaj_fiszke(client) for _ in range(4)]
+    with client.application.app_context():
+        db = get_db()
+        # zaległa (wczoraj), za 2 dni, za 10 dni; czwarta bez stanu = nowa
+        for fiszka_id, termin in zip(ids, ["2026-09-28", "2026-10-01", "2026-10-09"]):
+            db.execute(
+                "INSERT INTO powtorki (fiszka_id, pudelko, nastepna_powtorka) VALUES (?, 2, ?)", (fiszka_id, termin)
+            )
+        db.commit()
+        prognoza = statystyki_nauki.prognoza(db, date(2026, 9, 29))
+
+    assert [d["fiszki"] for d in prognoza] == [2, 0, 1, 0, 0, 0, 0]
+    assert prognoza[0]["data"] == "2026-09-29" and prognoza[0]["dzien_tygodnia"] == 1  # wtorek
+
+
+def test_skutecznosc_liczy_trudne_jako_zapamietane(client):
+    from fiszki import statystyki_nauki
+    from fiszki.baza import get_db
+
+    with client.application.app_context():
+        db = get_db()
+        for wynik in ["umiem", "trudne", "nie_umiem", "nie_umiem"]:
+            db.execute("INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (1, '2026-09-29', ?)", (wynik,))
+        db.commit()
+        assert statystyki_nauki.policz(db, date(2026, 9, 29))["skutecznosc_proc"] == 50

@@ -8,8 +8,8 @@
     <div class="naglowek-strony">
         <div>
             <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) if pdf else url_for('fiszki.index') }}">‹ {{ 'Wróć do pliku' if pdf else 'Fiszki' }}</a>
-            <h1>Powtórka</h1>
-            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }}</p>
+            <h1>{{ 'Przed egzaminem' if wszystkie else 'Powtórka' }}</h1>
+            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }}{% if wszystkie %} · wszystkie fiszki, oceny nie zmieniają harmonogramu{% endif %}</p>
         </div>
         <span id="postep-tekst" class="etykieta etykieta--akcent"></span>
     </div>
@@ -17,6 +17,10 @@
     <div class="pasek-postepu"><div id="pasek-postepu-wypelnienie"></div></div>
 
     <p id="blad-powtorki" class="komunikat komunikat--blad" hidden></p>
+
+    <label class="przelacznik-pisania">
+        <input id="tryb-pisania" type="checkbox"> Najpierw wpisuję odpowiedź
+    </label>
 
     <section id="karta-powtorki" class="karta karta-powtorki" hidden>
         <div class="karta-powtorki__meta">
@@ -26,7 +30,14 @@
         <div class="karta-powtorki__tresc">
             <p class="karta-powtorki__etykieta">Pytanie</p>
             <p id="pytanie-powtorki" class="karta-powtorki__pytanie"></p>
+            <textarea id="pole-odpowiedzi" class="pole-odpowiedzi" rows="3" hidden
+                      placeholder="Twoja odpowiedź… (Ctrl+Enter — sprawdź)"></textarea>
             <div id="odpowiedz-blok" hidden>
+                <div id="twoja-odpowiedz-blok" class="twoja-odpowiedz" hidden>
+                    <p class="karta-powtorki__etykieta">Twoja odpowiedź</p>
+                    <p id="twoja-odpowiedz"></p>
+                    <p id="trafienia" class="wyciszony twoja-odpowiedz__trafienia"></p>
+                </div>
                 <p class="karta-powtorki__etykieta">Odpowiedź</p>
                 <p id="odpowiedz-powtorki" class="karta-powtorki__odpowiedz"></p>
                 <blockquote id="fragment-powtorki" class="karta-powtorki__fragment"></blockquote>
@@ -36,7 +47,8 @@
             <button id="przycisk-pokaz" type="button" class="przycisk--duzy">Pokaż odpowiedź <kbd>spacja</kbd></button>
             <div id="przyciski-oceny" class="rzad" hidden>
                 <button id="przycisk-nie-umiem" type="button" class="przycisk--duzy przycisk--ocena-zle">Nie umiem <kbd>1</kbd></button>
-                <button id="przycisk-umiem" type="button" class="przycisk--duzy przycisk--ocena-dobrze">Umiem <kbd>2</kbd></button>
+                <button id="przycisk-trudne" type="button" class="przycisk--duzy przycisk--ocena-trudne" title="Pamiętam, ale z trudem — wróci jutro">Trudne <kbd>2</kbd></button>
+                <button id="przycisk-umiem" type="button" class="przycisk--duzy przycisk--ocena-dobrze">Umiem <kbd>3</kbd></button>
             </div>
         </div>
     </section>
@@ -52,7 +64,8 @@
 
 {% block skrypty %}
 <script>
-    const URL_KOLEJKA = "{{ url_for('fiszki.kolejka_powtorki', pdf_id=pdf['id']) if pdf else url_for('fiszki.kolejka_powtorki') }}";
+    const URL_KOLEJKA = "{{ url_for('fiszki.kolejka_powtorki', pdf_id=pdf['id'] if pdf else None, wszystkie=1 if wszystkie else None) }}";
+    const TRYB_EGZAMINU = {{ 'true' if wszystkie else 'false' }};
     const URL_POWTORKA = "{{ url_for('fiszki.powtorka') }}";
     const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
 </script>

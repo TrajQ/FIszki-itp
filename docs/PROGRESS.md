@@ -953,3 +953,17 @@ Status: zamknięty
 
 Testy: 264 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap38_20260929.zip
+
+## ETAP 39 — Fiszki: trudne, pisanie, przed egzaminem, prognoza
+Data: 2026-09-29
+Status: zamknięty
+
+- `powtorki.nastepny_stan`: wynik „trudne”
+- `/powtorka?wszystkie=1` + `/powtorka/kolejka?wszystkie=1` (losowo, bez
+  zapisu ocen po stronie przeglądarki)
+- `statystyki_nauki.prognoza` (zaległe i nowe liczone na dziś)
+- Sprawdzone w przeglądarce (jasny i ciemny motyw)
+- `DECISIONS.md`: D-045
+
+Testy: 269 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap39_20260929.zip

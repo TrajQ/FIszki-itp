@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 38 (dostępność: krzywa, luki, szczegóły komórki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap38_20260929.zip
-Testy: 264 passed / 0 failed
+ETAP: 39 (fiszki: trudne, pisanie odpowiedzi, przed egzaminem, prognoza — zamknięty)
+Ostatni ZIP: releases/warsztat_etap39_20260929.zip
+Testy: 269 passed / 0 failed

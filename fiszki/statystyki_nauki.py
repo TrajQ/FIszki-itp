@@ -15,7 +15,7 @@ def policz(db: sqlite3.Connection, dzis: date) -> dict:
     wiersze = db.execute(
         """SELECT data,
                   COUNT(*) AS wszystkie,
-                  SUM(wynik = 'umiem') AS umiem
+                  SUM(wynik IN ('umiem', 'trudne')) AS umiem
            FROM dziennik_powtorek WHERE data >= ? GROUP BY data""",
         (start.isoformat(),),
     ).fetchall()
@@ -31,6 +31,7 @@ def policz(db: sqlite3.Connection, dzis: date) -> dict:
     opanowane = db.execute("SELECT COUNT(*) FROM powtorki WHERE pudelko = 5").fetchone()[0]
 
     return {
+        "prognoza": prognoza(db, dzis),
         "seria_dni": _seria(db, dzis),
         "aktywnosc": aktywnosc,
         "powtorki_30_dni": wszystkie,
@@ -38,6 +39,29 @@ def policz(db: sqlite3.Connection, dzis: date) -> dict:
         "opanowane": opanowane,
         "dzis": po_dniu.get(dzis.isoformat(), (0, 0))[0],
     }
+
+
+DNI_PROGNOZY = 7
+
+
+def prognoza(db: sqlite3.Connection, dzis: date) -> list[dict]:
+    """Ile fiszek przypada do powtórki w każdym z najbliższych 7 dni.
+
+    Zaległe i nowe (bez stanu) liczymy na dziś — tyle czeka od razu.
+    """
+    koniec = dzis + timedelta(days=DNI_PROGNOZY - 1)
+    wiersze = db.execute(
+        """SELECT MAX(COALESCE(powtorki.nastepna_powtorka, :dzis), :dzis) AS dzien, COUNT(*) AS ile
+           FROM fiszki LEFT JOIN powtorki ON powtorki.fiszka_id = fiszki.id
+           WHERE COALESCE(powtorki.nastepna_powtorka, :dzis) <= :koniec
+           GROUP BY 1""",
+        {"dzis": dzis.isoformat(), "koniec": koniec.isoformat()},
+    ).fetchall()
+    po_dniu = {w["dzien"]: w["ile"] for w in wiersze}
+    return [
+        {"data": (d := dzis + timedelta(days=i)).isoformat(), "dzien_tygodnia": d.weekday(), "fiszki": po_dniu.get(d.isoformat(), 0)}
+        for i in range(DNI_PROGNOZY)
+    ]
 
 
 def _seria(db: sqlite3.Connection, dzis: date) -> int:

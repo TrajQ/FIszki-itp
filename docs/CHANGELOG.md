@@ -265,3 +265,14 @@
 - Dostępność: klik w heksagon pokazuje wszystkie wskaźniki komórki
   (`/dostepnosc/plik/<nazwa>/komorka/<h3>`).
 - Dodano `DECISIONS.md` D-044 i 6 testów.
+
+## ETAP 39 — 2026-09-29
+- Fiszki: ocena „Trudne” (klawisze 1/2/3), fiszka zostaje w pudełku i
+  wraca jutro.
+- Fiszki: tryb „Najpierw wpisuję odpowiedź” (Ctrl+Enter — sprawdź,
+  wspólne słowa podświetlone), zapamiętywany w przeglądarce.
+- Fiszki: „Przed egzaminem” — wszystkie fiszki pliku albo wszystkie,
+  losowo, bez zmiany harmonogramu.
+- Fiszki: prognoza powtórek na najbliższe 7 dni na stronie modułu;
+  skuteczność liczy „trudne” jako zapamiętane.
+- Dodano `DECISIONS.md` D-045 i 5 testów.

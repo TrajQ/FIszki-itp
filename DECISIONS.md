@@ -909,3 +909,30 @@ i tak mają dokładność modelu ruchu pieszego.
 **Odrzucone alternatywy:**
 - Zapytanie do serwera przy każdym ruchu suwaka — odrzucone: zbędny ruch.
 - Liczenie udziałów w JS — odrzucone: liczby miałyby dwa źródła.
+
+## D-045 — Ocena „trudne”, tryb przed egzaminem bez zapisu, porównanie słów bez oceny
+Data: 2026-09-29
+
+**Decyzja:**
+- Trzecia ocena w powtórce: „trudne” — fiszka zostaje w swoim pudełku
+  i wraca jutro. W skuteczności („zapamiętane w 30 dni”) liczy się jak
+  „umiem”; w „najtrudniejszych” liczą się tylko „nie umiem”.
+- Tryb „przed egzaminem”: wszystkie fiszki (pliku albo wszystkie) w
+  losowej kolejności; oceny nie są wysyłane na serwer, więc harmonogram
+  Leitnera zostaje nietknięty.
+- Tryb wpisywania odpowiedzi: podświetlamy w poprawnej odpowiedzi słowa
+  o wspólnym początku (5 liter) z wpisaną, ale nie wystawiamy oceny —
+  student ocenia się sam.
+
+**Uzasadnienie:** Dwie oceny zmuszały do wyboru między „spadnij na
+początek” a „awansuj”, choć często odpowiedź była wymęczona. Masowa
+powtórka przed kolokwium psułaby odstępy, gdyby zapisywała oceny.
+Automatyczna ocena wpisanej odpowiedzi byłaby zawodna (synonimy, szyk)
+albo wymagałaby modelu językowego — porównanie słów jest przejrzyste,
+a 5-literowy rdzeń wystarcza na polską odmianę w typowych definicjach.
+
+**Odrzucone alternatywy:**
+- Algorytm SM-2 (Anki) — odrzucone na teraz: prostszy Leitner jest
+  czytelny dla studenta i działa; „trudne” daje większość korzyści.
+- Ocena wpisanej odpowiedzi przez Gemini — odrzucone: koszt, opóźnienie,
+  a werdykt modelu łatwo wziąć za pewnik.

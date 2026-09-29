@@ -440,14 +440,23 @@ def usun_pdf(pdf_id):
 def powtorka():
     pdf_id = request.args.get("pdf_id", type=int)
     pdf = _pobierz_pdf_albo_404(pdf_id) if pdf_id is not None else None
-    return render_template("fiszki/powtorka.html", pdf=pdf)
+    # Tryb „przed egzaminem” (ETAP 39): wszystkie fiszki, bez zapisu ocen.
+    wszystkie = request.args.get("wszystkie") == "1"
+    return render_template("fiszki/powtorka.html", pdf=pdf, wszystkie=wszystkie)
 
 
 @fiszki_bp.route("/powtorka/kolejka")
 def kolejka_powtorki():
-    """Fiszki do powtórki dziś: najpierw z niższych pudełek (słabiej znane)."""
+    """Fiszki do powtórki dziś: najpierw z niższych pudełek (słabiej znane).
+
+    Z `wszystkie=1` — wszystkie fiszki (tryb przed egzaminem) w losowej
+    kolejności; harmonogram się wtedy nie zmienia, bo przeglądarka nie
+    zapisuje ocen.
+    """
     pdf_id = request.args.get("pdf_id", type=int)
+    wszystkie = request.args.get("wszystkie") == "1"
     parametry = {"dzis": powtorki.dzisiaj().isoformat()}
+    warunek = "1 = 1" if wszystkie else _WARUNEK_DO_POWTORKI
     filtr_pdf = ""
     if pdf_id is not None:
         filtr_pdf = "AND fiszki.pdf_id = :pdf_id"
@@ -460,11 +469,14 @@ def kolejka_powtorki():
             FROM fiszki
             JOIN pdfy ON pdfy.id = fiszki.pdf_id
             LEFT JOIN powtorki ON powtorki.fiszka_id = fiszki.id
-            WHERE {_WARUNEK_DO_POWTORKI} {filtr_pdf}
+            WHERE {warunek} {filtr_pdf}
             ORDER BY pudelko, fiszki.id""",
         parametry,
     ).fetchall()
-    return jsonify([dict(w) for w in wiersze])
+    fiszki = [dict(w) for w in wiersze]
+    if wszystkie:
+        random.shuffle(fiszki)
+    return jsonify(fiszki)
 
 
 @fiszki_bp.route("/powtorka/<int:fiszka_id>", methods=["POST"])
@@ -472,7 +484,7 @@ def zapisz_powtorke(fiszka_id):
     dane = request.get_json(silent=True) or {}
     wynik = dane.get("wynik")
     if wynik not in powtorki.WYNIKI:
-        return jsonify({"blad": "Wynik musi być 'umiem' albo 'nie_umiem'."}), 400
+        return jsonify({"blad": "Wynik musi być 'umiem', 'trudne' albo 'nie_umiem'."}), 400
 
     db = get_db()
     if db.execute("SELECT 1 FROM fiszki WHERE id = ?", (fiszka_id,)).fetchone() is None:

@@ -719,3 +719,107 @@ button.odpowiedz-quizu--zla {
         grid-template-columns: 1fr;
     }
 }
+
+/* ---------- ETAP 39: trudne, pisanie odpowiedzi, prognoza ---------- */
+
+button.przycisk--ocena-trudne {
+    background: #ff9f0a;
+}
+
+button.przycisk--ocena-trudne:hover {
+    filter: brightness(1.08);
+}
+
+.przelacznik-pisania {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--tekst-drugi);
+    cursor: pointer;
+}
+
+.przelacznik-pisania input {
+    accent-color: var(--akcent);
+}
+
+.pole-odpowiedzi {
+    width: 100%;
+    margin-top: 16px;
+    resize: vertical;
+}
+
+.twoja-odpowiedz {
+    margin-bottom: 12px;
+    padding: 12px 16px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.twoja-odpowiedz p {
+    margin: 0;
+}
+
+.twoja-odpowiedz__trafienia {
+    margin-top: 6px !important;
+    font-size: 13px;
+}
+
+.karta-powtorki__odpowiedz mark {
+    padding: 0 2px;
+    border-radius: 4px;
+    background: var(--sukces-tlo);
+    color: inherit;
+}
+
+.prognoza {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.prognoza__tytul {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tekst-drugi);
+}
+
+.prognoza__dni {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    align-items: end;
+}
+
+.prognoza__dzien {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.prognoza__ile {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Słupek: minimalna wysokość, żeby było widać dni bez powtórek. */
+.prognoza__slupek {
+    width: 100%;
+    max-width: 36px;
+    height: calc(4px + var(--poziom) * 56px);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--akcent) calc(30% + var(--poziom) * 70%), var(--tlo-wyciszone));
+}
+
+.prognoza__nazwa {
+    font-size: 12px;
+    color: var(--tekst-drugi);
+}
