@@ -12,7 +12,7 @@ from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
-from . import zabudowa
+from . import skala, zabudowa
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
@@ -216,6 +216,49 @@ def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
         dane["udzialy"] = []  # główne przeznaczenie już mamy — udziały są dodatkiem
     zapisz_w_historii(dzialka.id, przeznaczenie, punkt.y, punkt.x)
     return jsonify(dane), 200
+
+
+# ---------- Kalkulator skali mapy (ETAP 30) ----------
+
+
+@mpzp_bp.route("/skala")
+def skala_strona():
+    return render_template(
+        "mpzp/skala.html", skale=skala.SKALE_STANDARDOWE, arkusze=list(skala.ARKUSZE_MM)
+    )
+
+
+@mpzp_bp.route("/skala/licz", methods=["POST"])
+def skala_licz():
+    """Wszystkie przeliczenia naraz; puste pole = tej części nie liczymy."""
+    dane = request.get_json(silent=True) or {}
+
+    def liczba(klucz):
+        wartosc = str(dane.get(klucz, "")).strip().replace(",", ".").replace(" ", "")
+        return float(wartosc) if wartosc else None
+
+    try:
+        mianownik = liczba("mianownik")
+        if mianownik is None:
+            raise skala.BladSkali("Podaj skalę (np. 1000 dla 1:1000).")
+        wynik = {"mianownik": mianownik}
+        if (v := liczba("dlugosc_rysunek")) is not None:
+            wynik["dlugosc_teren_m"] = skala.dlugosc_w_terenie(v, dane.get("jednostka_rysunek", "cm"), mianownik)
+        if (v := liczba("dlugosc_teren")) is not None:
+            wynik["dlugosc_rysunek_mm"] = skala.dlugosc_na_rysunku(v, dane.get("jednostka_teren", "m"), mianownik)
+        if (v := liczba("pow_rysunek_cm2")) is not None:
+            wynik["pow_teren_m2"] = skala.powierzchnia_w_terenie(v, mianownik)
+        if (v := liczba("pow_teren")) is not None:
+            wynik["pow_rysunek_cm2"] = skala.powierzchnia_na_rysunku(v, dane.get("jednostka_pow", "m2"), mianownik)
+        szer, wys = liczba("teren_szer_m"), liczba("teren_wys_m")
+        if szer is not None and wys is not None:
+            wynik["dobor"] = skala.dobierz_skale(szer, wys, dane.get("arkusz", "A3"), liczba("margines_mm") or 20)
+    except KeyError:
+        return jsonify({"blad": "Nieznana jednostka."}), 400
+    except (ValueError, skala.BladSkali) as e:
+        komunikat = str(e) if isinstance(e, skala.BladSkali) else "Wpisz liczby (np. 4,5)."
+        return jsonify({"blad": komunikat}), 400
+    return jsonify(wynik)
 
 
 # ---------- Kalkulator wskaźników zabudowy (ETAP 23) ----------

@@ -741,3 +741,17 @@ widoku atlasu.
 **Odrzucone alternatywy:**
 - Gotowy przycisk „na 1000 mieszkańców” — odłożone do czasu
   potwierdzenia identyfikatora zmiennej ludności w działającym BDL.
+
+## D-037 — Dobór skali tylko spośród skal standardowych
+Data: 2026-09-29
+
+**Decyzja:** Kalkulator proponuje wyłącznie skale standardowe (1:500,
+1:1000, 1:2000, 1:5000, 1:10 000, 1:25 000, 1:50 000, 1:100 000) — tę
+najdokładniejszą, w której teren mieści się na arkuszu z marginesem.
+
+**Uzasadnienie:** Rysunki planistyczne i mapy zasadnicze wykonuje się w
+skalach standardowych; skala „1:1734” byłaby matematycznie optymalna,
+ale nieprzydatna na zajęciach i w urzędzie.
+
+**Odrzucone alternatywy:**
+- Dowolna skala dopasowana do arkusza — odrzucone (patrz wyżej).

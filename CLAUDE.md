@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 29 (atlas — wskaźniki względne — zamknięty)
-Ostatni ZIP: releases/warsztat_etap29_20260929.zip
-Testy: 211 passed / 0 failed
+ETAP: 30 (mpzp — kalkulator skali mapy — zamknięty)
+Ostatni ZIP: releases/warsztat_etap30_20260929.zip
+Testy: 215 passed / 0 failed

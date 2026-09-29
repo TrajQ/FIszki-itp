@@ -205,3 +205,8 @@
 - Atlas: wskaźniki względne — dowolny wskaźnik podzielony przez drugi z
   mnożnikiem (np. na 1000 mieszkańców), we wszystkich widokach.
 - Dodano `DECISIONS.md` D-036 i testy.
+
+## ETAP 30 — 2026-09-29
+- MPZP: kalkulator skali mapy (długości, powierzchnie, dobór skali do
+  arkusza) — `/mpzp/skala`.
+- Dodano `DECISIONS.md` D-037 i testy.

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block tytul %}Skala mapy — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa działek</a>
+        <h1>Skala mapy</h1>
+        <p>Przeliczenia rysunek ↔ teren i dobór skali do arkusza. Liczy się na bieżąco.</p>
+    </div>
+</div>
+
+<form id="formularz-skali" class="stos" autocomplete="off">
+    <section class="karta rzad pasek-skali">
+        <label>Skala 1 :
+            <input name="mianownik" type="text" inputmode="numeric" value="1000">
+        </label>
+        <div class="rzad szybkie-skale">
+            {% for s in skale %}<button type="button" class="przycisk--drugi" data-skala="{{ s }}">1:{{ '{:,}'.format(s).replace(',', ' ') }}</button>{% endfor %}
+        </div>
+    </section>
+    <p id="blad-skali" class="komunikat komunikat--blad" hidden></p>
+
+    <div class="siatka-kart siatka-skali">
+        <section class="karta stos">
+            <h3>Długość</h3>
+            <label>Na rysunku
+                <span class="pole-z-jednostka"><input name="dlugosc_rysunek" type="text" inputmode="decimal" placeholder="np. 4,5">
+                <select name="jednostka_rysunek"><option>mm</option><option selected>cm</option></select></span>
+            </label>
+            <p class="wynik-skali" data-wynik="dlugosc_teren_m">—</p>
+            <label>W terenie
+                <span class="pole-z-jednostka"><input name="dlugosc_teren" type="text" inputmode="decimal" placeholder="np. 250">
+                <select name="jednostka_teren"><option selected>m</option><option>km</option></select></span>
+            </label>
+            <p class="wynik-skali" data-wynik="dlugosc_rysunek_mm">—</p>
+        </section>
+
+        <section class="karta stos">
+            <h3>Powierzchnia</h3>
+            <label>Na rysunku [cm²]
+                <input name="pow_rysunek_cm2" type="text" inputmode="decimal" placeholder="np. 12">
+            </label>
+            <p class="wynik-skali" data-wynik="pow_teren_m2">—</p>
+            <label>W terenie
+                <span class="pole-z-jednostka"><input name="pow_teren" type="text" inputmode="decimal" placeholder="np. 1,5">
+                <select name="jednostka_pow"><option value="m2">m²</option><option value="ha" selected>ha</option><option value="km2">km²</option></select></span>
+            </label>
+            <p class="wynik-skali" data-wynik="pow_rysunek_cm2">—</p>
+        </section>
+
+        <section class="karta stos">
+            <h3>Dobór skali do arkusza</h3>
+            <div class="siatka-pol">
+                <label>Teren — szerokość [m]<input name="teren_szer_m" type="text" inputmode="decimal" placeholder="np. 600"></label>
+                <label>Teren — wysokość [m]<input name="teren_wys_m" type="text" inputmode="decimal" placeholder="np. 400"></label>
+                <label>Arkusz<select name="arkusz">{% for a in arkusze %}<option {{ 'selected' if a == 'A3' }}>{{ a }}</option>{% endfor %}</select></label>
+                <label>Margines [mm]<input name="margines_mm" type="text" inputmode="numeric" value="20"></label>
+            </div>
+            <p class="wynik-skali" data-wynik="dobor">—</p>
+        </section>
+    </div>
+</form>
+{% endblock %}
+
+{% block skrypty %}
+<script>const URL_SKALA = "{{ url_for('mpzp.skala_licz') }}";</script>
+<script src="{{ url_for('mpzp.static', filename='skala.js') }}"></script>
+{% endblock %}

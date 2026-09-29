@@ -792,3 +792,26 @@ Zrobione:
 
 Testy: 211 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap29_20260929.zip
+
+## ETAP 30 — MPZP: kalkulator skali mapy
+Data: 2026-09-29
+Status: zamknięty
+
+Analiza potrzeb: rysunki planistyczne i inwentaryzacje w skalach 1:500 –
+1:10 000 — ciągłe przeliczanie wymiarów i dobór skali do arkusza.
+
+Zrobione:
+- `mpzp/skala.py`: długość rysunek ↔ teren (mm/cm ↔ m/km), powierzchnia
+  rysunek ↔ teren (cm² ↔ m²/ha/km², skalowanie kwadratem mianownika),
+  dobór najdokładniejszej skali standardowej (1:500 … 1:100 000), w której
+  teren zmieści się na arkuszu A4–A0 z marginesem, w orientacji pionowej
+  albo poziomej, z procentem wypełnienia arkusza
+- `GET /mpzp/skala`, `POST /mpzp/skala/licz` (puste pole = tej części nie
+  liczymy; przecinek i spacje w liczbach)
+- Strona: skala z szybkimi przyciskami skal standardowych, trzy karty
+  (długość, powierzchnia, dobór do arkusza), wyniki na bieżąco; link z
+  nagłówka mapy MPZP
+- Testy: 4 nowe; `DECISIONS.md`: D-037
+
+Testy: 215 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap30_20260929.zip

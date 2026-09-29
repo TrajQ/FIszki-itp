@@ -474,3 +474,44 @@ button.wpis-historii:hover {
 #zapas p {
     margin: 0;
 }
+
+/* ---------- Kalkulator skali ---------- */
+
+.pasek-skali {
+    align-items: end;
+    gap: 16px;
+}
+
+.pasek-skali label {
+    width: 180px;
+}
+
+.szybkie-skale {
+    gap: 6px;
+}
+
+.szybkie-skale button {
+    padding: 0.4em 0.9em;
+    font-size: 0.82rem;
+}
+
+.siatka-skali {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.siatka-skali h3 {
+    margin: 0;
+}
+
+.pole-z-jednostka {
+    display: grid;
+    grid-template-columns: 1fr 90px;
+    gap: 8px;
+}
+
+.wynik-skali {
+    margin: -4px 0 6px;
+    color: var(--akcent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
