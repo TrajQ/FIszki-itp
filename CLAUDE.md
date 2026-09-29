@@ -50,4 +50,4 @@ kogoś, kto wróci do niego za trzy miesiące.
 ## Stan bieżący
 ETAP: 5 (wspólny wygląd — zamknięty)
 Ostatni ZIP: releases/warsztat_etap5_20260929.zip
-Testy: 47 passed / 0 failed
+Testy: 46 passed / 0 failed

@@ -156,5 +156,5 @@ Zrobione:
 - Testy: liczba fiszek na liście plików, pole `przeznaczenie` w mpzp
 - `DECISIONS.md`: D-011
 
-Testy: 47 passed / 0 failed
+Testy: 46 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap5_20260929.zip
