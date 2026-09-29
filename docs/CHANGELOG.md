@@ -141,3 +141,10 @@
   ETAPie 3).
 - Czytelne komunikaty o błędach sieci (`dane/siec.py`).
 - Poprawiono podwójną kropkę w komunikacie Gemini.
+
+## ETAP 18 — 2026-09-29
+- Fiszki: propozycje kilku fiszek z całej strony (Gemini), tylko z
+  cytatem sprawdzonym w tekście strony.
+- Fiszki: statystyki nauki (seria dni, aktywność 30 dni, skuteczność).
+- Naprawiono „Pokaż w źródle” dla fragmentów z kilku linii.
+- Dodano `DECISIONS.md` D-025 i testy.

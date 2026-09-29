@@ -78,6 +78,62 @@
     margin: 0;
 }
 
+/* ---------- Statystyki nauki ---------- */
+
+.nauka {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.nauka__liczby {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.nauka__liczby > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.nauka__wartosc {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.nauka__etykieta {
+    color: var(--tekst-drugi);
+    font-size: 0.75rem;
+}
+
+/* 30 kwadracików jak „kalendarz aktywności”: im więcej powtórek, tym ciemniej. */
+.nauka__aktywnosc {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    gap: 4px;
+}
+
+.nauka__dzien {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: color-mix(in srgb, #5e5ce6 calc(var(--poziom) * 100%), var(--tlo-wyciszone));
+}
+
+@media (max-width: 800px) {
+    .nauka {
+        grid-template-columns: 1fr;
+    }
+
+    .nauka__liczby {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 /* ---------- Wyszukiwarka ---------- */
 
 .szukajka {
@@ -186,6 +242,7 @@ mark {
 }
 
 #nawigacja-stron {
+    flex-wrap: wrap;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -258,6 +315,54 @@ mark {
     font-size: 0.9rem;
     max-height: 8rem;
     overflow-y: auto;
+}
+
+/* Propozycje fiszek z całej strony. */
+.lista-propozycji {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.propozycja {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    background: var(--tlo-wyciszone);
+}
+
+.propozycja__wybor {
+    width: 18px;
+    height: 18px;
+    margin-top: 6px;
+    accent-color: var(--akcent);
+}
+
+.propozycja textarea {
+    min-height: 2.6rem;
+    font-size: 0.88rem;
+}
+
+.propozycja__pytanie {
+    font-weight: 600;
+}
+
+.propozycja blockquote {
+    margin: 0;
+    padding: 6px 10px;
+    border-left: 3px solid var(--akcent);
+    color: var(--tekst-drugi);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.propozycja blockquote:hover {
+    background: var(--akcent-tlo);
 }
 
 #status-gemini:empty {

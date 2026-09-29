@@ -498,3 +498,29 @@ Zrobione:
 
 Testy: 147 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap17_20260929.zip
+
+## ETAP 18 — Fiszki: propozycje z całej strony, statystyki nauki, naprawa kotwicy
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- Przycisk „✦ Fiszki z tej strony”: tekst strony z pdf.js →
+  `POST /fiszki/<pdf_id>/szkice-strony` → Gemini (`zaproponuj_fiszki_ze_strony`,
+  odpowiedź JSON) proponuje do 5 fiszek, każdą z dosłownym cytatem;
+  `fiszki/strona.py` sprawdza, czy cytat naprawdę jest na stronie —
+  propozycje bez kotwicy są odrzucane (liczba odrzuconych w komunikacie)
+- Panel propozycji: zaznaczanie, edycja pytania i odpowiedzi, klik w
+  cytat podświetla go w PDF-ie, „Zapisz zaznaczone”
+- **Naprawiony błąd kotwicy** (odtworzony w przeglądarce przed poprawką):
+  fiszka z zaznaczenia przez kilka linii nie podświetlała się w „Pokaż w
+  źródle” (zaznaczenie zawiera „\n”, sklejone spany nie) — dopasowanie z
+  pominięciem białych znaków, po stronie przeglądarki i serwera
+- Tabela `dziennik_powtorek` + `fiszki/statystyki_nauki.py`: seria dni
+  nauki (dzień bieżący nie przerywa serii przed jego końcem), powtórki
+  dziś, skuteczność „umiem” z 30 dni, liczba opanowanych (pudełko 5),
+  aktywność 30 dni; `GET /fiszki/statystyki`; karta na liście plików z
+  „kalendarzem aktywności”
+- Testy: 8 nowych; `DECISIONS.md`: D-025
+
+Testy: 155 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap18_20260929.zip

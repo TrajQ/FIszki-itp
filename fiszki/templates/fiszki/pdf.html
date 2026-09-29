@@ -29,6 +29,7 @@
             <button id="strona-poprzednia" type="button" class="przycisk--drugi">‹ Poprzednia</button>
             <span id="numer-strony" class="wyciszony"></span>
             <button id="strona-nastepna" type="button" class="przycisk--drugi">Następna ›</button>
+            <button id="przycisk-fiszki-strony" type="button" title="Gemini zaproponuje kilka fiszek z całej bieżącej strony">✦ Fiszki z tej strony</button>
         </div>
         <p id="blad-pdf" class="komunikat komunikat--blad" hidden></p>
         <p class="podpowiedz wyciszony">Zaznacz myszką fragment tekstu, żeby utworzyć fiszkę.</p>
@@ -42,6 +43,16 @@
     </section>
 
     <aside id="panel-fiszek">
+        <div id="propozycje-strony" class="karta stos" hidden>
+            <h3>Propozycje ze strony</h3>
+            <p id="status-propozycji" class="wyciszony"></p>
+            <ul id="lista-propozycji" class="lista-propozycji"></ul>
+            <div class="rzad">
+                <button id="zapisz-propozycje" type="button" hidden>Zapisz zaznaczone</button>
+                <button id="odrzuc-propozycje" type="button" class="przycisk--drugi">Zamknij</button>
+            </div>
+        </div>
+
         <div id="formularz-fiszki" class="karta stos" hidden>
             <h3>Nowa fiszka</h3>
             <blockquote id="podglad-fragmentu"></blockquote>
@@ -75,6 +86,7 @@
     const URL_PLIK = "{{ url_for('fiszki.plik_pdf', pdf_id=pdf['id']) }}";
     const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
     const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
+    const URL_SZKICE_STRONY = "{{ url_for('fiszki.szkice_strony', pdf_id=pdf['id']) }}";
     const URL_WORKER = "{{ url_for('fiszki.static', filename='pdfjs/pdf.worker.min.mjs') }}";
 </script>
 <script type="module" src="{{ url_for('fiszki.static', filename='fiszki.js') }}"></script>

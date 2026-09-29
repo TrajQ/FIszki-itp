@@ -6,6 +6,7 @@ fragmentu (ta sama filozofia co zakaz generowania liczb przez LLM: model
 tłumaczy i porządkuje to, co dostał, a nie wymyśla).
 """
 
+import json
 import re
 
 from google import genai
@@ -84,6 +85,71 @@ def _sparsuj_odpowiedz(tekst: str) -> dict:
         raise BladGemini("Nie udało się sparsować odpowiedzi Gemini.")
 
     return {"pytanie": pytanie, "odpowiedz": odpowiedz}
+
+
+# ---------- Fiszki: kilka propozycji z całej strony (ETAP 18) ----------
+
+PROMPT_STRONY = (
+    "Jesteś asystentem tworzącym fiszki edukacyjne. Dostajesz tekst jednej "
+    "strony podręcznika. Ułóż od 1 do {liczba} fiszek sprawdzających "
+    "najważniejsze pojęcia i zależności z tej strony — WYŁĄCZNIE na podstawie "
+    "podanego tekstu, bez dodawania faktów, liczb ani informacji spoza niego. "
+    "Pytania i odpowiedzi mają być zwięzłe i po polsku.\n"
+    "Każda fiszka musi mieć pole \"fragment\": DOSŁOWNY cytat (1–2 zdania, "
+    "skopiowany znak w znak z tekstu strony), na którym opiera się odpowiedź.\n"
+    "Odpowiedz WYŁĄCZNIE listą JSON w formacie: "
+    '[{{"pytanie": "...", "odpowiedz": "...", "fragment": "..."}}]'
+)
+
+
+def zaproponuj_fiszki_ze_strony(tekst_strony: str, liczba: int = 5) -> list[dict]:
+    """Zwraca listę {"pytanie", "odpowiedz", "fragment"} z tekstu strony.
+
+    Czy „fragment” naprawdę występuje na stronie, sprawdza wywołujący
+    (fiszki/strona.py) — model bywa nieprecyzyjny przy cytowaniu.
+    """
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
+
+    try:
+        client = genai.Client(api_key=Config.GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model=Config.GEMINI_MODEL,
+            contents=tekst_strony,
+            config=types.GenerateContentConfig(
+                system_instruction=PROMPT_STRONY.format(liczba=liczba),
+                response_mime_type="application/json",
+            ),
+        )
+    except errors.APIError as e:
+        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+
+    return sparsuj_liste_fiszek(response.text or "")
+
+
+def sparsuj_liste_fiszek(tekst: str) -> list[dict]:
+    """JSON od modelu → lista poprawnych propozycji (niepełne pomijamy)."""
+    tekst = tekst.strip()
+    # Model czasem owija JSON w blok ```json ... ```
+    if tekst.startswith("```"):
+        tekst = tekst.strip("`").removeprefix("json").strip()
+    try:
+        dane = json.loads(tekst)
+    except json.JSONDecodeError as e:
+        raise BladGemini("Gemini zwrócił odpowiedź, której nie da się odczytać jako JSON.") from e
+    if isinstance(dane, dict):
+        dane = dane.get("fiszki", [])
+    if not isinstance(dane, list):
+        raise BladGemini("Gemini zwrócił nieoczekiwany format odpowiedzi.")
+
+    wynik = []
+    for pozycja in dane:
+        if not isinstance(pozycja, dict):
+            continue
+        pola = {k: str(pozycja.get(k) or "").strip() for k in ("pytanie", "odpowiedz", "fragment")}
+        if all(pola.values()):
+            wynik.append(pola)
+    return wynik
 
 
 # ---------- Atlas: opis wskaźnika (ETAP 7) ----------

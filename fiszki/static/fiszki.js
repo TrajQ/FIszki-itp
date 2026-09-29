@@ -265,29 +265,150 @@ async function pokazWZrodle(fiszka) {
     podswietlFragment(fiszka.fragment_tekstu);
 }
 
+// Szukamy fragmentu w tekście strony z pominięciem białych znaków:
+// zaznaczenie myszką przez kilka linii zawiera „\n”, a sklejone spany
+// warstwy tekstu nie — bez tego fiszki z dłuższych fragmentów się nie
+// podświetlały (ta sama zasada co fiszki/strona.py po stronie serwera).
 function podswietlFragment(fragment) {
+    const szukany = fragment.replace(/\s+/g, "");
+    if (!szukany) return false;
+
     const spany = Array.from(warstwaTekstu.querySelectorAll("span"));
     let polaczonyTekst = "";
     const zakresySpanow = spany.map((span) => {
         const start = polaczonyTekst.length;
-        polaczonyTekst += span.textContent;
+        polaczonyTekst += span.textContent.replace(/\s+/g, "");
         return { span, start, end: polaczonyTekst.length };
     });
 
-    const indeks = polaczonyTekst.indexOf(fragment);
-    if (indeks === -1) return;
+    const indeks = polaczonyTekst.indexOf(szukany);
+    if (indeks === -1) return false;
 
-    const koniec = indeks + fragment.length;
+    const koniec = indeks + szukany.length;
     let pierwszy = true;
     for (const { span, start, end } of zakresySpanow) {
-        if (end <= indeks || start >= koniec) continue;
+        if (end <= indeks || start >= koniec || start === end) continue;
         span.classList.add("fiszka-podswietlenie");
         if (pierwszy) {
             span.scrollIntoView({ block: "center" });
             pierwszy = false;
         }
     }
+    return true;
 }
+
+// ---------- Fiszki z całej strony (Gemini proponuje, użytkownik wybiera) ----------
+
+const przyciskFiszkiStrony = document.getElementById("przycisk-fiszki-strony");
+const propozycjeEl = document.getElementById("propozycje-strony");
+const listaPropozycji = document.getElementById("lista-propozycji");
+const statusPropozycji = document.getElementById("status-propozycji");
+const przyciskZapiszPropozycje = document.getElementById("zapisz-propozycje");
+const przyciskOdrzucPropozycje = document.getElementById("odrzuc-propozycje");
+let stronaPropozycji = null;
+
+async function tekstBiezacejStrony() {
+    const strona = await dokumentPdf.getPage(numerStrony);
+    const tresc = await strona.getTextContent();
+    return tresc.items.map((el) => el.str + (el.hasEOL ? "\n" : "")).join("");
+}
+
+przyciskFiszkiStrony.addEventListener("click", async () => {
+    if (!dokumentPdf) return;
+    stronaPropozycji = numerStrony;
+    propozycjeEl.hidden = false;
+    listaPropozycji.replaceChildren();
+    przyciskZapiszPropozycje.hidden = true;
+    statusPropozycji.className = "wyciszony";
+    statusPropozycji.textContent = `Gemini czyta stronę ${stronaPropozycji}…`;
+    przyciskFiszkiStrony.disabled = true;
+    try {
+        const odpowiedz = await fetch(URL_SZKICE_STRONY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ strona: stronaPropozycji, tekst: await tekstBiezacejStrony() }),
+        });
+        const dane = await odpowiedz.json();
+        if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
+        pokazPropozycje(dane);
+    } catch (e) {
+        statusPropozycji.className = "komunikat komunikat--blad";
+        statusPropozycji.textContent = e.message;
+    } finally {
+        przyciskFiszkiStrony.disabled = false;
+    }
+});
+
+function pokazPropozycje(dane) {
+    listaPropozycji.replaceChildren();
+    let opis = `Propozycje ze strony ${stronaPropozycji}: ${dane.propozycje.length}. Odznacz zbędne, popraw i zapisz.`;
+    if (dane.odrzucone) {
+        opis += ` Pominięto ${dane.odrzucone}, bo ich cytatu nie ma na stronie (brak kotwicy w źródle).`;
+    }
+    statusPropozycji.className = "wyciszony";
+    statusPropozycji.textContent = opis;
+
+    for (const p of dane.propozycje) {
+        const li = document.createElement("li");
+        li.className = "propozycja";
+        const wybor = document.createElement("input");
+        wybor.type = "checkbox";
+        wybor.checked = true;
+        wybor.className = "propozycja__wybor";
+        const pytanie = document.createElement("textarea");
+        pytanie.value = p.pytanie;
+        pytanie.className = "propozycja__pytanie";
+        const odpowiedz = document.createElement("textarea");
+        odpowiedz.value = p.odpowiedz;
+        const cytat = document.createElement("blockquote");
+        cytat.textContent = p.fragment;
+        cytat.title = "Pokaż na stronie";
+        cytat.addEventListener("click", async () => {
+            await renderujStrone(stronaPropozycji);
+            podswietlFragment(p.fragment);
+        });
+        const tresc = document.createElement("div");
+        tresc.className = "stos";
+        tresc.append(pytanie, odpowiedz, cytat);
+        li.append(wybor, tresc);
+        li.dataset.fragment = p.fragment;
+        listaPropozycji.appendChild(li);
+    }
+    przyciskZapiszPropozycje.hidden = dane.propozycje.length === 0;
+}
+
+przyciskZapiszPropozycje.addEventListener("click", async () => {
+    const wybrane = Array.from(listaPropozycji.querySelectorAll(".propozycja")).filter(
+        (li) => li.querySelector(".propozycja__wybor").checked
+    );
+    przyciskZapiszPropozycje.disabled = true;
+    let zapisane = 0;
+    for (const li of wybrane) {
+        const [pytanie, odpowiedz] = li.querySelectorAll("textarea");
+        if (!pytanie.value.trim() || !odpowiedz.value.trim()) continue;
+        const wynik = await fetch(URL_FISZKI, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                strona: stronaPropozycji,
+                fragment_tekstu: li.dataset.fragment,
+                pytanie: pytanie.value.trim(),
+                odpowiedz: odpowiedz.value.trim(),
+            }),
+        });
+        if (wynik.ok) zapisane += 1;
+    }
+    przyciskZapiszPropozycje.disabled = false;
+    przyciskZapiszPropozycje.hidden = true;
+    listaPropozycji.replaceChildren();
+    statusPropozycji.className = "komunikat komunikat--sukces";
+    statusPropozycji.textContent = `Zapisano fiszki: ${zapisane} (strona ${stronaPropozycji}).`;
+    await odswiezListeFiszek();
+});
+
+przyciskOdrzucPropozycje.addEventListener("click", () => {
+    propozycjeEl.hidden = true;
+});
 
 // Link z sesji powtórki: /fiszki/<pdf>/?fiszka=<id> od razu pokazuje fiszkę w źródle.
 async function start() {

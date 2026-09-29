@@ -516,3 +516,25 @@ działa”, stary wygląd). Jedna gałąź do uruchamiania usuwa tę pułapkę.
 **Odrzucone alternatywy:**
 - Instrukcja „przełącz się na gałąź roboczą” — odrzucone: łatwo o tym
   zapomnieć, a nazwa gałęzi jest nieczytelna.
+
+## D-025 — Fiszki ze strony: cytat obowiązkowy i sprawdzany w kodzie
+Data: 2026-09-29
+
+**Decyzja:** Gemini proponuje fiszki z całej strony tylko razem z
+dosłownym cytatem. Kod sprawdza, czy cytat występuje w tekście strony
+(porównanie bez białych znaków); propozycje bez kotwicy nie są
+pokazywane. Użytkownik zatwierdza każdą propozycję przed zapisem.
+Historia powtórek w osobnym dzienniku (bez kasowania przy usunięciu
+fiszki), statystyki liczone SQL-em z dziennika.
+
+**Uzasadnienie:** Kotwica w źródle to istota modułu — fiszka, której
+nie da się pokazać w PDF-ie, może zawierać treść wymyśloną przez model.
+Ten sam mechanizm (strażnik po stronie kodu) co przy liczbach w atlasie.
+Porównanie bez białych znaków, bo pdf.js i zaznaczenie myszką różnią
+się nowymi liniami i odstępami.
+
+**Odrzucone alternatywy:**
+- Automatyczny zapis wszystkich propozycji — odrzucone: student ma
+  przeczytać i ocenić fiszkę, to część nauki.
+- Dopasowanie przybliżone (fuzzy) cytatu — odrzucone: pozwalałoby
+  przepuścić parafrazę, której nie ma w źródle.

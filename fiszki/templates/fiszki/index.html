@@ -7,7 +7,7 @@
 <div class="naglowek-strony">
     <div>
         <h1>Fiszki</h1>
-        <p>Zaznacz fragment w PDF-ie, a Gemini zaproponuje pytanie i odpowiedź.</p>
+        <p>Zaznacz fragment w PDF-ie albo poproś o fiszki z całej strony — każda ma kotwicę w źródle.</p>
     </div>
 </div>
 
@@ -45,6 +45,24 @@
     </div>
 </form>
 </div>
+
+{% if nauka.powtorki_30_dni %}
+<section class="karta nauka">
+    <div class="nauka__liczby">
+        <div><span class="nauka__wartosc">{{ nauka.seria_dni }}</span><span class="nauka__etykieta">{{ 'dzień' if nauka.seria_dni == 1 else 'dni' }} z rzędu</span></div>
+        <div><span class="nauka__wartosc">{{ nauka.dzis }}</span><span class="nauka__etykieta">powtórek dziś</span></div>
+        <div><span class="nauka__wartosc">{{ '%.0f' % nauka.skutecznosc_proc }}%</span><span class="nauka__etykieta">„umiem” w 30 dni</span></div>
+        <div><span class="nauka__wartosc">{{ nauka.opanowane }}</span><span class="nauka__etykieta">opanowane (pudełko 5)</span></div>
+    </div>
+    <div class="nauka__aktywnosc" aria-label="Powtórki w ostatnich 30 dniach">
+        {% set najwiecej = [nauka.aktywnosc | map(attribute='powtorki') | max, 1] | max %}
+        {% for dzien in nauka.aktywnosc %}
+        <span class="nauka__dzien" title="{{ dzien.data }}: {{ dzien.powtorki }}"
+              style="--poziom: {{ (dzien.powtorki / najwiecej) | round(2) }}"></span>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
 
 <section class="karta stos szukajka">
     <div class="rzad rzad--miedzy">

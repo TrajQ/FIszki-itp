@@ -18,9 +18,10 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
-from dane.gemini import BladGemini, zaproponuj_fiszke
+from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import powtorki
+from . import powtorki, statystyki_nauki
+from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
 fiszki_bp = Blueprint(
@@ -58,6 +59,7 @@ def index():
         pdfy=pdfy,
         do_powtorki=sum(p["do_powtorki"] for p in pdfy),
         pudelka=_liczby_w_pudelkach(),
+        nauka=statystyki_nauki.policz(db, powtorki.dzisiaj()),
     )
 
 
@@ -165,6 +167,34 @@ def szkic_fiszki(pdf_id):
         return jsonify({"blad": str(e)}), 502
 
     return jsonify(szkic)
+
+
+MIN_TEKST_STRONY = 80
+MAKS_TEKST_STRONY = 20_000
+
+
+@fiszki_bp.route("/<int:pdf_id>/szkice-strony", methods=["POST"])
+def szkice_strony(pdf_id):
+    """Kilka propozycji fiszek z całej strony; każda z kotwicą sprawdzoną w tekście."""
+    _pobierz_pdf_albo_404(pdf_id)
+    dane = request.get_json(silent=True) or {}
+    tekst = (dane.get("tekst") or "").strip()
+    if len(tekst) < MIN_TEKST_STRONY:
+        return jsonify({"blad": "Na tej stronie prawie nie ma tekstu (może to skan albo rysunek)."}), 400
+    tekst = tekst[:MAKS_TEKST_STRONY]
+
+    try:
+        propozycje = zaproponuj_fiszki_ze_strony(tekst)
+    except BladGemini as e:
+        return jsonify({"blad": str(e)}), 502
+
+    dobre, odrzucone = zakotwiczone(propozycje, tekst)
+    return jsonify({"propozycje": dobre, "odrzucone": odrzucone})
+
+
+@fiszki_bp.route("/statystyki")
+def statystyki():
+    return jsonify(statystyki_nauki.policz(get_db(), powtorki.dzisiaj()))
 
 
 @fiszki_bp.route("/<int:pdf_id>/fiszki", methods=["POST"])
@@ -417,6 +447,10 @@ def zapisz_powtorke(fiszka_id):
                liczba_powtorek = powtorki.liczba_powtorek + 1,
                ostatnia_powtorka = excluded.ostatnia_powtorka""",
         (fiszka_id, nowe_pudelko, nastepna.isoformat(), dzis.isoformat()),
+    )
+    db.execute(
+        "INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (?, ?, ?)",
+        (fiszka_id, dzis.isoformat(), wynik),
     )
     db.commit()
 

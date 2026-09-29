@@ -34,6 +34,16 @@ CREATE TABLE IF NOT EXISTS powtorki (
     liczba_powtorek INTEGER NOT NULL DEFAULT 0,
     ostatnia_powtorka TEXT
 );
+
+-- ETAP 18: dziennik każdej odpowiedzi w powtórce — do statystyk nauki.
+-- Bez klucza obcego z kaskadą celowo: usunięcie fiszki nie kasuje
+-- historii nauki (liczba powtórek w danym dniu się nie zmienia).
+CREATE TABLE IF NOT EXISTS dziennik_powtorek (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fiszka_id INTEGER NOT NULL,
+    data TEXT NOT NULL,
+    wynik TEXT NOT NULL
+);
 """
 
 
