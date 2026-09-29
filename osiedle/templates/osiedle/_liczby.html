@@ -1,0 +1,2 @@
+{# Liczby w raporcie i porównaniu osiedla: przecinek dziesiętny, spacja tysięcy, bez zer na końcu, „—” dla braku. #}
+{% macro m(x, miejsca=1) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{% if '.' in s %}{% set s = s.rstrip('0').rstrip('.') %}{% endif %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}

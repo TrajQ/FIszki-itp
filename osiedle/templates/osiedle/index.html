@@ -15,6 +15,7 @@
         <h1>Koncepcja osiedla</h1>
         <p>Narysuj obszar opracowania i tereny o różnych funkcjach — bilans terenu liczy się na bieżąco.</p>
     </div>
+    <a class="przycisk przycisk--drugi" href="{{ url_for('osiedle.porownanie') }}">Porównaj warianty</a>
 </div>
 
 <div class="uklad-osiedla">
@@ -26,7 +27,10 @@
         <section class="karta stos">
             <div class="rzad rzad--miedzy">
                 <h3>Koncepcja</h3>
-                <a id="link-geojson" class="przycisk przycisk--tekst" href="#" hidden>GeoJSON</a>
+                <div id="linki-koncepcji" class="rzad" hidden>
+                    <a id="link-raport" class="przycisk przycisk--tekst" href="#">Raport</a>
+                    <a id="link-geojson" class="przycisk przycisk--tekst" href="#">GeoJSON</a>
+                </div>
             </div>
             <select id="wybor-koncepcji" aria-label="Koncepcja"></select>
             <form id="formularz-nowej" class="rzad">

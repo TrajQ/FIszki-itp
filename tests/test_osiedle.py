@@ -198,3 +198,43 @@ def test_program_z_wlasnymi_zalozeniami_i_bledy():
             bilans(rysunek, {"program": zle})
     with pytest.raises(BladKoncepcji):
         bilans(kolekcja(), {"program": {"metraz_mw_m2": -5}})
+
+
+# ---------- ETAP 60: raport, szkic SVG, porównanie wariantów ----------
+
+
+def test_szkic_svg_skala_i_bez_tekstu_uzytkownika():
+    from osiedle.rysunek_svg import skala_dla, szkic_svg, zasieg_m
+
+    maly = kolekcja(prostokat(0, 0, 100, 50, "obszar"), prostokat(0, 0, 50, 50, "MW"))
+    duzy = kolekcja(prostokat(0, 0, 400, 200, "MN"))
+    assert zasieg_m(maly) == pytest.approx((100, 50), rel=1e-3)
+    skala = skala_dla([maly, duzy], 360, 260)
+    assert skala == pytest.approx(400 / (360 - 48), rel=1e-3)  # większy decyduje
+    svg = szkic_svg(maly, 360, 260, skala)
+    assert svg.startswith("<svg") and "stroke-dasharray" in svg and "#ff9f0a" in svg
+    assert " m</text>" in svg and ">N</text>" in svg
+    assert "pusty rysunek" in szkic_svg(kolekcja())
+
+
+def test_raport_svg_i_porownanie(client):
+    ids = []
+    for nazwa, szer in (("Wariant <A>", 50), ("Wariant B", 80)):
+        k = client.post("/osiedle/koncepcje", json={"nazwa": nazwa}).get_json()
+        client.put(f"/osiedle/koncepcje/{k['id']}", json={
+            "geojson": kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, szer, 100, "MW")),
+            "ustawienia": {"plan": {"max_zabudowa_proc": 20}},
+        })
+        ids.append(k["id"])
+    r = client.get(f"/osiedle/koncepcje/{ids[0]}/raport")
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200 and "Wariant &lt;A&gt;" in html and "<svg" in html and "Program osiedla" in html
+    assert "✓ zgodne" in html  # 15% ≤ 20%
+    r = client.get(f"/osiedle/koncepcje/{ids[0]}.svg")
+    assert r.mimetype == "image/svg+xml" and "attachment" in r.headers["Content-Disposition"]
+    assert client.get("/osiedle/koncepcje/999/raport").status_code == 404
+
+    html = client.get(f"/osiedle/porownanie?id={ids[0]}&id={ids[1]}&id=x&id=999").get_data(as_text=True)
+    assert html.count("<svg") == 2 and "Wariant B" in html
+    assert "1 z 1" in html and "0 z 1" in html  # B: 24% > 20%
+    assert "Zaznacz co najmniej dwie" in client.get(f"/osiedle/porownanie?id={ids[0]}").get_data(as_text=True)

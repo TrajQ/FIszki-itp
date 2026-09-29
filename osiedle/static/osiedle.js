@@ -9,7 +9,9 @@
     const nazwaNowej = document.getElementById("nazwa-nowej");
     const akcjeKoncepcji = document.getElementById("akcje-koncepcji");
     const komunikat = document.getElementById("komunikat");
+    const linkiKoncepcji = document.getElementById("linki-koncepcji");
     const linkGeojson = document.getElementById("link-geojson");
+    const linkRaport = document.getElementById("link-raport");
     const sekcjaRysowania = document.getElementById("sekcja-rysowania");
     const sekcjaBilansu = document.getElementById("sekcja-bilansu");
     const wybranyTerenEl = document.getElementById("wybrany-teren");
@@ -374,7 +376,7 @@
         if (!id) {
             koncepcja = null;
             mapa.removeControl(kontrolkaRysowania);
-            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, akcjeKoncepcji, linkGeojson].forEach((el) => (el.hidden = true));
+            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, akcjeKoncepcji, linkiKoncepcji].forEach((el) => (el.hidden = true));
             return;
         }
         const dane = await zapytaj(`${URL_KONCEPCJE}/${id}`);
@@ -392,8 +394,9 @@
             },
         });
         kontrolkaRysowania.addTo(mapa);
-        [sekcjaRysowania, akcjeKoncepcji, linkGeojson].forEach((el) => (el.hidden = false));
+        [sekcjaRysowania, akcjeKoncepcji, linkiKoncepcji].forEach((el) => (el.hidden = false));
         linkGeojson.href = `${URL_KONCEPCJE}/${id}.geojson`;
+        linkRaport.href = `${URL_KONCEPCJE}/${id}/raport`;
         stanZapisu.textContent = "";
         const plan = (dane.ustawienia || {}).plan || {};
         polaUstalen.forEach((pole) => (pole.value = plan[pole.dataset.ustalenie] ?? ""));

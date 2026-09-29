@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "osiedle/_liczby.html" import m %}
+
+{% block tytul %}Porównanie wariantów — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('osiedle.static', filename='osiedle.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('osiedle.index') }}">‹ Osiedle</a>
+        <h1>Porównanie wariantów</h1>
+        <p>Wybierz od 2 do {{ maks }} koncepcji — zobaczysz je obok siebie, szkice w tej samej skali.</p>
+    </div>
+</div>
+
+{% if wszystkie | length < 2 %}
+<p class="karta pusty-stan">Do porównania potrzebne są co najmniej dwie koncepcje. Utwórz drugi wariant na stronie Osiedle.</p>
+{% else %}
+<form class="karta stos" method="get">
+    <div class="wybor-wariantow">
+        {% for k in wszystkie %}
+        <label class="funkcja"><input type="checkbox" name="id" value="{{ k.id }}" {{ 'checked' if k.id in wybrane_id }}> {{ k.nazwa }}</label>
+        {% endfor %}
+    </div>
+    <div class="rzad"><button type="submit">Porównaj</button></div>
+</form>
+{% endif %}
+
+{% if warianty %}
+<section class="karta tabela-wariantow-wrap">
+    <table class="tabela tabela-wariantow">
+        <tr><th></th>{% for w in warianty %}<th><a href="{{ url_for('osiedle.raport', koncepcja_id=w.k.id) }}">{{ w.k.nazwa }}</a></th>{% endfor %}</tr>
+        <tr><th>Szkic (ta sama skala)</th>{% for w in warianty %}<td class="tabela-wariantow__szkic">{{ w.szkic }}</td>{% endfor %}</tr>
+
+        <tr class="tabela-wariantow__grupa"><th colspan="{{ warianty | length + 1 }}">Bilans terenu</th></tr>
+        <tr><th>obszar opracowania [m²]</th>{% for w in warianty %}<td class="liczba">{{ m(w.b.obszar_m2, 0) }}</td>{% endfor %}</tr>
+        {% for kod, f in funkcje %}
+        <tr><th><span class="funkcja__probka" style="background: {{ f.kolor }}"></span> {{ kod }} [%]</th>
+            {% for w in warianty %}{% set wiersz = w.b.funkcje | selectattr('funkcja', 'equalto', kod) | first %}<td class="liczba">{{ m(wiersz.procent) if wiersz else '—' }}</td>{% endfor %}</tr>
+        {% endfor %}
+
+        <tr class="tabela-wariantow__grupa"><th colspan="{{ warianty | length + 1 }}">Wskaźniki zabudowy</th></tr>
+        {% for klucz, nazwa, miejsca in [('zabudowa_proc', 'wskaźnik zabudowy [%]', 1), ('intensywnosc', 'intensywność', 2), ('pbc_proc', 'biologicznie czynna [%]', 1), ('max_kondygnacje', 'najwyższa zabudowa [kond.]', 1)] %}
+        <tr><th>{{ nazwa }}</th>{% for w in warianty %}<td class="liczba">{{ m(w.b.wskazniki[klucz], miejsca) if w.b.wskazniki else '—' }}</td>{% endfor %}</tr>
+        {% endfor %}
+        <tr><th>zgodność z planem</th>{% for w in warianty %}{% set z = w.b.zgodnosc %}
+            <td class="liczba {{ '' if not z else ('stan--ok' if z | selectattr('spelnione') | list | length == z | length else 'stan--zle') }}">{{ '—' if not z else (z | selectattr('spelnione') | list | length) ~ ' z ' ~ (z | length) }}</td>{% endfor %}</tr>
+
+        <tr class="tabela-wariantow__grupa"><th colspan="{{ warianty | length + 1 }}">Program</th></tr>
+        {% for klucz, nazwa, miejsca in [('mieszkania', 'mieszkania i domy', 0), ('mieszkancy', 'mieszkańcy', 0), ('gestosc_os_na_ha', 'gęstość [os./ha]', 1), ('miejsca_potrzebne', 'miejsca postojowe — potrzeba', 0), ('miejsca_na_terenach_ks', 'miejsca postojowe — na KS', 0), ('oddzialy_przedszkolne', 'oddziały przedszkolne', 0), ('oddzialy_szkolne', 'oddziały szkolne', 0), ('zielen_na_mieszkanca_m2', 'zieleń na mieszkańca [m²]', 1)] %}
+        <tr><th>{{ nazwa }}</th>{% for w in warianty %}<td class="liczba">{{ m(w.b.program[klucz], miejsca) if w.b.program else '—' }}</td>{% endfor %}</tr>
+        {% endfor %}
+    </table>
+</section>
+{% elif wybrane_id %}
+<p class="karta pusty-stan">Zaznacz co najmniej dwie koncepcje.</p>
+{% endif %}
+{% endblock %}

@@ -114,3 +114,8 @@ def eksport_geojson(koncepcja_id):
         mimetype="application/geo+json",
         headers={"Content-Disposition": f"attachment; filename={nazwa}"},
     )
+
+
+# Raport, szkic i porównanie — w osobnym pliku, rejestruje się na osiedle_bp.
+# Import na końcu, bo tamten plik importuje osiedle_bp z tego modułu.
+from . import trasy_druk  # noqa: E402, F401

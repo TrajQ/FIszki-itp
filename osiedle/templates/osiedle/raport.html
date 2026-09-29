@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "osiedle/_liczby.html" import m %}
+
+{% block tytul %}{{ k.nazwa }} — raport koncepcji — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-osiedla{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('osiedle.static', filename='osiedle.css') }}">{% endblock %}
+
+{% block tresc %}
+{% set w = b.wskazniki %}
+{% set p = b.program %}
+<div class="raport-osiedla">
+    <div class="raport-osiedla__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('osiedle.index') }}">‹ Osiedle</a>
+        <div class="rzad">
+            <a class="przycisk przycisk--drugi" href="{{ url_for('osiedle.szkic', koncepcja_id=k.id) }}">Pobierz szkic SVG</a>
+            <a class="przycisk przycisk--drugi" href="{{ url_for('osiedle.eksport_geojson', koncepcja_id=k.id) }}">GeoJSON</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>
+    </div>
+
+    <section class="raport-osiedla__strona">
+        <h2>{{ k.nazwa }}</h2>
+        <p class="wyciszony">Koncepcja zagospodarowania · stan z {{ k.data_zmiany[:10] }} · Warsztat, moduł Osiedle</p>
+        <div class="raport-osiedla__szkic">{{ szkic }}</div>
+        <ul class="legenda-osiedla">
+            <li><span class="funkcja__probka funkcja__probka--obszar"></span> obszar opracowania</li>
+            {% for f in b.funkcje %}<li><span class="funkcja__probka" style="background: {{ f.kolor }}"></span> <strong>{{ f.funkcja }}</strong> {{ f.nazwa }}</li>{% endfor %}
+        </ul>
+    </section>
+
+    <section class="raport-osiedla__strona">
+        <div class="raport-osiedla__kolumny">
+            <div>
+                <h3>Bilans terenu</h3>
+                <table class="tabela">
+                    <tr><th>Funkcja</th><th class="liczba">m²</th><th class="liczba">%</th></tr>
+                    {% for f in b.funkcje %}<tr><td><strong>{{ f.funkcja }}</strong> {{ f.nazwa }}</td><td class="liczba">{{ m(f.powierzchnia_m2, 0) }}</td><td class="liczba">{{ m(f.procent) }}</td></tr>{% endfor %}
+                    {% if b.kontrole.niezagospodarowane_m2 %}<tr class="wyciszony"><td>bez funkcji (w obszarze)</td><td class="liczba">{{ m(b.kontrole.niezagospodarowane_m2, 0) }}</td><td class="liczba">{{ m(b.kontrole.niezagospodarowane_proc) }}</td></tr>{% endif %}
+                    <tr class="tabela-bilansu__razem"><td>{{ 'obszar opracowania' if b.obszar_m2 is not none else 'razem (bez obszaru opracowania)' }}</td><td class="liczba">{{ m(b.obszar_m2 if b.obszar_m2 is not none else b.razem_m2, 0) }}</td><td class="liczba">100</td></tr>
+                </table>
+                {% if b.kontrole.nakladanie_m2 and b.kontrole.nakladanie_m2 >= 1 %}<p class="komunikat komunikat--ostrzezenie">Tereny nakładają się na {{ m(b.kontrole.nakladanie_m2, 0) }} m² — bilans liczy tę część podwójnie.</p>{% endif %}
+                {% if b.kontrole.poza_obszarem_m2 and b.kontrole.poza_obszarem_m2 >= 1 %}<p class="komunikat komunikat--ostrzezenie">{{ m(b.kontrole.poza_obszarem_m2, 0) }} m² terenów leży poza obszarem opracowania.</p>{% endif %}
+
+                {% if w %}
+                <h3>Wskaźniki zabudowy</h3>
+                <p class="wyciszony">Liczone od {{ 'powierzchni obszaru opracowania' if b.obszar_m2 is not none else 'sumy terenów' }}.</p>
+                <table class="tabela">
+                    <tr><td>powierzchnia zabudowy</td><td class="liczba">{{ m(w.powierzchnia_zabudowy_m2, 0) }} m²</td></tr>
+                    <tr><td>powierzchnia całkowita</td><td class="liczba">{{ m(w.powierzchnia_calkowita_m2, 0) }} m²</td></tr>
+                    <tr><td>wskaźnik zabudowy</td><td class="liczba">{{ m(w.zabudowa_proc) }}%</td></tr>
+                    <tr><td>intensywność zabudowy</td><td class="liczba">{{ m(w.intensywnosc, 2) }}</td></tr>
+                    <tr><td>powierzchnia biologicznie czynna</td><td class="liczba">{{ m(w.pbc_proc) }}%</td></tr>
+                    <tr><td>najwyższa zabudowa</td><td class="liczba">{{ m(w.max_kondygnacje) }} kond.</td></tr>
+                </table>
+                {% endif %}
+
+                {% if b.zgodnosc %}
+                <h3>Zgodność z ustaleniami planu</h3>
+                <table class="tabela">
+                    <tr><th>Ustalenie</th><th class="liczba">Plan</th><th class="liczba">Koncepcja</th><th></th></tr>
+                    {% for z in b.zgodnosc %}
+                    <tr><td>{{ z.nazwa }}</td><td class="liczba">{{ z.rodzaj }} {{ m(z.granica, 2) }}{{ z.jednostka }}</td><td class="liczba">{{ m(z.wartosc, 2) }}{{ z.jednostka }}</td>
+                        <td class="{{ 'stan--ok' if z.spelnione else 'stan--zle' }}">{{ '✓ zgodne' if z.spelnione else '✗ niezgodne' }}</td></tr>
+                    {% endfor %}
+                </table>
+                {% endif %}
+            </div>
+
+            {% if p %}
+            <div>
+                <h3>Program osiedla</h3>
+                <table class="tabela">
+                    <tr><td>mieszkania w zabudowie wielorodzinnej (MW)</td><td class="liczba">{{ m(p.mieszkania_mw, 0) }}</td></tr>
+                    <tr><td>domy w zabudowie jednorodzinnej (MN)</td><td class="liczba">{{ m(p.mieszkania_mn, 0) }}</td></tr>
+                    <tr class="tabela-bilansu__razem"><td>mieszkańcy</td><td class="liczba">{{ m(p.mieszkancy, 0) }}</td></tr>
+                    <tr><td>gęstość [os./ha obszaru]</td><td class="liczba">{{ m(p.gestosc_os_na_ha) }}</td></tr>
+                    <tr><td>powierzchnia usług [m²]</td><td class="liczba">{{ m(p.powierzchnia_uslug_m2, 0) }}</td></tr>
+                    <tr><td>miejsca postojowe — potrzeba</td><td class="liczba">{{ m(p.miejsca_potrzebne, 0) }}</td></tr>
+                    <tr><td>miejsca postojowe — na terenach KS</td><td class="liczba">{{ m(p.miejsca_na_terenach_ks, 0) }}</td></tr>
+                    <tr><td>dzieci w wieku przedszkolnym / oddziały</td><td class="liczba">{{ m(p.dzieci_przedszkole, 0) }} / {{ m(p.oddzialy_przedszkolne, 0) }}</td></tr>
+                    <tr><td>dzieci w wieku szkolnym / oddziały</td><td class="liczba">{{ m(p.dzieci_szkola, 0) }} / {{ m(p.oddzialy_szkolne, 0) }}</td></tr>
+                    <tr><td>zieleń urządzona na mieszkańca [m²]</td><td class="liczba">{{ m(p.zielen_na_mieszkanca_m2) }}</td></tr>
+                </table>
+                {% if p.miejsca_brakuje %}<p class="komunikat komunikat--ostrzezenie">Na terenach KS brakuje {{ m(p.miejsca_brakuje, 0) }} miejsc postojowych.</p>{% endif %}
+
+                <h3>Przyjęte założenia</h3>
+                <table class="tabela raport-osiedla__zalozenia">
+                    {% for klucz, z in zalozenia.items() %}
+                    <tr><td>{{ z[0] }}</td><td class="liczba">{{ m(p.zalozenia[klucz], 2) }}{% if z[2] %} {{ z[2] }}{% endif %}{% if p.zalozenia[klucz] != z[1] %} <span class="wyciszony">(typowo {{ m(z[1], 2) }})</span>{% endif %}</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+            {% endif %}
+        </div>
+        <p class="wyciszony raport-osiedla__stopka">Szacunek koncepcyjny: wskaźniki z parametrów terenów, program z założeń powyżej. Liczy kod aplikacji, nie model językowy.</p>
+    </section>
+</div>
+{% endblock %}
