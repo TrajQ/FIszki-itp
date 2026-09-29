@@ -118,3 +118,56 @@ def test_zly_import_i_nazwa(client):
     client.post("/teren/projekty", data={"nazwa": "Własny", "wzor": ""})
     r = client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(b"\x00nie json"), "x.json")}, content_type="multipart/form-data")
     assert r.status_code == 400
+
+
+# ---------- ETAP 69: raport z terenu ----------
+
+from teren import raport as raport_terenu  # noqa: E402
+
+
+def test_zestawienie_i_numeracja():
+    pola = sprawdz_pola([
+        {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "zły"]},
+        {"nazwa": "obwód", "typ": "liczba"},
+        {"nazwa": "chroniony", "typ": "tak_nie"},
+        {"nazwa": "gatunek", "typ": "tekst"},
+    ])
+    punkty = raport_terenu.ponumeruj([
+        {"id": 2, "czas": "2026-09-29T10:05:00", "wartosci": {"stan": "zły", "obwód": 80.0, "chroniony": True}},
+        {"id": 1, "czas": "2026-09-29T10:00:00", "wartosci": {"stan": "dobry", "obwód": 120.0, "gatunek": "lipa"}},
+        {"id": 3, "czas": "2026-09-29T10:09:00", "wartosci": {"stan": "dobry"}},
+    ])
+    assert [(p["id"], p["nr"]) for p in punkty] == [(1, 1), (2, 2), (3, 3)]  # kolejność pomiaru
+    z = {x["nazwa"]: x for x in raport_terenu.zestawienie(pola, punkty)}
+    assert [(r["wartosc"], r["liczba"]) for r in z["stan"]["rozklad"]] == [("dobry", 2), ("zły", 1)]
+    assert z["stan"]["rozklad"][0]["procent"] == pytest.approx(66.667, abs=0.01)
+    assert z["obwód"]["statystyki"] == {"min": 80.0, "max": 120.0, "srednia": 100.0, "mediana": 100.0, "suma": 200.0}
+    assert [(r["wartosc"], r["liczba"]) for r in z["chroniony"]["rozklad"]] == [("tak", 1), ("nie", 0)]
+    assert z["gatunek"]["wypelnione"] == 1 and "rozklad" not in z["gatunek"]
+
+
+def test_mapa_svg_raportu():
+    pole = {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "zły"]}
+    punkty = [
+        {"nr": 1, "lat": 52.4, "lng": 16.9, "wartosci": {"stan": "dobry"}},
+        {"nr": 2, "lat": 52.4009, "lng": 16.9, "wartosci": {}},  # ok. 100 m na północ, bez wartości
+        {"nr": 3, "lat": None, "lng": None, "wartosci": {"stan": "zły"}},
+    ]
+    svg = raport_terenu.mapa_svg(punkty, pole)
+    assert svg.count("<circle") == 2 and ">1</text>" in svg and ">2</text>" in svg and ">3</text>" not in svg
+    assert raport_terenu.PALETA[0] in svg and raport_terenu.KOLOR_BRAK in svg and " m</text>" in svg
+    assert "brak punktów z położeniem" in raport_terenu.mapa_svg([punkty[2]], None)
+
+
+def test_strona_raportu(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń <test>", "wzor": "zielen"})
+    klucz = re.search(r'"klucz": "([^"]+)"', client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)).group(1)
+    client.post("/teren/projekty/1/import", content_type="multipart/form-data",
+                data={"plik": (io.BytesIO(json.dumps(plik(klucz, punkt(), punkt("drugi000000", zdjecie=None, wartosci={"stan": "zły"}))).encode()), "t.json")})
+    html = client.get("/teren/projekty/1/raport").get_data(as_text=True)
+    assert "Zieleń &lt;test&gt;" in html and "<svg" in html and "Dokumentacja fotograficzna" in html
+    assert "wg: obiekt" in html and 'value="obiekt" selected' in html  # domyślny kolor wg pierwszego pola wyboru
+    assert html.count('alt="Zdjęcie punktu') == 1
+    html = client.get("/teren/projekty/1/raport?pole=").get_data(as_text=True)
+    assert '<option value="" selected>jednolity' in html
+    assert client.get("/teren/projekty/9/raport").status_code == 404

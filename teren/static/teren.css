@@ -207,3 +207,158 @@ button.przycisk--niebezpieczny-tekst {
         height: 60vh;
     }
 }
+
+/* ---------- Raport z terenu (ETAP 69) ---------- */
+.raport-terenu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.raport-terenu__akcje {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.raport-terenu__akcje label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.raport-terenu__strona {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 28px;
+    border-radius: var(--promien);
+    background: var(--tlo-karty);
+    box-shadow: var(--cien);
+}
+
+.raport-terenu__strona h1,
+.raport-terenu__strona h2 {
+    margin: 0;
+}
+
+.raport-terenu__strona h1 {
+    font-size: 32px;
+}
+
+.raport-terenu__strona p {
+    margin: 0;
+}
+
+.raport-terenu__mapa svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--linia);
+    border-radius: var(--promien-maly);
+}
+
+.raport-terenu__legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+}
+
+.raport-terenu__legenda li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.raport-terenu__zestawienie {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px 28px;
+}
+
+.raport-terenu__pole h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+}
+
+.raport-terenu__pole .tabela,
+.raport-terenu__punkty {
+    font-size: 13px;
+}
+
+.raport-terenu__nr {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border-radius: 11px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.raport-terenu__zdjecia {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.raport-terenu__zdjecia figure {
+    margin: 0;
+    break-inside: avoid;
+}
+
+.raport-terenu__zdjecia img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.raport-terenu__zdjecia figcaption {
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+.raport-terenu .przypis {
+    font-size: 12px;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+
+    .strona-raportu-terenu .pasek-nawigacji,
+    .raport-terenu__akcje {
+        display: none;
+    }
+
+    .raport-terenu__strona {
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .raport-terenu__strona:first-of-type {
+        break-after: page;
+    }
+
+    .raport-terenu__nr {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

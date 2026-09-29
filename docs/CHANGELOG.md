@@ -509,3 +509,10 @@
   `pdf_skroty`; naprawiony podgląd PDF — lewy brzeg szerokiej strony był
   niewidoczny.
 - Dodano `DECISIONS.md` D-074 i 2 testy.
+
+## ETAP 69 — 2026-09-29
+- Teren: **raport do druku** — mapa schematyczna ponumerowanych punktów
+  (kolor wg pola, legenda, podziałka, północ), zestawienie pól, tabela
+  punktów z dokładnością GPS, dokumentacja fotograficzna z numerami;
+  przycisk „Raport do druku” na stronie projektu.
+- Dodano `teren/raport.py`, `DECISIONS.md` D-075 i 3 testy.

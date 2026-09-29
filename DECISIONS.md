@@ -1616,3 +1616,23 @@ jednym miejscu i w jedną stronę (przepisy → fiszki).
 - Fiszka bez kotwicy (strona 0, jak import CSV) — traci „Pokaż w źródle”.
 - Współdzielenie pliku PDF między modułami — usunięcie aktu w
   przepisach psułoby fiszki.
+
+## D-075 — Raport z terenu: mapa schematyczna bez podkładu
+Data: 2026-09-29
+
+**Decyzja:** Raport projektu terenowego (`/teren/projekty/<id>/raport`,
+druk/PDF z przeglądarki): mapa SVG generowana na serwerze
+(`teren/raport.py`) — punkty w metrach lokalnej skali, numery w
+kolejności pomiaru, kolor wg wybranego pola wyboru (domyślnie
+pierwszego), podziałka, północ; zestawienie pól (liczebności i % dla
+list wyboru i tak/nie, min–max, średnia, mediana dla liczb, liczba
+wypełnionych dla tekstu); tabela punktów ze współrzędnymi i
+dokładnością GPS; dokumentacja fotograficzna z tymi samymi numerami.
+
+**Uzasadnienie:** Raport do zaliczenia ćwiczeń terenowych ma się dać
+wydrukować zawsze — bez internetu i kafelków z cudzych serwerów. Wspólny
+numer punktu łączy mapę, tabelę i zdjęcia.
+
+**Odrzucone alternatywy:**
+- Mapa z podkładem (OSM/ortofotomapa) — zależna od sieci i licencji
+  kafelków przy druku; dokładny podkład daje eksport GeoJSON do QGIS.

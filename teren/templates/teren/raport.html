@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block tytul %}{{ projekt.nazwa }} — raport z terenu — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-terenu{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('teren.static', filename='teren.css') }}">{% endblock %}
+
+{% macro liczba(x) %}{{ ('%.2f' % x).rstrip('0').rstrip('.').replace('.', ',') }}{% endmacro %}
+{% macro wartosc(w) %}{% if w is sameas true %}tak{% elif w is sameas false %}nie{% elif w is number %}{{ liczba(w) }}{% else %}{{ w }}{% endif %}{% endmacro %}
+
+{% block tresc %}
+<div class="raport-terenu">
+    <div class="raport-terenu__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('teren.widok_projektu', projekt_id=projekt.id) }}">‹ Projekt</a>
+        <form class="rzad" method="get">
+            {% if pola_do_koloru %}
+            <label class="rzad">Kolor punktów
+                <select name="pole" onchange="this.form.submit()">
+                    <option value="" {{ 'selected' if pole is none }}>jednolity</option>
+                    {% for x in pola_do_koloru %}<option value="{{ x.nazwa }}" {{ 'selected' if pole and pole.nazwa == x.nazwa }}>wg: {{ x.nazwa }}</option>{% endfor %}
+                </select>
+            </label>
+            {% endif %}
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </form>
+    </div>
+
+    <section class="raport-terenu__strona">
+        <h1>{{ projekt.nazwa }}</h1>
+        <p class="wyciszony">
+            Inwentaryzacja terenowa · punktów: {{ punkty | length }}
+            (z położeniem: {{ punkty | selectattr('lat') | list | length }}, ze zdjęciem: {{ punkty | selectattr('zdjecie') | list | length }})
+            {% if od %} · pomiary {{ od[:10] }}{% if do[:10] != od[:10] %} – {{ do[:10] }}{% endif %}{% endif %}
+        </p>
+        <div class="raport-terenu__mapa">{{ mapa }}</div>
+        {% if pole %}
+        <ul class="raport-terenu__legenda">
+            <li class="wyciszony">{{ pole.nazwa }}:</li>
+            {% for w, k in kolory.items() %}<li><span class="legenda__probka" style="background: {{ k }}"></span> {{ w }}</li>{% endfor %}
+            <li><span class="legenda__probka" style="background: {{ kolor_brak }}"></span> brak wartości</li>
+        </ul>
+        {% endif %}
+        <p class="wyciszony przypis">Mapa schematyczna: punkty z pomiaru GPS telefonu (dokładność w tabeli), bez podkładu. Numery jak w tabeli i przy zdjęciach.</p>
+    </section>
+
+    <section class="raport-terenu__strona">
+        <h2>Zestawienie</h2>
+        <div class="raport-terenu__zestawienie">
+            {% for z in zestawienie %}
+            <div class="raport-terenu__pole">
+                <h3>{{ z.nazwa }}</h3>
+                {% if z.rozklad is defined %}
+                <table class="tabela">
+                    {% for r in z.rozklad %}<tr><td>{{ r.wartosc }}</td><td class="liczba">{{ r.liczba }}</td><td class="liczba wyciszony">{{ liczba(r.procent) }}%</td></tr>{% endfor %}
+                    {% if z.wypelnione < z.wszystkie %}<tr class="wyciszony"><td>brak wartości</td><td class="liczba">{{ z.wszystkie - z.wypelnione }}</td><td></td></tr>{% endif %}
+                </table>
+                {% elif z.statystyki is defined %}
+                {% set s = z.statystyki %}
+                <table class="tabela">
+                    <tr><td>punktów z wartością</td><td class="liczba">{{ z.wypelnione }}</td></tr>
+                    <tr><td>min – max</td><td class="liczba">{{ liczba(s.min) }} – {{ liczba(s.max) }}</td></tr>
+                    <tr><td>średnia</td><td class="liczba">{{ liczba(s.srednia) }}</td></tr>
+                    <tr><td>mediana</td><td class="liczba">{{ liczba(s.mediana) }}</td></tr>
+                </table>
+                {% else %}
+                <p class="wyciszony">wypełnione w {{ z.wypelnione }} z {{ z.wszystkie }} punktów</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="raport-terenu__strona">
+        <h2>Punkty</h2>
+        <table class="tabela raport-terenu__punkty">
+            <thead><tr><th>Nr</th><th>Data</th>{% for x in projekt.pola %}<th>{{ x.nazwa }}</th>{% endfor %}<th>Uwagi</th><th>Położenie</th></tr></thead>
+            <tbody>
+            {% for p in punkty %}
+            <tr>
+                <td><span class="raport-terenu__nr" style="background: {{ p.kolor }}">{{ p.nr }}</span></td>
+                <td>{{ p.czas[:10] }}</td>
+                {% for x in projekt.pola %}<td>{% if x.nazwa in p.wartosci %}{{ wartosc(p.wartosci[x.nazwa]) }}{% endif %}</td>{% endfor %}
+                <td>{{ p.uwagi }}</td>
+                <td class="liczba">{% if p.lat is not none %}{{ '%.5f' % p.lat }}, {{ '%.5f' % p.lng }}{% if p.dokladnosc_m is not none %} <span class="wyciszony">±{{ p.dokladnosc_m | round | int }} m</span>{% endif %}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    {% set ze_zdjeciem = punkty | selectattr('url_zdjecia') | list %}
+    {% if ze_zdjeciem %}
+    <section class="raport-terenu__strona">
+        <h2>Dokumentacja fotograficzna</h2>
+        <div class="raport-terenu__zdjecia">
+            {% for p in ze_zdjeciem %}
+            <figure>
+                <img src="{{ p.url_zdjecia }}" alt="Zdjęcie punktu {{ p.nr }}" loading="lazy">
+                <figcaption><strong>{{ p.nr }}.</strong> {% for x in projekt.pola if x.nazwa in p.wartosci %}{{ wartosc(p.wartosci[x.nazwa]) }}{{ ', ' if not loop.last }}{% endfor %}{% if p.uwagi %} — {{ p.uwagi | truncate(80) }}{% endif %}</figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+    <p class="wyciszony przypis">Raport z modułu Teren aplikacji Warsztat. Położenie: GPS telefonu (WGS84).</p>
+</div>
+{% endblock %}

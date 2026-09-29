@@ -22,7 +22,7 @@ kogoś, kto wróci do niego za trzy miesiące.
 - przepisy    — akty prawne z PDF: artykuły, wyszukiwarka, pytania do
                 Gemini z cytatami sprawdzanymi w tekście i kotwicą w PDF
 - teren       — inwentaryzacja w terenie: samodzielny formularz HTML na
-                telefon (bez internetu), import pliku, mapa punktów
+                telefon (bez internetu), import pliku, mapa punktów, raport
 
 Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 
@@ -59,6 +59,6 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 68 (przepisy → fiszki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap68_20260929.zip
-Testy: 404 passed / 0 failed
+ETAP: 69 (teren: raport do druku — zamknięty)
+Ostatni ZIP: releases/warsztat_etap69_20260929.zip
+Testy: 407 passed / 0 failed

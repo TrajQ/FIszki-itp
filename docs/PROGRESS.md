@@ -1373,3 +1373,13 @@ Status: zamknięty
 - Znaleziony przy okazji i naprawiony błąd podglądu PDF w fiszkach
   (lewy brzeg strony poza obszarem przewijania)
 - `DECISIONS.md`: D-074
+
+## ETAP 69 — Teren: raport do druku
+Data: 2026-09-29
+Status: zamknięty
+
+- `teren/raport.py` (numeracja, zestawienie, mapa SVG), trasa
+  `/teren/projekty/<id>/raport`, szablon `raport.html`, style w `teren.css`
+- Sprawdzone w przeglądarce: 12 punktów, 8 zdjęć JPEG, kolor wg „stan”,
+  jasny i ciemny motyw, wydruk do PDF (4 strony A4)
+- `DECISIONS.md`: D-075

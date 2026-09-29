@@ -17,6 +17,7 @@
     </div>
     <div class="rzad">
         <a class="przycisk" href="{{ url_for('teren.formularz', projekt_id=projekt.id) }}">📱 Pobierz formularz na telefon</a>
+        <a class="przycisk przycisk--drugi" href="{{ url_for('teren.raport_projektu', projekt_id=projekt.id) }}">Raport do druku</a>
         <a class="przycisk przycisk--drugi" href="{{ url_for('teren.eksport_geojson', projekt_id=projekt.id) }}" title="Punkty z położeniem — przeciągnij do QGIS">GeoJSON</a>
         <a class="przycisk przycisk--drugi" href="{{ url_for('teren.eksport_csv', projekt_id=projekt.id) }}">CSV</a>
     </div>

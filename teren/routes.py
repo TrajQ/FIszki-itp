@@ -14,7 +14,9 @@ import unicodedata
 
 from flask import Blueprint, Response, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 
-from . import baza
+from markupsafe import Markup
+
+from . import baza, raport
 from .projekt import FORMAT, TYPY_POL, WZORY, BladDanych, sprawdz_tekst, odczytaj_plik, sprawdz_pola
 
 teren_bp = Blueprint(
@@ -189,4 +191,35 @@ def eksport_csv(projekt_id):
         "﻿" + wyjscie.getvalue(),  # BOM — Excel otworzy polskie znaki poprawnie
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename=teren_{_nazwa_pliku(p['nazwa'])}.csv"},
+    )
+
+
+@teren_bp.route("/projekty/<int:projekt_id>/raport")
+def raport_projektu(projekt_id):
+    """Raport do druku (ETAP 69): mapa, zestawienie, punkty, zdjęcia."""
+    p = _projekt_albo_404(projekt_id)
+    punkty = raport.ponumeruj(baza.punkty(projekt_id))
+    do_koloru = [pole for pole in p["pola"] if pole["typ"] in ("wybor", "tak_nie")]
+    nazwa = request.args.get("pole")
+    if nazwa is None:
+        pole = do_koloru[0] if do_koloru else None  # domyślnie pierwsze pole wyboru
+    else:
+        pole = next((x for x in do_koloru if x["nazwa"] == nazwa), None)
+    kolory = raport.kolory_pola(pole)
+    for pt in punkty:
+        pt["kolor"] = raport.kolor_punktu(pt, pole, kolory)
+        pt["url_zdjecia"] = url_for("teren.zdjecie", projekt_id=projekt_id, punkt_id=pt["id"]) if pt["zdjecie"] else None
+    czasy = [pt["czas"] for pt in punkty]
+    return render_template(
+        "teren/raport.html",
+        projekt=p,
+        punkty=punkty,
+        zestawienie=raport.zestawienie(p["pola"], punkty),
+        mapa=Markup(raport.mapa_svg(punkty, pole)),  # tylko liczby i kolory z kodu
+        pole=pole,
+        pola_do_koloru=do_koloru,
+        kolory=kolory,
+        kolor_brak=raport.KOLOR_BRAK,
+        od=min(czasy) if czasy else None,
+        do=max(czasy) if czasy else None,
     )
