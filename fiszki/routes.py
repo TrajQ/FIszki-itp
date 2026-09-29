@@ -210,28 +210,33 @@ def edytuj_fiszke(pdf_id, fiszka_id):
     return jsonify(dict(zmieniona))
 
 
-def _fiszki_do_eksportu(pdf_id):
+def _fiszki_do_eksportu(pdf_id=None):
+    """Fiszki jednego PDF-a albo (pdf_id=None) wszystkie, z nazwą pliku."""
     db = get_db()
-    return db.execute(
-        "SELECT * FROM fiszki WHERE pdf_id = ? ORDER BY strona, id", (pdf_id,)
-    ).fetchall()
+    zapytanie = """SELECT fiszki.*, pdfy.nazwa_oryginalna
+                   FROM fiszki JOIN pdfy ON pdfy.id = fiszki.pdf_id"""
+    if pdf_id is None:
+        return db.execute(zapytanie + " ORDER BY pdfy.nazwa_oryginalna, strona, fiszki.id").fetchall()
+    return db.execute(zapytanie + " WHERE pdf_id = ? ORDER BY strona, fiszki.id", (pdf_id,)).fetchall()
 
 
 def _nazwa_pliku_eksportu(pdf, rozszerzenie):
+    if pdf is None:
+        return f"fiszki_wszystkie.{rozszerzenie}"
     nazwa_bez_pdf = os.path.splitext(secure_filename(pdf["nazwa_oryginalna"]))[0]
     return f"fiszki_{nazwa_bez_pdf or pdf['id']}.{rozszerzenie}"
 
 
-@fiszki_bp.route("/<int:pdf_id>/eksport.csv")
-def eksport_csv(pdf_id):
-    pdf = _pobierz_pdf_albo_404(pdf_id)
+def _odpowiedz_csv(fiszki, pdf):
+    """CSV do arkusza. Przy eksporcie wszystkiego dochodzi kolumna „plik”."""
     bufor = io.StringIO()
     zapis = csv.writer(bufor)
-    zapis.writerow(["strona", "pytanie", "odpowiedz", "fragment_tekstu", "data_utworzenia"])
-    for f in _fiszki_do_eksportu(pdf_id):
-        zapis.writerow(
-            [f["strona"], f["pytanie"], f["odpowiedz"], f["fragment_tekstu"], f["data_utworzenia"]]
-        )
+    kolumny = ["strona", "pytanie", "odpowiedz", "fragment_tekstu", "data_utworzenia"]
+    if pdf is None:
+        kolumny = ["plik"] + kolumny
+    zapis.writerow(kolumny)
+    for f in fiszki:
+        zapis.writerow([f["nazwa_oryginalna"] if k == "plik" else f[k] for k in kolumny])
 
     # utf-8-sig (z BOM), żeby LibreOffice/Excel poprawnie pokazały polskie znaki.
     return Response(
@@ -251,14 +256,12 @@ def _pole_anki(tekst):
     return tekst.replace("\r\n", "\n").replace("\n", "<br>")
 
 
-@fiszki_bp.route("/<int:pdf_id>/eksport.txt")
-def eksport_anki(pdf_id):
+def _odpowiedz_anki(fiszki, pdf):
     """Plik tekstowy rozdzielany tabulatorami — Anki importuje go przez
     Plik → Importuj. Kolumny: pytanie, odpowiedź, źródło (plik i strona)."""
-    pdf = _pobierz_pdf_albo_404(pdf_id)
     wiersze = ["#separator:tab", "#html:true"]
-    for f in _fiszki_do_eksportu(pdf_id):
-        zrodlo = f"{pdf['nazwa_oryginalna']}, s. {f['strona']}"
+    for f in fiszki:
+        zrodlo = f"{f['nazwa_oryginalna']}, s. {f['strona']}"
         wiersze.append(
             "\t".join(_pole_anki(t) for t in (f["pytanie"], f["odpowiedz"], zrodlo))
         )
@@ -270,6 +273,70 @@ def eksport_anki(pdf_id):
             "Content-Disposition": f"attachment; filename={_nazwa_pliku_eksportu(pdf, 'txt')}"
         },
     )
+
+
+@fiszki_bp.route("/<int:pdf_id>/eksport.csv")
+def eksport_csv(pdf_id):
+    pdf = _pobierz_pdf_albo_404(pdf_id)
+    return _odpowiedz_csv(_fiszki_do_eksportu(pdf_id), pdf)
+
+
+@fiszki_bp.route("/<int:pdf_id>/eksport.txt")
+def eksport_anki(pdf_id):
+    pdf = _pobierz_pdf_albo_404(pdf_id)
+    return _odpowiedz_anki(_fiszki_do_eksportu(pdf_id), pdf)
+
+
+@fiszki_bp.route("/eksport.csv")
+def eksport_csv_wszystkie():
+    return _odpowiedz_csv(_fiszki_do_eksportu(), None)
+
+
+@fiszki_bp.route("/eksport.txt")
+def eksport_anki_wszystkie():
+    return _odpowiedz_anki(_fiszki_do_eksportu(), None)
+
+
+# ---------- Wyszukiwarka i usuwanie PDF-a (ETAP 11) ----------
+
+MAKS_WYNIKOW_SZUKANIA = 50
+
+
+@fiszki_bp.route("/szukaj")
+def szukaj():
+    """Fiszki, których pytanie, odpowiedź albo fragment zawiera frazę.
+
+    Porównanie bez rozróżniania wielkości liter także dla polskich znaków
+    (SQLite LOWER() obsługuje tylko ASCII, więc filtrujemy w Pythonie —
+    przy setkach czy tysiącach fiszek to bez znaczenia dla szybkości).
+    """
+    fraza = (request.args.get("q") or "").strip().casefold()
+    if len(fraza) < 2:
+        return jsonify({"blad": "Wpisz co najmniej 2 znaki."}), 400
+
+    wyniki = []
+    for f in _fiszki_do_eksportu():
+        tekst = " ".join((f["pytanie"], f["odpowiedz"], f["fragment_tekstu"])).casefold()
+        if fraza in tekst:
+            wyniki.append(dict(f))
+            if len(wyniki) >= MAKS_WYNIKOW_SZUKANIA:
+                break
+    return jsonify(wyniki)
+
+
+@fiszki_bp.route("/<int:pdf_id>/usun", methods=["POST"])
+def usun_pdf(pdf_id):
+    """Usuwa PDF razem z jego fiszkami (i stanem powtórek — ON DELETE CASCADE)."""
+    pdf = _pobierz_pdf_albo_404(pdf_id)
+    db = get_db()
+    db.execute("DELETE FROM fiszki WHERE pdf_id = ?", (pdf_id,))
+    db.execute("DELETE FROM pdfy WHERE id = ?", (pdf_id,))
+    db.commit()
+
+    sciezka = os.path.join(folder_plikow(), pdf["nazwa_pliku"])
+    if os.path.exists(sciezka):
+        os.remove(sciezka)
+    return redirect(url_for("fiszki.index"))
 
 
 # ---------- Powtórki (ETAP 6, system Leitnera — zob. powtorki.py) ----------

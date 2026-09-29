@@ -100,3 +100,9 @@
 - Atlas: eksport tabeli gmin do CSV (`/atlas/eksport.csv`).
 - Poprawiono przybliżenie kartogramu przy pierwszym wczytaniu.
 - Dodano `DECISIONS.md` D-017 i testy.
+
+## ETAP 11 — 2026-09-29
+- Fiszki: wyszukiwarka we wszystkich plikach (`/fiszki/szukaj`).
+- Fiszki: eksport wszystkich fiszek do CSV i Anki.
+- Fiszki: usuwanie PDF-a razem z fiszkami i powtórkami.
+- Dodano `DECISIONS.md` D-018 i testy.

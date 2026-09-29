@@ -220,3 +220,64 @@ def test_lista_plikow_pokazuje_liczbe_fiszek(client):
     strona = client.get("/fiszki/").get_data(as_text=True)
     assert "skrypt.pdf" in strona
     assert "2 fiszki" in strona
+
+
+# ---------- ETAP 11: wyszukiwarka, eksport wszystkiego, usuwanie PDF-a ----------
+
+
+def test_szukaj_bez_rozrozniania_wielkosci_liter_z_polskimi_znakami(client):
+    wgraj_pdf(client, nazwa="a.pdf")
+    wgraj_pdf(client, nazwa="b.pdf")
+    dodaj_fiszke(client, pytanie="Czym jest ŁAD przestrzenny?", odpowiedz="Harmonią całości.")
+    dodaj_fiszke(client, pdf_id=2, pytanie="Co to MPZP?", odpowiedz="Akt prawa miejscowego, ład w gminie.")
+    dodaj_fiszke(client, pdf_id=2, pytanie="Inne?", odpowiedz="Nic.")
+
+    wyniki = client.get("/fiszki/szukaj?q=ład").get_json()
+    assert sorted(w["pytanie"] for w in wyniki) == ["Co to MPZP?", "Czym jest ŁAD przestrzenny?"]
+    assert {w["nazwa_oryginalna"] for w in wyniki} == {"a.pdf", "b.pdf"}
+
+    # fragment też jest przeszukiwany
+    assert len(client.get("/fiszki/szukaj?q=ZAZNACZONY").get_json()) == 3
+    assert client.get("/fiszki/szukaj?q=x").status_code == 400
+
+
+def test_eksport_wszystkich_ma_kolumne_plik(client):
+    wgraj_pdf(client, nazwa="a.pdf")
+    wgraj_pdf(client, nazwa="b.pdf")
+    dodaj_fiszke(client, pytanie="P1")
+    dodaj_fiszke(client, pdf_id=2, pytanie="P2")
+
+    wiersze = list(csv.reader(io.StringIO(client.get("/fiszki/eksport.csv").data.decode("utf-8-sig"))))
+    assert wiersze[0][0] == "plik"
+    assert [(w[0], w[2]) for w in wiersze[1:]] == [("a.pdf", "P1"), ("b.pdf", "P2")]
+
+    anki = client.get("/fiszki/eksport.txt")
+    assert "fiszki_wszystkie.txt" in anki.headers["Content-Disposition"]
+    assert "b.pdf, s. 2" in anki.data.decode("utf-8")
+
+
+def test_usuniecie_pdf_usuwa_plik_fiszki_i_powtorki(client, app):
+    import os
+
+    from fiszki.baza import folder_plikow, get_db
+
+    wgraj_pdf(client)
+    wgraj_pdf(client, nazwa="zostaje.pdf")
+    fiszka_id = dodaj_fiszke(client)
+    dodaj_fiszke(client, pdf_id=2)
+    client.post(f"/fiszki/powtorka/{fiszka_id}", data=json.dumps({"wynik": "umiem"}), content_type="application/json")
+    with app.app_context():
+        plik = get_db().execute("SELECT nazwa_pliku FROM pdfy WHERE id = 1").fetchone()[0]
+        sciezka = os.path.join(folder_plikow(), plik)
+    assert os.path.exists(sciezka)
+
+    odpowiedz = client.post("/fiszki/1/usun")
+
+    assert odpowiedz.status_code == 302
+    assert not os.path.exists(sciezka)
+    assert client.get("/fiszki/1/").status_code == 404
+    with app.app_context():
+        db = get_db()
+        assert db.execute("SELECT COUNT(*) FROM fiszki").fetchone()[0] == 1
+        assert db.execute("SELECT COUNT(*) FROM powtorki").fetchone()[0] == 0
+    assert client.post("/fiszki/1/usun").status_code == 404

@@ -387,3 +387,21 @@ Porównanie tylko gmin obecnych w obu latach, bo zmiany granic gmin
   „ze wzrostem” wyglądałaby jak spadek.
 - Średnioroczne tempo zmian (CAGR) — odrzucone na start: trudniejsze do
   wyjaśnienia; można dodać później.
+
+## D-018 — Wyszukiwanie fiszek w Pythonie zamiast SQL/FTS
+Data: 2026-09-29
+
+**Decyzja:** Wyszukiwarka pobiera fiszki z bazy i filtruje je w Pythonie
+(`str.casefold()`), a nie przez `LIKE` ani indeks pełnotekstowy FTS5.
+
+**Uzasadnienie:** `LOWER()`/`LIKE` w SQLite rozróżnia wielkość liter
+poza ASCII, więc „ład” nie znalazłoby „ŁAD”. Osobista kolekcja to setki
+albo kilka tysięcy fiszek — filtrowanie w Pythonie trwa milisekundy, a
+kod jest prosty i łatwy do przetestowania.
+
+**Odrzucone alternatywy:**
+- FTS5 z tokenizerem `unicode61` — odrzucone na teraz: osobna tabela
+  wirtualna i jej synchronizacja przy każdej zmianie fiszki; warto
+  wrócić, gdyby kolekcja urosła do dziesiątek tysięcy.
+- Własna funkcja SQL (`create_function`) do porównań — odrzucone:
+  więcej kodu dla tego samego efektu.

@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 10 (atlas — porównanie lat, eksport — zamknięty)
-Ostatni ZIP: releases/warsztat_etap10_20260929.zip
-Testy: 116 passed / 0 failed
+ETAP: 11 (fiszki — wyszukiwarka, eksport wszystkiego, usuwanie PDF — zamknięty)
+Ostatni ZIP: releases/warsztat_etap11_20260929.zip
+Testy: 119 passed / 0 failed

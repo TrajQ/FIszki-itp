@@ -321,3 +321,24 @@ Zrobione:
 
 Testy: 116 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap10_20260929.zip
+
+## ETAP 11 — Fiszki: wyszukiwarka, eksport wszystkiego, usuwanie PDF-a
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `GET /fiszki/szukaj?q=` — przeszukuje pytanie, odpowiedź i fragment
+  we wszystkich plikach, bez rozróżniania wielkości liter także dla
+  polskich znaków (`casefold` w Pythonie), maks. 50 wyników
+- `GET /fiszki/eksport.csv` i `/fiszki/eksport.txt` — wszystkie fiszki
+  naraz (CSV z dodatkową kolumną `plik`); eksport jednego PDF-a bez
+  zmian — wspólne funkcje `_odpowiedz_csv` / `_odpowiedz_anki`
+- `POST /fiszki/<pdf_id>/usun` — usuwa PDF, jego fiszki, stan powtórek
+  (kaskada) i plik z dysku; przycisk „Usuń plik” z potwierdzeniem
+- Lista plików: karta „Szukaj w fiszkach” z wyróżnieniem frazy
+  (`<mark>`, bez `innerHTML`), wynik otwiera PDF z podświetlonym
+  fragmentem; linki „Wszystkie do CSV / Anki”
+- Testy: 3 nowe; `DECISIONS.md`: D-018
+
+Testy: 119 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap11_20260929.zip

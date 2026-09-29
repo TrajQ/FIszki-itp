@@ -46,6 +46,18 @@
 </form>
 </div>
 
+<section class="karta stos szukajka">
+    <div class="rzad rzad--miedzy">
+        <h3>Szukaj w fiszkach</h3>
+        <span class="rzad">
+            <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.eksport_csv_wszystkie') }}">Wszystkie do CSV</a>
+            <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.eksport_anki_wszystkie') }}">Wszystkie do Anki</a>
+        </span>
+    </div>
+    <input id="pole-szukaj-fiszek" type="search" placeholder="Fraza z pytania, odpowiedzi albo fragmentu…" autocomplete="off">
+    <ul id="wyniki-szukania" class="wyniki-szukania"></ul>
+</section>
+
 <h2 class="naglowek-sekcji">Twoje pliki</h2>
 {% if pdfy %}
 <div class="siatka-kart">
@@ -65,4 +77,12 @@
 {% else %}
 <div class="karta pusty-stan">Brak wgranych plików. Zacznij od wgrania PDF-a.</div>
 {% endif %}
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_SZUKAJ = "{{ url_for('fiszki.szukaj') }}";
+    const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
+</script>
+<script src="{{ url_for('fiszki.static', filename='szukaj.js') }}"></script>
 {% endblock %}
