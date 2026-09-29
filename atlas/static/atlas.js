@@ -149,9 +149,18 @@
         return i;
     }
 
+    // Klastry LISA (ETAP 41): kolory jak w GeoDa.
+    const KOLORY_LISA = { HH: "#d7191c", LL: "#2c7bb6", HL: "#fdae61", LH: "#abd9e9", ns: "#e5e5ea" };
+    let wynikMorana = null; // odpowiedź /autokorelacja dla bieżących danych
+    let lisaPoTeryt = new Map();
+
     // Kolor dla gminy w bieżącym trybie.
     function kolorGminy(gmina) {
         if (!gmina) return KOLOR_BRAK;
+        if (tryb === "lisa") {
+            const lisa = lisaPoTeryt.get(gmina.teryt);
+            return lisa ? KOLORY_LISA[lisa.kategoria] : KOLOR_BRAK;
+        }
         if (tryb === "zmiana") {
             if (gmina.zmiana_proc === null || gmina.zmiana_proc === undefined) return KOLOR_BRAK;
             return KOLORY_ZMIANY[numerKlasy(gmina.zmiana_proc, biezaceDane.porownanie.progi_zmiany_proc)];
@@ -335,6 +344,7 @@
             }
             biezaceDane = dane;
             biezaceParametry = parametryDanych;
+            resetujMorana();
             numerKlas += 1; // starsze odpowiedzi /klasy dotyczą poprzednich danych
             wybranyWskaznikEl.textContent = `Na mapie: ${dane.zmienna.nazwa} [${dane.zmienna.jednostka || "–"}], ${dane.rok}`;
             linkEksport.href = `${URL_EKSPORT}?${parametry}`;
@@ -344,6 +354,7 @@
                 pokazKomunikat(`Brak danych z roku ${dane.porownanie.rok_bazowy} do porównania — pokazuję same wartości.`);
             }
             przelacznik.hidden = !jestPorownanie;
+            przelacznik.querySelector('[data-tryb="zmiana"]').hidden = !jestPorownanie;
             ustawTryb(jestPorownanie ? "zmiana" : "wartosc", false);
             wynikiEl.hidden = false;
             profilEl.hidden = true;
@@ -389,8 +400,8 @@
     function pokazGvf() {
         const k = biezaceDane.klasyfikacja;
         gvfEl.textContent = k.gvf === null ? "" : `GVF ${k.gvf.toLocaleString("pl-PL", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
-        klasyfikacjaEl.classList.toggle("klasyfikacja--nieaktywna", tryb === "zmiana");
-        poleMetoda.disabled = poleKlasy.disabled = tryb === "zmiana";
+        klasyfikacjaEl.classList.toggle("klasyfikacja--nieaktywna", tryb !== "wartosc");
+        poleMetoda.disabled = poleKlasy.disabled = tryb !== "wartosc";
     }
 
     async function zmienKlasyfikacje() {
@@ -411,6 +422,81 @@
 
     poleMetoda.addEventListener("change", zmienKlasyfikacje);
     poleKlasy.addEventListener("change", zmienKlasyfikacje);
+
+    // ---------- autokorelacja przestrzenna (ETAP 41) ----------
+    // Liczy serwer (atlas/autokorelacja.py) — na żądanie, bo permutacje
+    // trwają 1–2 s dla dużego województwa.
+
+    const przyciskMoran = document.getElementById("przycisk-moran");
+    const statusMorana = document.getElementById("status-morana");
+    const wynikMoranaEl = document.getElementById("wynik-morana");
+    const liczbyMorana = document.getElementById("liczby-morana");
+    const opisMorana = document.getElementById("opis-morana");
+    const listaLisa = document.getElementById("lista-lisa");
+    const przyciskLisa = przelacznik.querySelector('[data-tryb="lisa"]');
+    let numerMorana = 0;
+
+    function liczKategorie() {
+        const ile = {};
+        for (const l of wynikMorana.lisa) ile[l.kategoria] = (ile[l.kategoria] || 0) + 1;
+        return ile;
+    }
+
+    function resetujMorana() {
+        numerMorana += 1;
+        wynikMorana = null;
+        lisaPoTeryt = new Map();
+        wynikMoranaEl.hidden = true;
+        statusMorana.hidden = true;
+        przyciskLisa.hidden = true;
+        przyciskMoran.disabled = false;
+        przyciskMoran.textContent = "Policz I Morana";
+    }
+
+    przyciskMoran.addEventListener("click", async () => {
+        if (!biezaceParametry) return;
+        const numer = ++numerMorana;
+        przyciskMoran.disabled = true;
+        przyciskMoran.textContent = "Liczę…";
+        statusMorana.hidden = true;
+        try {
+            const wynik = await pobierzJson(`${URL_AUTOKORELACJA}?${biezaceParametry}`);
+            if (numer !== numerMorana) return;
+            wynikMorana = wynik;
+            lisaPoTeryt = new Map(wynik.lisa.map((l) => [l.teryt, l]));
+            const f3 = (x) => x.toLocaleString("pl-PL", { maximumFractionDigits: 3, minimumFractionDigits: 3 });
+            liczbyMorana.replaceChildren(
+                liczbaProfilu("I Morana", f3(wynik.moran_i)),
+                liczbaProfilu("oczekiwane (losowo)", f3(wynik.oczekiwane_i)),
+                liczbaProfilu("p", wynik.p.toLocaleString("pl-PL")),
+                liczbaProfilu("z", wynik.z === null ? "—" : wynik.z.toLocaleString("pl-PL", { maximumFractionDigits: 2 }))
+            );
+            opisMorana.textContent =
+                wynik.interpretacja +
+                ` Gmin w analizie: ${wynik.liczba_gmin}` +
+                (wynik.pominiete ? ` (pominięte bez sąsiadów z danymi: ${wynik.pominiete}).` : ".");
+            const ile = liczKategorie();
+            listaLisa.replaceChildren();
+            for (const kategoria of ["HH", "LL", "HL", "LH"]) {
+                const li = element("li");
+                const probka = element("span", "legenda__kolor");
+                probka.style.background = KOLORY_LISA[kategoria];
+                li.append(probka, element("span", "", wynik.kategorie[kategoria]), element("strong", "", `${ile[kategoria] || 0}`));
+                listaLisa.appendChild(li);
+            }
+            wynikMoranaEl.hidden = false;
+            przyciskLisa.hidden = false;
+            przelacznik.hidden = false;
+            przyciskMoran.textContent = "Policzone ✓";
+            ustawTryb("lisa");
+        } catch (e) {
+            if (numer !== numerMorana) return;
+            statusMorana.textContent = e.message;
+            statusMorana.hidden = false;
+            przyciskMoran.disabled = false;
+            przyciskMoran.textContent = "Policz I Morana";
+        }
+    });
 
     function odswiezWidok() {
         pokazGvf();
@@ -634,6 +720,10 @@
                         tryb === "zmiana"
                             ? `${procent(gmina.zmiana_proc)} (${formatLiczby.format(gmina.wartosc_bazowa)} → ${formatLiczby.format(gmina.wartosc)})`
                             : zJednostka(gmina.wartosc);
+                    const lisa = lisaPoTeryt.get(gmina.teryt);
+                    if (tryb === "lisa") {
+                        tresc += lisa ? ` · ${wynikMorana.kategorie[lisa.kategoria]} (p = ${formatLiczby.format(lisa.p)})` : " · bez sąsiadów z danymi";
+                    }
                 }
                 const dymek = element("div");
                 dymek.append(element("strong", "", cecha.properties.nazwa), element("br"), tresc);
@@ -663,6 +753,16 @@
 
     function pokazLegende() {
         legendaEl.replaceChildren();
+        if (tryb === "lisa") {
+            legendaEl.appendChild(element("div", "legenda__tytul", "klastry LISA (p < 0,05)"));
+            const ile = liczKategorie();
+            for (const kategoria of ["HH", "LL", "HL", "LH", "ns"]) {
+                const wiersz = wierszLegendy(KOLORY_LISA[kategoria], wynikMorana.kategorie[kategoria]);
+                wiersz.appendChild(element("span", "legenda__liczebnosc", `${ile[kategoria] || 0}`));
+                legendaEl.appendChild(wiersz);
+            }
+            return;
+        }
         if (tryb === "zmiana") {
             const p = biezaceDane.porownanie.progi_zmiany_proc;
             legendaEl.appendChild(element("div", "legenda__tytul", `zmiana ${biezaceDane.porownanie.rok_bazowy}→${biezaceDane.rok}`));

@@ -957,3 +957,29 @@ biblioteka (jenkspy, mapclassify) byłaby zbędną zależnością.
 - mapclassify — odrzucone: ciągnie numpy/scipy dla czterech funkcji.
 - Przybliżony Jenks (iteracyjny) — odrzucone: dokładny jest wystarczająco
   szybki i daje powtarzalny wynik.
+
+## D-047 — I Morana i LISA własną implementacją, sprawdzoną z PySAL
+Data: 2026-09-29
+
+**Decyzja:** `atlas/autokorelacja.py` liczy globalne I Morana i lokalne
+LISA (Anselin 1995): sąsiedztwo queen z granic PRG (styk z tolerancją
+~0,001°, bo granice gmin upraszczane są osobno i między sąsiadami bywają
+szczeliny), wagi standaryzowane wierszami, istotność z 999 permutacji
+(dla LISA warunkowych), stałe ziarno losowania. Gminy bez sąsiadów z
+danymi („wyspy”) są pomijane i zliczane. Obliczenie na żądanie
+(przycisk), wynik jako trzeci tryb mapy „Klastry LISA”.
+
+**Uzasadnienie:** Autokorelacja przestrzenna to standard analiz
+regionalnych na 2. roku gospodarki przestrzennej (GeoDa, PySAL).
+PySAL (libpysal + esda) ciągnie numpy, scipy, pandas i geopandas —
+za dużo dla jednej funkcji. Własna implementacja ma ~150 linii; globalne
+I zgadza się z esda.Moran co do 1e-15, lokalne Ii — z esda.Moran_Local
+(ta sama wariancja z dzielnikiem n − 1). Wartość wzorcowa w teście
+policzona PySAL jednorazowo, poza projektem. Ok. 2 s dla 320 gmin.
+
+**Odrzucone alternatywy:**
+- PySAL jako zależność — odrzucone (rozmiar, patrz wyżej).
+- Istotność z rozkładu normalnego (bez permutacji) — odrzucone: dla
+  wskaźników gmin (skośne rozkłady) permutacje są pewniejsze i to
+  standard w GeoDa.
+- Liczenie przy każdym „Pokaż” — odrzucone: 1–2 s na każde zapytanie.

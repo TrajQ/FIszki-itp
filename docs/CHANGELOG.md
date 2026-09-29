@@ -284,3 +284,10 @@
 - Atlas: 7-stopniowa skala kolorów.
 - Atlas: szybki wybór popularnych wskaźników (frazy do wyszukiwarki BDL).
 - Dodano `DECISIONS.md` D-046 i 5 testów.
+
+## ETAP 41 — 2026-09-29
+- Atlas: autokorelacja przestrzenna — I Morana (p z 999 permutacji, z,
+  interpretacja) i klastry LISA (HH, LL, HL, LH) jako tryb mapy z legendą
+  i liczebnościami; endpoint `/atlas/autokorelacja`.
+- Dodano `atlas/autokorelacja.py`, `DECISIONS.md` D-047 i 5 testów
+  (wartość wzorcowa z PySAL).

@@ -982,3 +982,17 @@ Status: zamknięty
 
 Testy: 274 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap40_20260929.zip
+
+## ETAP 41 — Atlas: autokorelacja przestrzenna (Moran, LISA)
+Data: 2026-09-29
+Status: zamknięty
+
+- `atlas/autokorelacja.py`: `sasiedzi` (queen, STRtree, tolerancja
+  szczelin), `analiza` (I Morana, permutacje, LISA)
+- Sąsiedztwo województwa liczone raz na uruchomienie (pamięć procesu)
+- Tryb mapy „Klastry LISA”, przełącznik widoczny też bez porównania lat
+- Zgodność z PySAL sprawdzona (globalne i lokalne I)
+- `DECISIONS.md`: D-047
+
+Testy: 279 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap41_20260929.zip

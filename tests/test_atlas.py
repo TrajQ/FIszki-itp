@@ -728,3 +728,82 @@ def test_dane_i_klasy_z_metoda(client):
 
     assert client.get(f"/atlas/klasy?{ZAPYTANIE}&metoda=x").status_code == 400
     assert client.get(f"/atlas/dane?{ZAPYTANIE}&klasy=2").status_code == 400
+
+
+# ---------- ETAP 41: autokorelacja przestrzenna ----------
+
+from atlas import autokorelacja  # noqa: E402
+
+
+def _siatka(n=6):
+    """n×n kwadratowych „gmin” z wartością rosnącą na wschód (skupiska)."""
+    cechy, wartosci = [], {}
+    for i in range(n):
+        for j in range(n):
+            teryt = f"12{i:02d}{j:02d}1"
+            cechy.append(
+                {
+                    "type": "Feature",
+                    "properties": {"teryt": teryt, "nazwa": teryt},
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[20 + i * 0.1, 50 + j * 0.1], [20.1 + i * 0.1, 50 + j * 0.1], [20.1 + i * 0.1, 50.1 + j * 0.1], [20 + i * 0.1, 50.1 + j * 0.1], [20 + i * 0.1, 50 + j * 0.1]]],
+                    },
+                }
+            )
+            wartosci[teryt] = float(i)
+    return {"type": "FeatureCollection", "features": cechy}, wartosci
+
+
+def test_sasiedztwo_queen_z_tolerancja_szczelin():
+    kolekcja, _ = _siatka(3)
+    # szczelina 50 m między kolumnami (jak po uproszczeniu granic) nie przerywa sąsiedztwa
+    for cecha in kolekcja["features"]:
+        pierscien = cecha["geometry"]["coordinates"][0]
+        cecha["geometry"]["coordinates"][0] = [[x + 0.0002, y] if x > 20.05 else [x, y] for x, y in pierscien]
+    s = autokorelacja.sasiedzi(kolekcja)
+    assert len(s["1201011"]) == 8  # środek siatki 3×3
+    assert len(s["1200001"]) == 3  # narożnik
+
+
+def test_moran_dodatni_dla_trendu_i_zgodny_z_pysal():
+    kolekcja, wartosci = _siatka(6)
+    wynik = autokorelacja.analiza(wartosci, autokorelacja.sasiedzi(kolekcja))
+    # wartość wzorcowa policzona raz biblioteką PySAL (esda.Moran), wagi queen, standaryzacja wierszami
+    assert wynik["moran_i"] == pytest.approx(0.822222, abs=1e-5)
+    assert wynik["p"] == 0.001 and wynik["oczekiwane_i"] == pytest.approx(-1 / 35)
+    assert wynik["interpretacja"].startswith("Dodatnia")
+    kategorie = {l["teryt"]: l["kategoria"] for l in wynik["lisa"]}
+    assert kategorie["1205021"] == "HH" and kategorie["1200021"] == "LL"
+
+
+def test_szachownica_daje_ujemna_autokorelacje():
+    kolekcja, _ = _siatka(6)
+    wartosci = {c["properties"]["teryt"]: float((int(c["properties"]["teryt"][2:4]) + int(c["properties"]["teryt"][4:6])) % 2) for c in kolekcja["features"]}
+    sasiedzi = autokorelacja.sasiedzi(kolekcja)
+    # przy sąsiedztwie queen szachownica też daje I poniżej oczekiwanego
+    wynik = autokorelacja.analiza(wartosci, sasiedzi)
+    assert wynik["moran_i"] < wynik["oczekiwane_i"]
+
+
+def test_autokorelacja_bledy_i_wyspy():
+    kolekcja, wartosci = _siatka(2)
+    with pytest.raises(ValueError):
+        autokorelacja.analiza(wartosci, autokorelacja.sasiedzi(kolekcja))  # 4 gminy to za mało
+    kolekcja, wartosci = _siatka(4)
+    wartosci["9999999"] = 5.0  # gmina bez granic = wyspa
+    wynik = autokorelacja.analiza(wartosci, autokorelacja.sasiedzi(kolekcja))
+    assert wynik["pominiete"] == 1 and wynik["liczba_gmin"] == 16
+    with pytest.raises(ValueError):
+        autokorelacja.analiza({t: 1.0 for t in wartosci}, autokorelacja.sasiedzi(kolekcja))
+
+
+def test_endpoint_autokorelacji(client, monkeypatch):
+    kolekcja, _ = _siatka(2)
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: kolekcja)
+    atlas_routes._sasiedzi_wojewodztw.clear()
+    # dane testowe mają 2 gminy — za mało: czytelny błąd 422
+    odpowiedz = client.get(f"/atlas/autokorelacja?{ZAPYTANIE}")
+    assert odpowiedz.status_code == 422 and "Za mało" in odpowiedz.get_json()["blad"]
+    assert client.get("/atlas/autokorelacja?zmienna=x").status_code == 400
+    atlas_routes._sasiedzi_wojewodztw.clear()

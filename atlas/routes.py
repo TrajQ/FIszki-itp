@@ -10,7 +10,7 @@ from dane import bdl
 from dane.bdl import BladBDL
 from dane.gemini import BladGemini, opisz_wskaznik
 
-from . import granice, statystyki
+from . import autokorelacja, granice, statystyki
 from .baza import folder_modulu, z_cache
 
 atlas_bp = Blueprint(
@@ -99,6 +99,38 @@ def klasy():
         return jsonify({"blad": str(e)}), 400
     except BladBDL as e:
         return jsonify({"blad": str(e)}), 502
+
+
+# Sąsiedztwo gmin województwa liczy się z granic raz na uruchomienie aplikacji.
+_sasiedzi_wojewodztw: dict[str, dict] = {}
+
+
+@atlas_bp.route("/autokorelacja")
+def autokorelacja_przestrzenna():
+    """I Morana i klastry LISA dla wskaźnika z mapy (ETAP 41)."""
+    try:
+        parametry = _parametry_zapytania(request.args)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    wojewodztwo = next((w for w in _wojewodztwa() if w["bdl_id"] == parametry["woj_bdl_id"]), None)
+    if wojewodztwo is None:
+        return jsonify({"blad": "Nie znaleziono takiego województwa w BDL."}), 404
+    try:
+        gminy = _wartosci_wskaznika(
+            parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"]
+        )
+        teryt = wojewodztwo["teryt"]
+        if teryt not in _sasiedzi_wojewodztw:
+            kolekcja = granice.granice_gmin(teryt, os.path.join(folder_modulu(), "granice"))
+            _sasiedzi_wojewodztw[teryt] = autokorelacja.sasiedzi(kolekcja)
+        wynik = autokorelacja.analiza({g["teryt"]: g["wartosc"] for g in gminy}, _sasiedzi_wojewodztw[teryt])
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    except granice.BladGranic as e:
+        return jsonify({"blad": f"Autokorelacja wymaga granic gmin: {e}"}), 502
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 422
+    return jsonify(wynik)
 
 
 @atlas_bp.route("/gmina/<gmina_bdl_id>")
