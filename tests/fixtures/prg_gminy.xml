@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:ms="http://mapserver.gis.umn.edu/mapserver" numberMatched="3" numberReturned="3">
+  <wfs:member>
+    <ms:A03_Granice_gmin gml:id="g1">
+      <ms:msGeometry>
+        <gml:Polygon gml:id="p1"><gml:exterior><gml:LinearRing>
+          <gml:posList>50.0 19.9 50.0 20.0 50.1 20.0 50.1 19.9 50.0 19.9</gml:posList>
+        </gml:LinearRing></gml:exterior></gml:Polygon>
+      </ms:msGeometry>
+      <ms:JPT_KOD_JE>1261011</ms:JPT_KOD_JE>
+      <ms:JPT_NAZWA_>Kraków</ms:JPT_NAZWA_>
+    </ms:A03_Granice_gmin>
+  </wfs:member>
+  <wfs:member>
+    <ms:A03_Granice_gmin gml:id="g2">
+      <ms:msGeometry>
+        <gml:MultiSurface gml:id="m2"><gml:surfaceMember>
+          <gml:Polygon gml:id="p2"><gml:exterior><gml:LinearRing>
+            <gml:posList>49.9 19.9 49.9 20.0 50.0 20.0 50.0 19.9 49.9 19.9</gml:posList>
+          </gml:LinearRing></gml:exterior></gml:Polygon>
+        </gml:surfaceMember></gml:MultiSurface>
+      </ms:msGeometry>
+      <ms:JPT_KOD_JE>1206032</ms:JPT_KOD_JE>
+      <ms:JPT_NAZWA_>Wieliczka</ms:JPT_NAZWA_>
+    </ms:A03_Granice_gmin>
+  </wfs:member>
+  <wfs:member>
+    <ms:A03_Granice_gmin gml:id="g3">
+      <ms:msGeometry>
+        <gml:Polygon gml:id="p3"><gml:exterior><gml:LinearRing>
+          <gml:posList>52.0 21.0 52.0 21.1 52.1 21.1 52.1 21.0 52.0 21.0</gml:posList>
+        </gml:LinearRing></gml:exterior></gml:Polygon>
+      </ms:msGeometry>
+      <ms:JPT_KOD_JE>1465011</ms:JPT_KOD_JE>
+      <ms:JPT_NAZWA_>Warszawa (spoza województwa — ma być odfiltrowana)</ms:JPT_NAZWA_>
+    </ms:A03_Granice_gmin>
+  </wfs:member>
+</wfs:FeatureCollection>

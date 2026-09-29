@@ -1,0 +1,278 @@
+import json
+import os
+
+import pytest
+import requests
+
+import atlas.routes as atlas_routes
+from app import create_app
+from atlas import granice, statystyki
+from dane import bdl
+from dane.gemini import BladGemini, liczby_w_tekscie, sprawdz_liczby
+
+FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
+
+
+# ---------- dane/bdl.py ----------
+
+
+class FalszywaOdpowiedz:
+    def __init__(self, dane, status=200):
+        self._dane = dane
+        self.status_code = status
+
+    def json(self):
+        return self._dane
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(f"HTTP {self.status_code}")
+
+
+def test_teryt_z_id_bdl():
+    assert bdl.teryt_z_id_bdl("011212161011") == "1261011"  # Kraków
+    assert bdl.teryt_z_id_bdl("071412865011") == "1465011"  # Warszawa
+    assert bdl.teryt_z_id_bdl("011200000000") == "12"  # województwo małopolskie
+    with pytest.raises(bdl.BladBDL):
+        bdl.teryt_z_id_bdl("123")
+
+
+def test_szukaj_zmiennych_sklada_nazwe_z_poziomow(monkeypatch):
+    zapytania = []
+
+    def falszywy_get(url, params, headers, timeout):
+        zapytania.append((url, params))
+        return FalszywaOdpowiedz(
+            {"results": [{"id": 72305, "n1": "ogółem", "n2": "ludność", "n3": None, "measureUnitName": "osoba"}]}
+        )
+
+    monkeypatch.setattr(bdl.requests, "get", falszywy_get)
+    wynik = bdl.szukaj_zmiennych("ludność")
+
+    assert wynik == [bdl.Zmienna(id=72305, nazwa="ogółem — ludność", jednostka="osoba")]
+    assert zapytania[0][0].endswith("/variables/search")
+    assert zapytania[0][1]["level"] == 6
+
+
+def test_wartosci_dla_gmin_stronicuje_i_pomija_braki_oraz_czesci_gmin(monkeypatch):
+    strony = {
+        0: {
+            "totalRecords": 3,
+            "results": [
+                {"id": "011212161011", "name": "Kraków", "values": [{"year": "2023", "val": 804237}]},
+                {"id": "011212106034", "name": "Wieliczka - miasto", "values": [{"year": "2023", "val": 1}]},
+            ],
+        },
+        1: {
+            "totalRecords": 3,
+            "results": [{"id": "011212106032", "name": "Wieliczka", "values": [{"year": "2023", "val": None}]}],
+        },
+    }
+    monkeypatch.setattr(bdl, "ROZMIAR_STRONY", 2)
+    monkeypatch.setattr(
+        bdl.requests, "get", lambda url, params, headers, timeout: FalszywaOdpowiedz(strony[params["page"]])
+    )
+
+    wynik = bdl.wartosci_dla_gmin(72305, 2023, "011200000000")
+
+    assert wynik == [bdl.Wartosc(bdl_id="011212161011", teryt="1261011", nazwa="Kraków", wartosc=804237.0)]
+
+
+def test_bledy_bdl(monkeypatch):
+    monkeypatch.setattr(bdl.requests, "get", lambda *a, **k: FalszywaOdpowiedz({}, status=429))
+    with pytest.raises(bdl.BladBDL, match="limit"):
+        bdl.wojewodztwa()
+
+    def zerwane(*a, **k):
+        raise requests.ConnectionError("brak sieci")
+
+    monkeypatch.setattr(bdl.requests, "get", zerwane)
+    with pytest.raises(bdl.BladBDL, match="połączenia"):
+        bdl.wojewodztwa()
+
+
+# ---------- atlas/statystyki.py ----------
+
+GMINY = [
+    {"nazwa": "A", "wartosc": 10.0},
+    {"nazwa": "B", "wartosc": 20.0},
+    {"nazwa": "C", "wartosc": 30.0},
+    {"nazwa": "D", "wartosc": 40.0},
+    {"nazwa": "E", "wartosc": 1000.5},
+]
+
+
+def test_statystyki():
+    s = statystyki.statystyki(GMINY)
+    assert s["liczba_gmin"] == 5
+    assert s["min"] == {"nazwa": "A", "wartosc": 10.0}
+    assert s["max"] == {"nazwa": "E", "wartosc": 1000.5}
+    assert s["mediana"] == 30.0
+    assert [g["nazwa"] for g in s["najwyzsze"]] == ["E", "D", "C"]
+    assert statystyki.statystyki([]) == {"liczba_gmin": 0}
+
+
+def test_progi_klas_rosnace_i_wewnatrz_zakresu():
+    progi = statystyki.progi_klas([float(x) for x in range(1, 101)])
+    assert len(progi) == 4
+    assert progi == sorted(progi)
+    assert statystyki.progi_klas([5.0, 5.0, 5.0]) == []
+
+
+def test_format_liczby_po_polsku():
+    assert statystyki.format_liczby(804237) == "804 237"
+    assert statystyki.format_liczby(1234.5) == "1 234,5"
+    assert statystyki.format_liczby(2.5) == "2,5"
+    assert statystyki.format_liczby(-3.14159) == "-3,14"
+
+
+# ---------- strażnik liczb w opisie Gemini ----------
+
+
+def test_straznik_przepuszcza_liczby_z_faktow():
+    fakty = ["Rok: 2023", "Wartość najwyższa: Kraków — 804 237 osoba", "3 gminy o najwyższej wartości: ..."]
+    sprawdz_liczby("W 2023 r. najwięcej osób mieszkało w Krakowie (804 237), a 3 gminy...", fakty)
+
+
+def test_straznik_odrzuca_wymyslone_liczby():
+    fakty = ["Rok: 2023", "Mediana: 12 345,5 osoba"]
+    with pytest.raises(BladGemini, match="12345.6"):
+        sprawdz_liczby("Mediana wynosi około 12 345,6 osoby.", fakty)
+    with pytest.raises(BladGemini):
+        sprawdz_liczby("To o 40% więcej niż w 2023.", fakty)
+
+
+def test_liczby_w_tekscie_rozpoznaje_zapis_polski():
+    assert liczby_w_tekscie("804 237 i 1 234,5 oraz 0,75") == {"804237", "1234.5", "0.75"}
+
+
+# ---------- atlas/granice.py ----------
+
+
+def test_granice_parsuja_gml_filtrujac_wojewodztwo_i_zamieniajac_osie(tmp_path, monkeypatch):
+    with open(os.path.join(FIXTURES, "prg_gminy.xml"), encoding="utf-8") as plik:
+        gml = plik.read()
+    wywolania = []
+    monkeypatch.setattr(granice, "_pobierz_gml", lambda teryt: wywolania.append(teryt) or gml)
+
+    kolekcja = granice.granice_gmin("12", str(tmp_path))
+
+    assert [c["properties"]["teryt"] for c in kolekcja["features"]] == ["1206032", "1261011"]
+    krakow = kolekcja["features"][1]
+    lon, lat = krakow["geometry"]["coordinates"][0][0]
+    assert 19 < lon < 21 and 49 < lat < 51  # osie zamienione na (lon, lat)
+
+    # Drugie wywołanie idzie z pliku cache, bez pobierania.
+    granice.granice_gmin("12", str(tmp_path))
+    assert wywolania == ["12"]
+
+
+def test_granice_blad_serwisu(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        granice, "_pobierz_gml", lambda teryt: "<ows:ExceptionReport xmlns:ows='x'>zły filtr</ows:ExceptionReport>"
+    )
+    with pytest.raises(granice.BladGranic):
+        granice.granice_gmin("12", str(tmp_path))
+
+
+# ---------- endpointy ----------
+
+WOJ = [{"bdl_id": "011200000000", "nazwa": "małopolskie", "teryt": "12"}]
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch):
+    licznik = {"dane": 0}
+
+    def wartosci(zmienna_id, rok, woj):
+        licznik["dane"] += 1
+        return [
+            bdl.Wartosc("011212161011", "1261011", "Kraków", 804237.0),
+            bdl.Wartosc("011212106032", "1206032", "Wieliczka", 63000.0),
+        ]
+
+    monkeypatch.setattr(atlas_routes.bdl, "wojewodztwa", lambda: [bdl.Jednostka(**w) for w in WOJ])
+    monkeypatch.setattr(atlas_routes.bdl, "pobierz_zmienna", lambda i: bdl.Zmienna(i, "ludność ogółem", "osoba"))
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", wartosci)
+    monkeypatch.setattr(atlas_routes.bdl, "szukaj_zmiennych", lambda f: [bdl.Zmienna(72305, "ludność", "osoba")])
+
+    app = create_app(instance_path=str(tmp_path))
+    app.config.update(TESTING=True)
+    with app.test_client() as c:
+        c.licznik = licznik
+        yield c
+
+
+ZAPYTANIE = "zmienna=72305&rok=2023&woj=011200000000"
+
+
+def test_strona_atlasu(client):
+    assert client.get("/atlas/").status_code == 200
+
+
+def test_zmienne(client):
+    assert client.get("/atlas/zmienne?q=lu").status_code == 400
+    assert client.get("/atlas/zmienne?q=ludność").get_json() == [
+        {"id": 72305, "nazwa": "ludność", "jednostka": "osoba"}
+    ]
+
+
+def test_dane_z_statystykami_i_cache(client):
+    dane = client.get(f"/atlas/dane?{ZAPYTANIE}").get_json()
+    assert [g["nazwa"] for g in dane["gminy"]] == ["Kraków", "Wieliczka"]
+    assert dane["statystyki"]["max"]["nazwa"] == "Kraków"
+    assert dane["wojewodztwo"]["nazwa"] == "małopolskie"
+    assert dane["zmienna"]["jednostka"] == "osoba"
+
+    client.get(f"/atlas/dane?{ZAPYTANIE}")
+    assert client.licznik["dane"] == 1  # drugie zapytanie z cache
+
+
+@pytest.mark.parametrize(
+    "zapytanie,status",
+    [("zmienna=x&rok=2023&woj=011200000000", 400), ("zmienna=1&rok=2023&woj=12", 400), ("zmienna=1&rok=2023&woj=999999999999", 404)],
+)
+def test_dane_bledne_parametry(client, zapytanie, status):
+    assert client.get(f"/atlas/dane?{zapytanie}").status_code == status
+
+
+def test_dane_blad_bdl(client, monkeypatch):
+    def blad(*a):
+        raise bdl.BladBDL("BDL nie odpowiada")
+
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", blad)
+    odpowiedz = client.get(f"/atlas/dane?{ZAPYTANIE}")
+    assert odpowiedz.status_code == 502
+    assert odpowiedz.get_json()["blad"] == "BDL nie odpowiada"
+
+
+def test_granice_endpoint(client, monkeypatch):
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {"type": "FeatureCollection", "features": []})
+    assert client.get("/atlas/granice/12").status_code == 200
+    assert client.get("/atlas/granice/1").status_code == 400
+
+
+def test_opis_liczy_fakty_na_serwerze(client, monkeypatch):
+    otrzymane = []
+
+    def falszywy_opis(fakty):
+        otrzymane.extend(fakty)
+        return "Najwięcej mieszkańców ma Kraków (804 237 osoba)."
+
+    monkeypatch.setattr(atlas_routes, "opisz_wskaznik", falszywy_opis)
+    odpowiedz = client.post("/atlas/opis", data=json.dumps({"zmienna": 72305, "rok": 2023, "woj": "011200000000"}), content_type="application/json")
+
+    assert odpowiedz.status_code == 200
+    assert "Kraków — 804 237 osoba" in " ".join(otrzymane)
+    assert odpowiedz.get_json()["opis"].startswith("Najwięcej")
+
+
+def test_opis_blad_gemini_zwraca_fakty(client, monkeypatch):
+    def blad(fakty):
+        raise BladGemini("Opis odrzucony: model podał liczby, których nie ma w danych (42).")
+
+    monkeypatch.setattr(atlas_routes, "opisz_wskaznik", blad)
+    odpowiedz = client.post("/atlas/opis", data=json.dumps({"zmienna": 72305, "rok": 2023, "woj": "011200000000"}), content_type="application/json")
+
+    assert odpowiedz.status_code == 502
+    assert "fakty" in odpowiedz.get_json()

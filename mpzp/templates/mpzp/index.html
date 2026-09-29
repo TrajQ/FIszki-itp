@@ -2,8 +2,9 @@
 
 {% block tytul %}MPZP — Warsztat{% endblock %}
 {% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block klasa_body %}strona--szeroka{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
 <link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">
 {% endblock %}
 
@@ -29,6 +30,6 @@
     const URL_SPRAWDZ = "{{ url_for('mpzp.sprawdz') }}";
     const URL_ODSWIEZ = "{{ url_for('mpzp.odswiez') }}";
 </script>
-<script src="{{ url_for('mpzp.static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('mpzp.static', filename='mpzp.js') }}"></script>
 {% endblock %}

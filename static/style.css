@@ -193,8 +193,9 @@ code {
     padding: 40px 22px 80px;
 }
 
-/* Wariant na mapy: szerzej, mniej marginesu. */
-.tresc--szeroka {
+/* Wariant na mapy: szerzej. Pasek nawigacji dopasowuje się do treści. */
+.tresc--szeroka,
+.strona--szeroka .pasek-nawigacji__wnetrze {
     max-width: 1440px;
 }
 

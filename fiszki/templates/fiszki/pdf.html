@@ -2,6 +2,7 @@
 
 {% block tytul %}{{ pdf['nazwa_oryginalna'] }} — Fiszki{% endblock %}
 {% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block klasa_body %}strona--szeroka{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">
 <link rel="stylesheet" href="{{ url_for('fiszki.static', filename='pdfjs/text_layer.css') }}">

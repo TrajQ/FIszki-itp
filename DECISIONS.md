@@ -266,3 +266,46 @@ bez skryptu migracji; brak wiersza oznacza fiszkę nową.
   (D-007) jest dla tych, którzy chcą SM-2.
 - Kolumny `pudelko`/`nastepna_powtorka` w `fiszki` — odrzucone:
   wymagałyby `ALTER TABLE` w istniejących bazach.
+
+## D-013 — Atlas: BDL API, granice z PRG, strażnik liczb w opisie
+Data: 2026-09-29
+
+**Decyzja:** Dane z API BDL v1 (`dane/bdl.py`), jednostka analizy:
+gminy jednego województwa. Kod TERYT gminy wyciągany z identyfikatora
+BDL, co pozwala połączyć dane z granicami z PRG (WFS GUGiK). Odpowiedzi
+BDL w cache SQLite na 30 dni, granice w cache GeoJSON bez terminu.
+Statystyki i progi klas (kwantyle, 5 klas) liczone w Pythonie. Gemini
+dostaje listę gotowych faktów, a opis jest odrzucany, jeśli zawiera
+liczbę, której nie ma w faktach.
+
+**Uzasadnienie:** CLAUDE.md: tylko API i WFS, bez scrapowania; model
+nie generuje liczb. Samo polecenie w prompcie tego nie gwarantuje,
+dlatego jest twarda kontrola po stronie kodu. Fakty liczone na
+serwerze, nie przyjmowane z przeglądarki. Klasy kwantylowe dają
+czytelny kartogram także przy skośnych rozkładach (np. ludność, gdzie
+jedno miasto dominuje). Województwo jako zakres: ok. 100–300 gmin, więc
+rozsądny rozmiar granic i czytelna mapa.
+
+**Odrzucone alternatywy:**
+- Cała Polska naraz (2477 gmin) — odrzucone na start: duże granice,
+  wolny pierwszy wczyt, nieczytelny ranking.
+- Granice gmin jako plik w repo — odrzucone: kilkadziesiąt MB danych,
+  które się zmieniają; PRG to źródło referencyjne.
+- Klasy równych przedziałów — odrzucone: przy danych skośnych prawie
+  wszystkie gminy w jednej klasie.
+
+## D-014 — Leaflet we wspólnym `static/leaflet/`
+Data: 2026-09-29
+
+**Decyzja:** Leaflet 1.9.4 przeniesiony z `mpzp/static/leaflet/` do
+`static/leaflet/` (dalej lokalnie, bez CDN — D-006 w mocy).
+
+**Uzasadnienie:** Z mapy korzystają teraz trzy moduły (mpzp, atlas,
+dostępność). Biblioteka zewnętrzna w jednym miejscu to jedna kopia do
+aktualizacji; to nie jest współdzielona logika modułów.
+
+**Odrzucone alternatywy:**
+- Kopia Leafleta w każdym module — odrzucone: trzy kopie tej samej
+  wersji do pilnowania.
+- Odwołania atlasu do `mpzp.static` — odrzucone: ukryta zależność
+  między niezależnymi modułami.

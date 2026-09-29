@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 6 (fiszki — powtórki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap6_20260929.zip
-Testy: 57 passed / 0 failed
+ETAP: 7 (atlas — zamknięty)
+Ostatni ZIP: releases/warsztat_etap7_20260929.zip
+Testy: 79 passed / 0 failed

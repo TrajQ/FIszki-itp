@@ -64,3 +64,14 @@
 - Dodano tabelę `powtorki` i endpointy `/fiszki/powtorka*`.
 - Lista plików pokazuje liczbę fiszek do powtórki i rozkład pudełek.
 - Dodano `DECISIONS.md` D-012 i testy powtórek.
+
+## ETAP 7 — 2026-09-29
+- Dodano moduł atlas: wskaźniki GUS BDL dla gmin województwa,
+  kartogram (granice PRG), kafelki statystyk, ranking gmin, opis przez
+  Gemini ze sprawdzaniem liczb.
+- Dodano warstwę `dane/bdl.py` i `opisz_wskaznik` w `dane/gemini.py`.
+- Dodano `atlas/baza.py` (cache BDL), `atlas/granice.py`,
+  `atlas/statystyki.py`.
+- Przeniesiono Leaflet do `static/leaflet/`.
+- Dodano `GUS_BDL_API_KEY` do `config.py`.
+- Dodano `DECISIONS.md` D-013, D-014 i testy atlasu.

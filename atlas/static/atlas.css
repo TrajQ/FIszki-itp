@@ -1,1 +1,295 @@
-/* Style modułu atlas — uzupełniane w kolejnych ETAPach. */
+/* Style modułu atlas. Wspólne elementy w static/style.css. */
+
+/* Panel wyboru: wskaźnik szeroki, reszta w wąskich kolumnach. */
+.panel-wyboru {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1.4fr) minmax(0, 0.8fr) auto;
+    align-items: end;
+    gap: 16px;
+    padding: 20px 24px;
+}
+
+.pole-wskaznika {
+    position: relative;
+}
+
+.podpowiedzi {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1100;
+    max-height: 360px;
+    margin: 6px 0 0;
+    padding: 6px;
+    overflow-y: auto;
+    list-style: none;
+    border-radius: 14px;
+    background: var(--tlo-karty);
+    box-shadow: var(--cien-mocny);
+    color: var(--tekst);
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.podpowiedzi li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.podpowiedzi li:hover,
+.podpowiedzi li:focus {
+    background: var(--akcent-tlo);
+    outline: none;
+}
+
+.podpowiedzi .podpowiedzi__info {
+    color: var(--tekst-drugi);
+    cursor: default;
+}
+
+.podpowiedzi .podpowiedzi__info:hover {
+    background: none;
+}
+
+.wybrany-wskaznik {
+    margin: 10px 4px 24px;
+    font-size: 0.85rem;
+}
+
+/* Mapa po lewej, statystyki i opis po prawej. */
+.uklad-atlasu {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 24px;
+}
+
+.karta-mapy {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+}
+
+#mapa-atlasu {
+    height: 620px;
+    border-radius: 0;
+}
+
+.legenda {
+    position: absolute;
+    right: 16px;
+    bottom: 28px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--pasek-tlo);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--cien);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.legenda:empty {
+    display: none;
+}
+
+.legenda__tytul {
+    margin-bottom: 2px;
+    color: var(--tekst-drugi);
+    font-weight: 600;
+}
+
+.legenda__wiersz {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legenda__kolor {
+    width: 18px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.komunikat-mapy {
+    position: absolute;
+    top: 16px;
+    left: 60px;
+    right: 16px;
+    z-index: 500;
+}
+
+/* Kafelki statystyk: siatka 2 kolumny, szerokie na całą szerokość. */
+.kafelki {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.kafelek {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+}
+
+.kafelek--szeroki {
+    grid-column: 1 / -1;
+}
+
+.kafelek__etykieta {
+    color: var(--tekst-drugi);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kafelek__wartosc {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.kafelek__jednostka {
+    margin-left: 0.3em;
+    color: var(--tekst-drugi);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+.kafelek__wartosc--mala {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.rzad--miedzy {
+    justify-content: space-between;
+}
+
+.rzad--miedzy h3 {
+    margin: 0;
+}
+
+.opis-tekst {
+    line-height: 1.6;
+}
+
+#fakty-opisu {
+    color: var(--tekst-drugi);
+    font-size: 0.8rem;
+}
+
+#fakty-opisu summary {
+    cursor: pointer;
+}
+
+/* Ranking: każdy wiersz to siatka miejsce | nazwa | słupek | wartość. */
+.ranking {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filtr-rankingu {
+    max-width: 260px;
+}
+
+.lista-rankingu {
+    display: flex;
+    flex-direction: column;
+    max-height: 560px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.wiersz-rankingu {
+    display: grid;
+    grid-template-columns: 3rem minmax(10rem, 16rem) 1fr 8rem;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.wiersz-rankingu:hover,
+.wiersz-rankingu--aktywny {
+    background: var(--akcent-tlo);
+}
+
+.wiersz-rankingu__miejsce {
+    color: var(--tekst-drugi);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.wiersz-rankingu__nazwa {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wiersz-rankingu__tor {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--tlo-wyciszone);
+    overflow: hidden;
+}
+
+.wiersz-rankingu__slupek {
+    display: block;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.wiersz-rankingu__wartosc {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+@media (max-width: 1100px) {
+    .panel-wyboru {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .pole-wskaznika {
+        grid-column: 1 / -1;
+    }
+
+    .uklad-atlasu {
+        grid-template-columns: 1fr;
+    }
+
+    #mapa-atlasu {
+        height: 60vh;
+    }
+}
+
+@media (max-width: 600px) {
+    .wiersz-rankingu {
+        grid-template-columns: 2rem minmax(0, 1fr) 6rem;
+    }
+
+    .wiersz-rankingu__tor {
+        display: none;
+    }
+}

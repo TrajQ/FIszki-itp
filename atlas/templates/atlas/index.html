@@ -1,9 +1,86 @@
 {% extends "base.html" %}
 
 {% block tytul %}Atlas — Warsztat{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block klasa_body %}strona--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">
+{% endblock %}
 
 {% block tresc %}
-<div class="naglowek-strony"><h1>Atlas</h1></div>
-<div class="karta pusty-stan">Moduł w budowie.</div>
+<div class="naglowek-strony">
+    <div>
+        <h1>Atlas gmin</h1>
+        <p>Wskaźniki z Banku Danych Lokalnych GUS. Kartogram, ranking i opis dla wybranego województwa.</p>
+    </div>
+</div>
+
+<form id="formularz-atlasu" class="karta panel-wyboru">
+    <label class="pole-wskaznika">Wskaźnik
+        <input id="pole-szukaj" type="search" placeholder="np. ludność, bezrobocie, mieszkania…" autocomplete="off">
+        <ul id="podpowiedzi" class="podpowiedzi" hidden></ul>
+    </label>
+    <label>Województwo
+        <select id="pole-woj" required><option value="">Wczytywanie…</option></select>
+    </label>
+    <label>Rok
+        <select id="pole-rok"></select>
+    </label>
+    <button id="przycisk-pokaz" type="submit" disabled>Pokaż</button>
+</form>
+<p id="wybrany-wskaznik" class="wybrany-wskaznik wyciszony">Wybierz wskaźnik z listy podpowiedzi.</p>
+
+<p id="komunikat-atlasu" class="komunikat komunikat--blad" hidden></p>
+
+<div id="wyniki" hidden>
+    <div class="uklad-atlasu">
+        <section class="karta karta-mapy">
+            <div id="mapa-atlasu"></div>
+            <div id="legenda" class="legenda"></div>
+            <p id="komunikat-mapy" class="komunikat komunikat--ostrzezenie komunikat-mapy" hidden></p>
+        </section>
+
+        <aside class="stos">
+            <div class="kafelki">
+                <div class="karta kafelek"><span class="kafelek__etykieta">Gmin z danymi</span><span id="stat-liczba" class="kafelek__wartosc"></span></div>
+                <div class="karta kafelek"><span class="kafelek__etykieta">Mediana</span><span id="stat-mediana" class="kafelek__wartosc"></span></div>
+                <div class="karta kafelek kafelek--szeroki"><span class="kafelek__etykieta">Najwyżej</span><span id="stat-max" class="kafelek__wartosc kafelek__wartosc--mala"></span></div>
+                <div class="karta kafelek kafelek--szeroki"><span class="kafelek__etykieta">Najniżej</span><span id="stat-min" class="kafelek__wartosc kafelek__wartosc--mala"></span></div>
+            </div>
+
+            <section class="karta stos">
+                <div class="rzad rzad--miedzy">
+                    <h3>Opis</h3>
+                    <button id="przycisk-opis" type="button" class="przycisk--drugi">✦ Wygeneruj opis</button>
+                </div>
+                <p id="opis" class="wyciszony">Gemini opisze wynik słowami. Liczby w opisie są sprawdzane: każda musi pochodzić z danych GUS.</p>
+                <details id="fakty-opisu" hidden>
+                    <summary>Fakty przekazane modelowi</summary>
+                    <ul id="lista-faktow"></ul>
+                </details>
+            </section>
+        </aside>
+    </div>
+
+    <section class="karta ranking">
+        <div class="rzad rzad--miedzy">
+            <h3>Ranking gmin</h3>
+            <input id="filtr-rankingu" type="search" placeholder="Szukaj gminy…" class="filtr-rankingu">
+        </div>
+        <ol id="lista-rankingu" class="lista-rankingu"></ol>
+    </section>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_ZMIENNE = "{{ url_for('atlas.zmienne') }}";
+    const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
+    const URL_DANE = "{{ url_for('atlas.dane') }}";
+    const URL_GRANICE = "{{ url_for('atlas.granice_wojewodztwa', teryt_woj='00') }}";
+    const URL_OPIS = "{{ url_for('atlas.opis') }}";
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('atlas.static', filename='atlas.js') }}"></script>
 {% endblock %}

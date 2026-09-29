@@ -6,6 +6,8 @@ fragmentu (ta sama filozofia co zakaz generowania liczb przez LLM: model
 tłumaczy i porządkuje to, co dostał, a nie wymyśla).
 """
 
+import re
+
 from google import genai
 from google.genai import errors, types
 
@@ -82,3 +84,68 @@ def _sparsuj_odpowiedz(tekst: str) -> dict:
         raise BladGemini("Nie udało się sparsować odpowiedzi Gemini.")
 
     return {"pytanie": pytanie, "odpowiedz": odpowiedz}
+
+
+# ---------- Atlas: opis wskaźnika (ETAP 7) ----------
+
+PROMPT_OPISU = (
+    "Jesteś analitykiem gospodarki przestrzennej. Dostajesz listę faktów o "
+    "jednym wskaźniku GUS dla gmin jednego województwa. Napisz po polsku "
+    "zwięzły opis (3–5 zdań) dla studenta: co pokazuje wskaźnik, gdzie jest "
+    "najwyżej, gdzie najniżej, jak duże jest zróżnicowanie.\n"
+    "ZASADY BEZWZGLĘDNE:\n"
+    "- Używaj WYŁĄCZNIE liczb podanych w faktach, przepisanych dokładnie tak, "
+    "jak są zapisane. Nie licz niczego sam: żadnych różnic, ilorazów, "
+    "procentów, zaokrągleń ani nowych liczb.\n"
+    "- Nie dodawaj faktów spoza listy, nie zgaduj przyczyn jako pewników.\n"
+    "- Zwykły tekst, bez nagłówków i list."
+)
+
+# Liczba w tekście: cyfry z opcjonalnymi grupami tysięcy (spacja zwykła,
+# niełamliwa lub wąska) i częścią dziesiętną po przecinku lub kropce.
+_WZOR_LICZBY = re.compile(r"\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?")
+
+
+def _znormalizuj_liczbe(tekst: str) -> str:
+    return re.sub(r"[ \u00a0\u202f]", "", tekst).replace(",", ".")
+
+
+def liczby_w_tekscie(tekst: str) -> set[str]:
+    return {_znormalizuj_liczbe(m) for m in _WZOR_LICZBY.findall(tekst)}
+
+
+def opisz_wskaznik(fakty: list[str]) -> str:
+    """Opis wskaźnika na podstawie faktów policzonych w atlas/statystyki.py.
+
+    Po odpowiedzi modelu sprawdzamy, czy każda liczba z opisu występuje w
+    faktach. Jeśli model „wymyślił” liczbę — odrzucamy opis (BladGemini),
+    zgodnie z zasadą: model opisuje, liczby przychodzą z danych.
+    """
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
+
+    try:
+        client = genai.Client(api_key=Config.GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model=Config.GEMINI_MODEL,
+            contents="Fakty:\n" + "\n".join(f"- {f}" for f in fakty),
+            config=types.GenerateContentConfig(system_instruction=PROMPT_OPISU),
+        )
+    except errors.APIError as e:
+        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+
+    opis = (response.text or "").strip()
+    if not opis:
+        raise BladGemini("Gemini zwrócił pusty opis.")
+    sprawdz_liczby(opis, fakty)
+    return opis
+
+
+def sprawdz_liczby(opis: str, fakty: list[str]) -> None:
+    obce = liczby_w_tekscie(opis) - liczby_w_tekscie("\n".join(fakty))
+    if obce:
+        raise BladGemini(
+            "Opis odrzucony: model podał liczby, których nie ma w danych ("
+            + ", ".join(sorted(obce))
+            + "). Spróbuj ponownie."
+        )

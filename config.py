@@ -15,3 +15,4 @@ class Config:
 
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
     GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    GUS_BDL_API_KEY = os.environ.get("GUS_BDL_API_KEY", "")

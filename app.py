@@ -16,11 +16,14 @@ def create_app(instance_path=None):
     app.register_blueprint(fiszki_bp, url_prefix="/fiszki")
     app.register_blueprint(dostepnosc_bp, url_prefix="/dostepnosc")
 
-    from fiszki.baza import init_db, close_db
+    from fiszki.baza import init_db as init_db_fiszki, close_db as close_db_fiszki
+    from atlas.baza import init_db as init_db_atlas, close_db as close_db_atlas
 
     with app.app_context():
-        init_db()
-    app.teardown_appcontext(close_db)
+        init_db_fiszki()
+        init_db_atlas()
+    app.teardown_appcontext(close_db_fiszki)
+    app.teardown_appcontext(close_db_atlas)
 
     @app.route("/")
     def index():

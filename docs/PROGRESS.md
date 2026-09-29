@@ -186,3 +186,49 @@ Zrobione:
 
 Testy: 57 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap6_20260929.zip
+
+## ETAP 7 — Atlas (GUS BDL: kartogram, ranking, opis)
+Data: 2026-09-29
+Status: zamknięty (bez weryfikacji na żywym API — patrz „Znane ryzyka”)
+
+Zrobione:
+- `dane/bdl.py`: klient API BDL v1 — wyszukiwanie zmiennych dostępnych
+  dla gmin, lista województw, wartości zmiennej dla gmin województwa
+  w danym roku (stronicowanie, pomijanie braków i części gmin
+  miejsko-wiejskich), TERYT wyciągany z 12-znakowego id BDL, opcjonalny
+  klucz `GUS_BDL_API_KEY` (nagłówek `X-ClientId`), błędy jako `BladBDL`
+- `atlas/baza.py`: `instance/atlas/atlas.db` — cache odpowiedzi BDL na
+  30 dni (limity zapytań API)
+- `atlas/granice.py`: granice gmin z PRG (WFS GUGiK), filtr po TERYT
+  województwa, łączenie rekordów jednej gminy, uproszczenie geometrii
+  (~50 m), automatyczne rozpoznanie kolejności osi, cache GeoJSON w
+  `instance/atlas/granice/`
+- `atlas/statystyki.py`: liczba gmin, min, max, mediana, średnia, 3
+  najwyższe/najniższe, progi 5 klas kwantylowych, polski zapis liczb,
+  lista faktów dla modelu
+- `dane/gemini.py`: `opisz_wskaznik(fakty)` + strażnik liczb
+  `sprawdz_liczby` — opis z liczbą spoza faktów jest odrzucany
+- Endpointy: `/atlas/zmienne`, `/atlas/wojewodztwa`, `/atlas/dane`,
+  `/atlas/granice/<teryt>`, `POST /atlas/opis` (fakty liczone na
+  serwerze, nie przyjmowane z przeglądarki)
+- Frontend: wyszukiwarka wskaźników z podpowiedziami, wybór
+  województwa i roku, kartogram Leaflet z legendą i dymkami, kafelki
+  statystyk, ranking gmin jako wykres słupkowy (filtr, podświetlanie
+  mapa ↔ ranking, klik = przybliżenie), opis z podglądem faktów
+  przekazanych modelowi; brak granic nie blokuje rankingu i statystyk
+- Leaflet przeniesiony z `mpzp/static/leaflet/` do `static/leaflet/`
+  (używają go mpzp, atlas i dostępność)
+- Testy: 22 nowe (klient BDL na fałszywych odpowiedziach HTTP, TERYT,
+  statystyki, strażnik liczb, parser GML granic + cache, endpointy)
+- `DECISIONS.md`: D-013, D-014
+
+Znane ryzyka (nie dało się sprawdzić — sieć środowiska, w którym
+powstawał ETAP, blokuje bdl.stat.gov.pl i geoportal.gov.pl):
+- nazwy parametrów/pól API BDL i warstwy PRG (`ms:A03_Granice_gmin`,
+  `JPT_KOD_JE`, `JPT_NAZWA_`) przyjęte według dokumentacji; przy
+  pierwszym uruchomieniu u autora sprawdzić, czy kartogram się rysuje
+- format filtra WFS (FES 2.0 `PropertyIsLike`) — jeśli PRG go odrzuci,
+  komunikat błędu pojawi się nad mapą
+
+Testy: 79 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap7_20260929.zip
