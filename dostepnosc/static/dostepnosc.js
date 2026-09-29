@@ -303,7 +303,7 @@
             ? zLudnoscia
                 ? "Komórki dalej niż 15 min, w których mieszka najwięcej osób — tu nowa usługa pomogłaby najbardziej."
                 : "Komórki najdalej od usługi (powyżej 15 min). Dodaj kolumnę ludnosc, żeby uwzględnić mieszkańców."
-            : "Wszystkie komórki są w zasięgu 15 min.";
+            : "Żadna komórka (zamieszkana, jeśli plik podaje ludność) nie jest dalej niż 15 min.";
         for (const luka of luki) {
             const li = document.createElement("li");
             const przycisk = document.createElement("button");
