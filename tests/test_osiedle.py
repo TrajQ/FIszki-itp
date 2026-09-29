@@ -49,7 +49,7 @@ def test_bilans_z_obszarem_nakladaniem_i_wolnym_terenem():
 def test_bilans_bez_obszaru_procent_od_sumy_i_pusty():
     b = bilans(kolekcja(prostokat(0, 0, 30, 10, "MN"), prostokat(40, 0, 10, 10, "ZP")))
     assert b["obszar_m2"] is None and [f["procent"] for f in b["funkcje"]] == [75.0, 25.0]
-    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}}
+    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": []}
 
 
 def test_teren_poza_obszarem():
@@ -97,3 +97,66 @@ def test_koncepcje_przez_api(client):
     assert client.delete(f"/osiedle/koncepcje/{nowa['id']}").status_code == 200
     assert client.get(f"/osiedle/koncepcje/{nowa['id']}").status_code == 404
     assert "Osiedle" in client.get("/").get_data(as_text=True)
+
+# ---------- ETAP 58: wskaźniki zabudowy i zgodność z planem ----------
+
+
+def test_wskazniki_z_domyslnymi_i_wlasnymi_parametrami():
+    b = bilans(
+        kolekcja(
+            prostokat(0, 0, 100, 100, "obszar"),  # 10 000 m²
+            prostokat(0, 0, 40, 100, "MW"),  # 4000 m², domyślnie 30% × 5 kondygnacji, PBC 30%
+            prostokat(40, 0, 20, 100, "MN", zabudowa_proc=25, kondygnacje=2, pbc_proc="60"),  # 2000 m²
+            prostokat(60, 0, 30, 100, "ZP"),  # 3000 m², PBC 90%
+        )
+    )
+    w = b["wskazniki"]
+    # zabudowa: 4000·0,3 + 2000·0,25 = 1700; całkowita: 1200·5 + 500·2 = 7000
+    assert w["powierzchnia_zabudowy_m2"] == pytest.approx(1700, rel=1e-3)
+    assert w["powierzchnia_calkowita_m2"] == pytest.approx(7000, rel=1e-3)
+    assert w["zabudowa_proc"] == pytest.approx(17.0, abs=0.1)
+    assert w["intensywnosc"] == pytest.approx(0.70, abs=0.01)
+    # PBC: 4000·0,3 + 2000·0,6 + 3000·0,9 = 5100 → 51%
+    assert w["pbc_proc"] == pytest.approx(51.0, abs=0.1)
+    assert w["max_kondygnacje"] == 5
+    assert b["zgodnosc"] == [] and b["kontrole"]["parametry_ponad_100"] == 0
+
+
+def test_zgodnosc_z_planem_i_teren_ponad_100_proc():
+    b = bilans(
+        kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 100, 100, "MW", zabudowa_proc=40, pbc_proc=70)),
+        {"plan": {"max_zabudowa_proc": 35, "min_pbc_proc": 25, "max_intensywnosc": "0.5", "min_intensywnosc": None}},
+    )
+    wynik = {z["ustalenie"]: z["spelnione"] for z in b["zgodnosc"]}
+    assert wynik == {"max_zabudowa_proc": False, "min_pbc_proc": True, "max_intensywnosc": False}
+    assert b["kontrole"]["parametry_ponad_100"] == 1
+
+
+@pytest.mark.parametrize(
+    "wlasciwosci, ustawienia",
+    [
+        ({"zabudowa_proc": 120}, None),
+        ({"kondygnacje": "dużo"}, None),
+        ({"pbc_proc": float("nan")}, None),
+        ({}, {"plan": {"max_zabudowa_proc": -1}}),
+        ({}, {"plan": {"nieznane": 1}}),
+        ({}, {"plan": {"min_intensywnosc": 2, "max_intensywnosc": 1}}),
+    ],
+)
+def test_zle_parametry_i_ustalenia(wlasciwosci, ustawienia):
+    with pytest.raises(BladKoncepcji):
+        bilans(kolekcja(prostokat(0, 0, 10, 10, "MW", **wlasciwosci)), ustawienia)
+
+
+def test_api_ustawienia_planu_walidowane_i_zapisane(client):
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Plan"}).get_json()
+    url = f"/osiedle/koncepcje/{k['id']}"
+    client.put(url, json={"geojson": kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 50, 100, "MW"))})
+    assert client.put(url, json={"ustawienia": {"plan": {"max_zabudowa_proc": "x"}}}).status_code == 400
+    odp = client.put(url, json={"ustawienia": {"plan": {"max_zabudowa_proc": 10}}}).get_json()
+    assert odp["ustawienia"]["plan"]["max_zabudowa_proc"] == 10
+    assert odp["bilans"]["zgodnosc"][0]["spelnione"] is False  # 15% > 10%
+    # zapis samego rysunku bierze ustalenia zapisane wcześniej
+    odp = client.put(url, json={"geojson": kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 20, 100, "MW"))}).get_json()
+    assert odp["bilans"]["zgodnosc"][0]["spelnione"] is True  # 6%
+    assert client.get(url).get_json()["bilans"]["wskazniki"]["zabudowa_proc"] == pytest.approx(6.0, abs=0.1)

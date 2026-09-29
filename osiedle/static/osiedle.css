@@ -154,3 +154,68 @@ button.przycisk--niebezpieczny-tekst {
 .leaflet-draw-actions a {
     font-family: var(--czcionka);
 }
+
+/* ETAP 58: parametry terenu i wskaźniki zabudowy */
+.parametry-terenu {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.parametry-terenu label {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.parametry-terenu label[hidden] {
+    display: none;
+}
+
+.parametry-terenu input {
+    width: 100%;
+    min-width: 0;
+}
+
+.tabela-wskaznikow {
+    font-size: 13px;
+}
+
+.tabela-wskaznikow th,
+.tabela-wskaznikow td {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.tabela-wskaznikow .granica {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    margin-right: 6px;
+    color: var(--tekst-drugi);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.tabela-wskaznikow .granica input {
+    width: 54px;
+    padding: 4px 6px;
+}
+
+.tabela-wskaznikow .stan {
+    width: 1.5em;
+    font-size: 15px;
+    text-align: center;
+}
+
+.stan--ok {
+    color: var(--sukces);
+}
+
+.stan--zle {
+    color: var(--blad);
+    font-weight: 600;
+}

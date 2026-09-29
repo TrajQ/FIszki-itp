@@ -1335,3 +1335,32 @@ prosty i odporny na rozjazd między mapą a bazą.
 - Tabela terenów z wierszem na wielobok — odrzucone na teraz: więcej
   kodu synchronizacji bez korzyści przy tej skali.
 - SpatiaLite — odrzucone: bilans liczy shapely, baza tylko przechowuje.
+
+## D-064 — Osiedle: wskaźniki zabudowy z parametrów terenów
+Data: 2026-09-29
+
+**Decyzja:** Każdy teren ma parametry we właściwościach obiektu
+GeoJSON: `zabudowa_proc` i `kondygnacje` (tylko MN, MW, U) oraz
+`pbc_proc` (wszystkie funkcje). Brak parametru = wartość typowa z tabeli
+`DOMYSLNE` w `osiedle/wskazniki.py`, pokazywana w panelu jako
+podpowiedź (MN 30%/2 kond./PBC 50%, MW 30%/5/30%, U 40%/2/20%, ZP PBC
+90%, KD i KS 0%, WS 100% — woda powierzchniowa liczy się do terenu
+biologicznie czynnego wg rozporządzenia o warunkach technicznych).
+Wskaźniki (powierzchnia zabudowy i całkowita, wskaźnik zabudowy,
+intensywność, PBC, najwyższa zabudowa) liczy serwer dla całego obszaru
+opracowania, a bez niego — dla sumy terenów. Ustalenia planu (max
+zabudowa, min/max intensywność, min PBC, max kondygnacje) są w
+`ustawienia.plan` koncepcji; zgodność liczy serwer. Rysunek i ustalenia
+zapisują się jednym żądaniem, więc żadna zmiana nie ginie w opóźnieniu
+drugiej.
+
+**Uzasadnienie:** Parametry na terenie zamiast rysowania budynków —
+na etapie koncepcji planista myśli udziałami i kondygnacjami. Wartości
+typowe widoczne w polu, żeby nie było ukrytych założeń. Definicje
+wskaźników jak w module MPZP; kod osobny (niezależność modułów).
+
+**Odrzucone alternatywy:**
+- Rysowanie obrysów budynków — odrzucone na teraz: dużo pracy na
+  mapie, a koncepcja urbanistyczna tego nie wymaga.
+- Zgodność liczona osobno dla każdego terenu — odrzucone na teraz:
+  parametry terenu to wprost udziały, więc porównanie widać od razu.

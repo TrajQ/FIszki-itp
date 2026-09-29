@@ -408,3 +408,11 @@
   eksport GeoJSON, podkłady OSM/ortofotomapa.
 - Dodano Leaflet.draw 1.0.4 (`static/leaflet-draw/`), `DECISIONS.md`
   D-063 i 9 testów.
+
+## ETAP 58 — 2026-09-29
+- Osiedle: parametry zaznaczonego terenu (zabudowa %, kondygnacje,
+  PBC %, puste = wartość typowa), karta „Wskaźniki zabudowy” —
+  powierzchnia zabudowy i całkowita, wskaźnik zabudowy, intensywność,
+  PBC, najwyższa zabudowa — z polami ustaleń planu i zgodnością ✓/✗,
+  kontrola terenów, na których zabudowa + PBC przekraczają 100%.
+- Dodano `osiedle/wskazniki.py`, `DECISIONS.md` D-064 i 9 testów.

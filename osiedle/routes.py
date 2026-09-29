@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from . import baza
 from .bilans import FUNKCJE, OBSZAR, BladKoncepcji, bilans
+from .wskazniki import DOMYSLNE
 
 osiedle_bp = Blueprint(
     "osiedle",
@@ -42,7 +43,9 @@ def podsumowanie() -> dict:
 
 @osiedle_bp.route("/")
 def index():
-    return render_template("osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR)
+    return render_template(
+        "osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR, domyslne=DOMYSLNE
+    )
 
 
 @osiedle_bp.route("/koncepcje")
@@ -63,26 +66,29 @@ def nowa_koncepcja():
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>")
 def koncepcja(koncepcja_id):
     k = _koncepcja_albo_404(koncepcja_id)
-    return jsonify({**k, "bilans": bilans(k["geojson"])})
+    return jsonify({**k, "bilans": bilans(k["geojson"], k["ustawienia"])})
 
 
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>", methods=["PUT"])
 def zapisz_koncepcje(koncepcja_id):
     """Zapis nazwy, rysunku albo ustawień; zwraca świeży bilans."""
-    _koncepcja_albo_404(koncepcja_id)
+    obecna = _koncepcja_albo_404(koncepcja_id)
     dane = request.get_json(silent=True) or {}
     try:
         nazwa = _nazwa(dane["nazwa"]) if "nazwa" in dane else None
         geojson = dane.get("geojson")
-        wynik = bilans(geojson) if geojson is not None else None  # walidacja przed zapisem
         ustawienia = dane.get("ustawienia")
         if ustawienia is not None and not isinstance(ustawienia, dict):
             raise BladKoncepcji("Ustawienia muszą być obiektem.")
+        # walidacja przed zapisem: nowy rysunek i nowe ustawienia razem
+        wynik = bilans(
+            geojson if geojson is not None else obecna["geojson"],
+            ustawienia if ustawienia is not None else obecna["ustawienia"],
+        )
     except BladKoncepcji as e:
         return jsonify({"blad": str(e)}), 400
     baza.zapisz(koncepcja_id, nazwa, geojson, ustawienia)
-    k = baza.pobierz(koncepcja_id)
-    return jsonify({**k, "bilans": wynik or bilans(k["geojson"])})
+    return jsonify({**baza.pobierz(koncepcja_id), "bilans": wynik})
 
 
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>", methods=["DELETE"])

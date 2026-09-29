@@ -14,8 +14,9 @@ kogoś, kto wróci do niego za trzy miesiące.
 - mpzp        — czytnik planów miejscowych, działka → przeznaczenie
 - fiszki      — generator fiszek z PDF z kotwicą w źródle
 - dostepnosc  — analiza dostępności pieszej, siatka H3 (czyta gotowe wyniki)
-- osiedle     — koncepcja osiedla rysowana na mapie: bilans terenu
-                (w budowie: wskaźniki, program, warianty — ETAPy 58–60)
+- osiedle     — koncepcja osiedla rysowana na mapie: bilans terenu,
+                wskaźniki zabudowy i zgodność z planem
+                (w budowie: program, warianty — ETAPy 59–60)
 
 Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - przepisy    — nowy moduł: pytania do PDF-ów z przepisami, odpowiedź
@@ -58,6 +59,6 @@ Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 57 (osiedle: moduł, rysowanie, bilans terenu — zamknięty)
-Ostatni ZIP: releases/warsztat_etap57_20260929.zip
-Testy: 353 passed / 0 failed
+ETAP: 58 (osiedle: wskaźniki zabudowy i zgodność z planem — zamknięty)
+Ostatni ZIP: releases/warsztat_etap58_20260929.zip
+Testy: 362 passed / 0 failed

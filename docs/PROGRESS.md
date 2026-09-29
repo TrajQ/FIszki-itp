@@ -1228,3 +1228,17 @@ Status: zamknięty
 
 Testy: 353 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap57_20260929.zip
+
+## ETAP 58 — Osiedle: wskaźniki zabudowy i zgodność z planem
+Data: 2026-09-29
+Status: zamknięty
+
+- `osiedle/wskazniki.py` (parametry terenów, wskaźniki, ustalenia planu,
+  zgodność); `bilans()` przyjmuje ustawienia koncepcji
+- Zapis PUT waliduje rysunek i ustawienia razem (brakującą część bierze
+  z bazy)
+- Panel: pola parametrów terenu zależne od funkcji, tabela wskaźników
+  z granicami planu
+- Sprawdzone w przeglądarce: liczby zgodne z ręcznym rachunkiem,
+  zapis parametrów i ustaleń po przeładowaniu (jasny i ciemny motyw)
+- `DECISIONS.md`: D-064

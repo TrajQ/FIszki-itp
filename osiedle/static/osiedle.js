@@ -1,6 +1,6 @@
 // Moduł osiedle: rysowanie koncepcji na mapie (Leaflet.draw) i bilans terenu.
-// Bilans liczy serwer (osiedle/bilans.py) po każdym zapisie rysunku;
-// tu tylko rysujemy, zapisujemy i wyświetlamy wynik.
+// Bilans i wskaźniki liczy serwer (osiedle/bilans.py, wskazniki.py) po
+// każdym zapisie; tu tylko rysujemy, zapisujemy i wyświetlamy wynik.
 (function () {
     "use strict";
 
@@ -15,6 +15,10 @@
     const wybranyTerenEl = document.getElementById("wybrany-teren");
     const funkcjaTerenu = document.getElementById("funkcja-terenu");
     const stanZapisu = document.getElementById("stan-zapisu");
+    const sekcjaWskaznikow = document.getElementById("sekcja-wskaznikow");
+    const polaParametrow = document.querySelectorAll("#parametry-terenu [data-parametr]");
+    const polaUstalen = document.querySelectorAll("[data-ustalenie]");
+    const formatWsk = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
     const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
     const formatProc = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
 
@@ -143,6 +147,41 @@
         if (!warstwa) return;
         warstwa.setStyle(styl(warstwa.funkcja, true));
         funkcjaTerenu.value = warstwa.funkcja;
+        pokazParametry(warstwa);
+    }
+
+    // Pola parametrów zaznaczonego terenu: tylko te, które funkcja ma
+    // (zabudowa i kondygnacje — MN, MW, U); podpowiedź = wartość typowa.
+    function pokazParametry(warstwa) {
+        const domyslne = DOMYSLNE[warstwa.funkcja] || {};
+        const wlasciwosci = warstwa.wlasciwosci || {};
+        polaParametrow.forEach((etykieta) => {
+            const klucz = etykieta.dataset.parametr;
+            const pole = etykieta.querySelector("input");
+            etykieta.hidden = !(klucz in domyslne);
+            pole.placeholder = klucz in domyslne ? String(domyslne[klucz]) : "";
+            pole.value = wlasciwosci[klucz] ?? "";
+        });
+    }
+
+    polaParametrow.forEach((etykieta) => {
+        etykieta.querySelector("input").addEventListener("input", (e) => {
+            if (!wybranaWarstwa) return;
+            const klucz = etykieta.dataset.parametr;
+            wybranaWarstwa.wlasciwosci = { ...(wybranaWarstwa.wlasciwosci || {}) };
+            if (e.target.value === "") delete wybranaWarstwa.wlasciwosci[klucz];
+            else wybranaWarstwa.wlasciwosci[klucz] = Number(e.target.value);
+            zapiszRysunek();
+        });
+    });
+    polaUstalen.forEach((pole) => pole.addEventListener("input", zapiszRysunek));
+
+    function ustawieniaZFormularza() {
+        const plan = {};
+        polaUstalen.forEach((pole) => {
+            if (pole.value !== "") plan[pole.dataset.ustalenie] = Number(pole.value);
+        });
+        return { ...(koncepcja.ustawienia || {}), plan };
     }
 
     mapa.on("click", () => zaznacz(null));
@@ -168,6 +207,7 @@
         if (!wybranaWarstwa) return;
         wybranaWarstwa.funkcja = funkcjaTerenu.value;
         wybranaWarstwa.setStyle(styl(wybranaWarstwa.funkcja, true));
+        pokazParametry(wybranaWarstwa);
         zapiszRysunek();
     });
     document.getElementById("usun-teren").addEventListener("click", () => {
@@ -188,6 +228,8 @@
         return { type: "FeatureCollection", features: cechy };
     }
 
+    // Zapis rysunku razem z ustaleniami planu — jedna droga zapisu, więc
+    // żadna zmiana nie zgubi się w opóźnieniu drugiej.
     // Zapis po krótkiej przerwie (kilka zmian pod rząd = jeden zapis);
     // numer zapisu chroni przed pokazaniem bilansu ze starszej odpowiedzi.
     function zapiszRysunek() {
@@ -199,9 +241,10 @@
             try {
                 const dane = await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}`, {
                     method: "PUT",
-                    body: JSON.stringify({ geojson: rysunekGeojson() }),
+                    body: JSON.stringify({ geojson: rysunekGeojson(), ustawienia: ustawieniaZFormularza() }),
                 });
                 if (numer !== numerZapisu) return;
+                koncepcja.ustawienia = dane.ustawienia;
                 pokazKomunikat("");
                 stanZapisu.textContent = "Zapisano";
                 pokazBilans(dane.bilans);
@@ -262,6 +305,32 @@
         if (k.nakladanie_m2 >= 1) uwaga(`Tereny nakładają się na ${formatM2.format(k.nakladanie_m2)} m² — bilans liczy tę część podwójnie.`);
         if (k.poza_obszarem_m2 >= 1) uwaga(`${formatM2.format(k.poza_obszarem_m2)} m² terenów leży poza obszarem opracowania.`);
         if (!b.funkcje.length && b.obszar_m2 === null) uwaga("Jeszcze nic nie narysowano.");
+        if (k.parametry_ponad_100) uwaga(`Terenów, na których zabudowa i powierzchnia biologicznie czynna razem przekraczają 100%: ${k.parametry_ponad_100}.`);
+        pokazWskazniki(b);
+    }
+
+    function pokazWskazniki(b) {
+        sekcjaWskaznikow.hidden = false;
+        const w = b.wskazniki || {};
+        document.getElementById("podstawa-wskaznikow").textContent = b.obszar_m2 !== null
+            ? "Wskaźniki liczone od powierzchni obszaru opracowania."
+            : "Bez obszaru opracowania wskaźniki liczone są od sumy terenów.";
+        sekcjaWskaznikow.querySelectorAll("[data-wskaznik]").forEach((td) => {
+            const wartosc = w[td.dataset.wskaznik];
+            td.textContent = wartosc === null || wartosc === undefined ? "—" : formatWsk.format(wartosc);
+        });
+        // Wskaźnik spełnia plan, gdy spełnia wszystkie swoje granice (np. min i max intensywności).
+        const stany = {};
+        for (const z of b.zgodnosc) {
+            const klucz = { max_zabudowa_proc: "zabudowa_proc", min_intensywnosc: "intensywnosc", max_intensywnosc: "intensywnosc", min_pbc_proc: "pbc_proc", max_kondygnacje: "max_kondygnacje" }[z.ustalenie];
+            stany[klucz] = (stany[klucz] ?? true) && z.spelnione;
+        }
+        sekcjaWskaznikow.querySelectorAll("[data-stan]").forEach((td) => {
+            const stan = stany[td.dataset.stan];
+            td.textContent = stan === undefined ? "" : stan ? "✓" : "✗";
+            td.title = stan === undefined ? "" : stan ? "zgodne z planem" : "niezgodne z planem";
+            td.className = `stan ${stan === undefined ? "" : stan ? "stan--ok" : "stan--zle"}`;
+        });
     }
 
     // ---------- koncepcje ----------
@@ -283,7 +352,7 @@
         if (!id) {
             koncepcja = null;
             mapa.removeControl(kontrolkaRysowania);
-            [sekcjaRysowania, sekcjaBilansu, akcjeKoncepcji, linkGeojson].forEach((el) => (el.hidden = true));
+            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, akcjeKoncepcji, linkGeojson].forEach((el) => (el.hidden = true));
             return;
         }
         const dane = await zapytaj(`${URL_KONCEPCJE}/${id}`);
@@ -304,6 +373,8 @@
         [sekcjaRysowania, akcjeKoncepcji, linkGeojson].forEach((el) => (el.hidden = false));
         linkGeojson.href = `${URL_KONCEPCJE}/${id}.geojson`;
         stanZapisu.textContent = "";
+        const plan = (dane.ustawienia || {}).plan || {};
+        polaUstalen.forEach((pole) => (pole.value = plan[pole.dataset.ustalenie] ?? ""));
         pokazBilans(dane.bilans);
         if (rysunek.getLayers().length) mapa.fitBounds(rysunek.getBounds(), { padding: [30, 30], maxZoom: 18 });
     }

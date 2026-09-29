@@ -18,10 +18,13 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
+from . import wskazniki as wsk
+
 OBSZAR = "obszar"
 
-# Funkcje terenu: nazwa, kolor na mapie, czy to teren zabudowy (ETAP 58:
-# wskaźniki zabudowy liczymy tylko dla tych). Symbole jak w planach.
+# Funkcje terenu: nazwa, kolor na mapie, czy to teren zabudowy
+# (powierzchnię zabudowy i kondygnacje liczymy tylko dla tych — wskazniki.py).
+# Symbole jak w planach.
 FUNKCJE = {
     "MN": {"nazwa": "zabudowa mieszkaniowa jednorodzinna", "kolor": "#ffd60a", "zabudowa": True},
     "MW": {"nazwa": "zabudowa mieszkaniowa wielorodzinna", "kolor": "#ff9f0a", "zabudowa": True},
@@ -85,12 +88,19 @@ def wczytaj_tereny(geojson: dict) -> tuple[BaseGeometry | None, list[dict]]:
     return obszar, tereny
 
 
-def bilans(geojson: dict) -> dict:
-    """Bilans terenu: m² i % dla każdej funkcji + kontrole rysunku."""
+def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
+    """Bilans terenu: m² i % dla każdej funkcji, kontrole rysunku,
+    wskaźniki zabudowy i zgodność z ustaleniami planu (z ustawień)."""
     obszar, tereny = wczytaj_tereny(geojson)
+    try:
+        plan = wsk.ustalenia_planu(ustawienia)
+        for t in tereny:
+            t["parametry"] = wsk.parametry_terenu(t["funkcja"], t["wlasciwosci"])
+    except wsk.BladParametru as e:
+        raise BladKoncepcji(str(e)) from None
     wszystko = [t["geometria"] for t in tereny] + ([obszar] if obszar is not None else [])
     if not wszystko:
-        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}}
+        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": []}
     szerokosc = unary_union(wszystko).centroid.y
 
     def pole(geometria):
@@ -102,7 +112,9 @@ def bilans(geojson: dict) -> dict:
 
     po_funkcji: dict[str, float] = {}
     for t in tereny:
-        po_funkcji[t["funkcja"]] = po_funkcji.get(t["funkcja"], 0.0) + pole(t["geometria"])
+        t["pole_m2"] = pole(t["geometria"])
+        t["zabudowa"] = FUNKCJE[t["funkcja"]]["zabudowa"]
+        po_funkcji[t["funkcja"]] = po_funkcji.get(t["funkcja"], 0.0) + t["pole_m2"]
     razem = sum(po_funkcji.values())
     podstawa = obszar_m2 or razem  # procenty od obszaru, a bez niego — od sumy terenów
 
@@ -130,9 +142,16 @@ def bilans(geojson: dict) -> dict:
             niezagospodarowane_m2=round(wolne, 1),
             niezagospodarowane_proc=round(100 * wolne / obszar_m2, 1) if obszar_m2 else None,
         )
+    # Teren, na którym budynki i zieleń razem zajmują ponad 100% — do poprawy.
+    kontrole["parametry_ponad_100"] = sum(
+        1 for t in tereny if t["parametry"].get("zabudowa_proc", 0) + t["parametry"]["pbc_proc"] > 100 + 1e-9
+    )
+    wskazniki = wsk.wskazniki(tereny, podstawa)
     return {
         "obszar_m2": round(obszar_m2, 1) if obszar_m2 is not None else None,
         "funkcje": funkcje,
         "razem_m2": round(razem, 1),
         "kontrole": kontrole,
+        "wskazniki": wskazniki,
+        "zgodnosc": wsk.zgodnosc(wskazniki, plan),
     }
