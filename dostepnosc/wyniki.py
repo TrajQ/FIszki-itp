@@ -151,6 +151,50 @@ def analiza_kolumny(wyniki: dict, kolumna: str) -> dict:
     }
 
 
+NAZWA_LACZNEGO = "czas_laczny_min"
+
+
+def kolumny_minut(wyniki: dict) -> list[str]:
+    return [k for k in wyniki["kolumny"] if czy_minuty(k)]
+
+
+def analiza_laczna(wyniki: dict) -> dict:
+    """„Miasto 15-minutowe”: czas dojścia do WSZYSTKICH usług naraz.
+
+    Dla każdej komórki bierzemy maksimum z kolumn czasu (dopiero wtedy
+    dojdziemy do każdej z usług). Komórka z brakiem w którejkolwiek
+    kolumnie nie ma wartości łącznej. Dodatkowo liczymy, która usługa
+    najczęściej jest tą najdalszą — „najsłabsze ogniwo”.
+    """
+    kolumny = kolumny_minut(wyniki)
+    if len(kolumny) < 2:
+        raise BladWynikow("Wskaźnik łączny wymaga co najmniej dwóch kolumn czasu (*_min).")
+
+    laczne = []
+    najdalsze = {k: 0 for k in kolumny}
+    for i in range(len(wyniki["komorki"])):
+        czasy = [(wyniki["kolumny"][k][i], k) for k in kolumny]
+        if any(c is None for c, _ in czasy):
+            laczne.append(None)
+            continue
+        czas, kolumna = max(czasy)
+        laczne.append(czas)
+        najdalsze[kolumna] += 1
+
+    kopia = {**wyniki, "kolumny": {NAZWA_LACZNEGO: laczne}}
+    analiza = analiza_kolumny(kopia, NAZWA_LACZNEGO)
+    policzone = sum(najdalsze.values())
+    analiza["skladowe"] = kolumny
+    analiza["najslabsze_ogniwo"] = sorted(
+        (
+            {"kolumna": k, "komorki": n, "procent": 100 * n / policzone if policzone else 0}
+            for k, n in najdalsze.items()
+        ),
+        key=lambda x: -x["komorki"],
+    )
+    return analiza
+
+
 def _progi_kwantylowe(wartosci: list[float]) -> list[float]:
     if len(set(wartosci)) < 2:
         return []

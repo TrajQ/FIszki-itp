@@ -373,3 +373,22 @@ Zrobione:
 
 Testy: 128 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap12_20260929.zip
+
+## ETAP 13 — Dostępność: wskaźnik łączny „miasta 15-minutowego”
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `dostepnosc/wyniki.py`: `analiza_laczna` — czas dojścia do wszystkich
+  usług naraz = maksimum z kolumn czasu w komórce (brak w dowolnej
+  kolumnie → brak wartości), te same klasy i udziały 5/10/15 min co dla
+  pojedynczej usługi; „najsłabsze ogniwo” — która usługa najczęściej
+  jest najdalej (liczba i procent komórek)
+- `GET /dostepnosc/plik/<nazwa>/laczny`; metadane pliku mają
+  `laczny_dostepny` (co najmniej dwie kolumny czasu)
+- Frontend: opcja „★ Wszystkie usługi naraz” (domyślna, gdy dostępna),
+  blok „Najsłabsze ogniwo” z paskami
+- Testy: 3 nowe; `DECISIONS.md`: D-020
+
+Testy: 131 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap13_20260929.zip

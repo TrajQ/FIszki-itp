@@ -11,6 +11,9 @@
     const poleKolumna = document.getElementById("pole-kolumna");
     const kafelki = document.getElementById("kafelki");
     const metaPliku = document.getElementById("meta-pliku");
+    const ogniwoEl = document.getElementById("ogniwo");
+    const listaOgniw = document.getElementById("lista-ogniw");
+    const WARTOSC_LACZNY = "__laczny__";
     const legenda = document.getElementById("legenda");
     const komunikat = document.getElementById("komunikat");
 
@@ -90,7 +93,7 @@
         legenda.replaceChildren();
         const tytul = document.createElement("div");
         tytul.className = "legenda__tytul";
-        tytul.textContent = analiza.minuty ? "czas dojścia" : analiza.kolumna;
+        tytul.textContent = analiza.najslabsze_ogniwo ? "czas do wszystkich usług" : analiza.minuty ? "czas dojścia" : analiza.kolumna;
         legenda.appendChild(tytul);
 
         const p = analiza.progi;
@@ -115,7 +118,8 @@
         pokazBlad("");
         let analiza;
         try {
-            analiza = await pobierzJson(`${urlPliku}/${encodeURIComponent(kolumna)}`);
+            const adres = kolumna === WARTOSC_LACZNY ? `${urlPliku}/laczny` : `${urlPliku}/${encodeURIComponent(kolumna)}`;
+            analiza = await pobierzJson(adres);
         } catch (e) {
             pokazBlad(e.message);
             return;
@@ -143,16 +147,43 @@
         }
         pokazStatystyki(analiza);
         pokazLegende(analiza, paleta);
+        pokazOgniwo(analiza);
+    }
+
+    // Tylko dla wskaźnika łącznego: która usługa najczęściej jest najdalej.
+    function pokazOgniwo(analiza) {
+        ogniwoEl.hidden = !analiza.najslabsze_ogniwo;
+        if (!analiza.najslabsze_ogniwo) return;
+        listaOgniw.replaceChildren();
+        for (const o of analiza.najslabsze_ogniwo) {
+            const li = document.createElement("li");
+            const nazwa = document.createElement("span");
+            nazwa.textContent = o.kolumna;
+            const tor = document.createElement("span");
+            tor.className = "ogniwo__tor";
+            const slupek = document.createElement("span");
+            slupek.className = "ogniwo__slupek";
+            slupek.style.width = `${o.procent}%`;
+            tor.appendChild(slupek);
+            const procent = document.createElement("span");
+            procent.className = "ogniwo__procent";
+            procent.textContent = `${formatLiczby.format(o.procent)}%`;
+            li.append(nazwa, tor, procent);
+            listaOgniw.appendChild(li);
+        }
     }
 
     poleKolumna.addEventListener("change", () => pokazKolumne(poleKolumna.value));
 
     pobierzJson(urlPliku)
         .then((meta) => {
+            if (meta.laczny_dostepny) {
+                poleKolumna.add(new Option("★ Wszystkie usługi naraz (min)", WARTOSC_LACZNY));
+            }
             for (const k of meta.kolumny) {
                 poleKolumna.add(new Option(k.nazwa + (k.minuty ? " (min)" : ""), k.nazwa));
             }
-            return pokazKolumne(meta.kolumny[0].nazwa);
+            return pokazKolumne(poleKolumna.value);
         })
         .catch((e) => pokazBlad(`Nie udało się wczytać pliku: ${e.message}`));
 })();

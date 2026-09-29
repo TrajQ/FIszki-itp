@@ -151,3 +151,44 @@ def test_wgranie_zlego_pliku_nie_zapisuje_go(client):
 def test_nie_da_sie_usunac_przykladu_ani_wyjsc_poza_folder(client):
     assert client.post("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/usun").status_code == 400
     assert client.get("/dostepnosc/plik/..%2Fconfig.py").status_code == 404
+
+
+# ---------- ETAP 13: wskaźnik łączny ----------
+
+
+def test_analiza_laczna_bierze_maksimum_i_liczy_najslabsze_ogniwo():
+    komorki = SASIEDZI[:4]
+    tekst = "h3,czas_a_min,czas_b_min,gestosc\n" + "\n".join(
+        [
+            f"{komorki[0]},3,12,1",  # łącznie 12 (b)
+            f"{komorki[1]},20,4,1",  # 20 (a)
+            f"{komorki[2]},2,,1",  # brak b → brak łącznego
+            f"{komorki[3]},8,9,1",  # 9 (b)
+        ]
+    )
+    analiza = wyniki.analiza_laczna(wyniki.wczytaj_csv(tekst))
+
+    wartosci = [c["properties"]["wartosc"] for c in analiza["geojson"]["features"]]
+    assert wartosci == [12, 20, 9]
+    assert analiza["minuty"] is True
+    assert analiza["statystyki"]["komorki_bez_wartosci"] == 1
+    assert analiza["skladowe"] == ["czas_a_min", "czas_b_min"]
+    ogniwa = {o["kolumna"]: o["komorki"] for o in analiza["najslabsze_ogniwo"]}
+    assert ogniwa == {"czas_b_min": 2, "czas_a_min": 1}
+    assert analiza["najslabsze_ogniwo"][0]["procent"] == pytest.approx(200 / 3)
+
+
+def test_analiza_laczna_wymaga_dwoch_kolumn_czasu():
+    with pytest.raises(BladWynikow, match="dwóch"):
+        wyniki.analiza_laczna(wyniki.wczytaj_csv(csv_testowy()))
+
+
+def test_endpoint_laczny(client):
+    meta = client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv").get_json()
+    assert meta["laczny_dostepny"] is True
+    analiza = client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/laczny").get_json()
+    assert len(analiza["najslabsze_ogniwo"]) == 3
+
+    wgraj(client, csv_testowy())
+    assert client.get("/dostepnosc/plik/moje.csv").get_json()["laczny_dostepny"] is False
+    assert client.get("/dostepnosc/plik/moje.csv/laczny").status_code == 422

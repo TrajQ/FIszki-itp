@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 12 (bezpieczeństwo — CSRF, DNS rebinding — zamknięty)
-Ostatni ZIP: releases/warsztat_etap12_20260929.zip
-Testy: 128 passed / 0 failed
+ETAP: 13 (dostępność — wskaźnik łączny — zamknięty)
+Ostatni ZIP: releases/warsztat_etap13_20260929.zip
+Testy: 131 passed / 0 failed

@@ -115,6 +115,59 @@
     font-size: 0.75rem;
 }
 
+/* Najsłabsze ogniwo: wiersz = nazwa | pasek | procent. */
+.ogniwo h4 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.ogniwo p {
+    margin: 2px 0 8px;
+    font-size: 0.78rem;
+}
+
+.ogniwo ul {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ogniwo li {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 1fr 3rem;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+}
+
+.ogniwo li > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ogniwo__tor {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--tlo-wyciszone);
+    overflow: hidden;
+}
+
+.ogniwo__slupek {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: #ff9f0a;
+}
+
+.ogniwo__procent {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
 .meta-pliku {
     margin: 0;
     font-size: 0.78rem;

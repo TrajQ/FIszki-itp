@@ -113,3 +113,8 @@
 - Dodano nagłówki bezpieczeństwa (`X-Frame-Options`,
   `X-Content-Type-Options`, `Referrer-Policy`).
 - Dodano `DECISIONS.md` D-019 i testy.
+
+## ETAP 13 — 2026-09-29
+- Dostępność: wskaźnik łączny (czas do wszystkich usług naraz) i
+  „najsłabsze ogniwo” (`/dostepnosc/plik/<nazwa>/laczny`).
+- Dodano `DECISIONS.md` D-020 i testy.

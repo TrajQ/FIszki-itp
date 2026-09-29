@@ -427,3 +427,24 @@ aplikacji (jak `base.html`), a nie wspólna logika modułów. Kontrola
 - Content-Security-Policy — odłożone: szablony używają wbudowanych
   `<script>` ze stałymi URL-i i `onsubmit`, więc CSP wymagałaby
   `unsafe-inline` albo przepisania tych miejsc.
+
+## D-020 — Wskaźnik łączny jako maksimum czasów
+Data: 2026-09-29
+
+**Decyzja:** Łączna dostępność komórki to maksimum czasów dojścia do
+wszystkich usług z pliku (kolumny `*_min` / `czas*`). Komórka z brakiem
+danych dla którejkolwiek usługi nie dostaje wartości łącznej. Obok
+liczymy, która usługa najczęściej wyznacza to maksimum.
+
+**Uzasadnienie:** Idea miasta 15-minutowego to „wszystkie podstawowe
+usługi w zasięgu” — dopiero najdalsza z nich mówi, czy komórka spełnia
+warunek. „Najsłabsze ogniwo” podpowiada, której usługi brakuje
+najbardziej — to wniosek planistyczny liczony z danych, a nie
+interpretacja modelu. Uzupełnianie braków (np. zerem albo średnią)
+fałszowałoby wynik.
+
+**Odrzucone alternatywy:**
+- Średnia czasów — odrzucone: bliski przystanek „nadrabiałby” brak
+  przychodni, co przeczy idei wskaźnika.
+- Wagi usług ustawiane przez użytkownika — odłożone: wymagają
+  uzasadnienia wag, a wynik przestaje być porównywalny.

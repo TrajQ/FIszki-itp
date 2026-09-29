@@ -114,8 +114,18 @@ def opis_pliku(nazwa):
             "kolumny": [
                 {"nazwa": k, "minuty": wyniki_h3.czy_minuty(k)} for k in dane["kolumny"]
             ],
+            # Wskaźnik łączny ma sens dopiero przy co najmniej dwóch usługach.
+            "laczny_dostepny": len(wyniki_h3.kolumny_minut(dane)) >= 2,
         }
     )
+
+
+@dostepnosc_bp.route("/plik/<nazwa>/laczny")
+def analiza_laczna(nazwa):
+    try:
+        return jsonify(wyniki_h3.analiza_laczna(_wczytaj(nazwa)))
+    except BladWynikow as e:
+        return jsonify({"blad": str(e)}), 422
 
 
 @dostepnosc_bp.route("/plik/<nazwa>/<kolumna>")
