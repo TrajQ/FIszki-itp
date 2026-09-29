@@ -405,3 +405,25 @@ kod jest prosty i łatwy do przetestowania.
   wrócić, gdyby kolekcja urosła do dziesiątek tysięcy.
 - Własna funkcja SQL (`create_function`) do porównań — odrzucone:
   więcej kodu dla tego samego efektu.
+
+## D-019 — Ochrona przed CSRF przez sprawdzanie Origin, bez tokenów
+Data: 2026-09-29
+
+**Decyzja:** Zamiast tokenów CSRF w formularzach aplikacja odrzuca
+zapytania zmieniające stan, których `Origin` (albo `Referer`) wskazuje
+inne źródło niż ona sama, oraz każde zapytanie z nagłówkiem `Host`
+innym niż `127.0.0.1`/`localhost`. Całość w jednym pliku `ochrona.py`,
+podpiętym w `app.py` dla wszystkich modułów.
+
+**Uzasadnienie:** Współczesne przeglądarki zawsze wysyłają `Origin` przy
+POST z innej strony, więc sprawdzenie nagłówka zamyka ten atak bez
+zmian w każdym formularzu i każdym `fetch`. To zabezpieczenie powłoki
+aplikacji (jak `base.html`), a nie wspólna logika modułów. Kontrola
+`Host` to standardowa obrona serwerów lokalnych przed DNS rebinding.
+
+**Odrzucone alternatywy:**
+- Tokeny CSRF (np. Flask-WTF) — odrzucone: nowa zależność, sesje i
+  zmiany w kilkunastu miejscach frontendu dla tego samego efektu.
+- Content-Security-Policy — odłożone: szablony używają wbudowanych
+  `<script>` ze stałymi URL-i i `onsubmit`, więc CSP wymagałaby
+  `unsafe-inline` albo przepisania tych miejsc.

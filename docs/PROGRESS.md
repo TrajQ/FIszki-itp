@@ -342,3 +342,34 @@ Zrobione:
 
 Testy: 119 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap11_20260929.zip
+
+## ETAP 12 — Bezpieczeństwo: ochrona przed obcymi stronami (CSRF, DNS rebinding)
+Data: 2026-09-29
+Status: zamknięty
+
+Audyt: aplikacja słucha tylko na 127.0.0.1, ale każda strona otwarta w
+tej samej przeglądarce mogła wysłać do niej zwykły formularz POST (bez
+pytania wstępnego CORS). Narażone były: `POST /fiszki/<id>/usun`,
+`/fiszki/upload`, `/dostepnosc/wgraj`, `/dostepnosc/plik/<n>/usun`,
+`/mpzp/odswiez`. Endpointy JSON (`application/json`) były bezpieczne —
+przeglądarka nie wyśle takiego zapytania do obcego serwera bez zgody
+CORS. Dodatkowo możliwy był DNS rebinding (obca domena wskazująca na
+127.0.0.1 = pełny dostęp do odczytu). `innerHTML` z danymi użytkownika:
+brak (jedyne użycie to stały tekst).
+
+Zrobione:
+- `ochrona.py` + rejestracja w `app.py`:
+  - nagłówek `Host` musi być `127.0.0.1` albo `localhost` (każda
+    metoda) — blokuje DNS rebinding,
+  - POST/PUT/DELETE/PATCH z obcym `Origin` (albo `Referer`, gdy brak
+    `Origin`; także `Origin: null` i inny port) → 403; zapytania bez
+    obu nagłówków (curl, testy) przechodzą,
+  - nagłówki `X-Frame-Options: DENY` (clickjacking),
+    `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`
+- Sprawdzone w przeglądarce, że własne formularze i zapytania
+  (usuwanie PDF, powtórki, edycja PUT, wgrywanie/usuwanie CSV,
+  wyszukiwanie działki) działają dalej
+- Testy: 9 nowych; `DECISIONS.md`: D-019
+
+Testy: 128 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap12_20260929.zip

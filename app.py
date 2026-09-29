@@ -5,11 +5,16 @@ from mpzp import mpzp_bp
 from fiszki import fiszki_bp
 from dostepnosc import dostepnosc_bp
 from config import Config
+from ochrona import dodaj_naglowki, sprawdz_zapytanie
 
 
 def create_app(instance_path=None):
     app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
     app.config.from_object(Config)
+
+    # Ochrona przed obcymi stronami w tej samej przeglądarce (ochrona.py).
+    app.before_request(sprawdz_zapytanie)
+    app.after_request(dodaj_naglowki)
 
     app.register_blueprint(atlas_bp, url_prefix="/atlas")
     app.register_blueprint(mpzp_bp, url_prefix="/mpzp")

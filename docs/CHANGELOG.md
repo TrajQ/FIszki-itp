@@ -106,3 +106,10 @@
 - Fiszki: eksport wszystkich fiszek do CSV i Anki.
 - Fiszki: usuwanie PDF-a razem z fiszkami i powtórkami.
 - Dodano `DECISIONS.md` D-018 i testy.
+
+## ETAP 12 — 2026-09-29
+- Dodano ochronę przed zapytaniami z obcych stron (sprawdzanie `Host`
+  oraz `Origin`/`Referer` dla metod zmieniających stan) — `ochrona.py`.
+- Dodano nagłówki bezpieczeństwa (`X-Frame-Options`,
+  `X-Content-Type-Options`, `Referrer-Policy`).
+- Dodano `DECISIONS.md` D-019 i testy.

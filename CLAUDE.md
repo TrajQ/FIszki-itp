@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 11 (fiszki — wyszukiwarka, eksport wszystkiego, usuwanie PDF — zamknięty)
-Ostatni ZIP: releases/warsztat_etap11_20260929.zip
-Testy: 119 passed / 0 failed
+ETAP: 12 (bezpieczeństwo — CSRF, DNS rebinding — zamknięty)
+Ostatni ZIP: releases/warsztat_etap12_20260929.zip
+Testy: 128 passed / 0 failed
