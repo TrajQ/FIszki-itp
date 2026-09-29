@@ -715,3 +715,17 @@ def test_slownik_symboli_strona_i_rozszyfruj(client):
     assert "tereny zieleni urządzonej" in html and "zwyczajowe" in html
     dane = client.get("/mpzp/symbole/rozszyfruj?q=12KDL").get_json()
     assert dane["opis"][0]["opis"] == "tereny dróg publicznych — droga lokalna"
+
+
+@pytest.mark.parametrize(
+    "geometria",
+    [
+        {"type": "Polygon", "coordinates": [[[17, 52], [17.001, 52]]]},  # za mało punktów
+        {"type": "Polygon", "coordinates": "abc"},
+        {"type": "Nieznany", "coordinates": []},
+        "tekst",
+    ],
+)
+def test_obszar_analizowany_uszkodzona_geometria_to_400(client, geometria):
+    odpowiedz = client.post("/mpzp/obszar-analizowany", json={"geometria": geometria, "front": 20})
+    assert odpowiedz.status_code == 400

@@ -1054,3 +1054,18 @@ Status: zamknięty
 
 Testy: 298 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap45_20260929.zip
+
+## ETAP 46 — Poprawki z przeglądu kodu (ETAPy 43–45)
+Data: 2026-09-29
+Status: zamknięty
+
+Przegląd wykazał 2 problemy — oba naprawione:
+1. „Moje działki”: zmiana notatki i od razu klik w gwiazdkę — zapis
+   notatki (po wyjściu z pola) mógł dojść po usunięciu i przywrócić
+   działkę → usunięcie czeka na trwający zapis
+2. `POST /mpzp/obszar-analizowany`: nieznany typ geometrii albo zła
+   struktura współrzędnych dawały 500 → łapiemy `ShapelyError`, 400
+- Testy: 4 nowe
+
+Testy: 302 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap46_20260929.zip

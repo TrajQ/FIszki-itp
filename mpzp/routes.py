@@ -5,7 +5,7 @@ import math
 from datetime import datetime
 
 from flask import Blueprint, Response, abort, jsonify, render_template, request
-from shapely.errors import GEOSException
+from shapely.errors import GEOSException, ShapelyError
 from shapely.geometry import LineString, Point, Polygon, mapping, shape
 
 from dane.uldk import BladULDK, Dzialka
@@ -314,7 +314,7 @@ def obszar_analizowany_wz():
     try:
         geometria = shape(dane["geometria"])
         front = _liczba_skonczona(dane.get("front"))
-    except (KeyError, TypeError, ValueError, AttributeError, IndexError):
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError, ShapelyError):
         return jsonify({"blad": "Wymagane: geometria działki (GeoJSON) i szerokość frontu w metrach."}), 400
     if geometria.geom_type not in ("Polygon", "MultiPolygon") or geometria.is_empty:
         return jsonify({"blad": "Geometria działki musi być wielokątem."}), 400

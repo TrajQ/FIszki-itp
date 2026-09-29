@@ -236,6 +236,9 @@
         notatka.maxLength = 2000;
         notatka.placeholder = "Notatka, np. „projekt z urbanistyki — wariant B”";
         const stan = element("span", "zapis-dzialki__stan wyciszony");
+        // Zapis notatki w toku: usunięcie gwiazdki czeka na niego, inaczej
+        // spóźniony zapis przywróciłby właśnie usuniętą działkę.
+        let trwajacyZapis = Promise.resolve();
 
         const odswiez = () => {
             const wpis = zapisaneDzialki.get(dzialka.id);
@@ -248,6 +251,7 @@
         gwiazdka.addEventListener("click", async () => {
             gwiazdka.disabled = true;
             try {
+                await trwajacyZapis.catch(() => {});
                 if (zapisaneDzialki.has(dzialka.id)) {
                     const odpowiedz = await fetch(`${URL_ZAPISANE}?id=${encodeURIComponent(dzialka.id)}`, { method: "DELETE" });
                     if (!odpowiedz.ok && odpowiedz.status !== 404) throw new Error(`Błąd ${odpowiedz.status}`);
@@ -270,8 +274,9 @@
         // Notatka zapisuje się sama po wyjściu z pola.
         notatka.addEventListener("change", async () => {
             stan.textContent = "Zapisuję…";
+            trwajacyZapis = wyslijZapis(dzialka, notatka.value);
             try {
-                await wyslijZapis(dzialka, notatka.value);
+                await trwajacyZapis;
                 stan.textContent = "Zapisano";
                 setTimeout(() => (stan.textContent = ""), 1500);
             } catch (e) {

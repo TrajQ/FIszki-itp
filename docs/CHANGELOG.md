@@ -319,3 +319,8 @@
 - Słownik zwyczajowych oznaczeń (MU, ML, UC, UO, UZ, UK, UT, UP, ZN, ZI,
   KS, IT, O, PG) z wyraźną etykietą „zwyczajowe” w panelu działki.
 - Dodano `DECISIONS.md` D-051 i 2 testy.
+
+## ETAP 46 — 2026-09-29
+- Naprawiono 2 problemy z przeglądu ETAPów 43–45: usunięcie gwiazdki
+  tuż po zmianie notatki mogło przywrócić działkę (spóźniony zapis),
+  uszkodzona geometria w obszarze analizowanym dawała błąd 500.
