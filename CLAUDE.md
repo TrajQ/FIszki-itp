@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 42 (atlas: mapa do druku SVG/PDF — zamknięty)
-Ostatni ZIP: releases/warsztat_etap42_20260929.zip
-Testy: 283 passed / 0 failed
+ETAP: 43 (mpzp: wymiary działki, obszar analizowany WZ — zamknięty)
+Ostatni ZIP: releases/warsztat_etap43_20260929.zip
+Testy: 288 passed / 0 failed

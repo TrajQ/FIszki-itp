@@ -569,3 +569,70 @@ def test_eksport_geojson_gminy_bez_wfs_ma_przeznaczenie_z_kimpzp(client, monkeyp
     assert len(cechy) == 1
     assert cechy[0]["properties"]["przeznaczenie_kimpzp"] == "U"
     assert cechy[0]["properties"]["plan_kimpzp"] == "Plan X"
+
+
+# ---------- ETAP 43: wymiary działki, obszar analizowany WZ ----------
+
+from mpzp.geometria import metry_na_stopien, obszar_analizowany, wymiary  # noqa: E402
+
+
+def _prostokat(szer_m, dl_m, lat=52.0, lon=17.0):
+    from shapely.geometry import box
+
+    mx, my = metry_na_stopien(lat)
+    return box(lon, lat, lon + szer_m / mx, lat + dl_m / my)
+
+
+def test_wymiary_prostokata():
+    w = wymiary(_prostokat(20, 40))
+    assert [b["dlugosc_m"] for b in w["boki"]] == pytest.approx([40, 20, 40, 20], abs=0.01)
+    assert w["szerokosc_m"] == pytest.approx(20, abs=0.01) and w["glebokosc_m"] == pytest.approx(40, abs=0.01)
+    assert w["obwod_m"] == pytest.approx(120, abs=0.01)
+    assert w["zwartosc"] == pytest.approx(4 * 3.14159265 * 800 / 120**2, abs=0.001)
+    lat, lon = w["boki"][0]["srodek"]
+    assert 52 < lat < 52.001 and 17 < lon < 17.001
+
+
+def test_wymiary_upraszczaja_punkty_na_prostej():
+    from shapely.geometry import Polygon
+
+    mx, my = metry_na_stopien(52.0)
+    # punkt pośrodku dolnego boku odchylony o 5 cm — to nadal jeden bok
+    punkty = [(0, 0), (10, 0.05), (20, 0), (20, 20), (0, 20)]
+    wielokat = Polygon([(17 + x / mx, 52 + y / my) for x, y in punkty])
+    assert len(wymiary(wielokat)["boki"]) == 4
+
+
+def test_obszar_analizowany_trzy_fronty_albo_50_m():
+    dzialka = _prostokat(20, 40)
+    duzy = obszar_analizowany(dzialka, 25)
+    assert duzy["odleglosc_m"] == 75 and not duzy["z_minimum"]
+    # pole bufora ≈ pole + obwód × d + π d² (wielokąt przybliża łuki)
+    assert duzy["powierzchnia_m2"] == pytest.approx(800 + 120 * 75 + 3.14159 * 75**2, rel=0.005)
+    maly = obszar_analizowany(dzialka, 10)
+    assert maly["odleglosc_m"] == 50 and maly["z_minimum"]
+    with pytest.raises(ValueError):
+        obszar_analizowany(dzialka, 0)
+
+
+def test_endpoint_obszaru_analizowanego(client):
+    from shapely.geometry import mapping
+
+    geometria = mapping(_prostokat(20, 40))
+    odpowiedz = client.post("/mpzp/obszar-analizowany", json={"geometria": geometria, "front": "20"})
+    assert odpowiedz.status_code == 200
+    dane = odpowiedz.get_json()
+    assert dane["odleglosc_m"] == 60 and dane["geometria"]["type"] == "Polygon"
+
+    assert client.post("/mpzp/obszar-analizowany", json={"front": 20}).status_code == 400
+    punkt = {"type": "Point", "coordinates": [17, 52]}
+    assert client.post("/mpzp/obszar-analizowany", json={"geometria": punkt, "front": 20}).status_code == 400
+    assert client.post("/mpzp/obszar-analizowany", json={"geometria": geometria, "front": "nan"}).status_code == 400
+    ogromny = mapping(_prostokat(5000, 5000))
+    assert client.post("/mpzp/obszar-analizowany", json={"geometria": ogromny, "front": 20}).status_code == 400
+
+
+def test_sprawdz_zwraca_wymiary_dzialki(client, monkeypatch):
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke", lambda lat, lon: _dzialka_warszawa())
+    dzialka = client.get("/mpzp/sprawdz?lat=52.205&lon=21.005").get_json()["dzialka"]
+    assert dzialka["wymiary"]["boki"] and dzialka["wymiary"]["obwod_m"] > 0

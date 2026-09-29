@@ -4,7 +4,7 @@ from datetime import datetime
 
 from flask import Blueprint, Response, abort, jsonify, render_template, request
 from shapely.errors import GEOSException
-from shapely.geometry import LineString, Point, Polygon, mapping
+from shapely.geometry import LineString, Point, Polygon, mapping, shape
 
 from dane.uldk import BladULDK, Dzialka
 from dane.uldk import znajdz_dzialke as _znajdz_dzialke
@@ -18,7 +18,7 @@ from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
 from .wfs import wydzielenia_dzialki as _wydzielenia_dzialki
-from .geometria import powierzchnia_m2, szkic_svg, w_metrach
+from .geometria import obszar_analizowany, powierzchnia_m2, szkic_svg, w_metrach, wymiary
 from .wfs import znajdz_przeznaczenie as _znajdz_przeznaczenie
 
 mpzp_bp = Blueprint(
@@ -51,6 +51,7 @@ def _dzialka_na_json(dzialka: Dzialka) -> dict:
         "geometria": mapping(dzialka.geometria),
         "teryt_gminy": dzialka.teryt_gminy,
         "powierzchnia_m2": round(powierzchnia_m2(dzialka.geometria), 1),
+        "wymiary": wymiary(dzialka.geometria),
     }
 
 
@@ -228,6 +229,25 @@ def _wspolrzedne(lat: float, lon: float) -> list[dict]:
         for uklad in (uklady.pl1992(lat, lon), uklady.pl2000(lat, lon)):
             wynik.append({**uklad, "x": round(uklad["x"], 2), "y": round(uklad["y"], 2)})
     return wynik
+
+
+@mpzp_bp.route("/obszar-analizowany", methods=["POST"])
+def obszar_analizowany_wz():
+    """Obszar analizowany do decyzji WZ dla geometrii działki z mapy (ETAP 43)."""
+    dane = request.get_json(silent=True) or {}
+    try:
+        geometria = shape(dane["geometria"])
+        front = _liczba_skonczona(dane.get("front"))
+    except (KeyError, TypeError, ValueError, AttributeError, IndexError):
+        return jsonify({"blad": "Wymagane: geometria działki (GeoJSON) i szerokość frontu w metrach."}), 400
+    if geometria.geom_type not in ("Polygon", "MultiPolygon") or geometria.is_empty:
+        return jsonify({"blad": "Geometria działki musi być wielokątem."}), 400
+    if powierzchnia_m2(geometria) > 10_000_000:  # 10 km² — to nie jest działka budowlana
+        return jsonify({"blad": "Za duży obszar jak na działkę."}), 400
+    try:
+        return jsonify(obszar_analizowany(geometria, front))
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
 
 
 MAKS_PUNKTOW_POMIARU = 500

@@ -75,6 +75,10 @@
 
     let warstwaDzialki = null;
     let warstwaWydzielenia = null;
+    // ETAP 43: podpisy długości boków, wybrany front i obszar analizowany WZ.
+    const warstwaBokow = L.layerGroup().addTo(mapa);
+    const warstwaAnalizy = L.layerGroup().addTo(mapa);
+    let numerAnalizy = 0;
     // Numer ostatniego zapytania: odpowiedź na starsze kliknięcie, która
     // przyszła później, jest ignorowana (inaczej zostawiałaby na mapie
     // wielokąty, których nie da się już usunąć).
@@ -89,6 +93,9 @@
             mapa.removeLayer(warstwaWydzielenia);
             warstwaWydzielenia = null;
         }
+        warstwaBokow.clearLayers();
+        warstwaAnalizy.clearLayers();
+        numerAnalizy += 1;
     }
 
     function element(tag, klasa, tekst) {
@@ -179,8 +186,116 @@
                 element("div", "powierzchnia", `Powierzchnia: ${formatM2.format(dzialka.powierzchnia_m2)} m² (${(dzialka.powierzchnia_m2 / 10000).toLocaleString("pl-PL", { maximumFractionDigits: 4 })} ha)`)
             );
         }
+        if (dzialka.wymiary) sekcja.appendChild(sekcjaWymiarow(dzialka));
         if (ostatnieWspolrzedne) sekcja.appendChild(sekcjaWspolrzednych(ostatnieWspolrzedne));
         return sekcja;
+    }
+
+    // ---------- wymiary działki i obszar analizowany WZ (ETAP 43) ----------
+
+    const formatMetry = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
+    const MIN_BOK_Z_PODPISEM_M = 2;
+    const MAKS_PODPISOW = 40;
+    const ZOOM_PODPISOW = 17;
+
+    function rysujBoki(wymiary) {
+        warstwaBokow.clearLayers();
+        const boki = wymiary.boki.filter((b) => b.dlugosc_m >= MIN_BOK_Z_PODPISEM_M);
+        if (boki.length > MAKS_PODPISOW) return; // działka o bardzo krętej granicy — bez podpisów
+        for (const bok of boki) {
+            warstwaBokow.addLayer(
+                L.tooltip({ permanent: true, direction: "center", className: "etykieta-boku", interactive: false })
+                    .setLatLng(bok.srodek)
+                    .setContent(`${formatMetry.format(bok.dlugosc_m)} m`)
+            );
+        }
+    }
+
+    // Podpisy boków tylko przy dużym przybliżeniu — inaczej się nakładają.
+    function przelaczPodpisy() {
+        mapa.getContainer().classList.toggle("mapa--bez-podpisow", mapa.getZoom() < ZOOM_PODPISOW);
+    }
+    mapa.on("zoomend", przelaczPodpisy);
+    przelaczPodpisy();
+
+    function sekcjaWymiarow(dzialka) {
+        const w = dzialka.wymiary;
+        const szczegoly = element("details", "wymiary");
+        szczegoly.appendChild(element("summary", "", "Wymiary i obszar analizowany (WZ)"));
+
+        const liczby = element("div", "wymiary__liczby");
+        const liczba = (etykieta, wartosc, opis) => {
+            const div = element("div", "wymiary__liczba");
+            if (opis) div.title = opis;
+            div.append(element("span", "wymiary__etykieta", etykieta), element("strong", "", wartosc));
+            liczby.appendChild(div);
+        };
+        liczba("Szerokość × głębokość", `${formatMetry.format(w.szerokosc_m)} × ${formatMetry.format(w.glebokosc_m)} m`, "Boki najmniejszego prostokąta opisanego na działce");
+        liczba("Obwód", `${formatMetry.format(w.obwod_m)} m`);
+        liczba("Liczba boków", String(w.boki.length), "Po uproszczeniu granicy o 20 cm");
+        if (w.zwartosc !== null) {
+            liczba("Zwartość", w.zwartosc.toLocaleString("pl-PL"), "4π·P / obwód² — 1 dla koła, ok. 0,79 dla kwadratu; mało = działka wąska albo postrzępiona");
+        }
+        szczegoly.appendChild(liczby);
+
+        // Obszar analizowany: front = bok od strony drogi, którą wskazuje student.
+        const front = element("label", "wymiary__front", "Front działki (bok od strony drogi)");
+        const wybor = element("select");
+        wybor.appendChild(new Option(`szerokość działki — ${formatMetry.format(w.szerokosc_m)} m`, "szerokosc"));
+        for (const bok of w.boki) wybor.appendChild(new Option(`bok ${bok.nr} — ${formatMetry.format(bok.dlugosc_m)} m`, String(bok.nr)));
+        front.appendChild(wybor);
+        const przycisk = element("button", "przycisk--drugi", "Pokaż obszar analizowany");
+        przycisk.type = "button";
+        const wynik = element("p", "wymiary__wynik wyciszony");
+        const przypis = element(
+            "p",
+            "przypis",
+            "Obszar analizowany do decyzji o warunkach zabudowy: wokół działki, w odległości co najmniej 3 × szerokość frontu, nie mniej niż 50 m (§ 3 ust. 2 rozporządzenia z 26.08.2003). Sprawdź aktualne przepisy — nowelizacja z 2023 r. zmieniła zasady wydawania WZ."
+        );
+
+        const dlugoscFrontu = () =>
+            wybor.value === "szerokosc" ? w.szerokosc_m : w.boki.find((b) => String(b.nr) === wybor.value).dlugosc_m;
+
+        wybor.addEventListener("change", () => {
+            warstwaAnalizy.clearLayers();
+            numerAnalizy += 1;
+            wynik.textContent = "";
+            if (wybor.value === "szerokosc") return;
+            const bok = w.boki.find((b) => String(b.nr) === wybor.value);
+            L.polyline([bok.od, bok.do], { color: "#ff375f", weight: 6, opacity: 0.9, interactive: false }).addTo(warstwaAnalizy);
+        });
+
+        przycisk.addEventListener("click", async () => {
+            const numer = ++numerAnalizy;
+            wynik.textContent = "Liczę…";
+            try {
+                const odpowiedz = await fetch(URL_OBSZAR_ANALIZOWANY, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ geometria: dzialka.geometria, front: dlugoscFrontu() }),
+                });
+                const dane = await odpowiedz.json();
+                if (numer !== numerAnalizy) return;
+                if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
+                warstwaAnalizy.eachLayer((l) => {
+                    if (l instanceof L.GeoJSON) warstwaAnalizy.removeLayer(l);
+                });
+                const obszar = L.geoJSON(dane.geometria, {
+                    style: { color: "#bf5af2", weight: 2, dashArray: "8 6", fillOpacity: 0.06 },
+                    interactive: false,
+                }).addTo(warstwaAnalizy);
+                mapa.fitBounds(obszar.getBounds(), { padding: [20, 20] });
+                wynik.textContent =
+                    `Odległość: ${formatMetry.format(dane.odleglosc_m)} m` +
+                    (dane.z_minimum ? " (minimum 50 m, bo 3 × front jest mniej)" : ` (3 × ${formatMetry.format(dlugoscFrontu())} m)`) +
+                    ` · powierzchnia obszaru ${(dane.powierzchnia_m2 / 10000).toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ha.`;
+            } catch (e) {
+                if (numer === numerAnalizy) wynik.textContent = e.message;
+            }
+        });
+
+        szczegoly.append(front, przycisk, wynik, przypis);
+        return szczegoly;
     }
 
     // Jak działka dzieli się między przeznaczenia: pasek + lista z m² i %.
@@ -307,6 +422,7 @@
                 style: { color: "#0071e3", weight: 2, fillOpacity: 0.1 },
             }).addTo(mapa);
             if (przyblizDoDzialki) mapa.fitBounds(warstwaDzialki.getBounds(), { maxZoom: 18, padding: [40, 40] });
+            if (dane.dzialka.wymiary) rysujBoki(dane.dzialka.wymiary);
         }
 
         if (dane.wydzielenie) {

@@ -299,3 +299,10 @@
 - Autokorelacja: wynik niezależny od kolejności danych (ten sam na
   ekranie i na wydruku).
 - Dodano `atlas/mapa_svg.py`, `DECISIONS.md` D-048 i 4 testy.
+
+## ETAP 43 — 2026-09-29
+- MPZP: wymiary działki — długości boków podpisane na mapie (od
+  przybliżenia 17), szerokość × głębokość, obwód, liczba boków, zwartość.
+- MPZP: obszar analizowany do decyzji WZ — wybór boku frontu (podświetlony
+  na mapie), bufor max(3 × front, 50 m) z powierzchnią.
+- Dodano `DECISIONS.md` D-049 i 5 testów.

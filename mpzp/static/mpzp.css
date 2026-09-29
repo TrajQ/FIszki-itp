@@ -659,3 +659,61 @@ button.wpis-historii:hover {
 .mapa--pomiar .leaflet-interactive {
     cursor: crosshair;
 }
+
+/* Wymiary działki i obszar analizowany (ETAP 43) */
+.wymiary summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+}
+
+.wymiary__liczby {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 8px 0 12px;
+}
+
+.wymiary__liczba {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+    font-size: 14px;
+}
+
+.wymiary__etykieta {
+    font-size: 11px;
+    color: var(--tekst-drugi);
+}
+
+.wymiary__front {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.wymiary__wynik {
+    margin: 8px 0 0;
+    font-size: 13px;
+}
+
+.leaflet-container .etykieta-boku.leaflet-tooltip {
+    padding: 1px 5px;
+    border: 0;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: none;
+    color: #1d1d1f;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.mapa--bez-podpisow .etykieta-boku {
+    display: none;
+}

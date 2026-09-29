@@ -1006,3 +1006,29 @@ jest pomijalne, więc bez biblioteki kartograficznej.
 - matplotlib/geopandas do renderowania — odrzucone: ciężkie zależności.
 - Eksport PNG z przeglądarki (canvas) — odrzucone: raster, bez legendy
   i podziałki w pliku.
+
+## D-049 — Wymiary działki i obszar analizowany WZ liczone z geometrii ULDK
+Data: 2026-09-29
+
+**Decyzja:** Odpowiedź o działce zawiera `wymiary`: boki (po uproszczeniu
+granicy o 20 cm), obwód, szerokość i głębokość (najmniejszy prostokąt
+opisany) i zwartość Polsby-Popper. Obszar analizowany do decyzji WZ to
+bufor wokół działki na odległość max(3 × szerokość frontu, 50 m)
+(§ 3 ust. 2 rozporządzenia MI z 26.08.2003, Dz.U. nr 164 poz. 1588).
+Front wskazuje student (bok od strony drogi) — domyślnie szerokość
+działki. Serwer liczy bufor z geometrii przesłanej z mapy
+(`POST /mpzp/obszar-analizowany`), bez ponownego pytania ULDK.
+
+**Uzasadnienie:** Analiza urbanistyczna do WZ i sprawdzanie minimalnej
+szerokości frontu to typowe zadania na zajęciach z planowania. Front
+działki zależy od dostępu do drogi, którego nie ma w danych ULDK —
+dlatego wybór zostaje przy użytkowniku, a nie jest zgadywany.
+Uproszczenie o 20 cm usuwa punkty granicy leżące prawie na prostej.
+
+**Niepewne:** nowelizacja ustawy o planowaniu z 2023 r. zmieniła zasady
+WZ; panel prosi o sprawdzenie aktualnych przepisów, a reguła 3 × front /
+min. 50 m jest opisana ze źródłem.
+
+**Odrzucone alternatywy:**
+- Automatyczne wykrywanie frontu (bok najbliżej drogi) — odrzucone: brak
+  danych o drogach w używanych usługach, byłoby zgadywaniem.

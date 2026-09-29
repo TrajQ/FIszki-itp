@@ -1013,3 +1013,18 @@ Status: zamknięty
 
 Testy: 283 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap42_20260929.zip
+
+## ETAP 43 — MPZP: wymiary działki, obszar analizowany WZ
+Data: 2026-09-29
+Status: zamknięty
+
+- `geometria.wymiary`, `geometria.obszar_analizowany`
+- `POST /mpzp/obszar-analizowany` (walidacja typu geometrii, rozmiaru,
+  liczb skończonych)
+- Podpisy boków jako stałe dymki Leafleta, ukryte przy małym przybliżeniu
+  i dla granic z ponad 40 bokami; numerowanie zapytań o obszar
+- Sprawdzone w przeglądarce (działka w kształcie litery L)
+- `DECISIONS.md`: D-049
+
+Testy: 288 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap43_20260929.zip
