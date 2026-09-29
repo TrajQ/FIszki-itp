@@ -13,7 +13,7 @@ from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
-from . import skala, zabudowa
+from . import krajowe, skala, zabudowa
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
@@ -37,6 +37,7 @@ znajdz_wydzielenia_dzialki = _wydzielenia_dzialki
 MIN_DLUGOSC_FRAZY = 3
 znajdz_przeznaczenie = _znajdz_przeznaczenie
 odswiez_warstwe = _odswiez
+plan_krajowy = krajowe.plan_w_punkcie
 
 
 @mpzp_bp.route("/")
@@ -189,10 +190,7 @@ def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
 
     gmina = znajdz_gmine(dzialka.teryt_gminy)
     if gmina is None:
-        dane["blad"] = (
-            f"Ta gmina nie jest jeszcze obsługiwana (pilotaż: {GMINA_PILOTAZOWA.nazwa})."
-        )
-        return jsonify(dane), 200
+        return _wynik_krajowy(dzialka, punkt, dane)
 
     try:
         wydzielenie = znajdz_przeznaczenie(gmina, punkt)
@@ -217,6 +215,53 @@ def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
         dane["udzialy"] = []  # główne przeznaczenie już mamy — udziały są dodatkiem
     zapisz_w_historii(dzialka.id, przeznaczenie, punkt.y, punkt.x)
     return jsonify(dane), 200
+
+
+def _plan_krajowy_na_json(obiekty: list) -> dict:
+    przeznaczenie = krajowe.rozpoznaj_przeznaczenie(obiekty)
+    return {
+        "przeznaczenie": przeznaczenie,
+        "opis_przeznaczenia": opisz_symbol(przeznaczenie),
+        "tytul": krajowe.tytul_planu(obiekty),
+        "linki": krajowe.linki(obiekty),
+        "obiekty": [{"warstwa": o.warstwa, "atrybuty": o.atrybuty} for o in obiekty],
+    }
+
+
+def _wynik_krajowy(dzialka: Dzialka, punkt: Point, dane: dict):
+    """Gmina bez własnego WFS — plan z krajowej integracji GUGiK (ETAP 35)."""
+    try:
+        obiekty = plan_krajowy(punkt.y, punkt.x)
+    except krajowe.BladKIMPZP as e:
+        dane["blad"] = str(e)
+        return jsonify(dane), 502
+    if not obiekty:
+        zapisz_w_historii(dzialka.id, None, punkt.y, punkt.x)
+        dane["blad"] = (
+            "Krajowa integracja planów nie ma planu miejscowego w tym miejscu. "
+            "Część gmin nie przekazała jeszcze planów — sprawdź też geoportal gminy."
+        )
+        return jsonify(dane), 200
+    dane["plan_krajowy"] = _plan_krajowy_na_json(obiekty)
+    zapisz_w_historii(dzialka.id, dane["plan_krajowy"]["przeznaczenie"] or "plan", punkt.y, punkt.x)
+    return jsonify(dane), 200
+
+
+@mpzp_bp.route("/warstwy-krajowe")
+def warstwy_krajowe():
+    """Warstwy WMS do mapy: plany (KIMPZP) i działki (KIEG)."""
+    nazwy, z_uslugi = krajowe.nazwy_warstw()
+    return jsonify(
+        {
+            "plany": {
+                "url": krajowe.URL_KIMPZP,
+                "warstwy": ",".join(nazwy),
+                "z_uslugi": z_uslugi,
+                "mercator": krajowe.czy_mercator(),
+            },
+            "dzialki": {"url": krajowe.URL_KIEG, "warstwy": krajowe.WARSTWY_KIEG},
+        }
+    )
 
 
 def _liczba_skonczona(tekst) -> float:
@@ -407,9 +452,18 @@ def raport():
         abort(404, "ULDK nie zna tej działki.")
 
     gmina = znajdz_gmine(dzialka.teryt_gminy)
-    czesci, udzialy, blad = [], [], None
+    czesci, udzialy, blad, plan = [], [], None, None
     if gmina is None:
-        blad = f"Gmina tej działki nie jest jeszcze obsługiwana (pilotaż: {GMINA_PILOTAZOWA.nazwa})."
+        # Bez WFS gminy: plan z krajowej integracji, w punkcie wewnątrz działki.
+        punkt = dzialka.geometria.representative_point()
+        try:
+            obiekty = plan_krajowy(punkt.y, punkt.x)
+        except krajowe.BladKIMPZP as e:
+            obiekty, blad = [], str(e)
+        if obiekty:
+            plan = _plan_krajowy_na_json(obiekty)
+        elif blad is None:
+            blad = "Krajowa integracja planów nie ma planu miejscowego dla tej działki."
     else:
         try:
             pary = znajdz_wydzielenia_dzialki(gmina, dzialka.geometria)
@@ -446,6 +500,7 @@ def raport():
         kolory=KOLORY_RAPORTU,
         blad=blad,
         gmina=gmina,
+        plan_krajowy=plan,
         data=datetime.now().strftime("%d.%m.%Y, %H:%M"),
     )
 

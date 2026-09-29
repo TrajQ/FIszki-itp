@@ -515,3 +515,22 @@ button.wpis-historii:hover {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
+
+/* Plan z krajowej integracji (ETAP 35) */
+.raport__warstwa {
+    margin: 16px 0 6px;
+    font-size: 13px;
+    color: var(--tekst-drugi);
+}
+
+.plan-krajowy__linki {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.plan-krajowy__warstwa summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 6px 0;
+}

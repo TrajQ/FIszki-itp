@@ -887,3 +887,20 @@ Status: zamknięty
 
 Testy: 225 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap34_20260929.zip
+
+## ETAP 35 — MPZP dla wszystkich gmin
+Data: 2026-09-29
+Status: zamknięty
+
+- `mpzp/krajowe.py`: GetCapabilities (warstwy, CRS, cache doba),
+  GetFeatureInfo (GML → zapasowo text/plain), rozpoznanie symbolu,
+  tytułu i linków
+- `/sprawdz`, `/dzialka`, `/raport`: gmina bez WFS → plan krajowy
+  zamiast „gmina nieobsługiwana”; historia zapisuje rozpoznany symbol
+- Mapa: nakładki WMS planów (KIMPZP) i działek (KIEG)
+- Sprawdzone w przeglądarce na danych testowych; prawdziwa usługa
+  niedostępna z kontenera (D-042)
+- `DECISIONS.md`: D-042
+
+Testy: 238 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap35_20260929.zip

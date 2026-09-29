@@ -603,3 +603,42 @@ input[type="file"]::file-selector-button {
         padding: 24px 16px 60px;
     }
 }
+
+/* Kontrolki Leafleta w stylu aplikacji (przełącznik podkładów, atrybucja) —
+   wspólne dla wszystkich map, także w trybie ciemnym. Selektor z
+   .leaflet-container, żeby wygrać z leaflet.css ładowanym później. */
+.leaflet-container .leaflet-control-layers.leaflet-control {
+    border: 0;
+    border-radius: 12px;
+    background: var(--pasek-tlo);
+    color: var(--tekst);
+    box-shadow: var(--cien-mocny);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    font: 13px/1.5 var(--czcionka);
+}
+
+.leaflet-container .leaflet-control-layers-expanded {
+    padding: 10px 14px 10px 10px;
+}
+
+/* Leaflet: <label><span><input><span>nazwa</span></span></label> */
+.leaflet-container .leaflet-control-layers label {
+    padding: 2px 0;
+    text-align: left;
+}
+
+.leaflet-container .leaflet-control-layers label > span {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.leaflet-container .leaflet-control-layers-separator {
+    border-top-color: var(--linia-slaba);
+}
+
+.leaflet-container .leaflet-control-attribution {
+    background: var(--pasek-tlo);
+    color: var(--tekst-drugi);
+}

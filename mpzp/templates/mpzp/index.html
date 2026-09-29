@@ -12,12 +12,12 @@
 <div class="naglowek-strony">
     <div>
         <h1>Działka i przeznaczenie</h1>
-        <p>Kliknij punkt na mapie albo wpisz obręb i numer działki — podpowiedzi pojawią się same. Gmina pilotażowa: Poznań.</p>
+        <p>Kliknij punkt na mapie albo wpisz obręb i numer działki — podpowiedzi pojawią się same. Działa w całej Polsce: plany z krajowej integracji GUGiK, a dla Poznania dodatkowo podział działki na przeznaczenia.</p>
     </div>
     <div class="rzad">
         <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.kalkulator') }}">Kalkulator zabudowy</a>
         <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.skala_strona') }}">Skala mapy</a>
-        <button id="przycisk-odswiez" type="button" class="przycisk--drugi">Odśwież dane gminy</button>
+        <button id="przycisk-odswiez" type="button" class="przycisk--drugi" title="Ponowne pobranie warstwy planów Poznania (WFS)">Odśwież dane Poznania</button>
     </div>
 </div>
 
@@ -51,6 +51,7 @@
     const URL_RAPORT = "{{ url_for('mpzp.raport') }}";
     const URL_KALKULATOR = "{{ url_for('mpzp.kalkulator') }}";
     const URL_GEOJSON = "{{ url_for('mpzp.eksport_geojson') }}";
+    const URL_WARSTWY_KRAJOWE = "{{ url_for('mpzp.warstwy_krajowe') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('mpzp.static', filename='mpzp.js') }}"></script>

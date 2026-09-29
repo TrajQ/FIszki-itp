@@ -231,3 +231,13 @@
   „Access blocked”), przełącznik podkładu: OSM / ortofotomapa GUGiK /
   bez podkładu (wybór zapamiętywany w przeglądarce).
 - Dodano `DECISIONS.md` D-041 i 3 testy.
+
+## ETAP 35 — 2026-09-29
+- MPZP w całej Polsce: gminy bez WFS pytają krajową integrację planów
+  GUGiK (KIMPZP, `mpzp/krajowe.py`) — symbol przeznaczenia rozpoznany z
+  atrybutów, tytuł planu, linki do dokumentów, wszystkie atrybuty; to
+  samo w raporcie do druku.
+- Mapa MPZP: nakładki „Plany miejscowe (cała Polska)” i „Działki
+  ewidencyjne” (WMS GUGiK); endpoint `/mpzp/warstwy-krajowe`.
+- Przełącznik warstw Leafleta w stylu aplikacji (także tryb ciemny).
+- Dodano `DECISIONS.md` D-042 i 13 testów.

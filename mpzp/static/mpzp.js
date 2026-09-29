@@ -38,7 +38,34 @@
             // zapamiętanie wyboru to tylko wygoda
         }
     });
-    L.control.layers(PODKLADY, {}, { position: "topright" }).addTo(mapa);
+    const kontrolkaWarstw = L.control.layers(PODKLADY, {}, { position: "topright" }).addTo(mapa);
+
+    // Nakładki z krajowych integracji GUGiK: plany miejscowe całej Polski
+    // i granice działek. Obrazki ładuje przeglądarka wprost z GUGiK; nazwy
+    // warstw planów serwer odczytuje z opisu usługi (GetCapabilities).
+    function nakladkaWms(opis, przezroczystosc) {
+        return L.tileLayer.wms(opis.url, {
+            layers: opis.warstwy,
+            format: "image/png",
+            transparent: true,
+            version: "1.3.0",
+            opacity: przezroczystosc,
+            maxZoom: 20,
+            attribution: "plany i działki: GUGiK",
+            // Usługa bez EPSG:3857 dostaje zapytania w EPSG:4326.
+            ...(opis.mercator === false ? { crs: L.CRS.EPSG4326 } : {}),
+        });
+    }
+
+    fetch(URL_WARSTWY_KRAJOWE)
+        .then((odpowiedz) => odpowiedz.json())
+        .then((dane) => {
+            const plany = nakladkaWms(dane.plany, 0.65).addTo(mapa);
+            const dzialki = nakladkaWms(dane.dzialki, 1);
+            kontrolkaWarstw.addOverlay(plany, "Plany miejscowe (cała Polska)");
+            kontrolkaWarstw.addOverlay(dzialki, "Działki ewidencyjne");
+        })
+        .catch(() => {}); // bez nakładek mapa działa jak dotąd
 
     const panelWyniku = document.getElementById("panel-wyniku");
     const przyciskOdswiez = document.getElementById("przycisk-odswiez");
@@ -171,6 +198,53 @@
         panelWyniku.appendChild(tabela);
     }
 
+    // Gmina bez własnego WFS: atrybuty planu z krajowej integracji (ETAP 35).
+    function pokazPlanKrajowy(dzialka, plan) {
+        panelWyniku.replaceChildren(sekcjaDzialki(dzialka));
+
+        const przeznaczenie = element("div", "przeznaczenie");
+        przeznaczenie.append(
+            element("span", "przeznaczenie__symbol", plan.przeznaczenie || "?"),
+            element("span", "wyciszony", plan.przeznaczenie ? "symbol rozpoznany z atrybutów planu" : "nie rozpoznano symbolu — zobacz atrybuty niżej")
+        );
+        panelWyniku.appendChild(przeznaczenie);
+        if (plan.tytul) panelWyniku.appendChild(element("p", "", plan.tytul));
+
+        if (plan.opis_przeznaczenia && plan.opis_przeznaczenia.length) {
+            panelWyniku.appendChild(sekcjaOpisu(plan.opis_przeznaczenia));
+        }
+
+        if (plan.linki.length) {
+            const linki = element("div", "plan-krajowy__linki");
+            plan.linki.forEach((adres, i) => {
+                const a = element("a", "przycisk przycisk--tekst", plan.linki.length > 1 ? `Dokument planu ${i + 1} ↗` : "Dokument planu ↗");
+                a.href = adres;
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+                a.title = adres;
+                linki.appendChild(a);
+            });
+            panelWyniku.appendChild(linki);
+        }
+
+        for (const obiekt of plan.obiekty) {
+            const szczegoly = element("details", "plan-krajowy__warstwa");
+            szczegoly.open = plan.obiekty.length === 1;
+            szczegoly.appendChild(element("summary", "", `Atrybuty — warstwa ${obiekt.warstwa || "?"}`));
+            const tabela = element("table", "tabela");
+            for (const [klucz, wartosc] of Object.entries(obiekt.atrybuty)) {
+                const wiersz = element("tr");
+                wiersz.append(element("th", "", klucz), element("td", "", wartosc));
+                tabela.appendChild(wiersz);
+            }
+            szczegoly.appendChild(tabela);
+            panelWyniku.appendChild(szczegoly);
+        }
+        panelWyniku.appendChild(
+            element("p", "przypis", "Źródło: krajowa integracja planów miejscowych (GUGiK). Przeznaczenie w klikniętym punkcie; podział działki liczymy tylko tam, gdzie gmina ma usługę WFS (Poznań). Rozstrzyga tekst uchwały planu.")
+        );
+    }
+
     // Wspólna obsługa odpowiedzi z /sprawdz i /dzialka.
     function obsluzOdpowiedz(dane, przyblizDoDzialki) {
         wyczyscWarstwy();
@@ -187,6 +261,8 @@
             }).addTo(mapa);
             if (warstwaDzialki) warstwaDzialki.bringToFront();
             pokazWynik(dane.dzialka, dane.wydzielenie, dane.udzialy);
+        } else if (dane.plan_krajowy) {
+            pokazPlanKrajowy(dane.dzialka, dane.plan_krajowy);
         } else if (dane.blad) {
             pokazBlad(dane.blad, dane.dzialka);
         }
@@ -362,7 +438,7 @@
 
     przyciskOdswiez.addEventListener("click", function () {
         przyciskOdswiez.disabled = true;
-        przyciskOdswiez.textContent = "Odświeżanie danych gminy...";
+        przyciskOdswiez.textContent = "Odświeżanie danych Poznania…";
 
         fetch(URL_ODSWIEZ, { method: "POST" })
             .then((odpowiedz) => odpowiedz.json())
@@ -374,7 +450,7 @@
             .catch(() => pokazBlad("Błąd połączenia z serwerem."))
             .finally(() => {
                 przyciskOdswiez.disabled = false;
-                przyciskOdswiez.textContent = "Odśwież dane gminy";
+                przyciskOdswiez.textContent = "Odśwież dane Poznania";
             });
     });
 

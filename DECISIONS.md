@@ -828,3 +828,40 @@ Polityka ustawiona tylko na warstwie kafelków: poza nią zostaje
 geoportal.gov.pl i PRG jest zablokowana — działanie sprawdzone tylko na
 danych testowych. Jeśli PRG nie odpowie, mapa atlasu jest po prostu
 biała.
+
+## D-042 — MPZP dla całej Polski przez krajową integrację planów (KIMPZP)
+Data: 2026-09-29
+
+**Decyzja:** Gminy bez własnego WFS w `mpzp/gminy.py` (czyli wszystkie
+poza Poznaniem) obsługujemy przez usługę WMS krajowej integracji
+miejscowych planów GUGiK (`mpzp/krajowe.py`): GetFeatureInfo w punkcie
+działki daje atrybuty planu, a symbol przeznaczenia rozpoznajemy po
+nazwie pola (symbol / oznaczenie / przeznaczenie …). Na mapie dochodzą
+nakładki WMS: plany (KIMPZP) i działki (KIEG). Nazwy warstw i
+obsługiwane układy współrzędnych czytamy z GetCapabilities; lista
+zapasowa tylko na wypadek braku odpowiedzi. Poznań zostaje na WFS
+(geometria wydzieleń → podział działki na przeznaczenia).
+
+**Uzasadnienie:** Użytkownik chce sprawdzać działki w każdej gminie.
+Dopisywanie WFS gmina po gminie nie skaluje się (2477 gmin, różne
+schematy), a krajowa integracja to oficjalna usługa (nie scraping —
+zgodne z CLAUDE.md). Atrybuty różnią się między gminami, dlatego
+pokazujemy wszystkie, a rozpoznany symbol opisujemy jako podpowiedź.
+
+**Ograniczenia:**
+- Bez geometrii wydzieleń — podział działki na przeznaczenia (m², %)
+  i szkic z kolorami są tylko dla gmin z WFS.
+- Część gmin nie przekazała planów albo przekazała same skany rysunku
+  (wtedy GetFeatureInfo nic nie zwraca).
+
+**Odrzucone alternatywy:**
+- Rejestr WFS wielu gmin w `gminy.py` — odrzucone: ręczna praca na
+  każdą gminę, a i tak pokryłby ułamek kraju.
+- Pobieranie planów APP (GML) gmin — odrzucone na teraz: pliki różnej
+  wielkości i jakości, brak wspólnego punktu dostępu.
+
+**Niezweryfikowane:** z kontenera, w którym powstał kod,
+integracja.gugik.gov.pl jest zablokowana. Format odpowiedzi
+(GML MapServera, zapasowo text/plain) sprawdzony tylko na przykładach
+w testach. Jeśli po uruchomieniu u siebie panel pokaże błąd albo puste
+atrybuty — to pierwsze miejsce do poprawki.

@@ -19,6 +19,8 @@ def bez_prawdziwego_wfs(monkeypatch):
     # Udziały przeznaczeń (ETAP 20) pytają WFS o wszystkie wydzielenia
     # działki — w testach domyślnie pusto, konkretne testy podmieniają.
     monkeypatch.setattr(mpzp_routes, "znajdz_wydzielenia_dzialki", lambda gmina, geometria: [])
+    # Gminy bez WFS pytają krajową integrację planów — w testach bez sieci.
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: [])
 
 
 @pytest.fixture
@@ -80,8 +82,81 @@ def test_sprawdz_inna_gmina(client, monkeypatch):
 
     assert odpowiedz.status_code == 200
     assert dane["dzialka"]["id"] == "999999_1.0001.AR_1.1"
-    assert dane["blad"] == "Ta gmina nie jest jeszcze obsługiwana (pilotaż: Poznań)."
-    assert "wydzielenie" not in dane
+    assert dane["blad"].startswith("Krajowa integracja planów nie ma planu")
+    assert "wydzielenie" not in dane and "plan_krajowy" not in dane
+
+
+def _dzialka_warszawa():
+    return Dzialka(
+        id="146501_1.0001.AR_1.1",
+        geometria=Polygon([(21.0, 52.2), (21.01, 52.2), (21.01, 52.21), (21.0, 52.21)]),
+        teryt_gminy="146501",
+    )
+
+
+def test_sprawdz_gmina_bez_wfs_bierze_plan_z_integracji_krajowej(client, monkeypatch):
+    from mpzp.krajowe import ObiektPlanu
+
+    wolania = []
+    obiekty = [
+        ObiektPlanu("wektor-pow", {"symbol": "MN/U", "tytul": "Plan Wilanów Zachód", "tekst": "https://bip.example/uchwala.pdf"}),
+    ]
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke", lambda lat, lon: _dzialka_warszawa())
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: wolania.append((lat, lon)) or obiekty)
+
+    dane = client.get("/mpzp/sprawdz?lat=52.205&lon=21.005").get_json()
+
+    assert wolania == [(52.205, 21.005)]
+    plan = dane["plan_krajowy"]
+    assert plan["przeznaczenie"] == "MN/U"
+    assert [o["symbol"] for o in plan["opis_przeznaczenia"]] == ["MN", "U"]
+    assert plan["tytul"] == "Plan Wilanów Zachód"
+    assert plan["linki"] == ["https://bip.example/uchwala.pdf"]
+    assert "blad" not in dane
+    historia = client.get("/mpzp/historia").get_json()
+    assert historia[0]["przeznaczenie"] == "MN/U"
+
+
+def test_sprawdz_blad_integracji_krajowej(client, monkeypatch):
+    from mpzp.krajowe import BladKIMPZP
+
+    def podnies(lat, lon):
+        raise BladKIMPZP("Błąd połączenia z krajową integracją planów (GUGiK): timeout.")
+
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke", lambda lat, lon: _dzialka_warszawa())
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", podnies)
+
+    odpowiedz = client.get("/mpzp/sprawdz?lat=52.205&lon=21.005")
+
+    assert odpowiedz.status_code == 502
+    assert "GUGiK" in odpowiedz.get_json()["blad"]
+    assert odpowiedz.get_json()["dzialka"]["id"] == "146501_1.0001.AR_1.1"
+
+
+def test_raport_gminy_bez_wfs_pokazuje_atrybuty_planu(client, monkeypatch):
+    from mpzp.krajowe import ObiektPlanu
+
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_warszawa())
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: [ObiektPlanu("wektor-pow", {"oznaczenie": "1ZP", "nr_uchwaly": "XII/34/2019"})])
+
+    html = client.get("/mpzp/raport?id=146501_1.0001.AR_1.1").get_data(as_text=True)
+
+    assert "1ZP" in html and "XII/34/2019" in html
+    assert "krajowej integracji planów" in html
+
+
+def test_warstwy_krajowe_z_zapasowa_lista(client, monkeypatch):
+    from mpzp import krajowe
+
+    def podnies():
+        raise krajowe.BladKIMPZP("brak sieci")
+
+    monkeypatch.setattr(krajowe, "warstwy", podnies)
+    dane = client.get("/mpzp/warstwy-krajowe").get_json()
+
+    assert dane["plany"]["z_uslugi"] is False
+    assert dane["plany"]["warstwy"] == ",".join(krajowe.WARSTWY_ZAPASOWE)
+    assert dane["dzialki"]["warstwy"] == "dzialki,numery_dzialek"
 
 
 def test_sprawdz_brak_planu(client, monkeypatch):

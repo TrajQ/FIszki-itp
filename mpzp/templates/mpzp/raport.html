@@ -36,7 +36,7 @@
                 {% endfor %}
                 <path d="{{ szkic.dzialka }}" fill="none" stroke="currentColor" stroke-width="2.5"/>
             </svg>
-            <p class="wyciszony raport__przypis">Czarny obrys — działka. Kolory — wydzielenia planu (legenda obok). Północ u góry.</p>
+            <p class="wyciszony raport__przypis">Czarny obrys — działka.{% if not plan_krajowy %} Kolory — wydzielenia planu (legenda obok).{% endif %} Północ u góry.</p>
         </div>
     </section>
 
@@ -44,6 +44,24 @@
         <h3>Przeznaczenie w planie miejscowym</h3>
         {% if blad %}
         <p class="komunikat komunikat--ostrzezenie">{{ blad }}</p>
+        {% elif plan_krajowy %}
+        {# Gmina bez WFS: atrybuty z krajowej integracji, bez podziału działki. #}
+        <table class="tabela">
+            <tr><th>Symbol (rozpoznany z atrybutów)</th><td><strong>{{ plan_krajowy.przeznaczenie or '—' }}</strong></td></tr>
+            {% for o in plan_krajowy.opis_przeznaczenia %}
+            <tr><th>{{ o.symbol }}</th><td>{{ o.opis or 'brak w słowniku, sprawdź legendę planu' }}</td></tr>
+            {% endfor %}
+            {% if plan_krajowy.tytul %}<tr><th>Plan</th><td>{{ plan_krajowy.tytul }}</td></tr>{% endif %}
+        </table>
+        {% for obiekt in plan_krajowy.obiekty %}
+        <h4 class="raport__warstwa">Warstwa {{ obiekt.warstwa }}</h4>
+        <table class="tabela">
+            {% for klucz, wartosc in obiekt.atrybuty.items() %}
+            <tr><th>{{ klucz }}</th><td>{{ wartosc }}</td></tr>
+            {% endfor %}
+        </table>
+        {% endfor %}
+        <p class="wyciszony raport__przypis">Przeznaczenie w punkcie wewnątrz działki, z krajowej integracji planów (GUGiK). Podziału działki na przeznaczenia nie liczymy — usługa nie podaje geometrii wydzieleń.</p>
         {% else %}
         <table class="tabela">
             <tr><th></th><th>Symbol</th><th>Opis (orientacyjny)</th><th class="liczba">Powierzchnia</th><th class="liczba">Udział</th></tr>
@@ -61,7 +79,8 @@
     </section>
 
     <footer class="raport__stopka wyciszony">
-        Źródła: ULDK (GUGiK) — geometria działki; WFS planów miejscowych gminy — wydzielenia.
+        Źródła: ULDK (GUGiK) — geometria działki; WFS planów miejscowych gminy albo krajowa integracja planów
+        (KIMPZP, GUGiK) — przeznaczenie.
         Powierzchnia liczona z geometrii w przybliżeniu (błąd poniżej 0,1%) i może różnić się od
         powierzchni w ewidencji gruntów. Opisy symboli wg rozporządzenia z 2003 r. mają charakter
         orientacyjny. <strong>Raport nie jest wypisem ani wyrysem z planu miejscowego</strong> —
