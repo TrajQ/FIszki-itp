@@ -983,3 +983,26 @@ policzona PySAL jednorazowo, poza projektem. Ok. 2 s dla 320 gmin.
   wskaźników gmin (skośne rozkłady) permutacje są pewniejsze i to
   standard w GeoDa.
 - Liczenie przy każdym „Pokaż” — odrzucone: 1–2 s na każde zapytanie.
+
+## D-048 — Mapa do druku jako SVG generowany na serwerze
+Data: 2026-09-29
+
+**Decyzja:** `atlas/mapa_svg.py` składa kartogram A4 (poziomo) jako SVG:
+tytuł, podtytuł, legenda z liczebnością klas, podziałka liniowa,
+strzałka północy, źródło i metoda klasyfikacji (albo I Morana dla mapy
+LISA). Strona `/atlas/druk` pokazuje podgląd z przyciskami „Drukuj /
+zapisz PDF” i „Pobierz SVG”. Odwzorowanie: walcowe równoodległościowe ze
+skalą cos φ₀. Palety kolorów powielone z atlas.js (mapa na papierze =
+mapa na ekranie). Analiza autokorelacji sortuje gminy po TERYT, żeby
+permutacje — a więc klastry — były takie same na ekranie i na wydruku.
+
+**Uzasadnienie:** Student potrzebuje mapy do pracy zaliczeniowej z
+obowiązkowymi elementami mapy tematycznej. Zrzut ekranu Leafleta ich nie
+ma i jest rastrowy. SVG jest wektorowy, edytowalny w Inkscape i drukuje
+się ostro. Dla jednego województwa zniekształcenie prostego odwzorowania
+jest pomijalne, więc bez biblioteki kartograficznej.
+
+**Odrzucone alternatywy:**
+- matplotlib/geopandas do renderowania — odrzucone: ciężkie zależności.
+- Eksport PNG z przeglądarki (canvas) — odrzucone: raster, bez legendy
+  i podziałki w pliku.

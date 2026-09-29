@@ -996,3 +996,20 @@ Status: zamknięty
 
 Testy: 279 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap41_20260929.zip
+
+## ETAP 42 — Atlas: mapa do druku (SVG/PDF)
+Data: 2026-09-29
+Status: zamknięty
+
+- `atlas/mapa_svg.py`: kartogram, legenda, podziałka („ładne” długości),
+  strzałka północy
+- `/atlas/mapa.svg` (tryb, metoda, klasy; `pobierz=1` → załącznik),
+  `/atlas/druk` (podgląd + druk A4 poziomo)
+- Link „Mapa do druku” odpowiada bieżącemu widokowi
+- Naprawione przy okazji: kolejność gmin a permutacje (różne klastry na
+  ekranie i na wydruku), „p = 0” w przypisie
+- Sprawdzone w przeglądarce (wartość z Jenksem, LISA)
+- `DECISIONS.md`: D-048
+
+Testy: 283 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap42_20260929.zip

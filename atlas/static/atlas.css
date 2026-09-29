@@ -707,3 +707,49 @@ button.przelacznik__opcja--aktywna:hover {
     margin-left: auto;
     font-variant-numeric: tabular-nums;
 }
+
+/* Mapa do druku (ETAP 42) */
+.druk-mapy {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 1123px;
+    margin: 0 auto;
+}
+
+.druk-mapy__akcje {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.druk-mapy__opis {
+    margin: 0;
+    font-size: 14px;
+}
+
+.druk-mapy__obraz {
+    width: 100%;
+    height: auto;
+    border-radius: var(--promien);
+    background: #ffffff;
+    box-shadow: var(--cien);
+}
+
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 8mm;
+    }
+
+    .strona-druku-mapy .pasek-nawigacji,
+    .druk-mapy__akcje,
+    .druk-mapy__opis {
+        display: none;
+    }
+
+    .druk-mapy__obraz {
+        box-shadow: none;
+        border-radius: 0;
+    }
+}

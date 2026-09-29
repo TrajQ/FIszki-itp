@@ -69,6 +69,9 @@ def analiza(wartosci: dict[str, float], sasiedzi_gmin: dict[str, set[str]]) -> d
     Gminy bez sąsiadów z danymi („wyspy”) pomijamy — nie ma dla nich
     średniej u sąsiadów. Zwraca też liczbę pominiętych.
     """
+    # Stała kolejność gmin: te same dane dają te same permutacje, a więc
+    # ten sam wynik — niezależnie od kolejności, w jakiej przyszły z BDL.
+    wartosci = dict(sorted(wartosci.items()))
     sasiedztwo = {
         t: sorted(s for s in sasiedzi_gmin.get(t, ()) if s in wartosci)
         for t in wartosci

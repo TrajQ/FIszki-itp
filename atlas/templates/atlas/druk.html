@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block tytul %}Mapa do druku — Atlas{% endblock %}
+{% block klasa_body %}strona-druku-mapy{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="druk-mapy">
+    <div class="druk-mapy__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
+        <div class="rzad">
+            <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.mapa_do_druku_svg', pobierz=1, **parametry) }}">Pobierz SVG</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>
+    </div>
+    <p class="wyciszony druk-mapy__opis">Arkusz A4 poziomo. SVG da się edytować w Inkscape albo wstawić do pracy (Word, LibreOffice). Przy druku do PDF wybierz orientację poziomą.</p>
+    <img id="mapa-druk" class="druk-mapy__obraz" src="{{ url_for('atlas.mapa_do_druku_svg', **parametry) }}"
+         alt="Kartogram do druku" onerror="document.getElementById('blad-druku').hidden = false; this.hidden = true;">
+    <p id="blad-druku" class="komunikat komunikat--blad" hidden>Nie udało się przygotować mapy (brak danych albo granic gmin). Wróć do atlasu i sprawdź, czy mapa wyświetla się na ekranie.</p>
+</div>
+{% endblock %}

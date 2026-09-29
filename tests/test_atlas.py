@@ -807,3 +807,55 @@ def test_endpoint_autokorelacji(client, monkeypatch):
     assert odpowiedz.status_code == 422 and "Za mało" in odpowiedz.get_json()["blad"]
     assert client.get("/atlas/autokorelacja?zmienna=x").status_code == 400
     atlas_routes._sasiedzi_wojewodztw.clear()
+
+
+# ---------- ETAP 42: mapa do druku ----------
+
+from atlas import mapa_svg  # noqa: E402
+
+
+def test_autokorelacja_nie_zalezy_od_kolejnosci_danych():
+    kolekcja, wartosci = _siatka(5)
+    sasiedzi = autokorelacja.sasiedzi(kolekcja)
+    odwrotnie = dict(reversed(list(wartosci.items())))
+    a, b = autokorelacja.analiza(wartosci, sasiedzi), autokorelacja.analiza(odwrotnie, sasiedzi)
+    assert a["p"] == b["p"] and a["lisa"] == b["lisa"]
+
+
+def test_podzialka_ladna_dlugosc():
+    assert mapa_svg.dlugosc_podzialki_km(0.5) == 50  # 50 km = 100 px ≤ 180 px
+    assert mapa_svg.dlugosc_podzialki_km(0.1) == 10
+    assert mapa_svg.dlugosc_podzialki_km(10) == 200  # mała skala: najdłuższa z listy
+    assert mapa_svg.dlugosc_podzialki_km(0.001) == 1  # nic się nie mieści: najkrótsza
+
+
+def test_kartogram_svg_ma_elementy_mapy():
+    kolekcja, _ = _siatka(2)
+    svg = mapa_svg.kartogram_svg(
+        kolekcja, {"1200001": "#ff0000"}, "Tytuł <&>", "Podtytuł", [("#ff0000", "0 – 10", 1)], "osoba", ["Źródło: GUS"]
+    )
+    assert svg.startswith("<svg") and svg.rstrip().endswith("</svg>")
+    assert "Tytuł &lt;&amp;&gt;" in svg  # znaki specjalne escapowane
+    assert svg.count("<path") == 4 and 'fill="#ff0000"' in svg and mapa_svg.KOLOR_BRAK in svg
+    assert " km</text>" in svg and ">N</text>" in svg and "Źródło: GUS" in svg
+
+
+def test_endpoint_mapy_do_druku(client, monkeypatch):
+    cechy = [
+        {"type": "Feature", "properties": {"teryt": t, "nazwa": n},
+         "geometry": {"type": "Polygon", "coordinates": [[[19 + i, 50], [20 + i, 50], [20 + i, 51], [19 + i, 51], [19 + i, 50]]]}}
+        for i, (t, n) in enumerate([("1261011", "Kraków"), ("1206032", "Wieliczka")])
+    ]
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {"type": "FeatureCollection", "features": cechy})
+
+    odpowiedz = client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&metoda=rowne&klasy=3")
+    assert odpowiedz.status_code == 200 and odpowiedz.mimetype == "image/svg+xml"
+    svg = odpowiedz.get_data(as_text=True)
+    assert "małopolskie" in svg and "równe przedziały" in svg
+
+    pobranie = client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&pobierz=1")
+    assert "attachment" in pobranie.headers["Content-Disposition"]
+    assert client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=zmiana").status_code == 400  # bez roku bazowego
+    assert client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=cos").status_code == 400
+    strona = client.get(f"/atlas/druk?{ZAPYTANIE}&tryb=wartosc").get_data(as_text=True)
+    assert "Pobierz SVG" in strona and "mapa.svg?" in strona

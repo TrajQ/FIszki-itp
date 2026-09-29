@@ -82,6 +82,7 @@
             <span id="gvf" class="klasyfikacja__gvf" title="Goodness of Variance Fit: jaką część zmienności wartości wyjaśnia podział na klasy (1 = idealnie). Najwyższy daje zwykle metoda Jenksa."></span>
         </div>
         <div class="rzad">
+            <a id="link-druk" class="przycisk przycisk--drugi" href="#" target="_blank" title="Kartogram z legendą, podziałką i źródłem — SVG albo PDF">Mapa do druku ↗</a>
             <a id="link-eksport" class="przycisk przycisk--drugi" href="#">Pobierz CSV</a>
             <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Granice gmin z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
         </div>
@@ -199,6 +200,7 @@
     const URL_EKSPORT = "{{ url_for('atlas.eksport_csv') }}";
     const URL_GEOJSON = "{{ url_for('atlas.eksport_geojson') }}";
     const URL_KLASY = "{{ url_for('atlas.klasy') }}";
+    const URL_DRUK = "{{ url_for('atlas.druk') }}";
     const URL_AUTOKORELACJA = "{{ url_for('atlas.autokorelacja_przestrzenna') }}";
     const URL_KORELACJA = "{{ url_for('atlas.korelacja') }}";
     const URL_PROFIL = "{{ url_for('atlas.profil_gminy', gmina_bdl_id='000000000000') }}";

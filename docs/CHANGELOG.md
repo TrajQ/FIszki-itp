@@ -291,3 +291,11 @@
   i liczebnościami; endpoint `/atlas/autokorelacja`.
 - Dodano `atlas/autokorelacja.py`, `DECISIONS.md` D-047 i 5 testów
   (wartość wzorcowa z PySAL).
+
+## ETAP 42 — 2026-09-29
+- Atlas: „Mapa do druku ↗” — kartogram A4 z legendą (liczebności klas),
+  podziałką, strzałką północy, źródłem i metodą klasyfikacji; pobieranie
+  SVG albo druk do PDF; działa dla trybów wartość, zmiana i klastry LISA.
+- Autokorelacja: wynik niezależny od kolejności danych (ten sam na
+  ekranie i na wydruku).
+- Dodano `atlas/mapa_svg.py`, `DECISIONS.md` D-048 i 4 testy.

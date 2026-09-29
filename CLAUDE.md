@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 41 (atlas: autokorelacja przestrzenna — zamknięty)
-Ostatni ZIP: releases/warsztat_etap41_20260929.zip
-Testy: 279 passed / 0 failed
+ETAP: 42 (atlas: mapa do druku SVG/PDF — zamknięty)
+Ostatni ZIP: releases/warsztat_etap42_20260929.zip
+Testy: 283 passed / 0 failed

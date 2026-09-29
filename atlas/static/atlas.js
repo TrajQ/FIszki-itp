@@ -498,7 +498,18 @@
         }
     });
 
+    // Link „Mapa do druku” zawsze odpowiada temu, co widać: tryb, metoda, klasy.
+    function ustawLinkDruku() {
+        if (!biezaceParametry) return;
+        const parametry = new URLSearchParams(biezaceParametry);
+        parametry.set("tryb", tryb);
+        parametry.set("metoda", poleMetoda.value);
+        parametry.set("klasy", poleKlasy.value);
+        document.getElementById("link-druk").href = `${URL_DRUK}?${parametry}`;
+    }
+
     function odswiezWidok() {
+        ustawLinkDruku();
         pokazGvf();
         pokazRozklad();
         pokazStatystyki();
