@@ -416,3 +416,11 @@
   PBC, najwyższa zabudowa — z polami ustaleń planu i zgodnością ✓/✗,
   kontrola terenów, na których zabudowa + PBC przekraczają 100%.
 - Dodano `osiedle/wskazniki.py`, `DECISIONS.md` D-064 i 9 testów.
+
+## ETAP 59 — 2026-09-29
+- Osiedle: karta „Program osiedla” — mieszkania MW i domy MN,
+  mieszkańcy, gęstość, powierzchnia usług, miejsca postojowe (potrzeba
+  i miejsca na terenach KS z ostrzeżeniem o braku), dzieci w wieku
+  przedszkolnym i szkolnym z liczbą oddziałów, zieleń na mieszkańca;
+  założenia do zmiany w panelu, zapisywane z koncepcją.
+- Dodano `osiedle/program.py`, `DECISIONS.md` D-065 i 2 testy.

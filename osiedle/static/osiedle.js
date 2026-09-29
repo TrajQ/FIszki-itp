@@ -18,6 +18,8 @@
     const sekcjaWskaznikow = document.getElementById("sekcja-wskaznikow");
     const polaParametrow = document.querySelectorAll("#parametry-terenu [data-parametr]");
     const polaUstalen = document.querySelectorAll("[data-ustalenie]");
+    const polaZalozen = document.querySelectorAll("[data-zalozenie]");
+    const sekcjaProgramu = document.getElementById("sekcja-programu");
     const formatWsk = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
     const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
     const formatProc = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
@@ -175,13 +177,19 @@
         });
     });
     polaUstalen.forEach((pole) => pole.addEventListener("input", zapiszRysunek));
+    polaZalozen.forEach((pole) => pole.addEventListener("input", zapiszRysunek));
+
+    // Puste pole = brak wpisu (ustalenie planu: nie obowiązuje; założenie: wartość typowa).
+    function wpisane(pola, atrybut) {
+        const wynik = {};
+        pola.forEach((pole) => {
+            if (pole.value !== "") wynik[pole.dataset[atrybut]] = Number(pole.value);
+        });
+        return wynik;
+    }
 
     function ustawieniaZFormularza() {
-        const plan = {};
-        polaUstalen.forEach((pole) => {
-            if (pole.value !== "") plan[pole.dataset.ustalenie] = Number(pole.value);
-        });
-        return { ...(koncepcja.ustawienia || {}), plan };
+        return { ...(koncepcja.ustawienia || {}), plan: wpisane(polaUstalen, "ustalenie"), program: wpisane(polaZalozen, "zalozenie") };
     }
 
     mapa.on("click", () => zaznacz(null));
@@ -307,6 +315,20 @@
         if (!b.funkcje.length && b.obszar_m2 === null) uwaga("Jeszcze nic nie narysowano.");
         if (k.parametry_ponad_100) uwaga(`Terenów, na których zabudowa i powierzchnia biologicznie czynna razem przekraczają 100%: ${k.parametry_ponad_100}.`);
         pokazWskazniki(b);
+        pokazProgram(b.program);
+    }
+
+    function pokazProgram(p) {
+        sekcjaProgramu.hidden = false;
+        sekcjaProgramu.querySelectorAll("[data-program]").forEach((td) => {
+            const wartosc = p ? p[td.dataset.program] : null;
+            td.textContent = wartosc === null || wartosc === undefined ? "—" : formatWsk.format(wartosc);
+        });
+        const uwaga = document.getElementById("uwaga-parkingi");
+        uwaga.hidden = !(p && p.miejsca_brakuje > 0);
+        if (p && p.miejsca_brakuje > 0) {
+            uwaga.textContent = `Na terenach KS brakuje ${formatM2.format(p.miejsca_brakuje)} miejsc postojowych — dorysuj parkingi albo przyjmij garaże podziemne.`;
+        }
     }
 
     function pokazWskazniki(b) {
@@ -352,7 +374,7 @@
         if (!id) {
             koncepcja = null;
             mapa.removeControl(kontrolkaRysowania);
-            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, akcjeKoncepcji, linkGeojson].forEach((el) => (el.hidden = true));
+            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, akcjeKoncepcji, linkGeojson].forEach((el) => (el.hidden = true));
             return;
         }
         const dane = await zapytaj(`${URL_KONCEPCJE}/${id}`);
@@ -375,6 +397,8 @@
         stanZapisu.textContent = "";
         const plan = (dane.ustawienia || {}).plan || {};
         polaUstalen.forEach((pole) => (pole.value = plan[pole.dataset.ustalenie] ?? ""));
+        const zalozenia = (dane.ustawienia || {}).program || {};
+        polaZalozen.forEach((pole) => (pole.value = zalozenia[pole.dataset.zalozenie] ?? ""));
         pokazBilans(dane.bilans);
         if (rysunek.getLayers().length) mapa.fitBounds(rysunek.getBounds(), { padding: [30, 30], maxZoom: 18 });
     }

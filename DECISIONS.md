@@ -1364,3 +1364,24 @@ wskaźników jak w module MPZP; kod osobny (niezależność modułów).
   mapie, a koncepcja urbanistyczna tego nie wymaga.
 - Zgodność liczona osobno dla każdego terenu — odrzucone na teraz:
   parametry terenu to wprost udziały, więc porównanie widać od razu.
+
+## D-065 — Osiedle: program z jawnych założeń
+Data: 2026-09-29
+
+**Decyzja:** `osiedle/program.py` szacuje z powierzchni całkowitej
+terenów MN, MW i U: mieszkania (udział powierzchni mieszkań / średni
+metraż, osobno MN i MW), mieszkańców, gęstość na hektar obszaru,
+potrzebne miejsca postojowe i miejsca mieszczące się na terenach KS,
+dzieci w wieku przedszkolnym i szkolnym z liczbą oddziałów oraz zieleń
+urządzoną na mieszkańca. Wszystkie założenia (11 liczb) są w tabeli
+`ZALOZENIA` z zakresem dopuszczalnym, widoczne w panelu jako
+podpowiedzi i zmieniane per koncepcja (`ustawienia.program`). Liczby
+całkowite w dół z tolerancją 0,01 na błąd przeliczenia powierzchni.
+
+**Uzasadnienie:** Wartości domyślne to typowe założenia do szkicu, nie
+normy ani dane GUS — dlatego są jawne i opisane w panelu jako „zmień
+pod swoją gminę”. Model językowy nie bierze udziału (liczby z kodu).
+
+**Odrzucone alternatywy:**
+- Wskaźniki demograficzne pobierane z GUS BDL dla gminy — odrzucone
+  na teraz: wymaga wyboru gminy w koncepcji; można dodać później.

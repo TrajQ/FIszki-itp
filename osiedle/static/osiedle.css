@@ -219,3 +219,38 @@ button.przycisk--niebezpieczny-tekst {
     color: var(--blad);
     font-weight: 600;
 }
+
+/* ETAP 59: program osiedla */
+.tabela-programu {
+    font-size: 13px;
+}
+
+.tabela-programu__wazne td {
+    font-weight: 600;
+}
+
+.zalozenia summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--akcent);
+}
+
+.zalozenia__pola {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.zalozenia__pola label {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.zalozenia__pola input {
+    width: 100%;
+    min-width: 0;
+}

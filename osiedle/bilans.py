@@ -18,6 +18,7 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
+from . import program as prog
 from . import wskazniki as wsk
 
 OBSZAR = "obszar"
@@ -90,17 +91,19 @@ def wczytaj_tereny(geojson: dict) -> tuple[BaseGeometry | None, list[dict]]:
 
 def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     """Bilans terenu: m² i % dla każdej funkcji, kontrole rysunku,
-    wskaźniki zabudowy i zgodność z ustaleniami planu (z ustawień)."""
+    wskaźniki zabudowy, zgodność z ustaleniami planu i program osiedla
+    (ustalenia i założenia programu — z ustawień koncepcji)."""
     obszar, tereny = wczytaj_tereny(geojson)
     try:
         plan = wsk.ustalenia_planu(ustawienia)
+        prog.zalozenia(ustawienia)  # sprawdzenie także przy pustym rysunku
         for t in tereny:
             t["parametry"] = wsk.parametry_terenu(t["funkcja"], t["wlasciwosci"])
-    except wsk.BladParametru as e:
+    except (wsk.BladParametru, prog.BladZalozen) as e:
         raise BladKoncepcji(str(e)) from None
     wszystko = [t["geometria"] for t in tereny] + ([obszar] if obszar is not None else [])
     if not wszystko:
-        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": []}
+        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None}
     szerokosc = unary_union(wszystko).centroid.y
 
     def pole(geometria):
@@ -154,4 +157,5 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
         "kontrole": kontrole,
         "wskazniki": wskazniki,
         "zgodnosc": wsk.zgodnosc(wskazniki, plan),
+        "program": prog.program(tereny, obszar_m2, ustawienia),
     }

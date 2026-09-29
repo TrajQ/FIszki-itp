@@ -111,6 +111,33 @@
             </table>
             <p class="wyciszony opis-panelu">Wpisz ustalenia planu (np. z modułu MPZP) — zgodność sprawdza się od razu. Parametry terenów ustawisz, klikając teren na mapie.</p>
         </section>
+
+        <section id="sekcja-programu" class="karta stos" hidden>
+            <h3>Program osiedla</h3>
+            <p class="wyciszony opis-panelu">Szacunek z powierzchni całkowitej terenów MN, MW i U oraz założeń poniżej.</p>
+            <table class="tabela tabela-programu">
+                <tbody>
+                    <tr><td>mieszkania MW / domy MN</td><td class="liczba" data-program="mieszkania_mw"></td><td class="liczba" data-program="mieszkania_mn"></td></tr>
+                    <tr class="tabela-programu__wazne"><td>mieszkańcy</td><td class="liczba" colspan="2" data-program="mieszkancy"></td></tr>
+                    <tr><td>gęstość [os./ha obszaru]</td><td class="liczba" colspan="2" data-program="gestosc_os_na_ha"></td></tr>
+                    <tr><td>powierzchnia usług [m²]</td><td class="liczba" colspan="2" data-program="powierzchnia_uslug_m2"></td></tr>
+                    <tr><td>miejsca postojowe: potrzeba / na terenach KS</td><td class="liczba" data-program="miejsca_potrzebne"></td><td class="liczba" data-program="miejsca_na_terenach_ks"></td></tr>
+                    <tr><td>dzieci w wieku przedszkolnym / oddziały</td><td class="liczba" data-program="dzieci_przedszkole"></td><td class="liczba" data-program="oddzialy_przedszkolne"></td></tr>
+                    <tr><td>dzieci w wieku szkolnym / oddziały</td><td class="liczba" data-program="dzieci_szkola"></td><td class="liczba" data-program="oddzialy_szkolne"></td></tr>
+                    <tr><td>zieleń urządzona na mieszkańca [m²]</td><td class="liczba" colspan="2" data-program="zielen_na_mieszkanca_m2"></td></tr>
+                </tbody>
+            </table>
+            <p id="uwaga-parkingi" class="komunikat komunikat--ostrzezenie" hidden></p>
+            <details class="zalozenia">
+                <summary>Założenia (typowe wartości — zmień pod swoją gminę)</summary>
+                <div class="zalozenia__pola">
+                    {% for klucz, z in zalozenia.items() %}
+                    <label>{{ z[0] }}{% if z[2] %} [{{ z[2] }}]{% endif %}
+                        <input data-zalozenie="{{ klucz }}" type="number" min="{{ z[3] }}" max="{{ z[4] }}" step="any" placeholder="{{ z[1] }}"></label>
+                    {% endfor %}
+                </div>
+            </details>
+        </section>
     </aside>
 </div>
 {% endblock %}

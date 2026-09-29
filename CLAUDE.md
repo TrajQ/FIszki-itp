@@ -15,8 +15,8 @@ kogoś, kto wróci do niego za trzy miesiące.
 - fiszki      — generator fiszek z PDF z kotwicą w źródle
 - dostepnosc  — analiza dostępności pieszej, siatka H3 (czyta gotowe wyniki)
 - osiedle     — koncepcja osiedla rysowana na mapie: bilans terenu,
-                wskaźniki zabudowy i zgodność z planem
-                (w budowie: program, warianty — ETAPy 59–60)
+                wskaźniki zabudowy, zgodność z planem, program osiedla
+                (w budowie: warianty, raport — ETAP 60)
 
 Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - przepisy    — nowy moduł: pytania do PDF-ów z przepisami, odpowiedź
@@ -59,6 +59,6 @@ Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 58 (osiedle: wskaźniki zabudowy i zgodność z planem — zamknięty)
-Ostatni ZIP: releases/warsztat_etap58_20260929.zip
-Testy: 362 passed / 0 failed
+ETAP: 59 (osiedle: program — mieszkańcy, parkingi, usługi — zamknięty)
+Ostatni ZIP: releases/warsztat_etap59_20260929.zip
+Testy: 364 passed / 0 failed

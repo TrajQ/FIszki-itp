@@ -1242,3 +1242,15 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: liczby zgodne z ręcznym rachunkiem,
   zapis parametrów i ustaleń po przeładowaniu (jasny i ciemny motyw)
 - `DECISIONS.md`: D-064
+
+## ETAP 59 — Osiedle: program (mieszkańcy, parkingi, usługi)
+Data: 2026-09-29
+Status: zamknięty
+
+- `osiedle/program.py` (założenia z walidacją, program); wynik w
+  `bilans()["program"]`, założenia w `ustawienia.program`
+- Panel: tabela programu, ostrzeżenie o brakujących miejscach
+  postojowych, rozwijane założenia
+- Sprawdzone w przeglądarce: liczby zgodne z ręcznym rachunkiem, zmiana
+  założenia przelicza program, zapis po przeładowaniu
+- `DECISIONS.md`: D-065

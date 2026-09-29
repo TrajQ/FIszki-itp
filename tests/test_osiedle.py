@@ -49,7 +49,7 @@ def test_bilans_z_obszarem_nakladaniem_i_wolnym_terenem():
 def test_bilans_bez_obszaru_procent_od_sumy_i_pusty():
     b = bilans(kolekcja(prostokat(0, 0, 30, 10, "MN"), prostokat(40, 0, 10, 10, "ZP")))
     assert b["obszar_m2"] is None and [f["procent"] for f in b["funkcje"]] == [75.0, 25.0]
-    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": []}
+    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None}
 
 
 def test_teren_poza_obszarem():
@@ -160,3 +160,41 @@ def test_api_ustawienia_planu_walidowane_i_zapisane(client):
     odp = client.put(url, json={"geojson": kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 20, 100, "MW"))}).get_json()
     assert odp["bilans"]["zgodnosc"][0]["spelnione"] is True  # 6%
     assert client.get(url).get_json()["bilans"]["wskazniki"]["zabudowa_proc"] == pytest.approx(6.0, abs=0.1)
+
+
+# ---------- ETAP 59: program osiedla ----------
+
+
+def test_program_mieszkania_parkingi_dzieci():
+    b = bilans(
+        kolekcja(
+            prostokat(0, 0, 100, 100, "obszar"),  # 1 ha
+            prostokat(0, 0, 50, 100, "MW"),  # 5000 m² · 30% · 5 kond. = 7500 m² PC
+            prostokat(50, 0, 20, 100, "MN"),  # 2000 m² · 30% · 2 = 1200 m² PC
+            prostokat(70, 0, 10, 100, "U", kondygnacje=1),  # 1000 m² · 40% · 1 = 400 m² PC
+            prostokat(80, 0, 10, 100, "KS"),  # 1000 m² / 25 = 40 miejsc
+            prostokat(90, 0, 10, 100, "ZP"),
+        )
+    )
+    p = b["program"]
+    # MW: 7500 · 0,7 / 55 = 95,45 → 95; MN: 1200 · 0,7 / 120 = 7
+    assert (p["mieszkania_mw"], p["mieszkania_mn"], p["mieszkania"]) == (95, 7, 102)
+    assert p["mieszkancy"] == 245  # 102 · 2,4 = 244,8
+    assert p["gestosc_os_na_ha"] == pytest.approx(245, abs=0.5)
+    # 95 · 1,2 + 7 · 2 + 0,4 · 25 = 114 + 14 + 10 = 138
+    assert p["miejsca_potrzebne"] == 138 and p["miejsca_na_terenach_ks"] == 40 and p["miejsca_brakuje"] == 98
+    assert (p["dzieci_przedszkole"], p["oddzialy_przedszkolne"]) == (10, 1)  # 4% z 245 = 9,8
+    assert (p["dzieci_szkola"], p["oddzialy_szkolne"]) == (22, 1)  # 9% z 245 = 22,05
+    assert p["zielen_na_mieszkanca_m2"] == pytest.approx(1000 / 245, abs=0.05)
+
+
+def test_program_z_wlasnymi_zalozeniami_i_bledy():
+    rysunek = kolekcja(prostokat(0, 0, 100, 100, "MW"))  # 15 000 m² PC
+    p = bilans(rysunek, {"program": {"metraz_mw_m2": 75, "udzial_mieszkan_proc": "", "osoby_na_mieszkanie": 2}})["program"]
+    assert p["mieszkania"] == 140 and p["mieszkancy"] == 280  # 15 000 · 0,7 / 75
+    assert p["gestosc_os_na_ha"] is None and p["zalozenia"]["metraz_mw_m2"] == 75
+    for zle in ({"metraz_mw_m2": 0}, {"nieznane": 1}, {"osoby_na_mieszkanie": True}, {"dzieci_w_oddziale": "x"}):
+        with pytest.raises(BladKoncepcji):
+            bilans(rysunek, {"program": zle})
+    with pytest.raises(BladKoncepcji):
+        bilans(kolekcja(), {"program": {"metraz_mw_m2": -5}})

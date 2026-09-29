@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from . import baza
 from .bilans import FUNKCJE, OBSZAR, BladKoncepcji, bilans
+from .program import ZALOZENIA
 from .wskazniki import DOMYSLNE
 
 osiedle_bp = Blueprint(
@@ -44,7 +45,8 @@ def podsumowanie() -> dict:
 @osiedle_bp.route("/")
 def index():
     return render_template(
-        "osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR, domyslne=DOMYSLNE
+        "osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR, domyslne=DOMYSLNE,
+        zalozenia=ZALOZENIA,
     )
 
 
