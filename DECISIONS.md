@@ -1292,3 +1292,21 @@ nowych blueprintów: adresy URL i `url_for` w szablonach bez zmian.
 **Odrzucone alternatywy:**
 - Osobne blueprinty dla podgrup — odrzucone: zmiana nazw endpointów w
   szablonach i JS, ryzyko pomyłek bez korzyści dla użytkownika.
+
+## D-062 — Nowe moduły i rozszerzenia Warsztatu
+Data: 2026-09-29
+
+**Decyzja (za zgodą autora):** Warsztat rośnie z czterech do siedmiu
+modułów: `osiedle` (bilans terenu koncepcji), `przepisy` (asystent do
+PDF-ów z przepisami, zawsze z cytatem), `teren` (inwentaryzacja w
+terenie). Dwa pomysły to rozszerzenia istniejących modułów: „Raport
+gminy” w atlasie i „Kronika zmian” (ortofotomapy archiwalne) w mpzp.
+Kolejność: osiedle → przepisy → raport gminy → kronika → teren.
+
+**Uzasadnienie:** Wspólne uruchamianie, wygląd, kopia zapasowa i
+możliwość korzystania z danych innych modułów. Zasady z CLAUDE.md
+zostają: niezależne moduły, tylko 127.0.0.1 — dlatego „teren” nie
+wystawia serwera w sieci, tylko przyjmuje dane zebrane na telefonie.
+
+**Odrzucone alternatywy:**
+- Osobne aplikacje — odrzucone: podwójne uruchamianie i kopie danych.

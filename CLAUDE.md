@@ -15,6 +15,15 @@ kogoś, kto wróci do niego za trzy miesiące.
 - fiszki      — generator fiszek z PDF z kotwicą w źródle
 - dostepnosc  — analiza dostępności pieszej, siatka H3 (czyta gotowe wyniki)
 
+Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
+- osiedle     — nowy moduł: bilans terenu i wskaźniki koncepcji osiedla
+- przepisy    — nowy moduł: pytania do PDF-ów z przepisami, odpowiedź
+                zawsze z cytatem i kotwicą w źródle
+- atlas       — „Raport gminy”: uwarunkowania jednej gminy w jednym miejscu
+- mpzp        — „Kronika zmian”: ortofotomapy z różnych lat na suwaku
+- teren       — nowy moduł: inwentaryzacja w terenie (telefon zbiera dane
+                bez połączenia z Warsztatem — ten działa tylko na 127.0.0.1)
+
 ## Stack — nie zmieniaj bez pytania
 - Python 3.11+, Flask, blueprinty
 - SQLite, osobny plik bazy na moduł; SpatiaLite tam, gdzie geometria
