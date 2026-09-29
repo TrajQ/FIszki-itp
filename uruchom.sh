@@ -14,6 +14,16 @@ if [[ ! -x .venv/bin/python ]]; then
     exit 1
 fi
 
+# Po aktualizacji projektu (git pull / nowy ZIP) mogły dojść zależności.
+# Porównujemy sumę kontrolną requirements.txt z tą z ostatniej instalacji.
+SUMA_TERAZ=$(sha256sum requirements.txt | cut -d' ' -f1)
+SUMA_ZAPISANA=$(cat .venv/.requirements.sha256 2>/dev/null || true)
+if [[ "$SUMA_TERAZ" != "$SUMA_ZAPISANA" ]]; then
+    echo "Zmieniły się zależności — instaluję (jednorazowo)…"
+    .venv/bin/pip install -q --disable-pip-version-check -r requirements.txt
+    echo "$SUMA_TERAZ" > .venv/.requirements.sha256
+fi
+
 if [[ ! -f .env ]]; then
     echo "Brak pliku .env — tworzę go z .env.example (uzupełnij GEMINI_API_KEY)."
     cp .env.example .env

@@ -83,4 +83,6 @@
 - Dodano syntetyczny plik przykładowy i skrypt, który go generuje.
 - Dodano zależność `h3` (`requirements.txt`).
 - Poprawiono kolor przycisków zoomu mapy w trybie ciemnym.
+- `uruchom.sh` doinstalowuje zależności po aktualizacji; dodano
+  `README.md`.
 - Dodano `DECISIONS.md` D-015 i testy modułu.

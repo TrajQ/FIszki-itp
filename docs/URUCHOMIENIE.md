@@ -25,6 +25,20 @@ aplikację.
 
 Bez ikony: `cd ~/warsztat && ./uruchom.sh`.
 
+## Aktualizacja
+
+`git pull` (albo rozpakowanie nowego ZIP-a w to samo miejsce, z
+zachowaniem `.venv`, `.env` i `instance/`). Przy następnym starcie
+`uruchom.sh` sam doinstaluje nowe zależności, jeśli zmienił się
+`requirements.txt`. W przeglądarce odśwież stronę przez Ctrl+Shift+R.
+
+## Klucze w `.env`
+
+- `GEMINI_API_KEY` — szkice fiszek i opisy w atlasie (bez klucza reszta
+  działa).
+- `GUS_BDL_API_KEY` — opcjonalny; bez niego API GUS działa z niższym
+  limitem zapytań. Klucz: https://api.stat.gov.pl/Home/BdlApi
+
 ## Gdy coś nie działa
 
 - Ikona pyta, czy uruchomić / nic nie robi → prawy klik na ikonie →

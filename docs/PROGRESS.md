@@ -261,6 +261,9 @@ Zrobione:
 - Testy: 16 nowych (wczytywanie i błędy formatu, klasy, udziały,
   powierzchnie, kolejność współrzędnych, endpointy, bezpieczeństwo nazw)
 - Nowa zależność `h3==4.5.0`; `DECISIONS.md`: D-015
+- `uruchom.sh` sam doinstalowuje zależności, gdy zmieni się
+  `requirements.txt` (suma kontrolna w `.venv/`); `README.md`;
+  `docs/URUCHOMIENIE.md` uzupełnione o aktualizację i klucze
 
 Testy: 95 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap8_20260929.zip
