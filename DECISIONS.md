@@ -481,3 +481,23 @@ dodatkowych zapytań o lata bez danych.
 **Odrzucone alternatywy:**
 - Krótszy czas ważności dla pustych wyników (np. 1 dzień) — odrzucone:
   dodatkowa kolumna i logika dla bardzo małego zysku.
+
+## D-023 — Podpowiedzi działek: ULDK GetParcelByIdOrNr + historia
+Data: 2026-09-29
+
+**Decyzja:** Pole wyszukiwania działki podpowiada w trakcie pisania:
+wpisy z lokalnej historii (od razu) i wyniki ULDK `GetParcelByIdOrNr`
+dla frazy „obręb numer”. Podpowiedzi nie zawierają geometrii — pobieramy
+ją dopiero dla wybranej działki (istniejące `GetParcelById`).
+
+**Uzasadnienie:** Pełnego identyfikatora działki nikt nie pamięta, a
+obręb i numer są na wypisie z rejestru i w geoportalu. ULDK to usługa
+publiczna GUGiK (CLAUDE.md: tylko API/WFS). Bez geometrii w podpowiedziach
+odpowiedź jest mała i szybka, a jedno dodatkowe zapytanie po wyborze
+jest niezauważalne. Opóźnienie 400 ms i minimum 3 znaki ograniczają
+liczbę zapytań do ULDK.
+
+**Odrzucone alternatywy:**
+- Własna baza działek do wyszukiwania lokalnego — odrzucone: miliony
+  rekordów i ich aktualizacja; ULDK robi to po stronie GUGiK.
+- Zapytanie przy każdym znaku — odrzucone: obciąża usługę publiczną.

@@ -443,3 +443,31 @@ test, który go odtwarza:
 
 Testy: 139 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap15_20260929.zip
+
+## ETAP 16 — MPZP: wyszukiwanie działki po obrębie i numerze z podpowiedziami
+Data: 2026-09-29
+Status: zamknięty (format odpowiedzi ULDK niesprawdzony na żywo — patrz niżej)
+
+Prośba autora: wpisuję działkę i od razu wyskakuje, bez znajomości
+pełnego identyfikatora.
+
+Zrobione:
+- `dane/uldk.py`: `szukaj_dzialek(fraza)` — ULDK `GetParcelByIdOrNr`
+  („<obręb> <numer>” albo pełny identyfikator), wynik: identyfikator,
+  gmina, obręb, numer; maks. 15 podpowiedzi
+- `GET /mpzp/podpowiedzi?q=` — najpierw pasujące wpisy z historii, potem
+  działki z ULDK (bez duplikatów); pełny identyfikator nie wymaga
+  zapytania; bez cyfry we frazie — wskazówka „dopisz numer działki”
+- Frontend: lista podpowiedzi pojawia się sama po wpisaniu 3 znaków
+  (opóźnienie 400 ms, starsze odpowiedzi ignorowane), sekcje „Ostatnio
+  sprawdzane” i „Ewidencja gruntów (ULDK)”, obsługa myszy i klawiatury
+  (↑ ↓ Enter Esc); wybór od razu pokazuje działkę i przeznaczenie
+- Testy: 7 nowych (parser w obu wariantach statusu, limit, endpoint)
+
+Do sprawdzenia u autora: parser akceptuje oba spotykane warianty
+pierwszej linii odpowiedzi ULDK (liczba wyników albo „0”); jeśli
+podpowiedzi nie pojawią się mimo poprawnej nazwy obrębu — przysłać
+komunikat z listy.
+
+Testy: 146 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap16_20260929.zip

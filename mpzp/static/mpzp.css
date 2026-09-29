@@ -26,9 +26,73 @@
 }
 
 .szukaj-dzialki {
+    position: relative;
     display: flex;
     gap: 8px;
     padding: 12px;
+}
+
+/* Rozwijana lista podpowiedzi pod polem wyszukiwania. */
+.podpowiedzi-dzialek {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 1100;
+    max-height: 380px;
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    list-style: none;
+    border-radius: 14px;
+    background: var(--tlo-karty);
+    box-shadow: var(--cien-mocny);
+}
+
+.podpowiedzi-dzialek__naglowek {
+    padding: 8px 10px 4px;
+    color: var(--tekst-drugi);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.podpowiedzi-dzialek__info,
+.podpowiedzi-dzialek__blad {
+    padding: 8px 10px;
+    color: var(--tekst-drugi);
+    font-size: 0.85rem;
+}
+
+.podpowiedzi-dzialek__blad {
+    color: var(--blad);
+}
+
+.podpowiedz {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.podpowiedz:hover,
+.podpowiedz--zaznaczona {
+    background: var(--akcent-tlo);
+}
+
+.podpowiedz__tekst {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.podpowiedz__opis {
+    color: var(--tekst-drugi);
+    font-size: 0.78rem;
 }
 
 #panel-wyniku {

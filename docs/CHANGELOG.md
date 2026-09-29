@@ -130,3 +130,8 @@
   MPZP: wyścig kliknięć; atlas: „największy spadek” przy samych
   wzrostach, cache pustych wyników; `uruchom.sh` bez `PORT`).
 - Dodano testy regresji.
+
+## ETAP 16 — 2026-09-29
+- MPZP: wyszukiwanie działki po nazwie obrębu i numerze z listą
+  podpowiedzi (`/mpzp/podpowiedzi`, ULDK `GetParcelByIdOrNr`).
+- Dodano `DECISIONS.md` D-023 i testy.

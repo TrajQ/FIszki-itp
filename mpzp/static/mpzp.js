@@ -132,10 +132,124 @@
 
     mapa.on("click", (zdarzenie) => sprawdzPunkt(zdarzenie.latlng.lat, zdarzenie.latlng.lng, false));
 
+    // ---------- wyszukiwanie z podpowiedziami ----------
+    // Wpisujesz „obręb numer” (albo pełny identyfikator), lista podpowiedzi
+    // pojawia się sama; klik albo Enter od razu pokazuje działkę na mapie.
+
+    const listaPodpowiedzi = document.getElementById("podpowiedzi-dzialek");
+    let podpowiedzi = []; // [{id, opis}]
+    let zaznaczona = -1;
+    let opoznienie = null;
+    let numerPodpowiedzi = 0;
+
+    function pokazDzialke(id) {
+        ukryjPodpowiedzi();
+        poleIdDzialki.value = id;
+        zapytaj(`${URL_DZIALKA}?id=${encodeURIComponent(id)}`, true);
+    }
+
+    function ukryjPodpowiedzi() {
+        listaPodpowiedzi.hidden = true;
+        poleIdDzialki.setAttribute("aria-expanded", "false");
+        zaznaczona = -1;
+    }
+
+    function zaznacz(indeks) {
+        const elementy = listaPodpowiedzi.querySelectorAll("[role=option]");
+        if (elementy.length === 0) return;
+        zaznaczona = (indeks + elementy.length) % elementy.length;
+        elementy.forEach((el, i) => el.classList.toggle("podpowiedz--zaznaczona", i === zaznaczona));
+        elementy[zaznaczona].scrollIntoView({ block: "nearest" });
+    }
+
+    function naglowek(tekst) {
+        return element("li", "podpowiedzi-dzialek__naglowek", tekst);
+    }
+
+    function rysujPodpowiedzi(dane) {
+        listaPodpowiedzi.replaceChildren();
+        podpowiedzi = [];
+        const dodaj = (id, opis, etykieta) => {
+            const li = element("li", "podpowiedz");
+            li.setAttribute("role", "option");
+            const tekst = element("span", "podpowiedz__tekst");
+            tekst.append(element("span", "identyfikator", id));
+            if (opis) tekst.append(element("span", "podpowiedz__opis", opis));
+            li.appendChild(tekst);
+            if (etykieta) li.appendChild(element("span", "etykieta etykieta--sukces", etykieta));
+            const indeks = podpowiedzi.length;
+            li.addEventListener("mousedown", (e) => {
+                e.preventDefault(); // nie zabieraj fokusu polu przed kliknięciem
+                pokazDzialke(podpowiedzi[indeks].id);
+            });
+            podpowiedzi.push({ id });
+            listaPodpowiedzi.appendChild(li);
+        };
+
+        if (dane.z_historii.length) {
+            listaPodpowiedzi.appendChild(naglowek("Ostatnio sprawdzane"));
+            for (const p of dane.z_historii) dodaj(p.id, "", p.przeznaczenie || "bez planu");
+        }
+        if (dane.z_uldk.length) {
+            listaPodpowiedzi.appendChild(naglowek("Ewidencja gruntów (ULDK)"));
+            for (const p of dane.z_uldk) dodaj(p.id, p.opis);
+        }
+        const informacja = dane.blad || dane.wskazowka || (podpowiedzi.length ? "" : "Nie znaleziono działki. Sprawdź nazwę obrębu i numer.");
+        if (informacja) listaPodpowiedzi.appendChild(element("li", dane.blad ? "podpowiedzi-dzialek__blad" : "podpowiedzi-dzialek__info", informacja));
+
+        listaPodpowiedzi.hidden = false;
+        poleIdDzialki.setAttribute("aria-expanded", "true");
+        zaznaczona = -1;
+    }
+
+    async function pobierzPodpowiedzi(fraza) {
+        const numer = ++numerPodpowiedzi;
+        listaPodpowiedzi.replaceChildren(element("li", "podpowiedzi-dzialek__info", "Szukam…"));
+        listaPodpowiedzi.hidden = false;
+        try {
+            const odpowiedz = await fetch(`${URL_PODPOWIEDZI}?q=${encodeURIComponent(fraza)}`);
+            const dane = await odpowiedz.json();
+            if (numer === numerPodpowiedzi) rysujPodpowiedzi(dane);
+        } catch (e) {
+            if (numer === numerPodpowiedzi) rysujPodpowiedzi({ z_historii: [], z_uldk: [], blad: "Błąd połączenia z serwerem." });
+        }
+    }
+
+    poleIdDzialki.addEventListener("input", () => {
+        clearTimeout(opoznienie);
+        const fraza = poleIdDzialki.value.trim();
+        if (fraza.length < 3) {
+            numerPodpowiedzi += 1;
+            ukryjPodpowiedzi();
+            return;
+        }
+        opoznienie = setTimeout(() => pobierzPodpowiedzi(fraza), 400);
+    });
+
+    poleIdDzialki.addEventListener("keydown", (e) => {
+        if (listaPodpowiedzi.hidden) return;
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            zaznacz(zaznaczona + 1);
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            zaznacz(zaznaczona - 1);
+        } else if (e.key === "Escape") {
+            ukryjPodpowiedzi();
+        }
+    });
+
+    poleIdDzialki.addEventListener("blur", () => setTimeout(ukryjPodpowiedzi, 150));
+
     formularzSzukaj.addEventListener("submit", (zdarzenie) => {
         zdarzenie.preventDefault();
-        const id = poleIdDzialki.value.trim();
-        if (id) zapytaj(`${URL_DZIALKA}?id=${encodeURIComponent(id)}`, true);
+        // Enter: zaznaczona podpowiedź, a gdy nic nie zaznaczono — pierwsza.
+        if (!listaPodpowiedzi.hidden && podpowiedzi.length) {
+            pokazDzialke(podpowiedzi[Math.max(zaznaczona, 0)].id);
+            return;
+        }
+        const fraza = poleIdDzialki.value.trim();
+        if (fraza.length >= 3) pobierzPodpowiedzi(fraza);
     });
 
     // ---------- historia ----------

@@ -3,6 +3,8 @@ from shapely.geometry import Point, mapping
 
 from dane.uldk import BladULDK, Dzialka
 from dane.uldk import znajdz_dzialke as _znajdz_dzialke
+from dane.uldk import WZOR_ID_DZIALKI
+from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
@@ -21,6 +23,9 @@ mpzp_bp = Blueprint(
 
 znajdz_dzialke = _znajdz_dzialke
 znajdz_dzialke_po_id = _znajdz_dzialke_po_id
+szukaj_dzialek = _szukaj_dzialek
+
+MIN_DLUGOSC_FRAZY = 3
 znajdz_przeznaczenie = _znajdz_przeznaczenie
 odswiez_warstwe = _odswiez
 
@@ -91,6 +96,44 @@ def podsumowanie() -> dict:
     """Ostatnio sprawdzona działka — na kartę modułu na stronie głównej."""
     wpisy = historia()
     return {"liczba": len(wpisy), "ostatnia": wpisy[0] if wpisy else None}
+
+
+@mpzp_bp.route("/podpowiedzi")
+def podpowiedzi():
+    """Podpowiedzi przy wpisywaniu działki: najpierw pasujące wpisy z
+    historii (od razu, bez sieci), potem działki z ULDK po obrębie i numerze.
+    """
+    fraza = " ".join((request.args.get("q") or "").split())
+    if len(fraza) < MIN_DLUGOSC_FRAZY:
+        return jsonify({"z_historii": [], "z_uldk": []})
+
+    male = fraza.casefold()
+    z_historii = [
+        {"id": w["dzialka_id"], "przeznaczenie": w["przeznaczenie"]}
+        for w in historia()
+        if male in w["dzialka_id"].casefold()
+    ][:5]
+
+    # Pełny identyfikator nie wymaga wyszukiwania — wystarczy go wybrać.
+    if WZOR_ID_DZIALKI.match(fraza):
+        return jsonify({"z_historii": z_historii, "z_uldk": [{"id": fraza, "opis": "identyfikator działki"}]})
+
+    # ULDK szuka po „obręb numer”, więc bez cyfry nie ma sensu pytać.
+    if not any(znak.isdigit() for znak in fraza):
+        return jsonify({"z_historii": z_historii, "z_uldk": [], "wskazowka": "Dopisz numer działki, np. „Jeżyce 18/14”."})
+
+    try:
+        znalezione = szukaj_dzialek(fraza)
+    except BladULDK as e:
+        return jsonify({"z_historii": z_historii, "z_uldk": [], "blad": str(e)}), 502
+
+    znane = {w["id"] for w in z_historii}
+    z_uldk = [
+        {"id": d.id, "opis": f"{d.gmina}, obręb {d.obreb}, działka {d.numer}"}
+        for d in znalezione
+        if d.id not in znane
+    ]
+    return jsonify({"z_historii": z_historii, "z_uldk": z_uldk})
 
 
 @mpzp_bp.route("/historia")

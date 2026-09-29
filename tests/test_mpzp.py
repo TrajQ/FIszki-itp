@@ -232,3 +232,49 @@ def test_dzialka_po_id_bledy(client, monkeypatch):
 
     monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", podnies)
     assert client.get("/mpzp/dzialka?id=306401_1.0051.AR_99.1").status_code == 502
+
+
+# ---------- ETAP 16: podpowiedzi przy wpisywaniu ----------
+
+from dane.uldk import Podpowiedz
+
+
+def test_podpowiedzi_z_historii_i_uldk_bez_duplikatow(client, monkeypatch):
+    with client.application.app_context():
+        mpzp_baza.zapisz_w_historii("306401_1.0051.AR_18.14", "1MN", 52.4, 16.9)
+    monkeypatch.setattr(
+        mpzp_routes,
+        "szukaj_dzialek",
+        lambda fraza: [
+            Podpowiedz("306401_1.0051.AR_18.14", "Poznań", "Jeżyce", "14"),
+            Podpowiedz("306401_1.0051.AR_22.14", "Poznań", "Jeżyce", "14"),
+        ],
+    )
+
+    dane = client.get("/mpzp/podpowiedzi?q=AR_18").get_json()
+    assert [p["id"] for p in dane["z_historii"]] == ["306401_1.0051.AR_18.14"]
+    assert [p["id"] for p in dane["z_uldk"]] == ["306401_1.0051.AR_22.14"]
+    assert dane["z_uldk"][0]["opis"] == "Poznań, obręb Jeżyce, działka 14"
+
+
+def test_podpowiedzi_pelny_identyfikator_bez_pytania_uldk(client, monkeypatch):
+    monkeypatch.setattr(mpzp_routes, "szukaj_dzialek", lambda f: pytest.fail("nie powinno pytać ULDK"))
+    dane = client.get("/mpzp/podpowiedzi?q=306401_1.0051.AR_18.14").get_json()
+    assert dane["z_uldk"] == [{"id": "306401_1.0051.AR_18.14", "opis": "identyfikator działki"}]
+
+
+def test_podpowiedzi_bez_numeru_daje_wskazowke(client, monkeypatch):
+    monkeypatch.setattr(mpzp_routes, "szukaj_dzialek", lambda f: pytest.fail("nie powinno pytać ULDK"))
+    dane = client.get("/mpzp/podpowiedzi?q=Jeżyce").get_json()
+    assert "numer" in dane["wskazowka"]
+    assert client.get("/mpzp/podpowiedzi?q=Je").get_json() == {"z_historii": [], "z_uldk": []}
+
+
+def test_podpowiedzi_blad_uldk(client, monkeypatch):
+    def podnies(f):
+        raise BladULDK("Błąd połączenia z ULDK: timeout")
+
+    monkeypatch.setattr(mpzp_routes, "szukaj_dzialek", podnies)
+    odpowiedz = client.get("/mpzp/podpowiedzi?q=Jeżyce 14")
+    assert odpowiedz.status_code == 502
+    assert "ULDK" in odpowiedz.get_json()["blad"]

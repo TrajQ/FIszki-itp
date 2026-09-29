@@ -86,6 +86,71 @@ def znajdz_dzialke_po_id(dzialka_id: str) -> Dzialka | None:
     return _sparsuj_odpowiedz(odpowiedz.text)
 
 
+@dataclass
+class Podpowiedz:
+    """Działka znaleziona po nazwie obrębu i numerze — bez geometrii,
+    bo geometrię pobieramy dopiero dla wybranej (GetParcelById)."""
+
+    id: str
+    gmina: str
+    obreb: str
+    numer: str
+
+
+MAKS_PODPOWIEDZI = 15
+
+
+def szukaj_dzialek(fraza: str) -> list[Podpowiedz]:
+    """Działki pasujące do „<obręb> <numer>” (np. „Jeżyce 18/14”) albo
+    pełnego identyfikatora — ULDK GetParcelByIdOrNr.
+
+    Zwraca pustą listę, gdy nic nie pasuje; BladULDK przy błędzie sieci.
+    """
+    fraza = " ".join(fraza.split())
+    try:
+        odpowiedz = requests.get(
+            URL_ULDK,
+            params={
+                "request": "GetParcelByIdOrNr",
+                "id": fraza,
+                "result": "id,commune,region,parcel",
+            },
+            timeout=10,
+        )
+        odpowiedz.raise_for_status()
+    except requests.RequestException as e:
+        raise BladULDK(f"Błąd połączenia z ULDK: {e}") from e
+
+    return _sparsuj_podpowiedzi(odpowiedz.text)
+
+
+def _sparsuj_podpowiedzi(tekst: str) -> list[Podpowiedz]:
+    """Pierwsza linia to status: liczba ujemna = brak wyników albo błąd,
+    „0” albo liczba znalezionych działek = dalej po jednej działce w linii
+    (pola rozdzielone „|” w kolejności: id, gmina, obręb, numer)."""
+    linie = [l.strip() for l in tekst.strip().splitlines() if l.strip()]
+    if not linie:
+        raise BladULDK("Pusta odpowiedź ULDK.")
+
+    status = linie[0].split()[0]
+    if status.startswith("-1"):
+        return []
+    if not status.lstrip("-").isdigit():
+        raise BladULDK(f"Nieoczekiwany format odpowiedzi ULDK: {linie[0]}")
+    if int(status) < 0:
+        raise BladULDK(f"ULDK zwrócił błąd: {tekst.strip()}")
+
+    wyniki = []
+    for linia in linie[1:]:
+        pola = linia.split("|")
+        if len(pola) < 4 or "_" not in pola[0]:
+            continue
+        wyniki.append(Podpowiedz(id=pola[0], gmina=pola[1], obreb=pola[2], numer=pola[3]))
+        if len(wyniki) >= MAKS_PODPOWIEDZI:
+            break
+    return wyniki
+
+
 def _sparsuj_odpowiedz(tekst: str) -> Dzialka | None:
     linie = tekst.strip().splitlines()
     if not linie:

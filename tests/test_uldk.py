@@ -84,3 +84,41 @@ def test_dzialka_po_id_zly_format(monkeypatch):
     for zly in ["", "18/14", "Poznań 18/14", "30640_1.0051.1"]:
         with pytest.raises(ValueError):
             uldk.znajdz_dzialke_po_id(zly)
+
+
+# ---------- ETAP 16: wyszukiwanie po obrębie i numerze ----------
+
+
+def test_szukaj_dzialek_wiele_wynikow(monkeypatch):
+    zapytania = []
+    tekst = (
+        "2\n"
+        "306401_1.0051.AR_18.14|Poznań|Jeżyce|14\n"
+        "306401_1.0051.AR_22.14|Poznań|Jeżyce|14\n"
+    )
+
+    def falszywy_get(url, params, timeout):
+        zapytania.append(params)
+        return _FejkowaOdpowiedz(tekst)
+
+    monkeypatch.setattr(uldk.requests, "get", falszywy_get)
+    wyniki = uldk.szukaj_dzialek("  Jeżyce   14 ")
+
+    assert [w.id for w in wyniki] == ["306401_1.0051.AR_18.14", "306401_1.0051.AR_22.14"]
+    assert wyniki[0].obreb == "Jeżyce" and wyniki[0].numer == "14" and wyniki[0].gmina == "Poznań"
+    assert zapytania[0]["request"] == "GetParcelByIdOrNr"
+    assert zapytania[0]["id"] == "Jeżyce 14"  # nadmiarowe spacje usunięte
+
+
+def test_szukaj_dzialek_status_zero_i_brak_wynikow(monkeypatch):
+    monkeypatch.setattr(uldk.requests, "get", lambda *a, **k: _FejkowaOdpowiedz("0\n306401_1.0051.AR_18.14|Poznań|Jeżyce|14"))
+    assert len(uldk.szukaj_dzialek("Jeżyce 14")) == 1
+
+    monkeypatch.setattr(uldk.requests, "get", lambda *a, **k: _FejkowaOdpowiedz("-1 brak wyników"))
+    assert uldk.szukaj_dzialek("Nigdzie 1") == []
+
+
+def test_szukaj_dzialek_limit(monkeypatch):
+    linie = "\n".join(f"306401_1.0051.{i}|Poznań|Jeżyce|{i}" for i in range(40))
+    monkeypatch.setattr(uldk.requests, "get", lambda *a, **k: _FejkowaOdpowiedz(f"40\n{linie}"))
+    assert len(uldk.szukaj_dzialek("Jeżyce 1")) == uldk.MAKS_PODPOWIEDZI

@@ -12,7 +12,7 @@
 <div class="naglowek-strony">
     <div>
         <h1>Działka i przeznaczenie</h1>
-        <p>Kliknij punkt na mapie albo wyszukaj działkę po identyfikatorze. Gmina pilotażowa: Poznań.</p>
+        <p>Kliknij punkt na mapie albo wpisz obręb i numer działki — podpowiedzi pojawią się same. Gmina pilotażowa: Poznań.</p>
     </div>
     <button id="przycisk-odswiez" type="button" class="przycisk--drugi">Odśwież dane gminy</button>
 </div>
@@ -21,8 +21,10 @@
     <div id="mapa" class="karta"></div>
     <aside class="panel-boczny">
         <form id="szukaj-dzialki" class="karta szukaj-dzialki">
-            <input id="pole-id-dzialki" type="search" placeholder="Identyfikator działki, np. 306401_1.0051.AR_18.14" autocomplete="off">
+            <input id="pole-id-dzialki" type="search" placeholder="Obręb i numer działki, np. Jeżyce 18/14"
+                   autocomplete="off" role="combobox" aria-expanded="false" aria-controls="podpowiedzi-dzialek">
             <button type="submit">Szukaj</button>
+            <ul id="podpowiedzi-dzialek" class="podpowiedzi-dzialek" role="listbox" hidden></ul>
         </form>
         <section id="panel-wyniku" class="karta">
             <p class="pusty-stan">Kliknij punkt na mapie albo wpisz identyfikator działki.</p>
@@ -41,6 +43,7 @@
     const URL_ODSWIEZ = "{{ url_for('mpzp.odswiez') }}";
     const URL_DZIALKA = "{{ url_for('mpzp.dzialka_po_id') }}";
     const URL_HISTORIA = "{{ url_for('mpzp.lista_historii') }}";
+    const URL_PODPOWIEDZI = "{{ url_for('mpzp.podpowiedzi') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('mpzp.static', filename='mpzp.js') }}"></script>
