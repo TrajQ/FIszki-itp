@@ -13,6 +13,8 @@ import requests
 from shapely import wkt as shapely_wkt
 from shapely.geometry.base import BaseGeometry
 
+from dane.siec import opis_bledu_sieci
+
 URL_ULDK = "https://uldk.gugik.gov.pl/service.php"
 
 
@@ -46,7 +48,7 @@ def znajdz_dzialke(lat: float, lon: float) -> Dzialka | None:
         )
         odpowiedz.raise_for_status()
     except requests.RequestException as e:
-        raise BladULDK(f"Błąd połączenia z ULDK: {e}") from e
+        raise BladULDK(f"Błąd połączenia z ULDK: {opis_bledu_sieci(e)}.") from e
 
     return _sparsuj_odpowiedz(odpowiedz.text)
 
@@ -81,7 +83,7 @@ def znajdz_dzialke_po_id(dzialka_id: str) -> Dzialka | None:
         )
         odpowiedz.raise_for_status()
     except requests.RequestException as e:
-        raise BladULDK(f"Błąd połączenia z ULDK: {e}") from e
+        raise BladULDK(f"Błąd połączenia z ULDK: {opis_bledu_sieci(e)}.") from e
 
     return _sparsuj_odpowiedz(odpowiedz.text)
 
@@ -119,7 +121,7 @@ def szukaj_dzialek(fraza: str) -> list[Podpowiedz]:
         )
         odpowiedz.raise_for_status()
     except requests.RequestException as e:
-        raise BladULDK(f"Błąd połączenia z ULDK: {e}") from e
+        raise BladULDK(f"Błąd połączenia z ULDK: {opis_bledu_sieci(e)}.") from e
 
     return _sparsuj_podpowiedzi(odpowiedz.text)
 

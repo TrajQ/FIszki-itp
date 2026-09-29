@@ -119,7 +119,7 @@ przyciskZaproponuj.addEventListener("click", async () => {
         });
         const dane = await odpowiedz.json();
         if (!odpowiedz.ok || dane.blad) {
-            statusGemini.textContent = `Gemini nie odpowiedział: ${dane.blad || "nieznany błąd"}. Uzupełnij ręcznie.`;
+            statusGemini.textContent = `Gemini nie odpowiedział: ${(dane.blad || "nieznany błąd").replace(/\.+$/, "")}. Uzupełnij ręcznie.`;
         } else {
             polePytanie.value = dane.pytanie;
             poleOdpowiedz.value = dane.odpowiedz;

@@ -501,3 +501,18 @@ liczbę zapytań do ULDK.
 - Własna baza działek do wyszukiwania lokalnego — odrzucone: miliony
   rekordów i ich aktualizacja; ULDK robi to po stronie GUGiK.
 - Zapytanie przy każdym znaku — odrzucone: obciąża usługę publiczną.
+
+## D-024 — Praca trafia na `main`
+Data: 2026-09-29
+
+**Decyzja:** `main` jest gałęzią, z której autor uruchamia aplikację;
+zamknięte ETAPy są na nią przenoszone (fast-forward), a nie tylko na
+gałąź roboczą.
+
+**Uzasadnienie:** Autor aktualizuje projekt przez `git pull` na `main`
+i przez to przez wiele ETAPów uruchamiał wersję z ETAPu 3 („nic nie
+działa”, stary wygląd). Jedna gałąź do uruchamiania usuwa tę pułapkę.
+
+**Odrzucone alternatywy:**
+- Instrukcja „przełącz się na gałąź roboczą” — odrzucone: łatwo o tym
+  zapomnieć, a nazwa gałęzi jest nieczytelna.

@@ -18,6 +18,8 @@ import requests
 from shapely.geometry import MultiPolygon, Polygon, mapping
 from shapely.ops import unary_union
 
+from dane.siec import opis_bledu_sieci
+
 URL_PRG = "https://mapy.geoportal.gov.pl/wss/service/PZGIK/PRG/WFS/AdministrativeBoundaries"
 WARSTWA_GMIN = "ms:A03_Granice_gmin"
 POLE_TERYT = "JPT_KOD_JE"
@@ -72,7 +74,7 @@ def _pobierz_gml(teryt_wojewodztwa: str) -> str:
         )
         odpowiedz.raise_for_status()
     except requests.RequestException as e:
-        raise BladGranic(f"Błąd połączenia z PRG (geoportal.gov.pl): {e}") from e
+        raise BladGranic(f"Błąd połączenia z PRG (geoportal.gov.pl): {opis_bledu_sieci(e)}.") from e
     return odpowiedz.text
 
 

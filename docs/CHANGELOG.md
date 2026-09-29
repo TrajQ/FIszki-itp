@@ -135,3 +135,9 @@
 - MPZP: wyszukiwanie działki po nazwie obrębu i numerze z listą
   podpowiedzi (`/mpzp/podpowiedzi`, ULDK `GetParcelByIdOrNr`).
 - Dodano `DECISIONS.md` D-023 i testy.
+
+## ETAP 17 — 2026-09-29
+- `main` zaktualizowany do najnowszej wersji (wcześniej zatrzymany na
+  ETAPie 3).
+- Czytelne komunikaty o błędach sieci (`dane/siec.py`).
+- Poprawiono podwójną kropkę w komunikacie Gemini.

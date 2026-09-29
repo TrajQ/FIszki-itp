@@ -23,6 +23,7 @@ from dataclasses import dataclass
 import requests
 
 from config import Config
+from dane.siec import opis_bledu_sieci
 
 URL_BDL = "https://bdl.stat.gov.pl/api/v1"
 ROZMIAR_STRONY = 100
@@ -166,6 +167,6 @@ def _pobierz(sciezka: str, parametry: dict) -> dict:
         odpowiedz.raise_for_status()
         return odpowiedz.json()
     except requests.RequestException as e:
-        raise BladBDL(f"Błąd połączenia z API BDL: {e}") from e
+        raise BladBDL(f"Błąd połączenia z API BDL (GUS): {opis_bledu_sieci(e)}.") from e
     except ValueError as e:
         raise BladBDL(f"API BDL zwróciło niepoprawny JSON: {e}") from e

@@ -122,3 +122,17 @@ def test_szukaj_dzialek_limit(monkeypatch):
     linie = "\n".join(f"306401_1.0051.{i}|Poznań|Jeżyce|{i}" for i in range(40))
     monkeypatch.setattr(uldk.requests, "get", lambda *a, **k: _FejkowaOdpowiedz(f"40\n{linie}"))
     assert len(uldk.szukaj_dzialek("Jeżyce 1")) == uldk.MAKS_PODPOWIEDZI
+
+
+def test_blad_sieci_ma_czytelny_komunikat(monkeypatch):
+    import pytest
+    import requests
+
+    def brak_sieci(*a, **k):
+        raise requests.ConnectionError("HTTPSConnectionPool(host='uldk.gugik.gov.pl'): Max retries exceeded (ProxyError)")
+
+    monkeypatch.setattr(uldk.requests, "get", brak_sieci)
+    with pytest.raises(uldk.BladULDK) as blad:
+        uldk.znajdz_dzialke(52.4, 16.9)
+    assert "brak połączenia z usługą" in str(blad.value)
+    assert "HTTPSConnectionPool" not in str(blad.value)

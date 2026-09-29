@@ -16,6 +16,8 @@ from shapely.geometry import MultiPolygon, Point, Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.strtree import STRtree
 
+from dane.siec import opis_bledu_sieci
+
 from .gminy import Gmina
 
 NS_GML = "{http://www.opengis.net/gml/3.2}"
@@ -98,7 +100,7 @@ def _pobierz_strone(gmina: Gmina, start_index: int) -> str:
         )
         odpowiedz.raise_for_status()
     except requests.RequestException as e:
-        raise BladWFS(f"Błąd połączenia z WFS gminy {gmina.nazwa}: {e}") from e
+        raise BladWFS(f"Błąd połączenia z WFS gminy {gmina.nazwa}: {opis_bledu_sieci(e)}.") from e
     return odpowiedz.text
 
 

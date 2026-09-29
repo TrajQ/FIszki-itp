@@ -471,3 +471,30 @@ komunikat z listy.
 
 Testy: 146 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap16_20260929.zip
+
+## ETAP 17 — Połączenie z main, test „od zera”, czytelne błędy sieci
+Data: 2026-09-29
+Status: zamknięty
+
+Diagnoza zgłoszenia „brzydkie strony, fiszki nie działają”: gałąź `main`
+na GitHubie kończyła się na ETAPie 3 (commit „tak”) — autor uruchamiał
+starą wersję. Cała praca z ETAPów 4–16 była na gałęzi
+`claude/vibrant-knuth-1b5loa`.
+
+Zrobione:
+- Za zgodą autora `main` przesunięty (fast-forward, bez konfliktów) do
+  najnowszej wersji — zwykły `git pull` daje teraz wszystko
+- Test „jak u autora”: świeży klon `main` z GitHuba, czyste venv, instalacja
+  `requirements.txt`, start przez `uruchom.sh` (sam tworzy `.env`), pełny
+  scenariusz w Chromium na 6-stronicowym PDF-ie z polskimi znakami:
+  wgranie, wyświetlenie, zaznaczenie tekstu, szkic (bez klucza —
+  czytelny komunikat), zapis fiszki, zmiana strony, „pokaż w źródle”,
+  powtórka — wszystko działa; 146 testów zielonych w czystym środowisku
+- `dane/siec.py`: `opis_bledu_sieci` — zamiast „HTTPSConnectionPool…
+  ProxyError…” jedno zdanie po polsku (brak połączenia / przekroczony
+  czas / błąd usługi); używane w BDL, ULDK, PRG i WFS
+- Poprawka: podwójna kropka w komunikacie „Gemini nie odpowiedział”
+- Test: 1 nowy
+
+Testy: 147 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap17_20260929.zip
