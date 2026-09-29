@@ -509,3 +509,63 @@ button.przelacznik__opcja--aktywna:hover {
     margin: 0;
     font-size: 0.78rem;
 }
+
+/* ---------- Zróżnicowanie i histogram ---------- */
+
+.rozklad {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    gap: 32px;
+    margin-bottom: 24px;
+}
+
+.rozklad h3 {
+    margin: 0;
+}
+
+.miary {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 16px;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.miary dt {
+    color: var(--tekst-drugi);
+}
+
+.miary dt[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
+.miary dd {
+    margin: 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.histogram {
+    position: relative;
+}
+
+.histogram__slupek {
+    fill: var(--akcent);
+    fill-opacity: 0.75;
+}
+
+.histogram__slupek:hover {
+    fill-opacity: 1;
+}
+
+.rozklad .przypis {
+    margin: 0;
+    font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+    .rozklad {
+        grid-template-columns: 1fr;
+    }
+}

@@ -706,3 +706,20 @@ stosowana wszędzie jest łatwiejsza do sprawdzenia niż osobne łatki.
 **Odrzucone alternatywy:**
 - `AbortController` do przerywania zapytań — odrzucone na teraz: więcej
   kodu, a numer zapytania wystarcza, bo serwer jest lokalny i szybki.
+
+## D-035 — Odchylenie populacyjne i skala oceny współczynnika zmienności
+Data: 2026-09-29
+
+**Decyzja:** Odchylenie standardowe liczone populacyjnie (`pstdev`), bo
+gminy województwa to cała populacja, a nie próba. Ocena współczynnika
+zmienności według stałej skali 25 / 45 / 100%. Histogram ma 10
+przedziałów równej szerokości (nie kwantylowych jak kartogram).
+
+**Uzasadnienie:** Tak liczy się i ocenia zróżnicowanie w statystyce
+społeczno-ekonomicznej na zajęciach — wyniki zgadzają się z ręcznymi
+obliczeniami studenta. Histogram o równej szerokości pokazuje kształt
+rozkładu (skośność), którego klasy kwantylowe celowo nie pokazują.
+
+**Odrzucone alternatywy:**
+- Odchylenie z próby (`stdev`) — odrzucone: to nie jest próba.
+- Indeks Theila — odłożone: Gini jest powszechniej znany na studiach.

@@ -534,3 +534,42 @@ def test_endpoint_korelacji(client, monkeypatch):
 def test_korelacja_czytelny_blad_bez_zmienna2(client):
     odp = client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=abc")
     assert odp.status_code == 400 and odp.get_json()["blad"] == "Wymagany parametr zmienna2 (liczba)."
+
+
+# ---------- ETAP 28: miary zróżnicowania i histogram ----------
+
+
+def test_gini_wartosci_wzorcowe():
+    assert statystyki.gini([5, 5, 5, 5]) == pytest.approx(0)
+    assert statystyki.gini([0, 0, 0, 10]) == pytest.approx(0.75)  # maksimum dla n=4: (n−1)/n
+    assert statystyki.gini([1, 2, 3, 4]) == pytest.approx(0.25)
+
+
+def test_zroznicowanie():
+    z = statystyki.zroznicowanie([2, 4, 4, 4, 5, 5, 7, 9])
+    assert z["odchylenie_std"] == pytest.approx(2.0)  # klasyczny przykład: σ = 2
+    assert z["wspolczynnik_zmiennosci"] == pytest.approx(40.0)
+    assert z["ocena_zmiennosci"] == "przeciętne"
+    assert z["max_do_min"] == pytest.approx(4.5)
+    assert z["q1"] <= z["q3"]
+
+
+def test_zroznicowanie_przypadki_brzegowe():
+    z = statystyki.zroznicowanie([-5, 5, 10])  # ujemne: bez Giniego i max/min
+    assert "gini" not in z and "max_do_min" not in z
+    assert "wspolczynnik_zmiennosci" not in statystyki.zroznicowanie([-1, 1])  # średnia 0
+    assert statystyki.zroznicowanie([3])["odchylenie_std"] == 0
+
+
+def test_histogram_przedzialy():
+    h = statystyki.histogram([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], przedzialy=5)
+    assert [p["liczba"] for p in h] == [2, 2, 2, 2, 3]  # maksimum w ostatnim, domkniętym przedziale
+    assert h[0]["od"] == 0 and h[-1]["do"] == 10
+    assert statystyki.histogram([7, 7, 7]) == [{"od": 7, "do": 7, "liczba": 3}]
+
+
+def test_fakty_opisu_zawieraja_cv_i_gini():
+    stat = statystyki.statystyki(GMINY)
+    fakty = statystyki.fakty_do_opisu({"nazwa": "x", "jednostka": "osoba"}, 2023, "małopolskie", stat)
+    assert any(f.startswith("Współczynnik zmienności") for f in fakty)
+    assert any(f.startswith("Współczynnik Giniego") for f in fakty)

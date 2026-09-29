@@ -195,3 +195,8 @@
 ## ETAP 27 — 2026-09-29
 - Naprawiono 6 błędów z przeglądu ETAPów 23–26 (korelacja, kalkulator
   zabudowy, quiz).
+
+## ETAP 28 — 2026-09-29
+- Atlas: miary zróżnicowania (σ, współczynnik zmienności, kwartyle,
+  max/min, Gini) i histogram rozkładu gmin.
+- Dodano `DECISIONS.md` D-035 i testy.

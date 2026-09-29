@@ -269,10 +269,93 @@
     });
 
     function odswiezWidok() {
+        pokazRozklad();
         pokazStatystyki();
         pokazRanking();
         rysujKartogram();
         pokazLegende();
+    }
+
+    // ---------- zróżnicowanie i histogram (wartości roku badanego) ----------
+
+    function pokazRozklad() {
+        const s = biezaceDane.statystyki;
+        const z = s.zroznicowanie || {};
+        const miary = document.getElementById("miary");
+        miary.replaceChildren();
+        const dodaj = (nazwa, wartosc, opis) => {
+            if (wartosc === undefined || wartosc === null) return;
+            const dt = element("dt", "", nazwa);
+            if (opis) dt.title = opis;
+            miary.append(dt, element("dd", "", wartosc));
+        };
+        const jedn = biezaceDane.zmienna.jednostka ? ` ${biezaceDane.zmienna.jednostka}` : "";
+        dodaj("Średnia", formatLiczby.format(s.srednia) + jedn);
+        dodaj("Mediana", formatLiczby.format(s.mediana) + jedn);
+        dodaj("Odchylenie standardowe", formatLiczby.format(z.odchylenie_std) + jedn);
+        if (z.wspolczynnik_zmiennosci !== undefined) {
+            dodaj("Współczynnik zmienności", `${formatLiczby.format(z.wspolczynnik_zmiennosci)}% — ${z.ocena_zmiennosci}`,
+                "odchylenie standardowe / średnia; < 25% słabe, 25–45% przeciętne, 45–100% silne, > 100% bardzo silne");
+        }
+        if (z.q1 !== undefined) {
+            dodaj("Kwartyle Q1 – Q3", `${formatLiczby.format(z.q1)} – ${formatLiczby.format(z.q3)}${jedn}`, "połowa gmin mieści się w tym przedziale");
+            dodaj("Rozstęp kwartylowy", formatLiczby.format(z.rozstep_kwartylowy) + jedn);
+        }
+        if (z.max_do_min !== undefined) dodaj("Maksimum / minimum", `${formatLiczby.format(z.max_do_min)} ×`);
+        if (z.gini !== undefined) dodaj("Współczynnik Giniego", formatLiczby.format(z.gini));
+        rysujHistogram(s.histogram || [], s.mediana);
+    }
+
+    function rysujHistogram(przedzialy, mediana) {
+        const NS = "http://www.w3.org/2000/svg";
+        const kontener = document.getElementById("histogram");
+        kontener.replaceChildren();
+        if (!przedzialy.length) return;
+        const SZ = 420, WY = 200, M = { g: 12, p: 8, d: 30, l: 30 };
+        const maks = Math.max(...przedzialy.map((p) => p.liczba)) || 1;
+        const lo = przedzialy[0].od, hi = przedzialy[przedzialy.length - 1].do;
+        const x = (v) => M.l + (hi === lo ? 0.5 : (v - lo) / (hi - lo)) * (SZ - M.l - M.p);
+        const y = (n) => M.g + (1 - n / maks) * (WY - M.g - M.d);
+        const s = document.createElementNS(NS, "svg");
+        s.setAttribute("viewBox", `0 0 ${SZ} ${WY}`);
+        s.setAttribute("class", "wykres");
+        s.setAttribute("role", "img");
+        const nowy = (nazwa, atr) => {
+            const e = document.createElementNS(NS, nazwa);
+            for (const [k, v] of Object.entries(atr)) e.setAttribute(k, v);
+            s.appendChild(e);
+            return e;
+        };
+        nowy("title", {}).textContent = "Histogram: liczba gmin w przedziałach wartości";
+        for (const n of [0, Math.round(maks / 2), maks]) {
+            nowy("line", { x1: M.l, x2: SZ - M.p, y1: y(n), y2: y(n), class: "wykres__siatka" });
+            nowy("text", { x: M.l - 6, y: y(n) + 3, class: "wykres__os", "text-anchor": "end" }).textContent = n;
+        }
+        const dymek = element("div", "wykres__dymek");
+        dymek.hidden = true;
+        for (const p of przedzialy) {
+            // 2 px odstępu między słupkami, zaokrąglone tylko u góry.
+            const x0 = x(p.od) + 1, szer = Math.max(1, x(p.do) - x(p.od) - 2);
+            const slupek = nowy("rect", {
+                x: x0, y: y(p.liczba), width: szer, height: Math.max(0, WY - M.d - y(p.liczba)), rx: 3, class: "histogram__slupek",
+            });
+            slupek.addEventListener("mouseenter", () => {
+                const r = s.getBoundingClientRect();
+                dymek.textContent = `${formatLiczby.format(p.od)} – ${formatLiczby.format(p.do)}: ${p.liczba} gmin`;
+                dymek.hidden = false;
+                dymek.style.left = `${((x0 + szer / 2) / SZ) * r.width}px`;
+                dymek.style.top = `${(y(p.liczba) / WY) * r.height - 34}px`;
+            });
+            slupek.addEventListener("mouseleave", () => (dymek.hidden = true));
+        }
+        const fmt = new Intl.NumberFormat("pl-PL", { notation: "compact", maximumFractionDigits: 1 });
+        nowy("text", { x: M.l, y: WY - 10, class: "wykres__os" }).textContent = fmt.format(lo);
+        nowy("text", { x: SZ - M.p, y: WY - 10, class: "wykres__os", "text-anchor": "end" }).textContent = fmt.format(hi);
+        if (mediana !== undefined) {
+            nowy("line", { x1: x(mediana), x2: x(mediana), y1: M.g, y2: WY - M.d, class: "wykres__odniesienie" });
+            nowy("text", { x: x(mediana) + 4, y: M.g + 8, class: "wykres__os" }).textContent = "mediana";
+        }
+        kontener.append(s, dymek);
     }
 
     // ---------- kafelki ----------

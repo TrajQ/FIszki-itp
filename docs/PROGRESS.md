@@ -743,3 +743,28 @@ Przegląd wykazał 6 problemów — wszystkie naprawione:
 
 Testy: 199 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap27_20260929.zip
+
+## ETAP 28 — Atlas: miary zróżnicowania i histogram
+Data: 2026-09-29
+Status: zamknięty
+
+Analiza potrzeb: statystyka i geografia społeczno-ekonomiczna — ocena
+zróżnicowania zjawiska między gminami.
+
+Zrobione:
+- `atlas/statystyki.py`: `zroznicowanie` — odchylenie standardowe
+  (populacyjne — gminy to cała populacja województwa), współczynnik
+  zmienności z oceną (< 25% słabe, 25–45% przeciętne, 45–100% silne,
+  > 100% bardzo silne), kwartyle i rozstęp kwartylowy, relacja max/min,
+  współczynnik Giniego (dla wartości nieujemnych); `histogram` — 10
+  przedziałów równej szerokości; przypadki brzegowe (średnia 0, wartości
+  ujemne, jedna gmina, wszystkie równe)
+- CV i Gini trafiają do faktów dla opisu Gemini (strażnik liczb działa)
+- Karta „Zróżnicowanie / Rozkład gmin”: miary z objaśnieniami w dymkach,
+  histogram SVG (słupki z odstępem 2 px, dymek z przedziałem i liczbą
+  gmin, linia mediany)
+- Testy: 5 nowych (m.in. σ = 2 dla klasycznego przykładu, Gini 0,75 dla
+  [0,0,0,10]); `DECISIONS.md`: D-035
+
+Testy: 204 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap28_20260929.zip

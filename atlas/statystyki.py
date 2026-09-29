@@ -24,7 +24,61 @@ def statystyki(wartosci: list[dict]) -> dict:
         "mediana": statistics.median(liczby),
         "najnizsze": [_para(w) for w in posortowane[:3]],
         "najwyzsze": [_para(w) for w in reversed(posortowane[-3:])],
+        "zroznicowanie": zroznicowanie(liczby),
+        "histogram": histogram(liczby),
     }
+
+
+# ---------- Miary zróżnicowania (ETAP 28) ----------
+
+# Ocena współczynnika zmienności — skala stosowana w polskich
+# podręcznikach statystyki społeczno-ekonomicznej.
+PROGI_CV = [(25, "słabe"), (45, "przeciętne"), (100, "silne")]
+LICZBA_PRZEDZIALOW = 10
+
+
+def zroznicowanie(liczby: list[float]) -> dict:
+    """Miary zróżnicowania wartości w gminach.
+
+    Gminy traktujemy jako całą populację województwa (nie próbę), dlatego
+    odchylenie standardowe jest populacyjne (pstdev).
+    """
+    wynik = {"odchylenie_std": statistics.pstdev(liczby) if len(liczby) > 1 else 0.0}
+    if len(liczby) >= 4:
+        q1, _, q3 = statistics.quantiles(liczby, n=4, method="inclusive")
+        wynik.update(q1=q1, q3=q3, rozstep_kwartylowy=q3 - q1)
+    srednia = statistics.fmean(liczby)
+    if srednia != 0:
+        cv = 100 * wynik["odchylenie_std"] / abs(srednia)
+        wynik["wspolczynnik_zmiennosci"] = cv
+        wynik["ocena_zmiennosci"] = next((o for prog, o in PROGI_CV if cv < prog), "bardzo silne")
+    if min(liczby) > 0:
+        wynik["max_do_min"] = max(liczby) / min(liczby)
+    if min(liczby) >= 0 and sum(liczby) > 0:
+        wynik["gini"] = gini(liczby)
+    return wynik
+
+
+def gini(liczby: list[float]) -> float:
+    """Współczynnik Giniego (0 = równy rozkład, 1 = wszystko w jednej gminie).
+
+    Wzór na posortowanych wartościach: G = Σ (2i − n − 1)·x_i / (n · Σx).
+    """
+    x = sorted(liczby)
+    n = len(x)
+    return sum((2 * (i + 1) - n - 1) * v for i, v in enumerate(x)) / (n * sum(x))
+
+
+def histogram(liczby: list[float], przedzialy: int = LICZBA_PRZEDZIALOW) -> list[dict]:
+    """Liczba gmin w przedziałach równej szerokości (ostatni domknięty)."""
+    lo, hi = min(liczby), max(liczby)
+    if lo == hi:
+        return [{"od": lo, "do": hi, "liczba": len(liczby)}]
+    szer = (hi - lo) / przedzialy
+    liczniki = [0] * przedzialy
+    for v in liczby:
+        liczniki[min(int((v - lo) / szer), przedzialy - 1)] += 1
+    return [{"od": lo + i * szer, "do": lo + (i + 1) * szer, "liczba": n} for i, n in enumerate(liczniki)]
 
 
 def progi_klas(liczby: list[float], liczba_klas: int = LICZBA_KLAS) -> list[float]:
@@ -69,6 +123,7 @@ def fakty_do_opisu(zmienna: dict, rok: int, wojewodztwo: str, stat: dict) -> lis
         f"Wartość najniższa: {stat['min']['nazwa']} — {z_jednostka(stat['min']['wartosc'])}",
         f"Mediana: {z_jednostka(stat['mediana'])}",
         f"Średnia arytmetyczna (nieważona) gmin: {z_jednostka(stat['srednia'])}",
+        *_fakty_zroznicowania(stat.get("zroznicowanie", {})),
         "3 gminy o najwyższej wartości: "
         + "; ".join(f"{w['nazwa']} ({z_jednostka(w['wartosc'])})" for w in stat["najwyzsze"]),
         "3 gminy o najniższej wartości: "
@@ -227,6 +282,18 @@ def korelacja(gminy_x: list[dict], gminy_y: list[dict]) -> dict:
         opis=opis_sily(r),
     )
     return wynik
+
+
+def _fakty_zroznicowania(z: dict) -> list[str]:
+    fakty = []
+    if "wspolczynnik_zmiennosci" in z:
+        fakty.append(
+            f"Współczynnik zmienności: {format_liczby(z['wspolczynnik_zmiennosci'])}% "
+            f"(zróżnicowanie {z['ocena_zmiennosci']})"
+        )
+    if "gini" in z:
+        fakty.append(f"Współczynnik Giniego: {format_liczby(z['gini'])}")
+    return fakty
 
 
 def _para(w: dict) -> dict:
