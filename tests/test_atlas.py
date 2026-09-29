@@ -366,3 +366,32 @@ def test_opis_z_porownaniem_dostaje_fakty_zmiany(client, monkeypatch):
         content_type="application/json",
     )
     assert "Porównanie z rokiem: 2013" in otrzymane
+
+
+# ---------- ETAP 15: poprawki z przeglądu kodu ----------
+
+
+def test_bez_spadkow_nie_ma_najwiekszego_spadku():
+    teraz = [{"teryt": "1", "nazwa": "A", "wartosc": 110.0}, {"teryt": "2", "nazwa": "B", "wartosc": 101.0}]
+    wtedy = [{"teryt": "1", "nazwa": "A", "wartosc": 100.0}, {"teryt": "2", "nazwa": "B", "wartosc": 100.0}]
+    s = statystyki.statystyki_zmiany(statystyki.porownaj(teraz, wtedy))
+    assert s["najwiekszy_wzrost"]["nazwa"] == "A"
+    assert s["najwiekszy_spadek"] is None
+
+    fakty = statystyki.fakty_zmiany(2013, 2023, s)
+    assert not any("spadek procentowy" in f for f in fakty)
+    assert any("wzrost procentowy: A" in f for f in fakty)
+
+
+def test_pusty_wynik_bdl_nie_trafia_do_cache(client, monkeypatch):
+    wywolania = []
+
+    def pusto_potem_dane(zmienna_id, rok, woj):
+        wywolania.append(rok)
+        if len(wywolania) == 1:
+            return []  # GUS jeszcze nie opublikował
+        return [bdl.Wartosc("011212161011", "1261011", "Kraków", 1.0)]
+
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", pusto_potem_dane)
+    assert client.get(f"/atlas/dane?{ZAPYTANIE}").get_json()["gminy"] == []
+    assert len(client.get(f"/atlas/dane?{ZAPYTANIE}").get_json()["gminy"]) == 1

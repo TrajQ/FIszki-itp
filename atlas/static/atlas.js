@@ -281,10 +281,11 @@
                 kafelek("Spadek", String(s.spadki ?? 0), { jednostka: "gmin", klasaWartosci: "wartosc-minus" })
             );
             if (s.mediana_zmiany_proc !== undefined) {
+                const opisZmiany = (g, brak) => (g ? `${g.nazwa} · ${procent(g.zmiana_proc)}` : brak);
                 kafelkiEl.append(
                     kafelek(`Mediana zmiany ${p.rok_bazowy}→${biezaceDane.rok}`, procent(s.mediana_zmiany_proc), { szeroki: true }),
-                    kafelek("Największy wzrost", `${s.najwiekszy_wzrost.nazwa} · ${procent(s.najwiekszy_wzrost.zmiana_proc)}`, { szeroki: true }),
-                    kafelek("Największy spadek", `${s.najwiekszy_spadek.nazwa} · ${procent(s.najwiekszy_spadek.zmiana_proc)}`, { szeroki: true })
+                    kafelek("Największy wzrost", opisZmiany(s.najwiekszy_wzrost, "żadna gmina nie urosła"), { szeroki: true }),
+                    kafelek("Największy spadek", opisZmiany(s.najwiekszy_spadek, "żadna gmina nie spadła"), { szeroki: true })
                 );
             }
             return;

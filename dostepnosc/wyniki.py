@@ -50,6 +50,11 @@ def wczytaj_csv(tekst: str) -> dict:
         raise BladWynikow(f"Brak kolumny „{KOLUMNA_H3}” z indeksami komórek H3.")
     indeks_h3 = naglowek_male.index(KOLUMNA_H3)
     nazwy_kolumn = [n for i, n in enumerate(naglowek) if i != indeks_h3 and n]
+    powtorzone = sorted({n for n in nazwy_kolumn if nazwy_kolumn.count(n) > 1})
+    if powtorzone:
+        # Wartości dwóch kolumn o tej samej nazwie trafiałyby do jednej listy
+        # i rozjechały się z komórkami — lepiej odrzucić plik.
+        raise BladWynikow(f"Powtórzone nazwy kolumn: {', '.join(powtorzone)}.")
     if not nazwy_kolumn:
         raise BladWynikow("Poza kolumną h3 plik nie ma żadnych kolumn z wartościami.")
 
@@ -180,6 +185,9 @@ def analiza_laczna(wyniki: dict) -> dict:
         czas, kolumna = max(czasy)
         laczne.append(czas)
         najdalsze[kolumna] += 1
+
+    if all(w is None for w in laczne):
+        raise BladWynikow("Żadna komórka nie ma wartości we wszystkich kolumnach czasu.")
 
     kopia = {**wyniki, "kolumny": {NAZWA_LACZNEGO: laczne}}
     analiza = analiza_kolumny(kopia, NAZWA_LACZNEGO)

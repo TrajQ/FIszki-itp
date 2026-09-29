@@ -88,6 +88,8 @@ def wgraj():
     nazwa = secure_filename(plik.filename)
     if not nazwa.lower().endswith(".csv"):
         return redirect(url_for("dostepnosc.index", blad="Dozwolone są tylko pliki CSV."))
+    # „Wyniki.CSV” → „Wyniki.csv”: lista plików i odczyt szukają małego „.csv”.
+    nazwa = nazwa[: -len(".csv")] + ".csv"
     if nazwa == PLIK_PRZYKLADU:
         nazwa = "wlasny_" + nazwa
 

@@ -192,3 +192,31 @@ def test_endpoint_laczny(client):
     wgraj(client, csv_testowy())
     assert client.get("/dostepnosc/plik/moje.csv").get_json()["laczny_dostepny"] is False
     assert client.get("/dostepnosc/plik/moje.csv/laczny").status_code == 422
+
+
+# ---------- ETAP 15: poprawki z przeglądu kodu ----------
+
+
+def test_wgranie_pliku_z_wielkimi_literami_w_rozszerzeniu(client):
+    odpowiedz = wgraj(client, csv_testowy(), nazwa="Wyniki.CSV")
+    assert "plik=Wyniki.csv" in odpowiedz.headers["Location"]
+    assert client.get("/dostepnosc/plik/Wyniki.csv").status_code == 200
+    assert "Wyniki.csv" in client.get("/dostepnosc/").get_data(as_text=True)
+    assert client.post("/dostepnosc/plik/Wyniki.csv/usun").status_code == 302
+
+
+def test_powtorzone_nazwy_kolumn_odrzucone():
+    with pytest.raises(BladWynikow, match="Powtórzone"):
+        wyniki.wczytaj_csv(f"h3,x_min,x_min\n{SRODEK},2,3")
+
+
+def test_laczny_bez_zadnej_pelnej_komorki_to_czytelny_blad(client):
+    k = SASIEDZI
+    tekst = f"h3,czas_a_min,czas_b_min\n{k[0]},3,\n{k[1]},,4"
+    with pytest.raises(BladWynikow, match="Żadna komórka"):
+        wyniki.analiza_laczna(wyniki.wczytaj_csv(tekst))
+
+    wgraj(client, tekst, nazwa="dziury.csv")
+    odpowiedz = client.get("/dostepnosc/plik/dziury.csv/laczny")
+    assert odpowiedz.status_code == 422
+    assert "Żadna komórka" in odpowiedz.get_json()["blad"]

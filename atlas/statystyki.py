@@ -117,8 +117,10 @@ def statystyki_zmiany(porownanie: list[dict]) -> dict:
         "spadki": sum(1 for g in porownanie if g["zmiana"] < 0),
         "bez_zmian": sum(1 for g in porownanie if g["zmiana"] == 0),
         "mediana_zmiany_proc": statistics.median(procenty),
-        "najwiekszy_wzrost": _para_zmiany(z_procentem[0]),
-        "najwiekszy_spadek": _para_zmiany(z_procentem[-1]),
+        # Tylko prawdziwy wzrost/spadek: gdy wszystkie gminy urosły,
+        # „największego spadku” nie ma (None), a nie „najmniejszy wzrost”.
+        "najwiekszy_wzrost": _para_zmiany(z_procentem[0]) if z_procentem[0]["zmiana_proc"] > 0 else None,
+        "najwiekszy_spadek": _para_zmiany(z_procentem[-1]) if z_procentem[-1]["zmiana_proc"] < 0 else None,
     }
 
 
@@ -126,15 +128,18 @@ def fakty_zmiany(rok_bazowy: int, rok: int, stat: dict) -> list[str]:
     if "mediana_zmiany_proc" not in stat:
         return []
     wz, sp = stat["najwiekszy_wzrost"], stat["najwiekszy_spadek"]
-    return [
+    fakty = [
         f"Porównanie z rokiem: {rok_bazowy}",
         f"Liczba gmin porównanych: {stat['liczba_gmin']}",
         f"Gminy ze wzrostem wartości od {rok_bazowy} do {rok}: {stat['wzrosty']}",
         f"Gminy ze spadkiem wartości od {rok_bazowy} do {rok}: {stat['spadki']}",
         f"Mediana zmiany procentowej: {format_liczby(stat['mediana_zmiany_proc'])}%",
-        f"Największy wzrost procentowy: {wz['nazwa']} ({format_liczby(wz['zmiana_proc'])}%)",
-        f"Największy spadek procentowy: {sp['nazwa']} ({format_liczby(sp['zmiana_proc'])}%)",
     ]
+    if wz:
+        fakty.append(f"Największy wzrost procentowy: {wz['nazwa']} ({format_liczby(wz['zmiana_proc'])}%)")
+    if sp:
+        fakty.append(f"Największy spadek procentowy: {sp['nazwa']} ({format_liczby(sp['zmiana_proc'])}%)")
+    return fakty
 
 
 def _para_zmiany(g: dict) -> dict:

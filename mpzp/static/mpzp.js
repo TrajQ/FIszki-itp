@@ -16,6 +16,10 @@
 
     let warstwaDzialki = null;
     let warstwaWydzielenia = null;
+    // Numer ostatniego zapytania: odpowiedź na starsze kliknięcie, która
+    // przyszła później, jest ignorowana (inaczej zostawiałaby na mapie
+    // wielokąty, których nie da się już usunąć).
+    let numerZapytania = 0;
 
     function wyczyscWarstwy() {
         if (warstwaDzialki) {
@@ -87,6 +91,7 @@
 
     // Wspólna obsługa odpowiedzi z /sprawdz i /dzialka.
     function obsluzOdpowiedz(dane, przyblizDoDzialki) {
+        wyczyscWarstwy();
         if (dane.dzialka) {
             warstwaDzialki = L.geoJSON(dane.dzialka.geometria, {
                 style: { color: "#0071e3", weight: 2, fillOpacity: 0.1 },
@@ -107,12 +112,18 @@
     }
 
     function zapytaj(url, przyblizDoDzialki) {
+        const numer = ++numerZapytania;
         wyczyscWarstwy();
         panelWyniku.innerHTML = "<p class=\"pusty-stan\">Sprawdzam…</p>";
         return fetch(url)
             .then((odpowiedz) => odpowiedz.json())
-            .then((dane) => obsluzOdpowiedz(dane, przyblizDoDzialki))
-            .catch(() => pokazBlad("Błąd połączenia z serwerem."));
+            .then((dane) => {
+                if (numer === numerZapytania) obsluzOdpowiedz(dane, przyblizDoDzialki);
+                else odswiezHistorie(); // starsza odpowiedź: tylko historia
+            })
+            .catch(() => {
+                if (numer === numerZapytania) pokazBlad("Błąd połączenia z serwerem.");
+            });
     }
 
     function sprawdzPunkt(lat, lon, przyblizDoDzialki) {

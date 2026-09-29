@@ -413,3 +413,33 @@ Zrobione:
 
 Testy: 134 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap14_20260929.zip
+
+## ETAP 15 — Poprawki z przeglądu kodu (ETAPy 4–14)
+Data: 2026-09-29
+Status: zamknięty
+
+Przegląd całej zmiany od ETAPu 3 wykazał 7 błędów — wszystkie naprawione,
+do każdego (poza skryptem powłoki i wyścigiem w JS, sprawdzonymi ręcznie)
+test, który go odtwarza:
+1. Dostępność: plik `Wyniki.CSV` był zapisywany, ale niewidoczny i nie do
+   otwarcia (lista i odczyt szukały małego `.csv`) → rozszerzenie
+   normalizowane przy zapisie
+2. Dostępność: wskaźnik łączny bez żadnej pełnej komórki kończył się
+   błędem 500 → czytelny komunikat (422)
+3. Dostępność: powtórzone nazwy kolumn po cichu przesuwały wartości
+   między komórkami → plik odrzucany z komunikatem
+4. MPZP: dwa szybkie kliknięcia zostawiały na mapie wielokąty nie do
+   usunięcia i pokazywały odpowiedź na starsze kliknięcie → numer
+   zapytania, starsze odpowiedzi ignorowane (sprawdzone w przeglądarce
+   z opóźnioną pierwszą odpowiedzią)
+5. Atlas: „największy spadek” był ostatnią pozycją listy nawet przy
+   samych wzrostach (i trafiał do faktów dla Gemini) → tylko prawdziwy
+   spadek/wzrost, inaczej brak (kafelek „żadna gmina nie spadła”)
+6. Atlas: pusty wynik BDL (rok jeszcze nieopublikowany) trafiał do cache
+   na 30 dni → pustych wyników nie zapisujemy
+7. `uruchom.sh`: brak linii `PORT=` w `.env` zamykał skrypt bez
+   komunikatu (`set -e` + nieudany `grep`) → `|| true` (sprawdzone:
+   serwer wstaje na domyślnym 5000)
+
+Testy: 139 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap15_20260929.zip

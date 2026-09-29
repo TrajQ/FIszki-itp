@@ -466,3 +466,18 @@ wywołania czyta się łatwiej niż mechanizm.
   powłoka znałaby schematy baz wszystkich modułów.
 - Podsumowania ładowane przez JS z osobnych endpointów — odrzucone:
   cztery dodatkowe zapytania i migotanie strony dla kilku liczb.
+
+## D-022 — Pustych odpowiedzi API nie zapamiętujemy w cache
+Data: 2026-09-29
+
+**Decyzja:** `atlas/baza.py:z_cache` nie zapisuje pustego wyniku (pusta
+lista / brak danych) — takie zapytanie trafi do BDL ponownie.
+
+**Uzasadnienie:** Pusty wynik najczęściej znaczy „GUS jeszcze nie
+opublikował danych za ten rok”, a nie „tych danych nigdy nie będzie”.
+Zapamiętanie go na 30 dni ukrywałoby nowe dane. Koszt: kilka
+dodatkowych zapytań o lata bez danych.
+
+**Odrzucone alternatywy:**
+- Krótszy czas ważności dla pustych wyników (np. 1 dzień) — odrzucone:
+  dodatkowa kolumna i logika dla bardzo małego zysku.

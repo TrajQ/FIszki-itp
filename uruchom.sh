@@ -30,7 +30,8 @@ if [[ ! -f .env ]]; then
 fi
 
 # Ten sam port co w config.py: z .env, domyślnie 5000.
-PORT=$(grep -E '^PORT=' .env | cut -d= -f2 | tr -d '[:space:]')
+# „|| true”: brak linii PORT to nie błąd (set -e zamknąłby skrypt bez słowa).
+PORT=$(grep -E '^PORT=' .env | cut -d= -f2 | tr -d '[:space:]' || true)
 PORT=${PORT:-5000}
 ADRES="http://127.0.0.1:${PORT}/"
 

@@ -63,6 +63,10 @@ def z_cache(klucz: str, pobierz):
             return json.loads(wiersz["dane_json"])
 
     dane = pobierz()
+    if not dane:
+        # Pustego wyniku nie zapamiętujemy: GUS mógł jeszcze nie opublikować
+        # danych za ten rok — po publikacji mają się pojawić od razu.
+        return dane
     db.execute(
         "INSERT OR REPLACE INTO cache_bdl (klucz, dane_json, data_pobrania) VALUES (?, ?, ?)",
         (klucz, json.dumps(dane, ensure_ascii=False), datetime.now().isoformat()),

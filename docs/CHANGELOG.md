@@ -123,3 +123,10 @@
 - Strona główna: podsumowania modułów na kartach.
 - Dodano ikonę aplikacji (`static/favicon.svg`).
 - Dodano `DECISIONS.md` D-021 i testy.
+
+## ETAP 15 — 2026-09-29
+- Naprawiono 7 błędów znalezionych w przeglądzie kodu (dostępność:
+  `.CSV`, wskaźnik łączny bez pełnych komórek, powtórzone kolumny;
+  MPZP: wyścig kliknięć; atlas: „największy spadek” przy samych
+  wzrostach, cache pustych wyników; `uruchom.sh` bez `PORT`).
+- Dodano testy regresji.
