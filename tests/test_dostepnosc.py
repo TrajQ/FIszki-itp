@@ -303,3 +303,29 @@ def test_endpoint_porownania_na_przykladach(client):
 
     meta = client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv").get_json()
     assert meta["ma_ludnosc"] is True
+
+
+# ---------- ETAP 24: eksport GeoJSON ----------
+
+
+def test_eksport_geojson_dostepnosci(client):
+    import json as _json
+
+    przyklad = "przyklad_poznan_syntetyczny.csv"
+    odp = client.get(f"/dostepnosc/eksport.geojson?plik={przyklad}&kolumna=czas_szkola_min")
+    assert odp.mimetype == "application/geo+json"
+    assert "attachment" in odp.headers["Content-Disposition"]
+    dane = _json.loads(odp.data)
+    cecha = dane["features"][0]
+    assert cecha["geometry"]["type"] == "Polygon"
+    assert {"h3", "wartosc", "klasa", "wskaznik"} <= set(cecha["properties"])
+
+    laczny = _json.loads(client.get(f"/dostepnosc/eksport.geojson?plik={przyklad}&kolumna=laczny").data)
+    assert laczny["features"][0]["properties"]["wskaznik"] == "czas_laczny_min"
+
+    porownanie = client.get(
+        f"/dostepnosc/eksport.geojson?plik={przyklad}&po=przyklad_poznan_nowa_szkola_syntetyczny.csv&kolumna=czas_szkola_min"
+    )
+    assert {"przed", "po", "zmiana"} <= set(_json.loads(porownanie.data)["features"][0]["properties"])
+    assert "_porownanie_" in porownanie.headers["Content-Disposition"]
+    assert client.get(f"/dostepnosc/eksport.geojson?plik={przyklad}&kolumna=nie_ma").status_code == 404

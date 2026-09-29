@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 import os
 from dataclasses import asdict
 
@@ -187,6 +188,57 @@ def _policz_dane(zmienna_id: int, rok: int, woj_bdl_id: str, rok_bazowy: int | N
             "progi_zmiany_proc": statystyki.PROGI_ZMIANY_PROC,
         }
     return wynik
+
+
+@atlas_bp.route("/eksport.geojson")
+def eksport_geojson():
+    """Kartogram do QGIS: granice gmin + wartości (i zmiana, jeśli porównanie)."""
+    try:
+        parametry = _parametry_zapytania(request.args)
+        wynik = _policz_dane(**parametry)
+        kolekcja = granice.granice_gmin(
+            wynik["wojewodztwo"]["teryt"], os.path.join(folder_modulu(), "granice")
+        )
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except (BladBDL, granice.BladGranic) as e:
+        return jsonify({"blad": str(e)}), 502
+    except LookupError as e:
+        return jsonify({"blad": str(e)}), 404
+
+    wartosci = {g["teryt"]: g for g in wynik["gminy"]}
+    zmiany = {g["teryt"]: g for g in wynik.get("porownanie", {}).get("gminy", [])}
+    cechy = []
+    for cecha in kolekcja["features"]:
+        teryt = cecha["properties"]["teryt"]
+        wlasciwosci = {
+            "teryt": teryt,
+            "gmina": cecha["properties"]["nazwa"],
+            "wartosc": wartosci.get(teryt, {}).get("wartosc"),
+            "rok": wynik["rok"],
+            "wskaznik": wynik["zmienna"]["nazwa"],
+            "jednostka": wynik["zmienna"]["jednostka"],
+        }
+        if "porownanie" in wynik:
+            z = zmiany.get(teryt, {})
+            wlasciwosci.update(
+                rok_bazowy=wynik["porownanie"]["rok_bazowy"],
+                wartosc_bazowa=z.get("wartosc_bazowa"),
+                zmiana=z.get("zmiana"),
+                zmiana_proc=z.get("zmiana_proc"),
+            )
+        cechy.append({"type": "Feature", "properties": wlasciwosci, "geometry": cecha["geometry"]})
+
+    nazwa = f"atlas_{parametry['zmienna_id']}_{wynik['wojewodztwo']['teryt']}_{wynik['rok']}.geojson"
+    return _plik_geojson({"type": "FeatureCollection", "features": cechy}, nazwa)
+
+
+def _plik_geojson(kolekcja: dict, nazwa: str) -> Response:
+    return Response(
+        json.dumps(kolekcja, ensure_ascii=False),
+        mimetype="application/geo+json",
+        headers={"Content-Disposition": f"attachment; filename={nazwa}"},
+    )
 
 
 @atlas_bp.route("/eksport.csv")

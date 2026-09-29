@@ -445,3 +445,34 @@ def test_profil_gminy_endpoint_z_cache(client, monkeypatch):
 
     assert client.get("/atlas/gmina/011212161011").status_code == 400
     assert client.get("/atlas/gmina/123?zmienna=1").status_code == 400
+
+
+# ---------- ETAP 24: eksport GeoJSON ----------
+
+
+def test_eksport_geojson_atlasu(client, monkeypatch):
+    granica = {"type": "Polygon", "coordinates": [[[19.9, 50.0], [20.0, 50.0], [20.0, 50.1], [19.9, 50.0]]]}
+    monkeypatch.setattr(
+        atlas_routes.granice,
+        "granice_gmin",
+        lambda teryt, folder: {
+            "type": "FeatureCollection",
+            "features": [
+                {"type": "Feature", "properties": {"teryt": "1261011", "nazwa": "Kraków"}, "geometry": granica},
+                {"type": "Feature", "properties": {"teryt": "1299999", "nazwa": "Bez danych"}, "geometry": granica},
+            ],
+        },
+    )
+    odp = client.get(f"/atlas/eksport.geojson?{ZAPYTANIE}&rok_bazowy=2013")
+    assert odp.mimetype == "application/geo+json"
+    cechy = json.loads(odp.data)["features"]
+    krakow = cechy[0]["properties"]
+    assert krakow["wartosc"] == 804237.0 and krakow["wartosc_bazowa"] == 758334.0
+    assert krakow["jednostka"] == "osoba" and krakow["rok_bazowy"] == 2013
+    assert cechy[1]["properties"]["wartosc"] is None  # gmina bez danych zostaje, z pustą wartością
+
+    def blad(teryt, folder):
+        raise atlas_routes.granice.BladGranic("PRG nie odpowiada")
+
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", blad)
+    assert client.get(f"/atlas/eksport.geojson?{ZAPYTANIE}").status_code == 502

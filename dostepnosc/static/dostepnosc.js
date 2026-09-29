@@ -14,6 +14,15 @@
     const ogniwoEl = document.getElementById("ogniwo");
     const listaOgniw = document.getElementById("lista-ogniw");
     const WARTOSC_LACZNY = "__laczny__";
+    const linkGeojson = document.getElementById("link-geojson");
+
+    // Link „GeoJSON do QGIS” zawsze odpowiada temu, co widać na mapie.
+    function ustawLinkGeojson(po) {
+        const kolumna = poleKolumna.value === WARTOSC_LACZNY ? "laczny" : poleKolumna.value;
+        const parametry = new URLSearchParams({ plik: NAZWA_PLIKU, kolumna });
+        if (po) parametry.set("po", po);
+        linkGeojson.href = `${URL_GEOJSON}?${parametry}`;
+    }
     // Zmiana czasu (po − przed): szybciej = niebieski, wolniej = pomarańczowy, szary = bez zmian.
     const KOLORY_ZMIANY = ["#1d4ed8", "#60a5fa", "#d1d1d6", "#fb923c", "#c2410c"];
     const poleScenariusz = document.getElementById("pole-scenariusz");
@@ -167,6 +176,7 @@
         pokazStatystyki(analiza);
         pokazLegende(analiza, paleta);
         pokazOgniwo(analiza);
+        ustawLinkGeojson(null);
     }
 
     // Tylko dla wskaźnika łącznego: która usługa najczęściej jest najdalej.
@@ -221,6 +231,7 @@
             return;
         }
         trybPorownania.hidden = false;
+        ustawLinkGeojson(poleScenariusz.value);
         opisPorownania.textContent = `Porównanie: ${NAZWA_PLIKU} → ${poleScenariusz.value}`;
         ogniwoEl.hidden = true;
 

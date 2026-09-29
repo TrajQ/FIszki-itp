@@ -634,3 +634,21 @@ przykładami), a CLAUDE.md przewiduje cztery moduły.
   która ma być wiarygodna na zaliczeniu.
 - Uwzględnianie kondygnacji o różnej powierzchni — odłożone: komplikuje
   formularz; opisane jako uproszczenie na stronie.
+
+## D-031 — Eksport do QGIS jako GeoJSON (WGS84)
+Data: 2026-09-29
+
+**Decyzja:** Każda mapa ma eksport GeoJSON (RFC 7946, EPSG:4326) z
+geometrią i wszystkimi policzonymi wartościami jako atrybutami.
+
+**Uzasadnienie:** QGIS to podstawowe narzędzie na zajęciach z GIS;
+GeoJSON otwiera się przeciągnięciem pliku, bez konfiguracji, i nie
+wymaga żadnej zależności po stronie aplikacji. Wartości liczone w
+aplikacji (udziały, zmiany, klasy) trafiają do tabeli atrybutów, więc
+student może na nich dalej pracować.
+
+**Odrzucone alternatywy:**
+- GeoPackage / Shapefile — odrzucone: wymagają GDAL/Fiona (ciężkie
+  zależności), a Shapefile ucina nazwy pól do 10 znaków.
+- Eksport w EPSG:2180 — odrzucone: RFC 7946 wymaga WGS84, a QGIS sam
+  przelicza do układu projektu.

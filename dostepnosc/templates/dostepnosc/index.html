@@ -66,6 +66,7 @@
                 <ul id="lista-ogniw"></ul>
             </div>
             <p id="meta-pliku" class="wyciszony meta-pliku"></p>
+            <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
         </section>
 
         <section class="karta stos">
@@ -94,6 +95,7 @@
     const NAZWA_PLIKU = {{ wybrany | tojson }};
     const URL_PLIK = "{{ url_for('dostepnosc.opis_pliku', nazwa='__PLIK__') }}";
     const URL_POROWNANIE = "{{ url_for('dostepnosc.porownanie') }}";
+    const URL_GEOJSON = "{{ url_for('dostepnosc.eksport_geojson') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('dostepnosc.static', filename='dostepnosc.js') }}"></script>

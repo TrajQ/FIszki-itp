@@ -410,3 +410,25 @@ def test_wydzielenia_dzialki_nie_wywraca_sie_na_zlej_geometrii(monkeypatch):
     )
     pary = mpzp_wfs.wydzielenia_dzialki(GMINA_PILOTAZOWA, box(16.9, 52.4, 16.901, 52.401))
     assert [w.atrybuty["symb_t"] for w, _ in pary] == ["ZP"]
+
+
+# ---------- ETAP 24: eksport GeoJSON ----------
+
+
+def test_eksport_geojson_dzialki(client, monkeypatch):
+    import json as _json
+
+    wydzielenia = _dwa_wydzielenia()
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_kwadrat())
+    monkeypatch.setattr(
+        mpzp_routes,
+        "znajdz_wydzielenia_dzialki",
+        lambda g, geom: [(w, w.geometria.intersection(geom)) for w in wydzielenia if w.geometria.intersects(geom)],
+    )
+    odp = client.get("/mpzp/eksport.geojson?id=306401_1.0051.AR_18.14")
+    assert odp.mimetype == "application/geo+json"
+    cechy = _json.loads(odp.data)["features"]
+    assert [c["properties"]["warstwa"] for c in cechy] == ["dzialka", "czesc_w_przeznaczeniu", "czesc_w_przeznaczeniu"]
+    assert {c["properties"].get("przeznaczenie") for c in cechy[1:]} == {"1MN", "2KDD"}
+    assert cechy[1]["properties"]["wfs_symb_t"] in {"1MN", "2KDD"}
+    assert "dzialka_306401_1_0051_AR_18_14.geojson" in odp.headers["Content-Disposition"]

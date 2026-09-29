@@ -1,7 +1,9 @@
+import json
 import os
 
 from flask import (
     Blueprint,
+    Response,
     abort,
     current_app,
     jsonify,
@@ -148,6 +150,38 @@ def porownanie():
         return jsonify({"blad": f"Oba pliki muszą mieć wskaźnik „{kolumna}”."}), 422
     except BladWynikow as e:
         return jsonify({"blad": str(e)}), 422
+
+
+@dostepnosc_bp.route("/eksport.geojson")
+def eksport_geojson():
+    """Heksagony z wartościami do QGIS: jeden wskaźnik albo porównanie
+    scenariuszy (gdy podano `po`). kolumna=laczny — wskaźnik łączny."""
+    plik = request.args.get("plik", "")
+    kolumna = request.args.get("kolumna", "")
+    po = request.args.get("po")
+    try:
+        if kolumna == "laczny":
+            kolumna = wyniki_h3.NAZWA_LACZNEGO
+        if po:
+            wynik = wyniki_h3.porownaj_scenariusze(_wczytaj(plik), _wczytaj(po), kolumna)
+        elif kolumna == wyniki_h3.NAZWA_LACZNEGO:
+            wynik = wyniki_h3.analiza_laczna(_wczytaj(plik))
+        else:
+            wynik = wyniki_h3.analiza_kolumny(_wczytaj(plik), kolumna)
+    except KeyError:
+        return jsonify({"blad": f"Plik nie ma wskaźnika „{kolumna}”."}), 404
+    except BladWynikow as e:
+        return jsonify({"blad": str(e)}), 422
+
+    kolekcja = wynik["geojson"]
+    for cecha in kolekcja["features"]:
+        cecha["properties"]["wskaznik"] = kolumna
+    nazwa = os.path.splitext(plik)[0] + ("_porownanie" if po else "") + f"_{kolumna}.geojson"
+    return Response(
+        json.dumps(kolekcja, ensure_ascii=False),
+        mimetype="application/geo+json",
+        headers={"Content-Disposition": f"attachment; filename={secure_filename(nazwa)}"},
+    )
 
 
 @dostepnosc_bp.route("/plik/<nazwa>/laczny")

@@ -56,8 +56,11 @@
         raport.target = "_blank";
         const kalkulator = element("a", "przycisk przycisk--tekst", "Kalkulator zabudowy");
         kalkulator.href = `${URL_KALKULATOR}?dzialka=${encodeURIComponent(dzialka.id)}` + (dzialka.powierzchnia_m2 ? `&powierzchnia=${Math.round(dzialka.powierzchnia_m2)}` : "");
+        const geojson = element("a", "przycisk przycisk--tekst", "GeoJSON");
+        geojson.href = `${URL_GEOJSON}?id=${encodeURIComponent(dzialka.id)}`;
+        geojson.title = "Działka i jej części w przeznaczeniach — do QGIS";
         const linki = element("div", "rzad");
-        linki.append(kalkulator, raport);
+        linki.append(kalkulator, raport, geojson);
         naglowek.append(element("h3", "", "Działka"), linki);
         sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
         if (dzialka.powierzchnia_m2) {

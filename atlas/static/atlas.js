@@ -231,6 +231,7 @@
             }
             biezaceDane = dane;
             linkEksport.href = `${URL_EKSPORT}?${parametry}`;
+            document.getElementById("link-geojson").href = `${URL_GEOJSON}?${parametry}`;
             const jestPorownanie = Boolean(dane.porownanie && dane.porownanie.gminy.length);
             if (dane.porownanie && !jestPorownanie) {
                 pokazKomunikat(`Brak danych z roku ${dane.porownanie.rok_bazowy} do porównania — pokazuję same wartości.`);

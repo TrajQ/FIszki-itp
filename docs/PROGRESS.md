@@ -648,3 +648,25 @@ Zrobione:
 
 Testy: 178 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap23_20260929.zip
+
+## ETAP 24 — Eksport do QGIS (GeoJSON) ze wszystkich map
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `GET /atlas/eksport.geojson` — granice gmin z wartością, rokiem,
+  wskaźnikiem, jednostką (i zmianą przy porównaniu lat); gminy bez danych
+  zostają z pustą wartością
+- `GET /mpzp/eksport.geojson?id=` — działka (z powierzchnią) i jej części
+  w przeznaczeniach planu (symbol, m², %, atrybuty WFS z prefiksem
+  `wfs_`)
+- `GET /dostepnosc/eksport.geojson?plik=&kolumna=[&po=]` — heksagony z
+  wartością i klasą, wskaźnik łączny (`kolumna=laczny`) albo porównanie
+  scenariuszy (przed, po, zmiana)
+- Przyciski „GeoJSON do QGIS” w atlasie, panelu działki i dostępności —
+  zawsze eksportują to, co jest na mapie
+- Format RFC 7946 (WGS84), `application/geo+json`, jako załącznik
+- Testy: 3 nowe; `DECISIONS.md`: D-031
+
+Testy: 181 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap24_20260929.zip

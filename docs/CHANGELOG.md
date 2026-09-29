@@ -177,3 +177,7 @@
 - MPZP: kalkulator wskaźników zabudowy ze sprawdzaniem zgodności z
   planem (`/mpzp/kalkulator`).
 - Dodano `DECISIONS.md` D-030 i testy.
+
+## ETAP 24 — 2026-09-29
+- Eksport GeoJSON do QGIS z atlasu, mpzp i dostępności.
+- Dodano `DECISIONS.md` D-031 i testy.

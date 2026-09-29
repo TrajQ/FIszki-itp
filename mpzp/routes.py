@@ -1,6 +1,7 @@
+import json
 from datetime import datetime
 
-from flask import Blueprint, abort, jsonify, render_template, request
+from flask import Blueprint, Response, abort, jsonify, render_template, request
 from shapely.errors import GEOSException
 from shapely.geometry import Point, mapping
 
@@ -264,6 +265,62 @@ def kalkulator_licz():
         komunikat = str(e) if isinstance(e, zabudowa.BladDanych) else "Wpisz liczby (np. 450 albo 0,6)."
         return jsonify({"blad": komunikat}), 400
     return jsonify(wynik)
+
+
+@mpzp_bp.route("/eksport.geojson")
+def eksport_geojson():
+    """Działka i jej części w przeznaczeniach planu — do QGIS."""
+    dzialka_id = request.args.get("id", "")
+    try:
+        dzialka = znajdz_dzialke_po_id(dzialka_id)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except BladULDK as e:
+        return jsonify({"blad": str(e)}), 502
+    if dzialka is None:
+        return jsonify({"blad": "ULDK nie zna tej działki."}), 404
+
+    cechy = [
+        {
+            "type": "Feature",
+            "properties": {
+                "warstwa": "dzialka",
+                "id_dzialki": dzialka.id,
+                "powierzchnia_m2": round(powierzchnia_m2(dzialka.geometria), 1),
+            },
+            "geometry": mapping(dzialka.geometria),
+        }
+    ]
+    gmina = znajdz_gmine(dzialka.teryt_gminy)
+    if gmina is not None:
+        try:
+            pary = znajdz_wydzielenia_dzialki(gmina, dzialka.geometria)
+        except BladWFS as e:
+            return jsonify({"blad": str(e)}), 502
+        calosc = powierzchnia_m2(dzialka.geometria)
+        szerokosc = dzialka.geometria.centroid.y
+        for wydzielenie, czesc in pary:
+            pole = powierzchnia_m2(czesc, szerokosc)
+            cechy.append(
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "warstwa": "czesc_w_przeznaczeniu",
+                        "id_dzialki": dzialka.id,
+                        "przeznaczenie": wydzielenie.atrybuty.get(gmina.pole_przeznaczenia),
+                        "powierzchnia_m2": round(pole, 1),
+                        "procent": round(100 * pole / calosc, 1) if calosc else None,
+                        **{f"wfs_{k}": v for k, v in wydzielenie.atrybuty.items()},
+                    },
+                    "geometry": mapping(czesc),
+                }
+            )
+    nazwa = "dzialka_" + dzialka.id.replace("/", "-").replace(".", "_") + ".geojson"
+    return Response(
+        json.dumps({"type": "FeatureCollection", "features": cechy}, ensure_ascii=False),
+        mimetype="application/geo+json",
+        headers={"Content-Disposition": f"attachment; filename={nazwa}"},
+    )
 
 
 # Kolory części działki w raporcie — stała kolejność, żeby ten sam
