@@ -246,26 +246,52 @@
         if (!koncepcja) return;
         stanZapisu.textContent = "Zapisuję…";
         clearTimeout(opoznienieZapisu);
-        opoznienieZapisu = setTimeout(async () => {
-            const numer = ++numerZapisu;
-            try {
-                const dane = await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}`, {
-                    method: "PUT",
-                    body: JSON.stringify({ geojson: rysunekGeojson(), ustawienia: ustawieniaZFormularza() }),
-                });
-                if (numer !== numerZapisu) return;
-                koncepcja.ustawienia = dane.ustawienia;
-                pokazKomunikat("");
-                stanZapisu.textContent = "Zapisano";
-                pokazBilans(dane.bilans);
-            } catch (e) {
-                if (numer === numerZapisu) {
-                    stanZapisu.textContent = "Nie zapisano";
-                    pokazKomunikat(e.message);
-                }
-            }
-        }, 300);
+        opoznienieZapisu = setTimeout(wyslijZapis, 300);
     }
+
+    // Treść zapisu (koncepcja, rysunek, ustawienia) bierzemy od razu, przy
+    // wywołaniu — nie po odpowiedzi serwera. Inaczej przełączenie koncepcji
+    // w trakcie zapisu mogłoby wysłać pusty rysunek do poprzedniej (ETAP 66).
+    function trescZapisu() {
+        return { id: koncepcja.id, body: JSON.stringify({ geojson: rysunekGeojson(), ustawienia: ustawieniaZFormularza() }) };
+    }
+
+    async function wyslijZapis() {
+        opoznienieZapisu = null;
+        if (!koncepcja) return;
+        const { id, body } = trescZapisu();
+        const numer = ++numerZapisu;
+        try {
+            const dane = await zapytaj(`${URL_KONCEPCJE}/${id}`, { method: "PUT", body });
+            if (numer !== numerZapisu || !koncepcja || koncepcja.id !== id) return;
+            koncepcja.ustawienia = dane.ustawienia;
+            pokazKomunikat("");
+            stanZapisu.textContent = "Zapisano";
+            pokazBilans(dane.bilans);
+        } catch (e) {
+            if (numer === numerZapisu) {
+                stanZapisu.textContent = "Nie zapisano";
+                pokazKomunikat(e.message);
+            }
+        }
+    }
+
+    // Zaległy zapis (czekający na koniec przerwy) wysyłamy od razu —
+    // przed przełączeniem koncepcji.
+    async function dokonczZapis() {
+        if (opoznienieZapisu === null) return;
+        clearTimeout(opoznienieZapisu);
+        await wyslijZapis();
+    }
+
+    // Wyjście ze strony (np. w link „Raport”) w trakcie przerwy przed
+    // zapisem: keepalive pozwala zapytaniu dokończyć się po zamknięciu strony.
+    window.addEventListener("pagehide", () => {
+        if (opoznienieZapisu === null || !koncepcja) return;
+        clearTimeout(opoznienieZapisu);
+        const { id, body } = trescZapisu();
+        fetch(`${URL_KONCEPCJE}/${id}`, { method: "PUT", body, headers: { "Content-Type": "application/json" }, keepalive: true });
+    });
 
     // ---------- bilans ----------
 
@@ -370,6 +396,7 @@
     }
 
     async function otworz(id) {
+        await dokonczZapis();
         zaznacz(null);
         rysunek.clearLayers();
         pokazKomunikat("");

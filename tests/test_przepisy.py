@@ -226,3 +226,10 @@ def test_api_pytania_i_historia(client, monkeypatch):
 
     assert client.delete(f"/przepisy/pytania/{dane['id']}").get_json() == {"ok": True}
     assert client.delete(f"/przepisy/pytania/{dane['id']}").status_code == 404
+
+    # usunięcie aktu usuwa pytania z cytatami z niego (ETAP 66)
+    monkeypatch.setattr(gemini, "odpowiedz_z_przepisow", udawany_model)
+    client.post("/przepisy/pytanie", json={"pytanie": "Kontrolne pytanie o intensywność zabudowy"})
+    assert "Kontrolne pytanie" in client.get("/przepisy/").get_data(as_text=True)
+    client.delete("/przepisy/akty/1")
+    assert "Kontrolne pytanie" not in client.get("/przepisy/").get_data(as_text=True)

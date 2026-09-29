@@ -1,8 +1,8 @@
 # Warsztat — kontekst projektu
 
 ## Czym to jest
-Lokalna aplikacja desktopowa (Flask + vanilla JS) łącząca cztery niezależne
-moduły narzędziowe. Uruchamiana ikoną z pulpitu na Linux Mint, dostępna
+Lokalna aplikacja desktopowa (Flask + vanilla JS) łącząca siedem niezależnych
+modułów narzędziowych. Uruchamiana ikoną z pulpitu na Linux Mint, dostępna
 wyłącznie na 127.0.0.1. Ma dostęp do internetu (API GUS, WFS gmin, ULDK, Gemini).
 
 Autor: jedna osoba, student gospodarki przestrzennej, pierwszy rok.
@@ -59,6 +59,6 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 65 (teren: inwentaryzacja w terenie — zamknięty)
-Ostatni ZIP: releases/warsztat_etap65_20260929.zip
+ETAP: 66 (przegląd i porządki po ETAPach 57–65 — zamknięty)
+Ostatni ZIP: releases/warsztat_etap66_20260929.zip
 Testy: 401 passed / 0 failed

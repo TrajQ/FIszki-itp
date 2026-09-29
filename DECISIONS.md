@@ -1553,3 +1553,24 @@ zaimportowaniem pliku do złego projektu.
   konfiguracji projektu QGIS; do rozważenia jako uzupełnienie.
 - Podkład mapy w formularzu na telefonie — kafelki wymagają internetu;
   współrzędne i dokładność wystarczą, mapa jest w Warsztacie.
+
+## D-072 — Zapis koncepcji osiedla: treść brana w chwili wywołania
+Data: 2026-09-29
+
+**Decyzja:** Zapis rysunku osiedla (z opóźnieniem 300 ms) bierze
+identyfikator koncepcji, rysunek i ustawienia w chwili wysłania, a nie
+po odpowiedzi serwera; przed przełączeniem koncepcji zaległy zapis
+wysyła się od razu (`dokonczZapis`), a przy wyjściu ze strony — przez
+`fetch` z `keepalive`. Menu aplikacji w wąskim oknie przewija się
+w poziomie zamiast poszerzać stronę. Usunięcie aktu prawnego usuwa
+pytania z historii, które cytowały ten akt.
+
+**Uzasadnienie:** Przegląd kodu po ETAPach 57–65 znalazł błąd utraty
+danych: przełączenie koncepcji w ciągu 300 ms od zmiany rysunku
+zapisywało do poprzedniej koncepcji pusty rysunek (odtworzone w
+przeglądarce przed poprawką, sprawdzone po niej). Siedem pozycji menu
+nie mieści się w oknie o szerokości połowy ekranu.
+
+**Odrzucone alternatywy:**
+- Zapis bez opóźnienia po każdej zmianie — więcej zapytań przy
+  przesuwaniu wierzchołków, a problem kolejności i tak zostaje.

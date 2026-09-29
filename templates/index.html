@@ -3,7 +3,7 @@
 {% block tresc %}
 <section class="hero">
     <h1>Warsztat.</h1>
-    <p>Cztery niezależne narzędzia do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
+    <p>Siedem niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
 </section>
 
 <section class="siatka-kart">
@@ -12,7 +12,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V10M9 20V4M15 20v-7M21 20V8"/></svg>
         </span>
         <h2>Atlas</h2>
-        <p class="karta__opis">Wskaźniki GUS dla gmin: kartogramy, zmiany w czasie, profil gminy, korelacje.</p>
+        <p class="karta__opis">Wskaźniki GUS dla gmin: kartogramy, zmiany w czasie, korelacje, raport gminy.</p>
         {% if p.atlas %}<span class="karta__meta">{{ p.atlas }} {{ 'zestaw' if p.atlas == 1 else 'zestawów' }} danych zapisanych lokalnie</span>{% endif %}
     </a>
     <a class="karta karta--link" href="{{ url_for('mpzp.index') }}">
@@ -20,7 +20,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
         </span>
         <h2>MPZP</h2>
-        <p class="karta__opis">Działka → przeznaczenie w całej Polsce, podział działki, raport, kalkulatory zabudowy i skali.</p>
+        <p class="karta__opis">Działka → przeznaczenie w całej Polsce, podział działki, raport, kalkulatory, kronika zmian na ortofotomapach.</p>
         {% if p.mpzp and p.mpzp.ostatnia %}
         <span class="karta__meta">Ostatnio: <code>{{ p.mpzp.ostatnia.dzialka_id }}</code>
             <span class="etykieta etykieta--sukces">{{ p.mpzp.ostatnia.przeznaczenie or 'bez planu' }}</span></span>
@@ -52,7 +52,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l5-4 5 4v12"/><path d="M15 21v-8h4v8"/><path d="M9 21v-4h2v4"/></svg>
         </span>
         <h2>Osiedle</h2>
-        <p class="karta__opis">Koncepcja osiedla na mapie: bilans terenu, wskaźniki i zgodność z planem.</p>
+        <p class="karta__opis">Koncepcja osiedla na mapie: bilans terenu, wskaźniki, program i porównanie wariantów.</p>
         {% if p.osiedle and p.osiedle.liczba %}<span class="karta__meta">Ostatnio: {{ p.osiedle.ostatnia }}</span>{% endif %}
     </a>
     <a class="karta karta--link" href="{{ url_for('przepisy.index') }}">
@@ -60,7 +60,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg>
         </span>
         <h2>Przepisy</h2>
-        <p class="karta__opis">Ustawy i rozporządzenia z PDF-ów: wyszukiwarka artykułów z odnośnikiem do strony źródła.</p>
+        <p class="karta__opis">Ustawy i rozporządzenia z PDF-ów: wyszukiwarka artykułów i pytania z cytatami sprawdzanymi w źródle.</p>
         {% if p.przepisy and p.przepisy.liczba %}<span class="karta__meta">Akty: {{ p.przepisy.liczba }}, jednostki: {{ p.przepisy.jednostki }}</span>{% endif %}
     </a>
     <a class="karta karta--link" href="{{ url_for('teren.index') }}">
@@ -76,7 +76,7 @@
 <section class="karta dane-uzytkownika">
     <div>
         <h3>Twoje dane</h3>
-        <p class="karta__opis">Fiszki, historia nauki, wgrane PDF-y i pliki wyników są tylko na tym komputerze. Pobieraj kopię od czasu do czasu — np. przed reinstalacją systemu.</p>
+        <p class="karta__opis">Fiszki, koncepcje osiedli, akty prawne, punkty i zdjęcia z terenu, wgrane PDF-y i pliki wyników są tylko na tym komputerze. Pobieraj kopię od czasu do czasu — np. przed reinstalacją systemu.</p>
     </div>
     <a class="przycisk przycisk--drugi" href="{{ url_for('kopia_zapasowa') }}">Pobierz kopię zapasową (ZIP)</a>
 </section>

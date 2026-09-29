@@ -21,8 +21,11 @@ POMIJANE = {os.path.join("atlas", "granice")}
 
 INSTRUKCJA = """Kopia zapasowa aplikacji Warsztat — {data}
 
-Zawartość: folder instance/ (bazy fiszek, powtórek, historii działek,
-cache atlasu, wgrane PDF-y, pliki wyników dostępności).
+Zawartość: folder instance/ — bazy wszystkich modułów (fiszki i
+powtórki, historia i zapisane działki, cache i zestaw raportu atlasu,
+koncepcje osiedli, akty prawne i historia pytań, projekty i punkty
+terenowe), wgrane PDF-y (fiszki, przepisy), zdjęcia z terenu i pliki
+wyników dostępności.
 
 Przywracanie:
 1. Zamknij aplikację (zamknij okno terminala z serwerem).

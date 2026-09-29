@@ -158,6 +158,11 @@ def usun_akt(akt_id: int) -> str | None:
     if wiersz is None:
         return None
     db.execute("DELETE FROM jednostki_fts WHERE rowid IN (SELECT id FROM jednostki WHERE akt_id = ?)", (akt_id,))
+    # Pytania z cytatami z tego aktu też znikają — ich odnośniki prowadziłyby donikąd.
+    for p in db.execute("SELECT id, akt_id, wynik FROM pytania").fetchall():
+        cytaty = json.loads(p["wynik"]).get("cytaty", [])
+        if p["akt_id"] == akt_id or any(c.get("akt_id") == akt_id for c in cytaty):
+            db.execute("DELETE FROM pytania WHERE id = ?", (p["id"],))
     db.execute("DELETE FROM jednostki WHERE akt_id = ?", (akt_id,))
     db.execute("DELETE FROM akty WHERE id = ?", (akt_id,))
     db.commit()

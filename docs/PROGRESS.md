@@ -1339,3 +1339,15 @@ Status: zamknięty
   pamięci telefonu i zgoda na GPS zależą od przeglądarki) — do
   sprawdzenia u autora
 - `DECISIONS.md`: D-071
+
+## ETAP 66 — Przegląd i porządki po nowych modułach
+Data: 2026-09-29
+Status: zamknięty
+
+- pyflakes na całym projekcie: czysto (poza celowymi importami plików z
+  trasami), `node --check` na wszystkich skryptach: czysto
+- Błąd utraty rysunku w Osiedlu odtworzony w przeglądarce (koncepcja A:
+  0 obiektów zamiast 1) i naprawiony (A: 1 obiekt)
+- Szerokość stron sprawdzona w trzech rozmiarach okna
+- Testy: jeden nowy przypadek (historia pytań po usunięciu aktu)
+- `DECISIONS.md`: D-072

@@ -153,18 +153,32 @@ code {
     color: var(--tekst);
     font-weight: 600;
     font-size: 1.05rem;
+    flex: none;
 }
 
 .logo:hover {
     text-decoration: none;
 }
 
+/* Siedem modułów nie mieści się w wąskim oknie — wtedy menu przewija się
+   w poziomie samo, zamiast poszerzać całą stronę (ETAP 66). */
 .menu {
     display: flex;
     gap: 0.25rem;
+    min-width: 0;
     margin: 0;
     padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
     list-style: none;
+}
+
+.menu::-webkit-scrollbar {
+    display: none;
+}
+
+.menu li {
+    flex: none;
 }
 
 .menu a {

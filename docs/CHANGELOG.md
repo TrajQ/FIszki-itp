@@ -480,3 +480,16 @@
   bez dublowania punktów, mapa punktów z kolorem wg pola i legendą,
   dymki ze zdjęciem, tabela, eksport GeoJSON i CSV, edycja pól.
 - Dodano `DECISIONS.md` D-071 i 12 testów.
+
+## ETAP 66 — 2026-09-29
+- Przegląd i porządki po ETAPach 57–65 (bez nowych funkcji).
+- Naprawiono: w Osiedlu przełączenie koncepcji tuż po zmianie rysunku
+  mogło zapisać pusty rysunek do poprzedniej koncepcji; zaległy zapis
+  wysyła się teraz przed przełączeniem i przy wyjściu ze strony.
+- Menu w wąskim oknie przewija się w poziomie (strona nie jest szersza
+  niż okno); sprawdzone na 1300, 700 i 390 px dla stron nowych modułów.
+- Usunięcie aktu w Przepisach usuwa pytania z historii, które go
+  cytowały.
+- Zaktualizowane teksty: strona główna (siedem narzędzi, opisy kart),
+  instrukcja w kopii zapasowej, opis danych użytkownika.
+- Dodano `DECISIONS.md` D-072.
