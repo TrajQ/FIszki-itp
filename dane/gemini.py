@@ -270,3 +270,43 @@ def odpowiedz_z_przepisow(pytanie: str, fragmenty: list[str]) -> dict:
     if not isinstance(dane, dict):
         raise BladGemini("Gemini zwrócił nieoczekiwany format odpowiedzi.")
     return dane
+
+
+# ---------- Atlas: opis raportu gminy (ETAP 63) ----------
+
+PROMPT_RAPORTU_GMINY = (
+    "Jesteś analitykiem gospodarki przestrzennej. Dostajesz fakty o jednej "
+    "gminie: wartości wskaźników GUS, ich zmianę w czasie i miejsce gminy w "
+    "województwie. Napisz po polsku zwięzłą charakterystykę gminy (4–7 zdań) "
+    "dla studenta przygotowującego diagnozę uwarunkowań: co wyróżnia gminę na "
+    "tle województwa, co się zmienia w czasie.\n"
+    "ZASADY BEZWZGLĘDNE:\n"
+    "- Używaj WYŁĄCZNIE liczb podanych w faktach, przepisanych dokładnie tak, "
+    "jak są zapisane. Nie licz niczego sam: żadnych różnic, ilorazów, "
+    "procentów, zaokrągleń ani nowych liczb.\n"
+    "- Nie dodawaj faktów spoza listy, nie zgaduj przyczyn jako pewników.\n"
+    "- Zwykły tekst, bez nagłówków i list."
+)
+
+
+def opisz_gmine(fakty: list[str]) -> str:
+    """Charakterystyka gminy z faktów policzonych w atlas/raport.py.
+
+    Tak jak w opisz_wskaznik: liczba spoza faktów odrzuca opis.
+    """
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
+    try:
+        client = genai.Client(api_key=Config.GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model=Config.GEMINI_MODEL,
+            contents="Fakty:\n" + "\n".join(f"- {f}" for f in fakty),
+            config=types.GenerateContentConfig(system_instruction=PROMPT_RAPORTU_GMINY),
+        )
+    except errors.APIError as e:
+        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    opis = (response.text or "").strip()
+    if not opis:
+        raise BladGemini("Gemini zwrócił pusty opis.")
+    sprawdz_liczby(opis, fakty)
+    return opis

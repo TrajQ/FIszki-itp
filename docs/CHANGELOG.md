@@ -450,3 +450,14 @@
   historia pytań z usuwaniem, zastrzeżenie „nie porada prawna”.
 - Dodano `przepisy/pytania.py`, `dane/gemini.py: odpowiedz_z_przepisow`,
   `DECISIONS.md` D-068 i 6 testów.
+
+## ETAP 63 — 2026-09-29
+- Atlas: **Raport gminy** — wybór województwa i gminy, zestaw wskaźników
+  raportu z wyszukiwarki BDL (kolejność, usuwanie, przeliczenie przez
+  inny wskaźnik), tabela: rok, wartość, zmiana w 10 lat, miejsce w
+  województwie, mediana województwa, wykres trendu; charakterystyka
+  gminy przez Gemini ze sprawdzaniem liczb; wersja do druku/PDF; link
+  „Raport tej gminy” z profilu gminy na mapie.
+- Dodano `atlas/raport.py`, `atlas/trasy_raport.py`,
+  `bdl.gminy_wojewodztwa`, `gemini.opisz_gmine`, `DECISIONS.md` D-069
+  i 5 testów.

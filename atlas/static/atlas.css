@@ -816,3 +816,163 @@ button.przelacznik__opcja--aktywna:hover {
         grid-auto-flow: row;
     }
 }
+
+/* ---------- Raport gminy (ETAP 63) ---------- */
+.wybor-gminy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+    align-items: end;
+    gap: 16px;
+}
+
+.opis-raportu {
+    margin: 0;
+    font-size: 13px;
+}
+
+.lista-wskaznikow {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding-left: 22px;
+}
+
+.wskaznik-raportu {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--linia);
+    font-size: 14px;
+}
+
+.wskaznik-raportu__nazwa {
+    margin-right: 8px;
+}
+
+.wskaznik-raportu__akcje {
+    white-space: nowrap;
+}
+
+.wskaznik-raportu__akcje button {
+    padding: 2px 6px;
+}
+
+.podpowiedzi .podpowiedz {
+    all: unset;
+    width: 100%;
+    cursor: pointer;
+}
+
+.dodawanie-wskaznika .rzad label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.raport-gminy {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 1123px;
+    margin: 0 auto;
+}
+
+.raport-gminy__akcje {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.raport-gminy__strona {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 28px;
+    border-radius: var(--promien);
+    background: var(--tlo-karty);
+    box-shadow: var(--cien);
+}
+
+.raport-gminy__strona h1 {
+    margin: 0;
+    font-size: 34px;
+}
+
+.tabela-raportu {
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.tabela-raportu td {
+    vertical-align: middle;
+}
+
+.raport-gminy__trend svg {
+    display: block;
+}
+
+.raport-gminy__linia {
+    fill: none;
+    stroke: var(--akcent);
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+}
+
+.raport-gminy__punkt {
+    fill: var(--akcent);
+}
+
+.raport-gminy__zmiana {
+    white-space: nowrap;
+}
+
+.komunikat--blad-tekst {
+    color: var(--blad);
+}
+
+.raport-gminy__opis {
+    margin-top: 16px;
+}
+
+.raport-gminy__opis h3 {
+    margin: 0;
+}
+
+.raport-gminy__tekst-opisu {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.raport-gminy .przypis {
+    margin: 0;
+    font-size: 12px;
+}
+
+@media (max-width: 800px) {
+    .wybor-gminy {
+        grid-template-columns: 1fr;
+    }
+
+    .tabela-raportu {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+
+    .strona-raportu-gminy .pasek-nawigacji,
+    .raport-gminy__akcje,
+    #przycisk-opis {
+        display: none;
+    }
+
+    .raport-gminy__strona {
+        box-shadow: none;
+        padding: 0;
+    }
+}

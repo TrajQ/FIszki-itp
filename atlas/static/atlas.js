@@ -835,6 +835,7 @@
 
         profilEl.hidden = false;
         profilNazwa.textContent = gmina.nazwa;
+        document.getElementById("profil-raport").href = URL_RAPORT_GMINY.replace("000000000000", gmina.bdl_id);
         profilMiejsce.textContent = `${miejsce}. miejsce z ${s.liczba_gmin} w województwie (${biezaceDane.rok})`;
         profilLiczby.replaceChildren(liczbaProfilu(String(biezaceDane.rok), zJednostka(gmina.wartosc)));
         if (s.mediana) {

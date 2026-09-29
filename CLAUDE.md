@@ -10,7 +10,8 @@ To jest projekt uczący i użytkowy jednocześnie. Kod ma być czytelny dla
 kogoś, kto wróci do niego za trzy miesiące.
 
 ## Moduły
-- atlas       — wskaźniki GUS BDL dla gmin, kartogramy, generowanie opisów
+- atlas       — wskaźniki GUS BDL dla gmin, kartogramy, generowanie opisów,
+                raport gminy
 - mpzp        — czytnik planów miejscowych, działka → przeznaczenie
 - fiszki      — generator fiszek z PDF z kotwicą w źródle
 - dostepnosc  — analiza dostępności pieszej, siatka H3 (czyta gotowe wyniki)
@@ -21,9 +22,6 @@ kogoś, kto wróci do niego za trzy miesiące.
                 Gemini z cytatami sprawdzanymi w tekście i kotwicą w PDF
 
 Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
-- przepisy    — pytania do PDF-ów z przepisami, odpowiedź zawsze z
-                cytatem i kotwicą w źródle (moduł działa od ETAPu 61)
-- atlas       — „Raport gminy”: uwarunkowania jednej gminy w jednym miejscu
 - mpzp        — „Kronika zmian”: ortofotomapy z różnych lat na suwaku
 - teren       — nowy moduł: inwentaryzacja w terenie (telefon zbiera dane
                 bez połączenia z Warsztatem — ten działa tylko na 127.0.0.1)
@@ -61,6 +59,6 @@ Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 62 (przepisy: pytania z cytatami — zamknięty)
-Ostatni ZIP: releases/warsztat_etap62_20260929.zip
-Testy: 378 passed / 0 failed
+ETAP: 63 (atlas: raport gminy — zamknięty)
+Ostatni ZIP: releases/warsztat_etap63_20260929.zip
+Testy: 382 passed / 0 failed

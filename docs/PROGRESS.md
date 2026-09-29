@@ -1292,3 +1292,18 @@ Status: zamknięty
   cytatów, historia po przeładowaniu (jasny i ciemny motyw)
 - Nie sprawdzone tutaj: prawdziwe Gemini (brak klucza w tym środowisku)
 - `DECISIONS.md`: D-068
+
+## ETAP 63 — Atlas: Raport gminy
+Data: 2026-09-29
+Status: zamknięty
+
+- `atlas/raport.py` (podsumowanie wskaźnika, fakty do opisu),
+  `atlas/trasy_raport.py` (wybór, gminy województwa, zestaw, raport,
+  opis), tabela `raport_wskazniki`, szablony `raport_wybor.html`,
+  `raport_gminy.html`, skrypty `raport_wybor.js`, `raport_gminy.js`
+- Sprawdzone w przeglądarce z podstawionymi danymi BDL: układanie
+  zestawu (także wskaźnik względny), wybór gminy, raport (jasny i
+  ciemny motyw)
+- Nie sprawdzone tutaj: prawdziwe API BDL (sieć zablokowana), w tym
+  nowe zapytanie o listę gmin — do sprawdzenia u autora
+- `DECISIONS.md`: D-069

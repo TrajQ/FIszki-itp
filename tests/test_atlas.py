@@ -897,3 +897,115 @@ def test_endpoint_porownania_wojewodztw(client, monkeypatch):
     monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_wojewodztw", lambda z, rok: [])
     assert client.get("/atlas/wojewodztwa-porownanie?zmienna=5&rok=2023&woj=011200000000").status_code == 404
     assert client.get("/atlas/wojewodztwa-porownanie?zmienna=x").status_code == 400
+
+
+# ---------- ETAP 63: raport gminy ----------
+
+from atlas import raport as raport_gminy  # noqa: E402
+
+GMINA = "011212161011"
+WOJ_RAPORTU = "011200000000"
+
+
+def test_wojewodztwo_gminy_i_lista_gmin(monkeypatch):
+    assert bdl.wojewodztwo_gminy(GMINA) == WOJ_RAPORTU
+    strony = [
+        {"totalRecords": 3, "results": [{"id": "011212161011", "name": "Kraków"}, {"id": "011212105054", "name": "Część"}]},
+        {"totalRecords": 3, "results": [{"id": "011212105033", "name": "Alwernia"}]},
+    ]
+    zapytania = []
+
+    def falszywy_get(url, params=None, **kw):
+        zapytania.append(params)
+        return FalszywaOdpowiedz(strony[params["page"]])
+
+    monkeypatch.setattr(bdl, "ROZMIAR_STRONY", 2)
+    monkeypatch.setattr(bdl.requests, "get", falszywy_get)
+    gminy = bdl.gminy_wojewodztwa(WOJ_RAPORTU)
+    assert [g.nazwa for g in gminy] == ["Alwernia", "Kraków"]  # część gminy (5) pominięta, po nazwie
+    assert zapytania[0]["parent-id"] == WOJ_RAPORTU and zapytania[0]["level"] == 6
+
+
+def test_podsumowanie_wskaznika_gminy():
+    szereg = [{"rok": r, "wartosc": w} for r, w in [(2008, 50.0), (2013, 80.0), (2018, 90.0), (2023, 100.0)]]
+    gminy = [{"bdl_id": GMINA, "wartosc": 100.0}, {"bdl_id": "a", "wartosc": 150.0}, {"bdl_id": "b", "wartosc": 100.0}, {"bdl_id": "c", "wartosc": 20.0}]
+    s = raport_gminy.podsumuj(szereg, gminy, GMINA)
+    assert (s["rok"], s["wartosc"], s["pozycja"], s["liczba_gmin"], s["mediana_wojewodztwa"]) == (2023, 100.0, 2, 4, 100.0)
+    # 10 lat wstecz od 2023 → pierwszy rok ≥ 2013
+    assert s["zmiana"]["od"] == 2013 and s["zmiana"]["zmiana_proc"] == pytest.approx(25.0)
+    assert raport_gminy.podsumuj([], gminy, GMINA) is None
+    jeden = raport_gminy.podsumuj([{"rok": 2023, "wartosc": 5.0}], [], GMINA)
+    assert jeden["zmiana"] is None and jeden["pozycja"] is None and jeden["mediana_wojewodztwa"] is None
+
+    fakty = raport_gminy.fakty_raportu("Kraków", "małopolskie", [{"nazwa": "Ludność", "jednostka": "osoba", "podsumowanie": s}, {"nazwa": "X", "jednostka": "", "podsumowanie": None}])
+    assert fakty[1] == ("Ludność: 100 osoba w 2023 r. W 2013 r. było 80 osoba, zmiana o 25%. "
+                        "Miejsce 2 na 4 gmin województwa (mediana województwa: 100 osoba).")
+    assert len(fakty) == 2
+
+
+@pytest.fixture
+def raport_client(client, monkeypatch):
+    """Klient z podmienionym BDL: jedno województwo, dwie gminy, zmienne 1 (ludność) i 2 (bezrobotni)."""
+    monkeypatch.setattr(atlas_routes, "_wojewodztwa", lambda: [{"bdl_id": WOJ_RAPORTU, "nazwa": "małopolskie", "teryt": "12"}])
+    monkeypatch.setattr(bdl, "gminy_wojewodztwa", lambda woj: [bdl.Jednostka(GMINA, "Kraków", "1261011"), bdl.Jednostka("011212105033", "Alwernia", "1212033")])
+    monkeypatch.setattr(bdl, "pobierz_zmienna", lambda zid: bdl.Zmienna(zid, {1: "ludność ogółem", 2: "bezrobotni"}[zid], "osoba"))
+    szeregi = {1: [{"rok": 2013, "wartosc": 1000.0}, {"rok": 2023, "wartosc": 800.0}], 2: [{"rok": 2023, "wartosc": 40.0}]}
+    monkeypatch.setattr(bdl, "szereg_gminy", lambda zid, gid: szeregi[zid])
+    wartosci = {1: [(GMINA, 800.0), ("011212105033", 5000.0)], 2: [(GMINA, 40.0), ("011212105033", 50.0)]}
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+        {"bdl_id": b, "teryt": b, "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
+    return client
+
+
+def test_raport_gminy_zestaw_i_dane(raport_client):
+    c = raport_client
+    assert "Zestaw wskaźników raportu jest pusty" in c.get(f"/atlas/raport-gminy/{GMINA}").get_data(as_text=True)
+    w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    odp = c.post("/atlas/raport-wskazniki", json={"zmienna": 2, "mianownik": 1, "mnoznik": 1000})
+    assert odp.status_code == 201
+    w2 = odp.get_json()["id"]
+    assert odp.get_json()["wskazniki"][1]["nazwa_pelna"] == "bezrobotni na 1 000 (ludność ogółem)"
+    assert c.post("/atlas/raport-wskazniki", json={"zmienna": "x"}).status_code == 400
+    assert c.post("/atlas/raport-wskazniki", json={"zmienna": 2, "mianownik": 2}).status_code == 400
+
+    html = c.get(f"/atlas/raport-gminy/{GMINA}").get_data(as_text=True)
+    assert "Kraków" in html and "małopolskie" in html and f'data-wskaznik="{w2}"' in html
+    assert c.get("/atlas/raport-gminy/011212105099").status_code == 404
+
+    s = c.get(f"/atlas/raport-gminy/{GMINA}/wskaznik/{w1}").get_json()["podsumowanie"]
+    assert (s["wartosc"], s["pozycja"], s["liczba_gmin"], s["zmiana"]["zmiana_proc"]) == (800.0, 2, 2, pytest.approx(-20.0))
+    s = c.get(f"/atlas/raport-gminy/{GMINA}/wskaznik/{w2}").get_json()["podsumowanie"]
+    assert s["wartosc"] == pytest.approx(50.0) and s["pozycja"] == 1  # 40/800·1000 = 50 > 50/5000·1000 = 10
+
+    zestaw = c.post(f"/atlas/raport-wskazniki/{w2}/przesun", json={"o": -1}).get_json()["wskazniki"]
+    assert [w["id"] for w in zestaw] == [w2, w1]
+    assert c.delete(f"/atlas/raport-wskazniki/{w1}").get_json()["wskazniki"][0]["id"] == w2
+    assert c.get("/atlas/gminy/" + WOJ_RAPORTU).get_json()[0]["nazwa"] == "Kraków"
+
+
+def test_raport_gminy_opis_sprawdza_liczby(raport_client, monkeypatch):
+    c = raport_client
+    c.post("/atlas/raport-wskazniki", json={"zmienna": 1})
+    przekazane = {}
+
+    class Odpowiedz:
+        text = "Kraków ma 800 mieszkańców, o 20% mniej niż w 2013 r."
+
+    class Modele:
+        def generate_content(self, **kw):
+            przekazane["tresc"] = kw["contents"]
+            return Odpowiedz()
+
+    class Klient:
+        def __init__(self, api_key):
+            self.models = Modele()
+
+    from dane import gemini
+    monkeypatch.setattr(gemini.Config, "GEMINI_API_KEY", "test")
+    monkeypatch.setattr(gemini.genai, "Client", Klient)
+    r = c.post(f"/atlas/raport-gminy/{GMINA}/opis")
+    assert r.status_code == 200 and "Miejsce 2 na 2 gmin" in przekazane["tresc"]  # fakty z kodu
+
+    Odpowiedz.text = "Kraków ma 900 mieszkańców."  # liczba spoza faktów
+    r = c.post(f"/atlas/raport-gminy/{GMINA}/opis")
+    assert r.status_code == 502 and "900" in r.get_json()["blad"] and r.get_json()["fakty"]

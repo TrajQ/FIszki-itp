@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block tytul %}Raport gminy — Atlas — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
+        <h1>Raport gminy</h1>
+        <p>Uwarunkowania jednej gminy w jednym miejscu: wskaźniki GUS, zmiana w czasie i miejsce w województwie.</p>
+    </div>
+</div>
+
+<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+
+<section class="karta stos">
+    <h3>1. Gmina</h3>
+    <form id="formularz-gminy" class="wybor-gminy">
+        <label>Województwo <select id="pole-woj" required><option value="">Wczytywanie…</option></select></label>
+        <label>Gmina <select id="pole-gmina" required disabled><option value="">— najpierw województwo —</option></select></label>
+        <button type="submit" id="otworz-raport" disabled>Otwórz raport</button>
+    </form>
+</section>
+
+<section class="karta stos">
+    <h3>2. Wskaźniki raportu</h3>
+    <p class="wyciszony opis-raportu">Zestaw jest wspólny dla wszystkich gmin — ułóż go raz. Wskaźniki wybierasz z wyszukiwarki BDL (zobaczysz dokładną nazwę GUS). Żeby liczyć „na 1000 mieszkańców”, dodaj najpierw ludność ogółem, potem wybierz ją jako mianownik.</p>
+    <ol id="lista-wskaznikow" class="lista-wskaznikow">
+        {% for w in wskazniki %}<li data-id="{{ w.id }}">{{ w.nazwa_pelna }}</li>{% endfor %}
+    </ol>
+    <p id="pusty-zestaw" class="wyciszony" {{ 'hidden' if wskazniki }}>Zestaw jest pusty.</p>
+
+    <form id="formularz-wskaznika" class="stos dodawanie-wskaznika">
+        <label class="pole-wskaznika">Dodaj wskaźnik
+            <input id="pole-szukaj" type="search" placeholder="np. ludność, bezrobotni, mieszkania oddane…" autocomplete="off">
+            <ul id="podpowiedzi" class="podpowiedzi" hidden></ul>
+        </label>
+        <div class="szybki-wybor" aria-label="Typowe wskaźniki diagnozy">
+            {% for fraza in ['ludność', 'gęstość zaludnienia', 'saldo migracji', 'przyrost naturalny', 'wiek przedprodukcyjnym', 'wiek poprodukcyjnym', 'mieszkania oddane', 'podmioty gospodarki', 'bezrobotni', 'planami miejscowymi', 'dochody', 'wydatki'] %}
+            <button type="button" class="szybki-wybor__fraza" data-fraza="{{ fraza }}">{{ fraza }}</button>
+            {% endfor %}
+        </div>
+        <div class="rzad">
+            <label>Następny wskaźnik podziel przez <select id="pole-mianownik"><option value="">— bez przeliczenia —</option></select></label>
+            <label>i pomnóż przez <select id="pole-mnoznik">{% for m in [1000, 100, 10000, 1] %}<option value="{{ m }}">{{ '{:,}'.format(m).replace(',', ' ') }}</option>{% endfor %}</select></label>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
+    const URL_GMINY = "{{ url_for('atlas.gminy_wojewodztwa', woj_bdl_id='000000000000') }}";
+    const URL_ZMIENNE = "{{ url_for('atlas.zmienne') }}";
+    const URL_WSKAZNIKI = "{{ url_for('atlas.dodaj_wskaznik_raportu') }}";
+    const URL_RAPORT = "{{ url_for('atlas.raport_gminy', gmina_bdl_id='000000000000') }}";
+    let WSKAZNIKI = {{ wskazniki | tojson }};
+</script>
+<script src="{{ url_for('atlas.static', filename='raport_wybor.js') }}"></script>
+{% endblock %}

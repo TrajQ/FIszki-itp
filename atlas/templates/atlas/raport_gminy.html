@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block tytul %}{{ gmina.nazwa if gmina else 'Raport gminy' }} — raport gminy — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-gminy{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="raport-gminy">
+    <div class="raport-gminy__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.raport_gminy_wybor') }}">‹ Wybór gminy i wskaźników</a>
+        {% if gmina %}<button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>{% endif %}
+    </div>
+
+    {% if blad %}
+    <p class="komunikat komunikat--blad">{{ blad }}</p>
+    {% else %}
+    <section class="raport-gminy__strona">
+        <h1>{{ gmina.nazwa }}</h1>
+        <p class="wyciszony">
+            {{ {'1': 'gmina miejska', '2': 'gmina wiejska', '3': 'gmina miejsko-wiejska'}[gmina.bdl_id[-1]] }}
+            · województwo {{ wojewodztwo.nazwa }} · TERYT {{ gmina.teryt }}
+        </p>
+
+        {% if not wskazniki %}
+        <p class="komunikat komunikat--ostrzezenie">Zestaw wskaźników raportu jest pusty. <a href="{{ url_for('atlas.raport_gminy_wybor') }}">Dodaj wskaźniki</a> — np. ludność, saldo migracji, bezrobotni.</p>
+        {% else %}
+        <table class="tabela tabela-raportu">
+            <thead>
+                <tr>
+                    <th>Wskaźnik</th><th class="liczba">Rok</th><th class="liczba">Wartość</th>
+                    <th class="liczba">Zmiana w {{ lat_wstecz }} lat</th><th class="liczba">Miejsce w woj.</th>
+                    <th class="liczba">Mediana woj.</th><th>Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for w in wskazniki %}
+                <tr data-wskaznik="{{ w.id }}">
+                    <td>{{ w.nazwa_pelna }}{% if w.jednostka and not w.mianownik_id %} <span class="wyciszony">[{{ w.jednostka }}]</span>{% endif %}</td>
+                    <td class="liczba" data-pole="rok"></td>
+                    <td class="liczba" data-pole="wartosc"><span class="wyciszony">wczytywanie…</span></td>
+                    <td class="liczba" data-pole="zmiana"></td>
+                    <td class="liczba" data-pole="pozycja"></td>
+                    <td class="liczba" data-pole="mediana"></td>
+                    <td data-pole="trend" class="raport-gminy__trend"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="wyciszony przypis">Miejsce: 1 = najwyższa wartość wśród gmin województwa w tym samym roku. Zmiana: od najstarszego roku z ostatnich {{ lat_wstecz }} lat, dla którego GUS ma dane.</p>
+
+        <section class="raport-gminy__opis stos">
+            <div class="rzad rzad--miedzy">
+                <h3>Charakterystyka</h3>
+                <button id="przycisk-opis" type="button" class="przycisk--drugi">✦ Wygeneruj opis</button>
+            </div>
+            <p id="opis" class="wyciszony">Gemini opisze gminę na podstawie liczb z tabeli. Każda liczba w opisie jest sprawdzana — musi pochodzić z danych GUS.</p>
+            <details id="fakty-opisu" hidden>
+                <summary>Fakty przekazane modelowi</summary>
+                <ul id="lista-faktow"></ul>
+            </details>
+        </section>
+        {% endif %}
+        <p class="wyciszony przypis raport-gminy__zrodlo">Źródło danych: GUS, Bank Danych Lokalnych (bdl.stat.gov.pl). Raport z Warsztatu, <span id="data-raportu"></span>.</p>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block skrypty %}
+{% if gmina and wskazniki %}
+<script>
+    const URL_WSKAZNIK = "{{ url_for('atlas.raport_gminy_wskaznik', gmina_bdl_id=gmina.bdl_id, wskaznik_id=0) }}".replace(/0$/, "");
+    const URL_OPIS = "{{ url_for('atlas.raport_gminy_opis', gmina_bdl_id=gmina.bdl_id) }}";
+</script>
+<script src="{{ url_for('atlas.static', filename='raport_gminy.js') }}"></script>
+{% endif %}
+{% endblock %}

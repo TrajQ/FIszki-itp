@@ -20,7 +20,23 @@ CREATE TABLE IF NOT EXISTS cache_bdl (
     dane_json TEXT NOT NULL,
     data_pobrania TEXT NOT NULL
 );
+
+-- ETAP 63: zestaw wskaźników „Raportu gminy” — układa go użytkownik z
+-- wyszukiwarki BDL (bez identyfikatorów zmiennych wpisanych w kod).
+-- mianownik: opcjonalnie inna zmienna BDL (np. ludność) → wskaźnik względny.
+CREATE TABLE IF NOT EXISTS raport_wskazniki (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    zmienna_id INTEGER NOT NULL,
+    nazwa TEXT NOT NULL,
+    jednostka TEXT NOT NULL DEFAULT '',
+    mianownik_id INTEGER,
+    mianownik_nazwa TEXT,
+    mnoznik INTEGER NOT NULL DEFAULT 1,
+    kolejnosc INTEGER NOT NULL
+);
 """
+
+MAKS_WSKAZNIKOW_RAPORTU = 20
 
 
 def folder_modulu() -> str:
@@ -80,3 +96,50 @@ def liczba_zapisanych_zestawow() -> int:
     return get_db().execute(
         "SELECT COUNT(*) FROM cache_bdl WHERE klucz LIKE 'dane:%'"
     ).fetchone()[0]
+
+
+# ---------- zestaw wskaźników raportu gminy (ETAP 63) ----------
+
+
+def wskazniki_raportu() -> list[dict]:
+    wiersze = get_db().execute("SELECT * FROM raport_wskazniki ORDER BY kolejnosc, id").fetchall()
+    return [dict(w) for w in wiersze]
+
+
+def dodaj_wskaznik_raportu(zmienna: dict, mianownik: dict | None, mnoznik: int) -> int:
+    db = get_db()
+    kolejnosc = db.execute("SELECT COALESCE(MAX(kolejnosc), -1) + 1 FROM raport_wskazniki").fetchone()[0]
+    wskaznik_id = db.execute(
+        """INSERT INTO raport_wskazniki (zmienna_id, nazwa, jednostka, mianownik_id, mianownik_nazwa, mnoznik, kolejnosc)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (
+            zmienna["id"], zmienna["nazwa"], zmienna["jednostka"] or "",
+            mianownik["id"] if mianownik else None, mianownik["nazwa"] if mianownik else None,
+            mnoznik if mianownik else 1, kolejnosc,
+        ),
+    ).lastrowid
+    db.commit()
+    return wskaznik_id
+
+
+def usun_wskaznik_raportu(wskaznik_id: int) -> bool:
+    db = get_db()
+    usuniete = db.execute("DELETE FROM raport_wskazniki WHERE id = ?", (wskaznik_id,)).rowcount
+    db.commit()
+    return bool(usuniete)
+
+
+def przesun_wskaznik_raportu(wskaznik_id: int, o: int) -> bool:
+    """Zamienia miejscami z sąsiadem wyżej (o = -1) albo niżej (o = 1)."""
+    lista = wskazniki_raportu()
+    indeksy = [i for i, w in enumerate(lista) if w["id"] == wskaznik_id]
+    if not indeksy:
+        return False
+    i, j = indeksy[0], indeksy[0] + o
+    if 0 <= j < len(lista):
+        lista[i], lista[j] = lista[j], lista[i]
+        db = get_db()
+        for k, w in enumerate(lista):
+            db.execute("UPDATE raport_wskazniki SET kolejnosc = ? WHERE id = ?", (k, w["id"]))
+        db.commit()
+    return True

@@ -14,6 +14,7 @@
         <h1>Atlas gmin</h1>
         <p>Wskaźniki z Banku Danych Lokalnych GUS. Kartogram, ranking i opis dla wybranego województwa.</p>
     </div>
+    <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.raport_gminy_wybor') }}">Raport gminy</a>
 </div>
 
 <form id="formularz-atlasu" class="karta panel-wyboru">
@@ -108,6 +109,7 @@
                 <div id="profil-liczby" class="profil__liczby"></div>
                 <div id="profil-wykres" class="profil__wykres"></div>
                 <p id="profil-status" class="wyciszony profil__status"></p>
+                <a id="profil-raport" class="przycisk przycisk--tekst" href="#">Raport tej gminy ›</a>
                 <details id="profil-tabela-wrap" hidden>
                     <summary>Tabela wartości</summary>
                     <table id="profil-tabela" class="tabela"></table>
@@ -210,6 +212,7 @@
     const URL_AUTOKORELACJA = "{{ url_for('atlas.autokorelacja_przestrzenna') }}";
     const URL_WOJEWODZTWA_POROWNANIE = "{{ url_for('atlas.wojewodztwa_porownanie') }}";
     const URL_KORELACJA = "{{ url_for('atlas.korelacja') }}";
+    const URL_RAPORT_GMINY = "{{ url_for('atlas.raport_gminy', gmina_bdl_id='000000000000') }}";
     const URL_PROFIL = "{{ url_for('atlas.profil_gminy', gmina_bdl_id='000000000000') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>

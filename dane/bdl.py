@@ -94,6 +94,32 @@ def wojewodztwa() -> list[Jednostka]:
     )
 
 
+def gminy_wojewodztwa(wojewodztwo_bdl_id: str) -> list[Jednostka]:
+    """Gminy województwa (bez części gmin miejsko-wiejskich), po nazwie (ETAP 63)."""
+    wyniki = []
+    strona = 0
+    while True:
+        dane = _pobierz(
+            "/units",
+            {"parent-id": wojewodztwo_bdl_id, "level": POZIOM_GMINA, "page-size": ROZMIAR_STRONY, "page": strona},
+        )
+        for j in dane.get("results", []):
+            if j["id"][-1] in RODZAJE_GMIN:
+                wyniki.append(Jednostka(bdl_id=j["id"], nazwa=j["name"], teryt=teryt_z_id_bdl(j["id"])))
+        strona += 1
+        if strona * ROZMIAR_STRONY >= dane.get("totalRecords", 0) or not dane.get("results"):
+            break
+    return sorted(wyniki, key=lambda j: j.nazwa)
+
+
+def wojewodztwo_gminy(gmina_bdl_id: str) -> str:
+    """Identyfikator BDL województwa, w którym leży gmina: makroregion i
+    województwo z początku identyfikatora, reszta zerami („011212161011” →
+    „011200000000”)."""
+    teryt_z_id_bdl(gmina_bdl_id)  # walidacja formatu
+    return gmina_bdl_id[:4] + "0" * 8
+
+
 def wartosci_dla_gmin(zmienna_id: int, rok: int, wojewodztwo_bdl_id: str) -> list[Wartosc]:
     """Wartości zmiennej w danym roku dla wszystkich gmin województwa.
 

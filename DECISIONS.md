@@ -1465,3 +1465,32 @@ tłumaczy i opisuje, treść i liczby pochodzą ze źródła.
   rozmiar zapytania, a cytaty trudniej sprawdzić.
 - Wyszukiwanie semantyczne (embeddingi) — nowa zależność i koszt;
   FTS5 z odmianą po początku słowa wystarcza na start.
+
+## D-069 — Atlas: Raport gminy z zestawu wskaźników ułożonego przez użytkownika
+Data: 2026-09-29
+
+**Decyzja:** „Raport gminy” (`/atlas/raport-gminy`) pokazuje dla jednej
+gminy każdy wskaźnik z zestawu raportu: ostatni rok z danymi, wartość,
+zmianę od najstarszego roku z ostatnich 10 lat, miejsce w województwie
+w tym samym roku (1 = najwyższa, remisy dzielą miejsce), medianę
+województwa i mały wykres trendu, z opcjonalną charakterystyką Gemini
+(ze sprawdzaniem liczb, jak w opisie wskaźnika). Zestaw wskaźników
+(tabela `raport_wskazniki` w bazie atlasu, wspólny dla wszystkich gmin)
+użytkownik układa z wyszukiwarki BDL. Przeliczenie „na 1000
+mieszkańców” — mianownik wybierany spośród wskaźników zestawu. Lista
+gmin województwa: nowe zapytanie BDL `/units?parent-id=…&level=6`
+(`bdl.gminy_wojewodztwa`), województwo gminy z identyfikatora BDL.
+Każdy wskaźnik to osobne zapytanie z przeglądarki (po 3 naraz). Zmiana
+w tabeli bez kolorów „dobrze/źle”, tylko ▲/▼.
+
+**Uzasadnienie:** Identyfikatorów zmiennych BDL nie wpisujemy w kod z
+pamięci — nie da się ich tu sprawdzić, a pomyłka dałaby raport z
+cudzymi danymi (ta sama zasada co przy szybkim wyborze, ETAP 40).
+Użytkownik widzi dokładną nazwę GUS przy dodawaniu. Osobne zapytania
+na wskaźnik: wolne API GUS nie blokuje strony, a błąd jednego wskaźnika
+nie psuje reszty.
+
+**Odrzucone alternatywy:**
+- Gotowy zestaw wskaźników z identyfikatorami w kodzie — odrzucone
+  (zgadywanie identyfikatorów).
+- Jedno zapytanie liczące cały raport — długie czekanie bez postępu.
