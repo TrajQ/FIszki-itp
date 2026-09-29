@@ -24,6 +24,7 @@
                 <tr><th>Jednostka ewidencyjna</th><td>{{ jednostka }}{% if gmina %} ({{ gmina.nazwa }}){% endif %}</td></tr>
                 <tr><th>Obręb</th><td>{{ obreb }}</td></tr>
                 <tr><th>Numer</th><td>{{ numer }}</td></tr>
+                {% if zapis and zapis.notatka %}<tr><th>Notatka</th><td>{{ zapis.notatka }}</td></tr>{% endif %}
                 <tr><th>Powierzchnia (z geometrii)</th><td class="liczba">{{ '{:,.0f}'.format(powierzchnia).replace(',', ' ') }} m² ({{ ('%.4f' % (powierzchnia / 10000)).replace('.', ',') }} ha)</td></tr>
             </table>
         </div>

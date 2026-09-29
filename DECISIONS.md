@@ -1032,3 +1032,22 @@ min. 50 m jest opisana ze źródłem.
 **Odrzucone alternatywy:**
 - Automatyczne wykrywanie frontu (bok najbliżej drogi) — odrzucone: brak
   danych o drogach w używanych usługach, byłoby zgadywaniem.
+
+## D-050 — „Moje działki”: osobna tabela z notatką, poza historią
+Data: 2026-09-29
+
+**Decyzja:** Tabela `zapisane` w bazie mpzp: działki zapisane gwiazdką,
+z notatką (do 2000 znaków), położeniem, powierzchnią i przeznaczeniem z
+chwili zapisu. Bez limitu i niezależna od historii (ta trzyma ostatnie
+20 sprawdzeń). Notatka zapisuje się po wyjściu z pola; lista trafia do
+CSV (średnik, BOM) i do raportu działki. Identyfikator przechodzi przez
+ten sam wzorzec co wyszukiwanie ULDK.
+
+**Uzasadnienie:** Na zajęciach pracuje się na kilku konkretnych
+działkach przez cały semestr. Historia sama je wypiera, a notatka
+(„wariant B”, „działka sąsiada”) jest częścią pracy. Osobna tabela
+zamiast kolumny w `historia`, bo cykl życia jest inny.
+
+**Odrzucone alternatywy:**
+- Flaga „ulubiona” w tabeli historii — odrzucone: wpis znikałby po 20
+  kolejnych sprawdzeniach albo historia przestałaby mieć limit.

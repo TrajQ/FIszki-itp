@@ -306,3 +306,9 @@
 - MPZP: obszar analizowany do decyzji WZ — wybór boku frontu (podświetlony
   na mapie), bufor max(3 × front, 50 m) z powierzchnią.
 - Dodano `DECISIONS.md` D-049 i 5 testów.
+
+## ETAP 44 — 2026-09-29
+- MPZP: „Moje działki” — gwiazdka w panelu działki, notatka zapisywana
+  automatycznie, lista w panelu bocznym (klik → działka na mapie),
+  eksport CSV, notatka w raporcie do druku.
+- Dodano `DECISIONS.md` D-050 i 8 testów.

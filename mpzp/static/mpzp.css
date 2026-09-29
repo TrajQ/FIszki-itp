@@ -717,3 +717,55 @@ button.wpis-historii:hover {
 .mapa--bez-podpisow .etykieta-boku {
     display: none;
 }
+
+/* Moje działki (ETAP 44) */
+.zapis-dzialki {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+button.zapis-dzialki__gwiazdka {
+    align-self: flex-start;
+    padding: 6px 14px;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+    color: var(--tekst);
+    font-size: 14px;
+}
+
+button.zapis-dzialki__gwiazdka--aktywna {
+    background: rgba(255, 159, 10, 0.18);
+    color: var(--ostrzezenie);
+}
+
+.zapis-dzialki__notatka {
+    width: 100%;
+    resize: vertical;
+    font-size: 14px;
+}
+
+.zapis-dzialki__stan {
+    font-size: 12px;
+}
+
+button.wpis-zapisany {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.wpis-zapisany__gora {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.wpis-zapisany__notatka {
+    overflow: hidden;
+    color: var(--tekst-drugi);
+    font-size: 12px;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

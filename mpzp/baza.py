@@ -1,7 +1,11 @@
 """Baza modułu mpzp (surowy sqlite3, jak w pozostałych modułach — D-004).
 
-Jedna tabela: historia sprawdzonych działek, żeby łatwo do nich wrócić.
-Trzymamy tylko ostatnie LIMIT_HISTORII wpisów, bez duplikatów działki.
+Tabela `historia`: sprawdzone działki, żeby łatwo do nich wrócić —
+tylko ostatnie LIMIT_HISTORII wpisów, bez duplikatów działki.
+
+Tabela `zapisane` (ETAP 44): „Moje działki” — działki zapisane świadomie
+(np. do projektu na zajęcia), z notatką, bez limitu i bez wypierania
+przez nowe sprawdzenia.
 """
 
 import os
@@ -19,6 +23,17 @@ CREATE TABLE IF NOT EXISTS historia (
     lat REAL NOT NULL,
     lon REAL NOT NULL,
     data_sprawdzenia TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS zapisane (
+    dzialka_id TEXT PRIMARY KEY,
+    przeznaczenie TEXT,
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    powierzchnia_m2 REAL,
+    notatka TEXT NOT NULL DEFAULT '',
+    data_dodania TEXT NOT NULL,
+    data_zmiany TEXT NOT NULL
 );
 """
 
@@ -66,3 +81,43 @@ def historia() -> list[dict]:
         "SELECT * FROM historia ORDER BY rowid DESC"
     ).fetchall()
     return [dict(w) for w in wiersze]
+
+
+# ---------- Moje działki (ETAP 44) ----------
+
+
+def zapisane() -> list[dict]:
+    wiersze = get_db().execute("SELECT * FROM zapisane ORDER BY data_dodania DESC, rowid DESC").fetchall()
+    return [dict(w) for w in wiersze]
+
+
+def zapisana(dzialka_id: str) -> dict | None:
+    wiersz = get_db().execute("SELECT * FROM zapisane WHERE dzialka_id = ?", (dzialka_id,)).fetchone()
+    return dict(wiersz) if wiersz else None
+
+
+def zapisz_dzialke(dzialka_id: str, przeznaczenie, lat: float, lon: float, powierzchnia_m2, notatka: str) -> dict:
+    """Dodaje działkę albo aktualizuje notatkę i dane (data dodania zostaje)."""
+    teraz = datetime.now().isoformat(timespec="seconds")
+    db = get_db()
+    db.execute(
+        """INSERT INTO zapisane (dzialka_id, przeznaczenie, lat, lon, powierzchnia_m2, notatka, data_dodania, data_zmiany)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(dzialka_id) DO UPDATE SET
+               przeznaczenie = excluded.przeznaczenie,
+               lat = excluded.lat,
+               lon = excluded.lon,
+               powierzchnia_m2 = excluded.powierzchnia_m2,
+               notatka = excluded.notatka,
+               data_zmiany = excluded.data_zmiany""",
+        (dzialka_id, przeznaczenie, lat, lon, powierzchnia_m2, notatka, teraz, teraz),
+    )
+    db.commit()
+    return zapisana(dzialka_id)
+
+
+def usun_zapisana(dzialka_id: str) -> bool:
+    db = get_db()
+    usunieto = db.execute("DELETE FROM zapisane WHERE dzialka_id = ?", (dzialka_id,)).rowcount
+    db.commit()
+    return usunieto > 0

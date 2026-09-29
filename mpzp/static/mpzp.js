@@ -115,6 +115,8 @@
     const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
 
     let ostatnieWspolrzedne = null; // z ostatniej odpowiedzi serwera (ETAP 36)
+    let ostatniaOdpowiedz = null; // cała odpowiedź — punkt i przeznaczenie do „Moich działek”
+    const zapisaneDzialki = new Map(); // id → wpis z serwera (ETAP 44)
 
     const formatWsp = new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
 
@@ -181,6 +183,7 @@
         linki.append(kalkulator, raport, geojson, geoportal);
         naglowek.append(element("h3", "", "Działka"), linki);
         sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
+        sekcja.appendChild(sekcjaZapisu(dzialka));
         if (dzialka.powierzchnia_m2) {
             sekcja.appendChild(
                 element("div", "powierzchnia", `Powierzchnia: ${formatM2.format(dzialka.powierzchnia_m2)} m² (${(dzialka.powierzchnia_m2 / 10000).toLocaleString("pl-PL", { maximumFractionDigits: 4 })} ha)`)
@@ -189,6 +192,132 @@
         if (dzialka.wymiary) sekcja.appendChild(sekcjaWymiarow(dzialka));
         if (ostatnieWspolrzedne) sekcja.appendChild(sekcjaWspolrzednych(ostatnieWspolrzedne));
         return sekcja;
+    }
+
+    // ---------- Moje działki: gwiazdka i notatka (ETAP 44) ----------
+
+    function przeznaczenieZOdpowiedzi(dane) {
+        if (!dane) return null;
+        if (dane.wydzielenie) return dane.wydzielenie.przeznaczenie || null;
+        if (dane.plan_krajowy) return dane.plan_krajowy.przeznaczenie || "plan";
+        return null;
+    }
+
+    async function wyslijZapis(dzialka, notatka) {
+        const dane = ostatniaOdpowiedz && ostatniaOdpowiedz.dzialka && ostatniaOdpowiedz.dzialka.id === dzialka.id ? ostatniaOdpowiedz : null;
+        const zapisany = zapisaneDzialki.get(dzialka.id);
+        const punkt = dane ? dane.punkt : zapisany ? { lat: zapisany.lat, lon: zapisany.lon } : null;
+        if (!punkt) throw new Error("Brak położenia działki.");
+        const odpowiedz = await fetch(URL_ZAPISANE, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id: dzialka.id,
+                lat: punkt.lat,
+                lon: punkt.lon,
+                powierzchnia_m2: dzialka.powierzchnia_m2,
+                przeznaczenie: dane ? przeznaczenieZOdpowiedzi(dane) : zapisany.przeznaczenie,
+                notatka,
+            }),
+        });
+        const wynik = await odpowiedz.json();
+        if (!odpowiedz.ok) throw new Error(wynik.blad || `Błąd ${odpowiedz.status}`);
+        zapisaneDzialki.set(wynik.dzialka_id, wynik);
+        rysujZapisane();
+        return wynik;
+    }
+
+    function sekcjaZapisu(dzialka) {
+        const blok = element("div", "zapis-dzialki");
+        const gwiazdka = element("button", "zapis-dzialki__gwiazdka");
+        gwiazdka.type = "button";
+        const notatka = element("textarea", "zapis-dzialki__notatka");
+        notatka.rows = 2;
+        notatka.maxLength = 2000;
+        notatka.placeholder = "Notatka, np. „projekt z urbanistyki — wariant B”";
+        const stan = element("span", "zapis-dzialki__stan wyciszony");
+
+        const odswiez = () => {
+            const wpis = zapisaneDzialki.get(dzialka.id);
+            gwiazdka.textContent = wpis ? "★ W moich działkach" : "☆ Zapisz do moich działek";
+            gwiazdka.classList.toggle("zapis-dzialki__gwiazdka--aktywna", Boolean(wpis));
+            notatka.hidden = !wpis;
+            if (wpis && document.activeElement !== notatka) notatka.value = wpis.notatka;
+        };
+
+        gwiazdka.addEventListener("click", async () => {
+            gwiazdka.disabled = true;
+            try {
+                if (zapisaneDzialki.has(dzialka.id)) {
+                    const odpowiedz = await fetch(`${URL_ZAPISANE}?id=${encodeURIComponent(dzialka.id)}`, { method: "DELETE" });
+                    if (!odpowiedz.ok && odpowiedz.status !== 404) throw new Error(`Błąd ${odpowiedz.status}`);
+                    zapisaneDzialki.delete(dzialka.id);
+                    rysujZapisane();
+                } else {
+                    await wyslijZapis(dzialka, "");
+                    notatka.hidden = false;
+                    notatka.focus();
+                }
+                stan.textContent = "";
+            } catch (e) {
+                stan.textContent = e.message;
+            } finally {
+                gwiazdka.disabled = false;
+                odswiez();
+            }
+        });
+
+        // Notatka zapisuje się sama po wyjściu z pola.
+        notatka.addEventListener("change", async () => {
+            stan.textContent = "Zapisuję…";
+            try {
+                await wyslijZapis(dzialka, notatka.value);
+                stan.textContent = "Zapisano";
+                setTimeout(() => (stan.textContent = ""), 1500);
+            } catch (e) {
+                stan.textContent = e.message;
+            }
+        });
+
+        odswiez();
+        blok.append(gwiazdka, notatka, stan);
+        return blok;
+    }
+
+    const listaZapisanych = document.getElementById("zapisane");
+
+    function rysujZapisane() {
+        listaZapisanych.replaceChildren();
+        if (zapisaneDzialki.size === 0) {
+            listaZapisanych.appendChild(element("li", "wyciszony", "Zapisz działkę gwiazdką w panelu wyniku."));
+            return;
+        }
+        for (const wpis of zapisaneDzialki.values()) {
+            const li = element("li");
+            const przycisk = element("button", "wpis-historii wpis-zapisany");
+            przycisk.type = "button";
+            const gora = element("span", "wpis-zapisany__gora");
+            gora.append(
+                element("span", "identyfikator", `★ ${wpis.dzialka_id}`),
+                element("span", wpis.przeznaczenie ? "etykieta etykieta--sukces" : "etykieta", wpis.przeznaczenie || "bez planu")
+            );
+            przycisk.appendChild(gora);
+            if (wpis.notatka) przycisk.appendChild(element("span", "wpis-zapisany__notatka", wpis.notatka));
+            przycisk.addEventListener("click", () => sprawdzPunkt(wpis.lat, wpis.lon, true));
+            li.appendChild(przycisk);
+            listaZapisanych.appendChild(li);
+        }
+    }
+
+    function wczytajZapisane() {
+        fetch(URL_ZAPISANE)
+            .then((odpowiedz) => odpowiedz.json())
+            .then((wpisy) => {
+                zapisaneDzialki.clear();
+                for (const wpis of wpisy) zapisaneDzialki.set(wpis.dzialka_id, wpis);
+                rysujZapisane();
+            })
+            .catch(() => {});
     }
 
     // ---------- wymiary działki i obszar analizowany WZ (ETAP 43) ----------
@@ -417,6 +546,7 @@
     function obsluzOdpowiedz(dane, przyblizDoDzialki) {
         wyczyscWarstwy();
         ostatnieWspolrzedne = dane.wspolrzedne || null;
+        ostatniaOdpowiedz = dane;
         if (dane.dzialka) {
             warstwaDzialki = L.geoJSON(dane.dzialka.geometria, {
                 style: { color: "#0071e3", weight: 2, fillOpacity: 0.1 },
@@ -751,4 +881,5 @@
     });
 
     odswiezHistorie();
+    wczytajZapisane();
 })();

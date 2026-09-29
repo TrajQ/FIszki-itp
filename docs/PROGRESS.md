@@ -1028,3 +1028,16 @@ Status: zamknięty
 
 Testy: 288 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap43_20260929.zip
+
+## ETAP 44 — MPZP: Moje działki
+Data: 2026-09-29
+Status: zamknięty
+
+- `baza.zapisane/zapisana/zapisz_dzialke/usun_zapisana`, tabela
+  `zapisane` (CREATE IF NOT EXISTS — stare bazy działają bez migracji)
+- `GET/POST/DELETE /mpzp/zapisane`, `/mpzp/zapisane.csv`
+- Sprawdzone w przeglądarce: zapis, notatka, przeładowanie, odznaczenie
+- `DECISIONS.md`: D-050
+
+Testy: 296 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap44_20260929.zip

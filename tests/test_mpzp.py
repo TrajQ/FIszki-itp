@@ -636,3 +636,58 @@ def test_sprawdz_zwraca_wymiary_dzialki(client, monkeypatch):
     monkeypatch.setattr(mpzp_routes, "znajdz_dzialke", lambda lat, lon: _dzialka_warszawa())
     dzialka = client.get("/mpzp/sprawdz?lat=52.205&lon=21.005").get_json()["dzialka"]
     assert dzialka["wymiary"]["boki"] and dzialka["wymiary"]["obwod_m"] > 0
+
+
+# ---------- ETAP 44: Moje działki ----------
+
+ID_ZAPISANEJ = "306401_1.0051.AR_18.14/2"
+
+
+def _zapisz(client, **zmiany):
+    dane = {"id": ID_ZAPISANEJ, "lat": 52.41, "lon": 16.93, "powierzchnia_m2": 612.4, "przeznaczenie": "2MN", "notatka": "wariant A"}
+    dane.update(zmiany)
+    return client.post("/mpzp/zapisane", json=dane)
+
+
+def test_zapisane_dodanie_zmiana_notatki_i_usuniecie(client):
+    assert client.get("/mpzp/zapisane").get_json() == []
+    pierwszy = _zapisz(client).get_json()
+    assert pierwszy["notatka"] == "wariant A" and pierwszy["przeznaczenie"] == "2MN"
+
+    drugi = _zapisz(client, notatka="  wariant B  ").get_json()
+    assert drugi["notatka"] == "wariant B"
+    assert drugi["data_dodania"] == pierwszy["data_dodania"]  # zmiana notatki nie zmienia daty dodania
+    assert len(client.get("/mpzp/zapisane").get_json()) == 1
+
+    assert client.delete(f"/mpzp/zapisane?id={ID_ZAPISANEJ}").status_code == 200
+    assert client.get("/mpzp/zapisane").get_json() == []
+    assert client.delete(f"/mpzp/zapisane?id={ID_ZAPISANEJ}").status_code == 404
+
+
+@pytest.mark.parametrize(
+    "zmiany",
+    [{"id": "zly"}, {"lat": "x"}, {"lat": 95}, {"lon": "inf"}, {"powierzchnia_m2": "nan"}, {"notatka": "x" * 2001}],
+)
+def test_zapisane_zle_dane(client, zmiany):
+    odpowiedz = _zapisz(client, **zmiany)
+    assert odpowiedz.status_code == 400 and "blad" in odpowiedz.get_json()
+
+
+def test_zapisane_nie_znikaja_z_historia_i_trafiaja_do_csv_i_raportu(client, monkeypatch):
+    _zapisz(client, notatka="projekt; urbanistyka")
+    # historia ma limit 20 wpisów — zapisane działki nie są przez nią wypierane
+    with client.application.app_context():
+        for i in range(25):
+            mpzp_routes.zapisz_w_historii(f"306401_1.0051.AR_18.{i}", None, 52.4, 16.9)
+    assert len(client.get("/mpzp/historia").get_json()) == 20
+    assert len(client.get("/mpzp/zapisane").get_json()) == 1
+    csv_tekst = client.get("/mpzp/zapisane.csv").get_data(as_text=True)
+    assert csv_tekst.startswith("﻿id_dzialki;")
+    assert '"projekt; urbanistyka"' in csv_tekst and "612,4" in csv_tekst
+
+    monkeypatch.setattr(
+        mpzp_routes, "znajdz_dzialke_po_id",
+        lambda i: Dzialka(id=ID_ZAPISANEJ, geometria=Polygon([(16.93, 52.41), (16.931, 52.41), (16.931, 52.411), (16.93, 52.411)]), teryt_gminy="146501"),
+    )
+    html = client.get(f"/mpzp/raport?id={ID_ZAPISANEJ}").get_data(as_text=True)
+    assert "projekt; urbanistyka" in html
