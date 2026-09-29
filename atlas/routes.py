@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import os
+import statistics
 from dataclasses import asdict
 
 from flask import Blueprint, Response, jsonify, render_template, request
@@ -326,6 +327,50 @@ def _policz_dane(
             "progi_zmiany_proc": statystyki.PROGI_ZMIANY_PROC,
         }
     return wynik
+
+
+# ---------- Na tle kraju: porównanie województw (ETAP 52) ----------
+
+
+def _wartosci_wojewodztw(zmienna_id: int, rok: int) -> list[dict]:
+    return z_cache(
+        f"woj:{zmienna_id}:{rok}",
+        lambda: [asdict(w) for w in bdl.wartosci_dla_wojewodztw(zmienna_id, rok)],
+    )
+
+
+@atlas_bp.route("/wojewodztwa-porownanie")
+def wojewodztwa_porownanie():
+    """Ten sam wskaźnik (i rok) dla wszystkich województw — ranking z
+    wyróżnionym województwem z mapy. Wskaźnik względny też działa."""
+    try:
+        parametry = _parametry_zapytania(request.args)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    try:
+        wartosci = _wartosci_wojewodztw(parametry["zmienna_id"], parametry["rok"])
+        if parametry["mianownik"] is not None:
+            wartosci = statystyki.podziel(
+                wartosci, _wartosci_wojewodztw(parametry["mianownik"], parametry["rok"]), parametry["mnoznik"]
+            )
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    if not wartosci:
+        return jsonify({"blad": "BDL nie ma tego wskaźnika na poziomie województw w tym roku."}), 404
+
+    ranking = sorted(wartosci, key=lambda w: w["wartosc"], reverse=True)
+    for miejsce, w in enumerate(ranking, start=1):
+        w["miejsce"] = miejsce
+        w["wybrane"] = w["bdl_id"] == parametry["woj_bdl_id"]
+    liczby = [w["wartosc"] for w in ranking]
+    return jsonify(
+        {
+            "rok": parametry["rok"],
+            "wojewodztwa": ranking,
+            "mediana": statistics.median(liczby),
+            "wybrane": next((w for w in ranking if w["wybrane"]), None),
+        }
+    )
 
 
 @atlas_bp.route("/korelacja")

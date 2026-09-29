@@ -1145,3 +1145,16 @@ Status: zamknięty
 
 Testy: 331 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap51_20260929.zip
+
+## ETAP 52 — Atlas: na tle kraju
+Data: 2026-09-29
+Status: zamknięty
+
+- `bdl.wartosci_dla_wojewodztw`, `/atlas/wojewodztwa-porownanie`,
+  `static/wojewodztwa.js` (numerowanie zapytań)
+- Sprawdzone w przeglądarce (jasny i ciemny motyw); BDL na żywo
+  niedostępny z kontenera
+- `DECISIONS.md`: D-057
+
+Testy: 333 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap52_20260929.zip

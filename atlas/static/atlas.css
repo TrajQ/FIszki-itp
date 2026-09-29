@@ -753,3 +753,66 @@ button.przelacznik__opcja--aktywna:hover {
         border-radius: 0;
     }
 }
+
+/* Na tle kraju (ETAP 52) */
+.na-tle-kraju {
+    margin-bottom: 24px;
+}
+
+.lista-wojewodztw {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* kolumnami: 1–8 po lewej, 9–16 po prawej — ranking czyta się z góry na dół */
+    grid-template-rows: repeat(8, auto);
+    grid-auto-flow: column;
+    gap: 4px 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.wiersz-wojewodztwa {
+    display: grid;
+    grid-template-columns: 28px 150px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.wiersz-wojewodztwa--wybrane {
+    background: var(--akcent-tlo);
+    font-weight: 600;
+}
+
+.wiersz-wojewodztwa__miejsce {
+    color: var(--tekst-drugi);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.wiersz-wojewodztwa__tor {
+    height: 8px;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+}
+
+.wiersz-wojewodztwa__slupek {
+    display: block;
+    height: 100%;
+    border-radius: 980px;
+    background: #1f73de;
+}
+
+.wiersz-wojewodztwa__wartosc {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+    .lista-wojewodztw {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-auto-flow: row;
+    }
+}

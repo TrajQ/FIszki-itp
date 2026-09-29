@@ -365,3 +365,9 @@
 - Fiszki: pasek „utrwalone %” przy każdym pliku.
 - Powtórka: przełącznik „Odwróć: odpowiedź → pytanie” (zapamiętany).
 - Dodano `fiszki/egzaminy.py`, `DECISIONS.md` D-056 i 7 testów.
+
+## ETAP 52 — 2026-09-29
+- Atlas: „Na tle kraju” — ranking 16 województw dla tego samego
+  wskaźnika i roku (także względnego), z miejscem wybranego województwa
+  i medianą; `/atlas/wojewodztwa-porownanie`.
+- Dodano `DECISIONS.md` D-057 i 2 testy.

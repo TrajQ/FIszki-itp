@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 51 (fiszki: egzaminy, postęp, odwrócona powtórka — zamknięty)
-Ostatni ZIP: releases/warsztat_etap51_20260929.zip
-Testy: 331 passed / 0 failed
+ETAP: 52 (atlas: na tle kraju — zamknięty)
+Ostatni ZIP: releases/warsztat_etap52_20260929.zip
+Testy: 333 passed / 0 failed

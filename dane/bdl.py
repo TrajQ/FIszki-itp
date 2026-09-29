@@ -134,6 +134,28 @@ def wartosci_dla_gmin(zmienna_id: int, rok: int, wojewodztwo_bdl_id: str) -> lis
     return wyniki
 
 
+def wartosci_dla_wojewodztw(zmienna_id: int, rok: int) -> list[Wartosc]:
+    """Wartości zmiennej w danym roku dla wszystkich 16 województw (ETAP 52)."""
+    dane = _pobierz(
+        f"/data/by-variable/{zmienna_id}",
+        {"unit-level": POZIOM_WOJEWODZTWO, "year": rok, "page-size": ROZMIAR_STRONY},
+    )
+    wyniki = []
+    for jednostka in dane.get("results", []):
+        wartosc = _wartosc_z_roku(jednostka.get("values", []), rok)
+        if wartosc is None:
+            continue
+        wyniki.append(
+            Wartosc(
+                bdl_id=jednostka["id"],
+                teryt=teryt_z_id_bdl(jednostka["id"]),
+                nazwa=jednostka["name"].lower(),
+                wartosc=wartosc,
+            )
+        )
+    return wyniki
+
+
 def szereg_gminy(zmienna_id: int, gmina_bdl_id: str) -> list[dict]:
     """Wartości zmiennej dla jednej gminy we wszystkich dostępnych latach:
     [{"rok": 2010, "wartosc": 123.0}, ...] rosnąco po roku (braki pominięte)."""

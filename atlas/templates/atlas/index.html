@@ -157,6 +157,12 @@
         </div>
     </section>
 
+    <section id="na-tle-kraju" class="karta stos na-tle-kraju" hidden>
+        <h3>Na tle kraju</h3>
+        <p id="opis-kraju" class="wyciszony"></p>
+        <ol id="lista-wojewodztw" class="lista-wojewodztw"></ol>
+    </section>
+
     <section id="korelacja" class="karta stos korelacja">
         <div class="rzad rzad--miedzy">
             <div>
@@ -202,6 +208,7 @@
     const URL_KLASY = "{{ url_for('atlas.klasy') }}";
     const URL_DRUK = "{{ url_for('atlas.druk') }}";
     const URL_AUTOKORELACJA = "{{ url_for('atlas.autokorelacja_przestrzenna') }}";
+    const URL_WOJEWODZTWA_POROWNANIE = "{{ url_for('atlas.wojewodztwa_porownanie') }}";
     const URL_KORELACJA = "{{ url_for('atlas.korelacja') }}";
     const URL_PROFIL = "{{ url_for('atlas.profil_gminy', gmina_bdl_id='000000000000') }}";
 </script>
@@ -209,4 +216,5 @@
 <script src="{{ url_for('atlas.static', filename='wykres_gminy.js') }}"></script>
 <script src="{{ url_for('atlas.static', filename='atlas.js') }}"></script>
 <script src="{{ url_for('atlas.static', filename='korelacja.js') }}"></script>
+<script src="{{ url_for('atlas.static', filename='wojewodztwa.js') }}"></script>
 {% endblock %}

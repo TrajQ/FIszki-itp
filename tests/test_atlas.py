@@ -859,3 +859,41 @@ def test_endpoint_mapy_do_druku(client, monkeypatch):
     assert client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=cos").status_code == 400
     strona = client.get(f"/atlas/druk?{ZAPYTANIE}&tryb=wartosc").get_data(as_text=True)
     assert "Pobierz SVG" in strona and "mapa.svg?" in strona
+
+
+# ---------- ETAP 52: na tle kraju ----------
+
+
+def test_wartosci_dla_wojewodztw_z_bdl(monkeypatch):
+    odpowiedz = {
+        "results": [
+            {"id": "011200000000", "name": "MAŁOPOLSKIE", "values": [{"year": "2023", "val": 3.4}]},
+            {"id": "051400000000", "name": "MAZOWIECKIE", "values": [{"year": "2023", "val": 5.5}]},
+            {"id": "042200000000", "name": "POMORSKIE", "values": []},
+        ]
+    }
+    zapytania = []
+    monkeypatch.setattr(bdl, "_pobierz", lambda sciezka, parametry: zapytania.append(parametry) or odpowiedz)
+    wynik = bdl.wartosci_dla_wojewodztw(1, 2023)
+    assert [(w.teryt, w.nazwa, w.wartosc) for w in wynik] == [("12", "małopolskie", 3.4), ("14", "mazowieckie", 5.5)]
+    assert zapytania[0]["unit-level"] == 2
+
+
+def test_endpoint_porownania_wojewodztw(client, monkeypatch):
+    wojewodztwa = [
+        bdl.Wartosc("011200000000", "12", "małopolskie", 3_400_000.0),
+        bdl.Wartosc("051400000000", "14", "mazowieckie", 5_500_000.0),
+        bdl.Wartosc("042200000000", "22", "pomorskie", 2_300_000.0),
+    ]
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_wojewodztw", lambda z, rok: wojewodztwa)
+    dane = client.get(f"/atlas/wojewodztwa-porownanie?{ZAPYTANIE}").get_json()
+    assert [w["nazwa"] for w in dane["wojewodztwa"]] == ["mazowieckie", "małopolskie", "pomorskie"]
+    assert dane["wybrane"]["miejsce"] == 2 and dane["mediana"] == 3_400_000.0
+
+    # wskaźnik względny: dzielimy przez tę samą zmienną-mianownik województw
+    wzgledny = client.get(f"/atlas/wojewodztwa-porownanie?{ZAPYTANIE}&mianownik=99&mnoznik=100").get_json()
+    assert all(w["wartosc"] == 100 for w in wzgledny["wojewodztwa"])
+
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_wojewodztw", lambda z, rok: [])
+    assert client.get(f"/atlas/wojewodztwa-porownanie?zmienna=5&rok=2023&woj=011200000000").status_code == 404
+    assert client.get("/atlas/wojewodztwa-porownanie?zmienna=x").status_code == 400

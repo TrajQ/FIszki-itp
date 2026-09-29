@@ -1181,3 +1181,23 @@ harmonogram dla kierunku podwoiłby liczbę powtórek.
   Leitnera) — odrzucone: komplikuje czytelny system pudełek; tryb
   „przed egzaminem” już pozwala przejrzeć wszystko.
 - Osobne pudełka dla kierunku odwróconego — odrzucone (patrz wyżej).
+
+## D-057 — „Na tle kraju”: wartości województw z BDL, nie z gmin
+Data: 2026-09-29
+
+**Decyzja:** Pod kartogramem atlas pokazuje ranking 16 województw dla
+tego samego wskaźnika i roku (`bdl.wartosci_dla_wojewodztw`, poziom 2
+BDL, cache jak dla gmin), z wyróżnionym województwem z mapy, jego
+miejscem i medianą województw. Wskaźnik względny dzielony tak samo jak
+dla gmin. Sekcja ładuje się sama po każdym „Pokaż” (zdarzenie
+`atlas:dane`, osobny plik `wojewodztwa.js`, jak korelacja).
+
+**Uzasadnienie:** Student często pyta „czy to dużo?” — odpowiedzią jest
+porównanie z innymi regionami. Bierzemy wartości policzone przez GUS dla
+województw zamiast sumować gminy w aplikacji, bo dla wielu wskaźników
+(średnie, udziały, stopy) suma albo średnia gmin byłaby błędna.
+
+**Odrzucone alternatywy:**
+- Agregacja z gmin — odrzucone (patrz wyżej).
+- Osobny kartogram województw — odrzucone na teraz: ranking z paskami
+  jest czytelniejszy przy 16 jednostkach.
