@@ -196,9 +196,12 @@ def korelacja():
     roku i województwie. Liczby liczy atlas/statystyki.py."""
     try:
         parametry = _parametry_zapytania(request.args)
-        zmienna2 = int(request.args.get("zmienna2", ""))
     except ValueError as e:
-        return jsonify({"blad": str(e) if "zmienna2" not in str(e) else "Wymagany parametr zmienna2."}), 400
+        return jsonify({"blad": str(e)}), 400
+    try:
+        zmienna2 = int(request.args.get("zmienna2", ""))
+    except ValueError:
+        return jsonify({"blad": "Wymagany parametr zmienna2 (liczba)."}), 400
     if zmienna2 == parametry["zmienna_id"]:
         return jsonify({"blad": "Wybierz inny wskaźnik niż ten na mapie."}), 400
     try:

@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 26 (fiszki — quiz ABCD, najtrudniejsze fiszki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap26_20260929.zip
-Testy: 197 passed / 0 failed
+ETAP: 27 (poprawki z przeglądu kodu ETAPów 23–26 — zamknięty)
+Ostatni ZIP: releases/warsztat_etap27_20260929.zip
+Testy: 199 passed / 0 failed

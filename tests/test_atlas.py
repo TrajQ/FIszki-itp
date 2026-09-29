@@ -529,3 +529,8 @@ def test_endpoint_korelacji(client, monkeypatch):
     assert dane["zmienna_y"]["id"] == 60559
     assert client.get(f"/atlas/korelacja?{ZAPYTANIE}").status_code == 400
     assert client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=72305").status_code == 400
+
+
+def test_korelacja_czytelny_blad_bez_zmienna2(client):
+    odp = client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=abc")
+    assert odp.status_code == 400 and odp.get_json()["blad"] == "Wymagany parametr zmienna2 (liczba)."

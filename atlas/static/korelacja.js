@@ -21,6 +21,7 @@
 
     let daneMapy = null;
     let opoznienie = null;
+    let numerZapytania = 0; // odpowiedź na starsze zapytanie jest ignorowana
 
     function el(tag, klasa, tekst) {
         const e = document.createElement(tag);
@@ -42,6 +43,7 @@
 
     document.addEventListener("atlas:dane", (e) => {
         daneMapy = e.detail;
+        numerZapytania += 1; // nowe dane na mapie — trwające obliczenie jest już nieaktualne
         wynikEl.hidden = true;
         status.textContent = "";
         pole.value = "";
@@ -89,6 +91,7 @@
 
     async function policz(zmienna2) {
         if (!daneMapy) return;
+        const numer = ++numerZapytania;
         status.textContent = "Liczę korelację…";
         wynikEl.hidden = true;
         const parametry = new URLSearchParams({
@@ -100,10 +103,11 @@
         try {
             const odpowiedz = await fetch(`${URL_KORELACJA}?${parametry}`);
             const wynik = await odpowiedz.json();
+            if (numer !== numerZapytania) return;
             if (!odpowiedz.ok) throw new Error(wynik.blad || `Błąd ${odpowiedz.status}`);
             pokaz(wynik);
         } catch (err) {
-            status.textContent = err.message;
+            if (numer === numerZapytania) status.textContent = err.message;
         }
     }
 

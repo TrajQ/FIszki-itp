@@ -106,12 +106,12 @@
 
     async function przelicz() {
         const dane = zbierz();
+        const moj = ++numer; // unieważnia odpowiedzi na wcześniejsze przeliczenia
         if (dane.powierzchnia_dzialki === "") {
             bladEl.hidden = false;
             bladEl.textContent = "Wpisz powierzchnię działki.";
             return;
         }
-        const moj = ++numer;
         try {
             const odpowiedz = await fetch(URL_LICZ, {
                 method: "POST",

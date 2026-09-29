@@ -241,6 +241,11 @@ def _liczba_lub_none(slownik: dict, klucz: str, typ=float):
 def kalkulator_licz():
     dane = request.get_json(silent=True) or {}
     try:
+        # Budynek z rzutem, ale bez liczby kondygnacji, dałby po cichu
+        # powierzchnię całkowitą 0 — lepiej poprosić o uzupełnienie.
+        for b in dane.get("budynki", []):
+            if str(b.get("rzut_m2") or "").strip() and not str(b.get("kondygnacje") or "").strip():
+                raise zabudowa.BladDanych("Podaj liczbę kondygnacji nadziemnych każdego budynku.")
         budynki = [
             zabudowa.Budynek(
                 rzut_m2=float(b.get("rzut_m2") or 0),

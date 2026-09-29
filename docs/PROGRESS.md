@@ -720,3 +720,26 @@ Zrobione:
 
 Testy: 197 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap26_20260929.zip
+
+## ETAP 27 — Poprawki z przeglądu kodu (ETAPy 23–26)
+Data: 2026-09-29
+Status: zamknięty
+
+Przegląd wykazał 6 problemów — wszystkie naprawione:
+1. Atlas: brak/niepoprawny `zmienna2` w `/atlas/korelacja` dawał surowy
+   komunikat Pythona zamiast czytelnego (odwrócony warunek)
+2. Kalkulator: budynek z rzutem bez liczby kondygnacji liczył się po
+   cichu jako 0 kondygnacji (intensywność 0, zawyżony zapas) → czytelny
+   błąd „Podaj liczbę kondygnacji”
+3. Kalkulator: wyczyszczenie powierzchni działki nie unieważniało
+   trwającego przeliczenia (stary wynik nadpisywał komunikat)
+4. Korelacja: odpowiedzi nie były dopasowane do ostatniego zapytania
+   (wolniejsza odpowiedź dla wskaźnika A nadpisywała B)
+5. Korelacja: przy nieudanym wczytaniu granic panel korelacji liczył dla
+   poprzednich danych — zdarzenie `atlas:dane` wysyłane teraz od razu
+   po wczytaniu danych, przed granicami
+6. Quiz: Ctrl+C / Cmd+A itd. były traktowane jako wybór odpowiedzi C / A
+- Sprawdzone w przeglądarce (quiz, kalkulator); testy: 2 nowe
+
+Testy: 199 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap27_20260929.zip

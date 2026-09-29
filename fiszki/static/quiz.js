@@ -103,7 +103,8 @@
 
     dalej.addEventListener("click", nastepne);
     document.addEventListener("keydown", (e) => {
-        if (karta.hidden) return;
+        // Ctrl+C / Cmd+A itp. to skróty przeglądarki, nie wybór odpowiedzi.
+        if (karta.hidden || e.ctrlKey || e.metaKey || e.altKey) return;
         const numer = "1234".indexOf(e.key) !== -1 ? Number(e.key) - 1 : LITERY.indexOf(e.key.toUpperCase());
         if (numer >= 0 && numer < LITERY.length && !odpowiedziano) wybierz(numer);
         else if (e.key === "Enter" && odpowiedziano) {

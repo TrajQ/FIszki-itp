@@ -241,11 +241,12 @@
             wynikiEl.hidden = false;
             profilEl.hidden = true;
             resetujOpis();
+            // Dla innych skryptów strony (korelacja.js): nowe dane — od razu,
+            // niezależnie od tego, czy granice do kartogramu się wczytają.
+            document.dispatchEvent(new CustomEvent("atlas:dane", { detail: dane }));
             await wczytajGranice(terytWoj, numer);
             if (numer !== numerZapytania) return;
             odswiezWidok();
-            // Dla innych skryptów strony (korelacja.js): nowe dane na mapie.
-            document.dispatchEvent(new CustomEvent("atlas:dane", { detail: dane }));
         } catch (err) {
             pokazKomunikat(err.message);
         } finally {

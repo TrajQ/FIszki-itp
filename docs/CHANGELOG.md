@@ -191,3 +191,7 @@
 - Fiszki: quiz ABCD z własnych fiszek (`/fiszki/quiz`).
 - Fiszki: lista najtrudniejszych fiszek z dziennika powtórek.
 - Dodano `DECISIONS.md` D-033 i testy.
+
+## ETAP 27 — 2026-09-29
+- Naprawiono 6 błędów z przeglądu ETAPów 23–26 (korelacja, kalkulator
+  zabudowy, quiz).

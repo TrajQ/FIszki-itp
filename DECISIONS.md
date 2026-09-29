@@ -690,3 +690,19 @@ Oddzielenie od Leitnera chroni harmonogram powtórek przed przypadkowym
 - Dystraktory z Gemini — odrzucone (patrz wyżej).
 - Wynik quizu jako ocena w powtórkach — odrzucone: rozpoznanie
   odpowiedzi spośród czterech jest łatwiejsze niż jej przypomnienie.
+
+## D-034 — Każde asynchroniczne zapytanie w UI ma numer
+Data: 2026-09-29
+
+**Decyzja:** Każdy widok, który wysyła zapytania w tle (kalkulator,
+korelacja, podpowiedzi, mapy), numeruje je i wyświetla tylko odpowiedź
+na najnowsze; zmiana danych wejściowych (także wyczyszczenie pola)
+unieważnia trwające zapytania.
+
+**Uzasadnienie:** Przeglądy kodu kilkukrotnie znalazły ten sam rodzaj
+błędu — wolniejsza, starsza odpowiedź nadpisywała nowszą. Jedna zasada
+stosowana wszędzie jest łatwiejsza do sprawdzenia niż osobne łatki.
+
+**Odrzucone alternatywy:**
+- `AbortController` do przerywania zapytań — odrzucone na teraz: więcej
+  kodu, a numer zapytania wystarcza, bo serwer jest lokalny i szybki.

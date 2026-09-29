@@ -83,3 +83,9 @@ def test_endpoint_kalkulatora(client):
     dane["powierzchnia_dzialki"] = "100"
     zle = client.post("/mpzp/kalkulator/licz", data=json.dumps(dane), content_type="application/json")
     assert "przekraczają" in zle.get_json()["blad"]
+
+
+def test_brak_kondygnacji_przy_rzucie_to_blad(client):
+    dane = {"powierzchnia_dzialki": "1000", "pbc_m2": "", "budynki": [{"rzut_m2": "200", "kondygnacje": "", "wysokosc_m": ""}], "ustalenia": {}}
+    odp = client.post("/mpzp/kalkulator/licz", data=json.dumps(dane), content_type="application/json")
+    assert odp.status_code == 400 and "kondygnacji" in odp.get_json()["blad"]
