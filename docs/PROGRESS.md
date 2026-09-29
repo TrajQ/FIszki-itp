@@ -125,4 +125,36 @@ eksport .apkg, eksport wszystkich PDF-ów naraz.
 Testy: 45 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap4_20260929.zip
 
-Następny krok: ETAP 5 — system powtórek w module fiszki.
+Następny krok: na prośbę autora — wspólny wygląd aplikacji (ETAP 5),
+potem powtórki (ETAP 6), atlas (ETAP 7), dostępność (ETAP 8). Autor
+zlecił pracę bez dopytywania o każdy krok.
+
+## ETAP 5 — Wspólny wygląd (styl Apple, grid i flexbox)
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `templates/base.html`: wspólny szkielet stron — półprzezroczysty,
+  przyklejony pasek nawigacji z wyróżnionym aktywnym modułem, bloki
+  `tytul`, `head`, `tresc`, `skrypty`; wszystkie szablony modułów
+  dziedziczą po nim
+- `static/style.css` przepisany: tokeny kolorów (zmienne CSS) z trybem
+  ciemnym (`prefers-color-scheme`), systemowa czcionka, karty, przyciski
+  w kształcie pigułki (główny, drugi, tekstowy, niebezpieczny),
+  formularze, tabele, etykiety, komunikaty; siatka kart
+  `grid auto-fill`
+- Strona główna: nagłówek „hero” + siatka czterech kart modułów z
+  ikonami SVG
+- Fiszki: lista PDF-ów jako karty z liczbą fiszek (nowe zapytanie z
+  `COUNT`), widok PDF-a w układzie grid (PDF + przyklejony panel fiszek),
+  fiszki jako karty z akcjami i numerem strony
+- MPZP: grid mapa + panel; panel pokazuje identyfikator działki i
+  wyróżniony symbol przeznaczenia (nowe pole `przeznaczenie` w JSON
+  `/mpzp/sprawdz`), atrybuty w tabeli
+- Układ responsywny: poniżej ~1000/900 px kolumny przechodzą jedna pod
+  drugą
+- Testy: liczba fiszek na liście plików, pole `przeznaczenie` w mpzp
+- `DECISIONS.md`: D-011
+
+Testy: 47 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap5_20260929.zip

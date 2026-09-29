@@ -83,6 +83,8 @@ def sprawdz():
         return jsonify(dane), 200
 
     dane["wydzielenie"] = _wydzielenie_na_json(wydzielenie)
+    # Symbol przeznaczenia wyciągnięty osobno, żeby panel mógł go wyróżnić.
+    dane["wydzielenie"]["przeznaczenie"] = wydzielenie.atrybuty.get(gmina.pole_przeznaczenia)
     return jsonify(dane), 200
 
 

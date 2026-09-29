@@ -1,33 +1,34 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>MPZP — Warsztat</title>
-    <link rel="stylesheet" href="{{ url_for('mpzp.static', filename='leaflet/leaflet.css') }}">
-    <link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">
-</head>
-<body>
-    <p><a href="{{ url_for('index') }}">← strona główna</a></p>
-    <h1>MPZP — działka i przeznaczenie</h1>
-    <p>Kliknij punkt na mapie, żeby sprawdzić działkę i jej przeznaczenie
-    w planie miejscowym (obsługiwana gmina pilotażowa: Poznań).</p>
+{% extends "base.html" %}
 
-    <div id="pasek-narzedzi">
-        <button id="przycisk-odswiez" type="button">Odśwież dane gminy</button>
+{% block tytul %}MPZP — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Działka i przeznaczenie</h1>
+        <p>Kliknij punkt na mapie. Gmina pilotażowa: Poznań.</p>
     </div>
+    <button id="przycisk-odswiez" type="button" class="przycisk--drugi">Odśwież dane gminy</button>
+</div>
 
-    <div id="uklad">
-        <div id="mapa"></div>
-        <div id="panel-wyniku">
-            <p>Kliknij punkt na mapie.</p>
-        </div>
-    </div>
+<div id="uklad">
+    <div id="mapa" class="karta"></div>
+    <aside id="panel-wyniku" class="karta">
+        <p class="pusty-stan">Kliknij punkt na mapie, żeby zobaczyć działkę i zapisy planu.</p>
+    </aside>
+</div>
+{% endblock %}
 
-    <script>
-        const URL_SPRAWDZ = "{{ url_for('mpzp.sprawdz') }}";
-        const URL_ODSWIEZ = "{{ url_for('mpzp.odswiez') }}";
-    </script>
-    <script src="{{ url_for('mpzp.static', filename='leaflet/leaflet.js') }}"></script>
-    <script src="{{ url_for('mpzp.static', filename='mpzp.js') }}"></script>
-</body>
-</html>
+{% block skrypty %}
+<script>
+    const URL_SPRAWDZ = "{{ url_for('mpzp.sprawdz') }}";
+    const URL_ODSWIEZ = "{{ url_for('mpzp.odswiez') }}";
+</script>
+<script src="{{ url_for('mpzp.static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('mpzp.static', filename='mpzp.js') }}"></script>
+{% endblock %}

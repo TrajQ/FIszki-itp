@@ -222,3 +222,26 @@ różnej na każdym komputerze.
 - Gotowy `.desktop` w repo ze stałą ścieżką — odrzucone, psuje się po
   przeniesieniu katalogu.
 
+## D-011 — Wspólny szablon bazowy i system stylów
+Data: 2026-09-29
+
+**Decyzja:** Wszystkie strony dziedziczą po `templates/base.html`
+(nawigacja + bloki Jinja). `static/style.css` zawiera tylko elementy
+wspólne: tokeny kolorów jako zmienne CSS (jasny i ciemny motyw przez
+`prefers-color-scheme`), typografię, karty, przyciski, formularze,
+tabele i komunikaty. Układ każdego modułu zostaje w jego własnym pliku
+CSS (grid dla układów stron, flexbox dla rzędów i stosów elementów).
+Czcionka systemowa (`-apple-system`, `Inter`, `Ubuntu`, ...), bez
+pobierania fontów z sieci.
+
+**Uzasadnienie:** Autor poprosił o wygląd w stylu Apple z użyciem grid
+i flexboxa. Nawigacja i podstawowe elementy powtarzały się w każdym
+szablonie — jeden szkielet to mniej kopiowania. To powłoka aplikacji,
+a nie abstrakcja logiki modułów, więc nie łamie zasady niezależności
+modułów. Tokeny kolorów pozwalają mieć tryb ciemny bez dublowania reguł.
+
+**Odrzucone alternatywy:**
+- Framework CSS (Bootstrap, Tailwind) — odrzucone: zależność, a
+  Tailwind wymaga kroku budowania (zakazane w CLAUDE.md).
+- Fonty SF Pro / Inter pobierane z sieci — odrzucone: licencja SF Pro
+  i zasada „bez CDN”; stos czcionek systemowych wygląda natywnie.

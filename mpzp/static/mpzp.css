@@ -1,40 +1,72 @@
+/* Style modułu mpzp. Wspólne elementy w static/style.css. */
+
+/* Mapa zajmuje resztę szerokości, panel wyniku ma stałą kolumnę. */
 #uklad {
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    align-items: stretch;
 }
 
 #mapa {
-    width: 70%;
-    height: 600px;
-    border: 1px solid #ccc;
+    height: calc(100vh - 230px);
+    min-height: 480px;
+    padding: 0;
+    overflow: hidden;
 }
 
 #panel-wyniku {
-    width: 30%;
-    min-height: 600px;
-    border: 1px solid #ccc;
-    padding: 0.75rem;
-    box-sizing: border-box;
-    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: calc(100vh - 230px);
+    min-height: 480px;
+    overflow-y: auto;
 }
 
-#panel-wyniku table {
-    width: 100%;
-    border-collapse: collapse;
+#panel-wyniku h3 {
+    margin: 0;
 }
 
-#panel-wyniku th, #panel-wyniku td {
-    text-align: left;
-    padding: 0.25rem 0.4rem;
-    border-bottom: 1px solid #eee;
-    word-break: break-word;
+.przeznaczenie {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-#panel-wyniku .blad {
-    color: #b00020;
+.przeznaczenie__symbol {
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--sukces-tlo);
+    color: var(--sukces);
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
-#pasek-narzedzi {
-    margin: 0.5rem 0;
+.identyfikator {
+    font-family: var(--czcionka-mono);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+#panel-wyniku .tabela td {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+    #uklad {
+        grid-template-columns: 1fr;
+    }
+
+    #mapa,
+    #panel-wyniku {
+        height: 60vh;
+        max-height: none;
+        min-height: 0;
+    }
+
+    #panel-wyniku {
+        height: auto;
+    }
 }

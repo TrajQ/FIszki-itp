@@ -1,10 +1,581 @@
-body {
-    font-family: sans-serif;
-    max-width: 40rem;
-    margin: 2rem auto;
-    padding: 0 1rem;
+/*
+ * Wspólny styl aplikacji Warsztat — inspirowany stylem Apple:
+ * systemowa czcionka, dużo powietrza, jasnoszare tło, białe karty z
+ * dużym zaokrągleniem i miękkim cieniem, niebieski akcent, przyciski
+ * w kształcie pigułki, półprzezroczysty pasek nawigacji.
+ *
+ * Tu są tylko rzeczy wspólne (tokeny kolorów, typografia, nawigacja,
+ * karty, przyciski, formularze, tabele). Układ konkretnego modułu siedzi
+ * w jego własnym pliku CSS (atlas.css, mpzp.css, fiszki.css, ...).
+ */
+
+/* ---------- Tokeny (zmienne) ---------- */
+
+:root {
+    --tlo: #f5f5f7;
+    --tlo-karty: #ffffff;
+    --tlo-pola: #ffffff;
+    --tlo-wyciszone: #f0f0f3;
+    --tekst: #1d1d1f;
+    --tekst-drugi: #6e6e73;
+    --linia: #d2d2d7;
+    --linia-slaba: #e8e8ed;
+    --akcent: #0071e3;
+    --akcent-hover: #0077ed;
+    --akcent-tlo: rgba(0, 113, 227, 0.1);
+    --sukces: #1d8a3a;
+    --sukces-tlo: rgba(52, 199, 89, 0.14);
+    --ostrzezenie: #b25000;
+    --ostrzezenie-tlo: rgba(255, 159, 10, 0.16);
+    --blad: #d70015;
+    --blad-tlo: rgba(255, 59, 48, 0.1);
+    --cien: 0 2px 6px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+    --cien-mocny: 0 4px 12px rgba(0, 0, 0, 0.06), 0 16px 40px rgba(0, 0, 0, 0.1);
+    --promien: 18px;
+    --promien-maly: 10px;
+    --pasek-tlo: rgba(251, 251, 253, 0.8);
+    --szerokosc: 1180px;
+    --czcionka: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+        "Segoe UI", "Helvetica Neue", "Cantarell", "Ubuntu", system-ui, sans-serif;
+    --czcionka-mono: ui-monospace, "SF Mono", "DejaVu Sans Mono", monospace;
+    color-scheme: light dark;
 }
 
-.lista-modulow {
-    line-height: 1.8;
+@media (prefers-color-scheme: dark) {
+    :root {
+        --tlo: #000000;
+        --tlo-karty: #1c1c1e;
+        --tlo-pola: #2c2c2e;
+        --tlo-wyciszone: #2c2c2e;
+        --tekst: #f5f5f7;
+        --tekst-drugi: #a1a1a6;
+        --linia: #424245;
+        --linia-slaba: #2f2f32;
+        --akcent: #2997ff;
+        --akcent-hover: #47a5ff;
+        --akcent-tlo: rgba(41, 151, 255, 0.16);
+        --sukces: #32d74b;
+        --ostrzezenie: #ffb340;
+        --blad: #ff6961;
+        --cien: 0 0 0 1px rgba(255, 255, 255, 0.06);
+        --cien-mocny: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 16px 40px rgba(0, 0, 0, 0.5);
+        --pasek-tlo: rgba(22, 22, 23, 0.8);
+    }
+}
+
+/* ---------- Podstawy ---------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--tlo);
+    color: var(--tekst);
+    font-family: var(--czcionka);
+    font-size: 17px;
+    line-height: 1.47;
+    letter-spacing: -0.022em;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0 0 0.5em;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+h1 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 1.5rem;
+}
+
+h3 {
+    font-size: 1.15rem;
+}
+
+p {
+    margin: 0 0 1em;
+}
+
+a {
+    color: var(--akcent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+code {
+    font-family: var(--czcionka-mono);
+    font-size: 0.9em;
+}
+
+/* ---------- Nawigacja ---------- */
+
+.pasek-nawigacji {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--pasek-tlo);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--linia-slaba);
+}
+
+.pasek-nawigacji__wnetrze {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: var(--szerokosc);
+    height: 52px;
+    margin: 0 auto;
+    padding: 0 22px;
+}
+
+.logo {
+    color: var(--tekst);
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.logo:hover {
+    text-decoration: none;
+}
+
+.menu {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.menu a {
+    display: block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 980px;
+    color: var(--tekst-drugi);
+    font-size: 0.85rem;
+}
+
+.menu a:hover {
+    color: var(--tekst);
+    text-decoration: none;
+}
+
+.menu a.aktywny {
+    background: var(--tlo-wyciszone);
+    color: var(--tekst);
+}
+
+/* ---------- Układ strony ---------- */
+
+.tresc {
+    max-width: var(--szerokosc);
+    margin: 0 auto;
+    padding: 40px 22px 80px;
+}
+
+/* Wariant na mapy: szerzej, mniej marginesu. */
+.tresc--szeroka {
+    max-width: 1440px;
+}
+
+.naglowek-strony {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 28px;
+}
+
+.naglowek-strony p {
+    margin: 0;
+    color: var(--tekst-drugi);
+    font-size: 1.1rem;
+}
+
+.podtytul {
+    color: var(--tekst-drugi);
+    font-size: 1.2rem;
+}
+
+/* Automatyczna siatka kart — tyle kolumn, ile się zmieści. */
+.siatka-kart {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.stos {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rzad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ---------- Karty ---------- */
+
+.karta {
+    background: var(--tlo-karty);
+    border-radius: var(--promien);
+    box-shadow: var(--cien);
+    padding: 24px;
+}
+
+.karta--link {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--tekst);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.karta--link:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: var(--cien-mocny);
+    text-decoration: none;
+}
+
+.karta h2,
+.karta h3 {
+    margin-bottom: 0.4em;
+}
+
+.karta__opis {
+    margin: 0;
+    color: var(--tekst-drugi);
+    font-size: 0.95rem;
+}
+
+.karta__meta {
+    margin-top: auto;
+    padding-top: 10px;
+    color: var(--tekst-drugi);
+    font-size: 0.8rem;
+}
+
+/* ---------- Przyciski ---------- */
+
+button,
+.przycisk {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    padding: 0.55em 1.2em;
+    border: none;
+    border-radius: 980px;
+    background: var(--akcent);
+    color: #fff;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+}
+
+button:hover,
+.przycisk:hover {
+    background: var(--akcent-hover);
+    text-decoration: none;
+}
+
+button:active,
+.przycisk:active {
+    transform: scale(0.97);
+}
+
+button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* Przycisk drugorzędny: szare tło, akcentowy tekst. */
+.przycisk--drugi,
+button.przycisk--drugi {
+    background: var(--tlo-wyciszone);
+    color: var(--akcent);
+}
+
+.przycisk--drugi:hover,
+button.przycisk--drugi:hover {
+    background: var(--linia-slaba);
+}
+
+/* Przycisk tekstowy: bez tła, jak link. */
+.przycisk--tekst,
+button.przycisk--tekst {
+    padding: 0.3em 0.6em;
+    background: transparent;
+    color: var(--akcent);
+}
+
+.przycisk--tekst:hover,
+button.przycisk--tekst:hover {
+    background: var(--akcent-tlo);
+}
+
+.przycisk--niebezpieczny,
+button.przycisk--niebezpieczny {
+    background: transparent;
+    color: var(--blad);
+}
+
+.przycisk--niebezpieczny:hover,
+button.przycisk--niebezpieczny:hover {
+    background: var(--blad-tlo);
+}
+
+.przycisk--duzy {
+    padding: 0.75em 1.6em;
+    font-size: 1rem;
+}
+
+/* ---------- Formularze ---------- */
+
+input[type="text"],
+input[type="number"],
+input[type="search"],
+select,
+textarea {
+    width: 100%;
+    padding: 0.6em 0.8em;
+    border: 1px solid var(--linia);
+    border-radius: var(--promien-maly);
+    background: var(--tlo-pola);
+    color: var(--tekst);
+    font: inherit;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--akcent);
+    box-shadow: 0 0 0 4px var(--akcent-tlo);
+}
+
+textarea {
+    min-height: 5rem;
+    resize: vertical;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--tekst-drugi);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+input[type="file"] {
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--tekst-drugi);
+}
+
+input[type="file"]::file-selector-button {
+    margin-right: 0.8em;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+    color: var(--akcent);
+    font: inherit;
+    cursor: pointer;
+}
+
+/* ---------- Tabele ---------- */
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tabela th,
+.tabela td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--linia-slaba);
+    text-align: left;
+    vertical-align: top;
+}
+
+.tabela th {
+    color: var(--tekst-drugi);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.tabela tr:last-child td {
+    border-bottom: none;
+}
+
+.tabela .liczba {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Drobiazgi ---------- */
+
+.etykieta {
+    display: inline-block;
+    padding: 0.15em 0.65em;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+    color: var(--tekst-drugi);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.etykieta--akcent {
+    background: var(--akcent-tlo);
+    color: var(--akcent);
+}
+
+.etykieta--sukces {
+    background: var(--sukces-tlo);
+    color: var(--sukces);
+}
+
+.komunikat {
+    padding: 12px 16px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+    color: var(--tekst-drugi);
+    font-size: 0.9rem;
+}
+
+.komunikat--blad {
+    background: var(--blad-tlo);
+    color: var(--blad);
+}
+
+.komunikat--ostrzezenie {
+    background: var(--ostrzezenie-tlo);
+    color: var(--ostrzezenie);
+}
+
+.komunikat--sukces {
+    background: var(--sukces-tlo);
+    color: var(--sukces);
+}
+
+.wyciszony {
+    color: var(--tekst-drugi);
+}
+
+.pusty-stan {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--tekst-drugi);
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* ---------- Strona główna ---------- */
+
+.hero {
+    padding: 40px 0 48px;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+}
+
+.hero p {
+    max-width: 36rem;
+    margin: 0 auto;
+    color: var(--tekst-drugi);
+    font-size: 1.3rem;
+}
+
+.ikona-modulu {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    color: #fff;
+}
+
+.ikona-modulu svg {
+    width: 26px;
+    height: 26px;
+}
+
+.ikona-modulu--atlas { background: linear-gradient(135deg, #34c759, #30b0c7); }
+.ikona-modulu--mpzp { background: linear-gradient(135deg, #ff9f0a, #ff6b3d); }
+.ikona-modulu--fiszki { background: linear-gradient(135deg, #5e5ce6, #bf5af2); }
+.ikona-modulu--dostepnosc { background: linear-gradient(135deg, #0a84ff, #64d2ff); }
+
+/* ---------- Mapy Leaflet (wspólny wygląd kontrolek) ---------- */
+
+.leaflet-container {
+    font-family: var(--czcionka);
+    border-radius: var(--promien);
+}
+
+.leaflet-bar {
+    overflow: hidden;
+    border: none !important;
+    border-radius: var(--promien-maly) !important;
+    box-shadow: var(--cien-mocny) !important;
+}
+
+.leaflet-bar a {
+    background: var(--tlo-karty);
+    color: var(--tekst);
+    border-bottom-color: var(--linia-slaba);
+}
+
+/* ---------- Wąskie ekrany ---------- */
+
+@media (max-width: 700px) {
+    .pasek-nawigacji__wnetrze {
+        padding: 0 12px;
+    }
+
+    .menu a {
+        padding: 0.3rem 0.5rem;
+    }
+
+    .tresc {
+        padding: 24px 16px 60px;
+    }
 }

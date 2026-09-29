@@ -103,6 +103,7 @@ def test_sprawdz_sukces(client, monkeypatch):
     assert odpowiedz.status_code == 200
     assert "blad" not in dane
     assert dane["wydzielenie"]["atrybuty"]["symb_t"] == "ZP"
+    assert dane["wydzielenie"]["przeznaczenie"] == "ZP"
     assert dane["dzialka"]["geometria"]["type"] == "Polygon"
 
 

@@ -49,3 +49,11 @@
 - Dodano `uruchom.sh`, `zainstaluj_ikone.sh` i `docs/URUCHOMIENIE.md`.
 - Dodano `DECISIONS.md` D-007, D-008 (zastąpiona), D-009, D-010.
 - Dodano testy edycji i eksportu.
+
+## ETAP 5 — 2026-09-29
+- Dodano wspólny szablon `templates/base.html` z paskiem nawigacji.
+- Przepisano `static/style.css` (styl Apple, grid/flexbox, tryb ciemny).
+- Odświeżono wygląd strony głównej, fiszek i mpzp.
+- `/mpzp/sprawdz` zwraca dodatkowo `wydzielenie.przeznaczenie`.
+- Lista PDF-ów w fiszkach pokazuje liczbę fiszek.
+- Dodano `DECISIONS.md` D-011.

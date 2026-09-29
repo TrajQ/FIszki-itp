@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>Atlas — Warsztat</title>
-    <link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">
-</head>
-<body>
-    <p><a href="{{ url_for('index') }}">← strona główna</a></p>
-    <h1>Atlas</h1>
-    <p>Moduł w budowie.</p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block tytul %}Atlas — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony"><h1>Atlas</h1></div>
+<div class="karta pusty-stan">Moduł w budowie.</div>
+{% endblock %}

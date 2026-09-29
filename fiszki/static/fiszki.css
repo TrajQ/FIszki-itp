@@ -1,66 +1,198 @@
-/* Style modułu fiszki. */
+/* Style modułu fiszki. Wspólne elementy (karty, przyciski) w static/style.css. */
 
-#widok-glowny {
+/* ---------- Lista plików ---------- */
+
+.wgrywanie {
     display: flex;
-    gap: 2rem;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.wgrywanie h3,
+.wgrywanie p {
+    margin: 0;
+}
+
+.naglowek-sekcji {
+    margin-bottom: 16px;
+}
+
+.ikona-pdf {
+    align-self: flex-start;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--blad-tlo);
+    color: var(--blad);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.karta--link h3 {
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Widok PDF-a ---------- */
+
+.tytul-pdf {
+    margin-top: 8px;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    overflow-wrap: anywhere;
+}
+
+/* Dwie kolumny: PDF rośnie, panel fiszek ma stałą szerokość. */
+#widok-glowny {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 24px;
+    align-items: start;
 }
 
 #widok-pdf {
-    position: relative;
-}
-
-#blad-pdf {
-    color: #b00020;
-    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
 }
 
 #nawigacja-stron {
-    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.podpowiedz {
+    margin: 0;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+/* Kontener przewija się poziomo, gdy strona PDF jest szersza niż kolumna. */
+#kontener-pdf {
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
 }
 
 #warstwa-pdf {
     position: relative;
     display: inline-block;
-    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
+    background: #fff;
 }
 
 #canvas-pdf {
     display: block;
+    border-radius: 8px;
 }
 
 #przycisk-zaproponuj {
     position: absolute;
     z-index: 10;
+    box-shadow: var(--cien-mocny);
 }
 
+/* Panel boczny przykleja się przy przewijaniu długiej strony. */
 #panel-fiszek {
-    width: 22rem;
-    flex-shrink: 0;
+    position: sticky;
+    top: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: calc(100vh - 92px);
+    overflow-y: auto;
 }
 
-#formularz-fiszki textarea {
-    width: 100%;
-    min-height: 4rem;
-    box-sizing: border-box;
+.naglowek-panelu {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.naglowek-panelu h3 {
+    margin: 0;
+}
+
+#eksport-fiszek {
+    margin: 0;
+}
+
+#podglad-fragmentu {
+    margin: 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--akcent);
+    border-radius: 0 var(--promien-maly) var(--promien-maly) 0;
+    background: var(--akcent-tlo);
+    font-size: 0.9rem;
+    max-height: 8rem;
+    overflow-y: auto;
+}
+
+#status-gemini:empty {
+    display: none;
 }
 
 #lista-fiszek {
-    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
     padding: 0;
+    list-style: none;
 }
 
 #lista-fiszek li {
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 14px;
+    background: var(--tlo-wyciszone);
+    font-size: 0.92rem;
+}
+
+.fiszka-pytanie {
+    font-weight: 600;
+}
+
+.fiszka-odpowiedz {
+    color: var(--tekst-drugi);
+}
+
+.fiszka-akcje {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-left: -0.6em;
+}
+
+.fiszka-strona {
+    margin-left: auto;
 }
 
 #lista-fiszek li textarea {
-    display: block;
-    width: 100%;
-    min-height: 3rem;
-    box-sizing: border-box;
-    margin-bottom: 0.25rem;
+    min-height: 3.5rem;
+}
+
+.fiszka-podswietlenie {
+    background: rgba(255, 214, 10, 0.55);
+    border-radius: 2px;
+}
+
+@media (max-width: 1000px) {
+    #widok-glowny {
+        grid-template-columns: 1fr;
+    }
+
+    #panel-fiszek {
+        position: static;
+        max-height: none;
+    }
 }

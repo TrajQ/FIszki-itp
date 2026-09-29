@@ -1,58 +1,73 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ pdf['nazwa_oryginalna'] }} — Fiszki</title>
-    <link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">
-    <link rel="stylesheet" href="{{ url_for('fiszki.static', filename='pdfjs/text_layer.css') }}">
-</head>
-<body>
-    <p><a href="{{ url_for('fiszki.index') }}">← lista plików</a></p>
-    <h1>{{ pdf['nazwa_oryginalna'] }}</h1>
+{% extends "base.html" %}
 
-    <div id="widok-glowny">
-        <div id="widok-pdf">
-            <p id="blad-pdf" hidden></p>
-            <div id="nawigacja-stron">
-                <button id="strona-poprzednia" type="button">← poprzednia</button>
-                <span id="numer-strony"></span>
-                <button id="strona-nastepna" type="button">następna →</button>
-            </div>
+{% block tytul %}{{ pdf['nazwa_oryginalna'] }} — Fiszki{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">
+<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='pdfjs/text_layer.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.index') }}">‹ Wszystkie pliki</a>
+        <h1 class="tytul-pdf">{{ pdf['nazwa_oryginalna'] }}</h1>
+    </div>
+</div>
+
+<div id="widok-glowny">
+    <section id="widok-pdf" class="karta">
+        <div id="nawigacja-stron">
+            <button id="strona-poprzednia" type="button" class="przycisk--drugi">‹ Poprzednia</button>
+            <span id="numer-strony" class="wyciszony"></span>
+            <button id="strona-nastepna" type="button" class="przycisk--drugi">Następna ›</button>
+        </div>
+        <p id="blad-pdf" class="komunikat komunikat--blad" hidden></p>
+        <p class="podpowiedz wyciszony">Zaznacz myszką fragment tekstu, żeby utworzyć fiszkę.</p>
+        <div id="kontener-pdf">
             <div id="warstwa-pdf">
                 <canvas id="canvas-pdf"></canvas>
                 <div id="warstwa-tekstu" class="textLayer"></div>
+                <button id="przycisk-zaproponuj" type="button" hidden>✦ Zaproponuj fiszkę</button>
             </div>
-            <button id="przycisk-zaproponuj" type="button" hidden>Zaproponuj fiszkę</button>
+        </div>
+    </section>
+
+    <aside id="panel-fiszek">
+        <div id="formularz-fiszki" class="karta stos" hidden>
+            <h3>Nowa fiszka</h3>
+            <blockquote id="podglad-fragmentu"></blockquote>
+            <p id="status-gemini" class="wyciszony"></p>
+            <label>Pytanie <textarea id="pole-pytanie"></textarea></label>
+            <label>Odpowiedź <textarea id="pole-odpowiedz"></textarea></label>
+            <div class="rzad">
+                <button id="zapisz-fiszke" type="button">Zapisz</button>
+                <button id="anuluj-fiszke" type="button" class="przycisk--drugi">Anuluj</button>
+            </div>
         </div>
 
-        <aside id="panel-fiszek">
-            <div id="formularz-fiszki" hidden>
-                <h2>Nowa fiszka</h2>
-                <p><strong>Fragment:</strong> <span id="podglad-fragmentu"></span></p>
-                <p id="status-gemini"></p>
-                <label>Pytanie<br><textarea id="pole-pytanie"></textarea></label>
-                <label>Odpowiedź<br><textarea id="pole-odpowiedz"></textarea></label>
-                <button id="zapisz-fiszke" type="button">Zapisz</button>
-                <button id="anuluj-fiszke" type="button">Anuluj</button>
+        <div class="karta stos">
+            <div class="naglowek-panelu">
+                <h3>Fiszki z tego pliku</h3>
+                <span id="licznik-fiszek" class="etykieta"></span>
             </div>
-
-            <h2>Fiszki z tego pliku</h2>
-            <p id="eksport-fiszek">
-                Eksport:
-                <a href="{{ url_for('fiszki.eksport_csv', pdf_id=pdf['id']) }}">CSV</a> ·
-                <a href="{{ url_for('fiszki.eksport_anki', pdf_id=pdf['id']) }}">Anki (TXT)</a>
+            <p id="eksport-fiszek" class="rzad">
+                <a class="przycisk przycisk--drugi" href="{{ url_for('fiszki.eksport_csv', pdf_id=pdf['id']) }}">Eksport CSV</a>
+                <a class="przycisk przycisk--drugi" href="{{ url_for('fiszki.eksport_anki', pdf_id=pdf['id']) }}">Eksport Anki</a>
             </p>
             <ul id="lista-fiszek"></ul>
-        </aside>
-    </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}
 
-    <script>
-        const PDF_ID = {{ pdf['id'] }};
-        const URL_PLIK = "{{ url_for('fiszki.plik_pdf', pdf_id=pdf['id']) }}";
-        const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
-        const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
-        const URL_WORKER = "{{ url_for('fiszki.static', filename='pdfjs/pdf.worker.min.mjs') }}";
-    </script>
-    <script type="module" src="{{ url_for('fiszki.static', filename='fiszki.js') }}"></script>
-</body>
-</html>
+{% block skrypty %}
+<script>
+    const PDF_ID = {{ pdf['id'] }};
+    const URL_PLIK = "{{ url_for('fiszki.plik_pdf', pdf_id=pdf['id']) }}";
+    const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
+    const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
+    const URL_WORKER = "{{ url_for('fiszki.static', filename='pdfjs/pdf.worker.min.mjs') }}";
+</script>
+<script type="module" src="{{ url_for('fiszki.static', filename='fiszki.js') }}"></script>
+{% endblock %}

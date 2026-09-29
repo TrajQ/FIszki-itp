@@ -25,22 +25,53 @@
         }
     }
 
-    function pokazBlad(tresc) {
-        panelWyniku.innerHTML = "<p class=\"blad\"></p>";
-        panelWyniku.querySelector(".blad").textContent = tresc;
+    function pokazBlad(tresc, dzialka) {
+        panelWyniku.replaceChildren();
+        if (dzialka) panelWyniku.appendChild(sekcjaDzialki(dzialka));
+        const komunikat = document.createElement("p");
+        komunikat.className = "komunikat komunikat--blad";
+        komunikat.textContent = tresc;
+        panelWyniku.appendChild(komunikat);
     }
 
-    function pokazAtrybuty(atrybuty) {
-        panelWyniku.innerHTML = "";
+    function sekcjaDzialki(dzialka) {
+        const sekcja = document.createElement("div");
+        const tytul = document.createElement("h3");
+        tytul.textContent = "Działka";
+        const id = document.createElement("div");
+        id.className = "identyfikator wyciszony";
+        id.textContent = dzialka.id;
+        sekcja.append(tytul, id);
+        return sekcja;
+    }
+
+    function pokazWynik(dzialka, wydzielenie) {
+        panelWyniku.replaceChildren(sekcjaDzialki(dzialka));
+
+        const przeznaczenie = document.createElement("div");
+        przeznaczenie.className = "przeznaczenie";
+        const symbol = document.createElement("span");
+        symbol.className = "przeznaczenie__symbol";
+        symbol.textContent = wydzielenie.przeznaczenie || "?";
+        const opis = document.createElement("span");
+        opis.className = "wyciszony";
+        opis.textContent = "symbol przeznaczenia w planie";
+        przeznaczenie.append(symbol, opis);
+        panelWyniku.appendChild(przeznaczenie);
+
+        const tytul = document.createElement("h3");
+        tytul.textContent = "Atrybuty wydzielenia";
+        panelWyniku.appendChild(tytul);
+
         const tabela = document.createElement("table");
-        for (const [klucz, wartosc] of Object.entries(atrybuty)) {
+        tabela.className = "tabela";
+        for (const [klucz, wartosc] of Object.entries(wydzielenie.atrybuty)) {
             const wiersz = document.createElement("tr");
             const naglowek = document.createElement("th");
             naglowek.textContent = klucz;
             const komorka = document.createElement("td");
             komorka.textContent = wartosc;
-            wiersz.appendChild(naglowek);
-            wiersz.appendChild(komorka);
+            wiersz.append(naglowek, komorka);
             tabela.appendChild(wiersz);
         }
         panelWyniku.appendChild(tabela);
@@ -51,24 +82,24 @@
         const lon = zdarzenie.latlng.lng;
 
         wyczyscWarstwy();
-        panelWyniku.innerHTML = "<p>Sprawdzam...</p>";
+        panelWyniku.innerHTML = "<p class=\"pusty-stan\">Sprawdzam…</p>";
 
         fetch(`${URL_SPRAWDZ}?lat=${lat}&lon=${lon}`)
             .then((odpowiedz) => odpowiedz.json())
             .then((dane) => {
                 if (dane.dzialka) {
                     warstwaDzialki = L.geoJSON(dane.dzialka.geometria, {
-                        style: { color: "#3388ff", weight: 2, fillOpacity: 0.1 },
+                        style: { color: "#0071e3", weight: 2, fillOpacity: 0.1 },
                     }).addTo(mapa);
                 }
 
                 if (dane.wydzielenie) {
                     warstwaWydzielenia = L.geoJSON(dane.wydzielenie.geometria, {
-                        style: { color: "#2ecc71", weight: 2, fillOpacity: 0.3 },
+                        style: { color: "#34c759", weight: 2, fillOpacity: 0.3 },
                     }).addTo(mapa);
-                    pokazAtrybuty(dane.wydzielenie.atrybuty);
+                    pokazWynik(dane.dzialka, dane.wydzielenie);
                 } else if (dane.blad) {
-                    pokazBlad(dane.blad);
+                    pokazBlad(dane.blad, dane.dzialka);
                 }
             })
             .catch(() => pokazBlad("Błąd połączenia z serwerem."));

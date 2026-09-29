@@ -23,6 +23,7 @@ const przyciskZapisz = document.getElementById("zapisz-fiszke");
 const przyciskAnuluj = document.getElementById("anuluj-fiszke");
 const listaFiszekEl = document.getElementById("lista-fiszek");
 const bladPdfEl = document.getElementById("blad-pdf");
+const licznikFiszekEl = document.getElementById("licznik-fiszek");
 
 let dokumentPdf = null;
 let numerStrony = 1;
@@ -163,37 +164,56 @@ async function odswiezListeFiszek() {
     const odpowiedz = await fetch(URL_FISZKI);
     const fiszki = await odpowiedz.json();
 
+    licznikFiszekEl.textContent = fiszki.length;
     listaFiszekEl.replaceChildren();
+    if (fiszki.length === 0) {
+        const pusto = document.createElement("li");
+        pusto.className = "wyciszony";
+        pusto.textContent = "Jeszcze nie ma fiszek. Zaznacz fragment tekstu w PDF-ie.";
+        listaFiszekEl.appendChild(pusto);
+        return;
+    }
+
     for (const fiszka of fiszki) {
         const li = document.createElement("li");
 
-        const tresc = document.createElement("div");
-        tresc.innerHTML = `<strong>${escapeHtml(fiszka.pytanie)}</strong><br>${escapeHtml(fiszka.odpowiedz)}`;
-        li.appendChild(tresc);
+        const pytanie = document.createElement("div");
+        pytanie.className = "fiszka-pytanie";
+        pytanie.textContent = fiszka.pytanie;
+        const odpowiedzEl = document.createElement("div");
+        odpowiedzEl.className = "fiszka-odpowiedz";
+        odpowiedzEl.textContent = fiszka.odpowiedz;
+        li.append(pytanie, odpowiedzEl);
 
-        const przyciskPokaz = document.createElement("button");
-        przyciskPokaz.type = "button";
-        przyciskPokaz.textContent = "pokaż w źródle";
-        przyciskPokaz.addEventListener("click", () => pokazWZrodle(fiszka));
-        li.appendChild(przyciskPokaz);
+        const akcje = document.createElement("div");
+        akcje.className = "fiszka-akcje";
 
-        const przyciskEdytuj = document.createElement("button");
-        przyciskEdytuj.type = "button";
-        przyciskEdytuj.textContent = "edytuj";
-        przyciskEdytuj.addEventListener("click", () => pokazEdycje(li, fiszka));
-        li.appendChild(przyciskEdytuj);
+        akcje.appendChild(przycisk("Pokaż w źródle", "przycisk--tekst", () => pokazWZrodle(fiszka)));
+        akcje.appendChild(przycisk("Edytuj", "przycisk--tekst", () => pokazEdycje(li, fiszka)));
+        akcje.appendChild(
+            przycisk("Usuń", "przycisk--niebezpieczny", async () => {
+                await fetch(`${URL_FISZKI}/${fiszka.id}`, { method: "DELETE" });
+                await odswiezListeFiszek();
+            })
+        );
 
-        const przyciskUsun = document.createElement("button");
-        przyciskUsun.type = "button";
-        przyciskUsun.textContent = "usuń";
-        przyciskUsun.addEventListener("click", async () => {
-            await fetch(`${URL_FISZKI}/${fiszka.id}`, { method: "DELETE" });
-            await odswiezListeFiszek();
-        });
-        li.appendChild(przyciskUsun);
+        const strona = document.createElement("span");
+        strona.className = "etykieta fiszka-strona";
+        strona.textContent = `s. ${fiszka.strona}`;
+        akcje.appendChild(strona);
 
+        li.appendChild(akcje);
         listaFiszekEl.appendChild(li);
     }
+}
+
+function przycisk(tekst, klasa, poKliknieciu) {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = klasa;
+    el.textContent = tekst;
+    el.addEventListener("click", poKliknieciu);
+    return el;
 }
 
 // Edycja w miejscu: treść fiszki w <li> zastępujemy dwoma polami tekstowymi.
@@ -207,10 +227,7 @@ function pokazEdycje(li, fiszka) {
     poleOdpowiedzEdycja.value = fiszka.odpowiedz;
     const statusEdycji = document.createElement("p");
 
-    const przyciskZapiszZmiany = document.createElement("button");
-    przyciskZapiszZmiany.type = "button";
-    przyciskZapiszZmiany.textContent = "zapisz zmiany";
-    przyciskZapiszZmiany.addEventListener("click", async () => {
+    const przyciskZapiszZmiany = przycisk("Zapisz zmiany", "", async () => {
         const pytanie = polePytanieEdycja.value.trim();
         const odpowiedz = poleOdpowiedzEdycja.value.trim();
         if (!pytanie || !odpowiedz) {
@@ -228,23 +245,18 @@ function pokazEdycje(li, fiszka) {
         }
         await odswiezListeFiszek();
     });
+    const przyciskAnulujEdycje = przycisk("Anuluj", "przycisk--drugi", odswiezListeFiszek);
 
-    const przyciskAnulujEdycje = document.createElement("button");
-    przyciskAnulujEdycje.type = "button";
-    przyciskAnulujEdycje.textContent = "anuluj";
-    przyciskAnulujEdycje.addEventListener("click", odswiezListeFiszek);
+    const etykietaPytania = document.createElement("label");
+    etykietaPytania.append("Pytanie", polePytanieEdycja);
+    const etykietaOdpowiedzi = document.createElement("label");
+    etykietaOdpowiedzi.append("Odpowiedź", poleOdpowiedzEdycja);
+    const przyciski = document.createElement("div");
+    przyciski.className = "rzad";
+    przyciski.append(przyciskZapiszZmiany, przyciskAnulujEdycje);
 
-    li.append(
-        "Pytanie", polePytanieEdycja,
-        "Odpowiedź", poleOdpowiedzEdycja,
-        statusEdycji, przyciskZapiszZmiany, przyciskAnulujEdycje,
-    );
-}
-
-function escapeHtml(tekst) {
-    const div = document.createElement("div");
-    div.textContent = tekst;
-    return div.innerHTML;
+    statusEdycji.className = "wyciszony";
+    li.append(etykietaPytania, etykietaOdpowiedzi, statusEdycji, przyciski);
 }
 
 async function pokazWZrodle(fiszka) {

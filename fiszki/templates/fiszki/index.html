@@ -1,32 +1,41 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>Fiszki — Warsztat</title>
-    <link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">
-</head>
-<body>
-    <p><a href="{{ url_for('index') }}">← strona główna</a></p>
-    <h1>Fiszki</h1>
+{% extends "base.html" %}
 
-    <h2>Wgraj PDF</h2>
-    <form action="{{ url_for('fiszki.upload') }}" method="post" enctype="multipart/form-data">
+{% block tytul %}Fiszki — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Fiszki</h1>
+        <p>Zaznacz fragment w PDF-ie, a Gemini zaproponuje pytanie i odpowiedź.</p>
+    </div>
+</div>
+
+<form class="karta wgrywanie" action="{{ url_for('fiszki.upload') }}" method="post" enctype="multipart/form-data">
+    <div>
+        <h3>Wgraj PDF</h3>
+        <p class="karta__opis">Podręcznik, skrypt, notatki z wykładu.</p>
+    </div>
+    <div class="rzad">
         <input type="file" name="plik" accept="application/pdf" required>
         <button type="submit">Wgraj</button>
-    </form>
+    </div>
+</form>
 
-    <h2>Wgrane pliki</h2>
-    {% if pdfy %}
-    <ul class="lista-pdfow">
-        {% for pdf in pdfy %}
-        <li>
-            <a href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) }}">{{ pdf['nazwa_oryginalna'] }}</a>
-            — dodano {{ pdf['data_dodania'] }}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>Brak wgranych plików.</p>
-    {% endif %}
-</body>
-</html>
+<h2 class="naglowek-sekcji">Twoje pliki</h2>
+{% if pdfy %}
+<div class="siatka-kart">
+    {% for pdf in pdfy %}
+    <a class="karta karta--link" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) }}">
+        <span class="ikona-pdf">PDF</span>
+        <h3>{{ pdf['nazwa_oryginalna'] }}</h3>
+        {% set n = pdf['liczba_fiszek'] %}
+        <p class="karta__opis">{{ n }} {% if n == 1 %}fiszka{% elif n % 10 in [2, 3, 4] and n % 100 not in [12, 13, 14] %}fiszki{% else %}fiszek{% endif %}</p>
+        <span class="karta__meta">Dodano {{ pdf['data_dodania'][:10] }}</span>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="karta pusty-stan">Brak wgranych plików. Zacznij od wgrania PDF-a.</div>
+{% endif %}
+{% endblock %}

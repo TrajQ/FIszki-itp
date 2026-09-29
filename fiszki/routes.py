@@ -41,7 +41,11 @@ def _pobierz_pdf_albo_404(pdf_id):
 @fiszki_bp.route("/")
 def index():
     db = get_db()
-    pdfy = db.execute("SELECT * FROM pdfy ORDER BY data_dodania DESC").fetchall()
+    pdfy = db.execute(
+        """SELECT pdfy.*, COUNT(fiszki.id) AS liczba_fiszek
+           FROM pdfy LEFT JOIN fiszki ON fiszki.pdf_id = pdfy.id
+           GROUP BY pdfy.id ORDER BY pdfy.data_dodania DESC"""
+    ).fetchall()
     return render_template("fiszki/index.html", pdfy=pdfy)
 
 
