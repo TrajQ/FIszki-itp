@@ -539,6 +539,22 @@
         if (wstawianie) dodajPunkt(e.latlng);
     });
 
+    // „Dodaj do istniejących” ma sens tylko na siatce bieżącego pliku.
+    modelSiatka.addEventListener("change", () => {
+        const polacz = document.getElementById("model-polacz");
+        polacz.disabled = modelSiatka.value !== "plik";
+        if (polacz.disabled) polacz.checked = false;
+    });
+
+    function podpowiedzUslugi(kolumny) {
+        const lista = document.getElementById("model-uslugi");
+        lista.replaceChildren();
+        for (const k of kolumny) {
+            const dopasowanie = /^czas_(.+)_min$/.exec(k.nazwa);
+            if (dopasowanie) lista.appendChild(new Option(dopasowanie[1]));
+        }
+    }
+
     modelWstawiaj.addEventListener("click", () => {
         ustawWstawianie(!wstawianie);
         // Na wąskim ekranie mapa jest nad panelem — pokaż ją.
@@ -564,7 +580,10 @@
             predkosc_kmh: modelPredkosc.value,
             kretosc: modelKretosc.value,
         };
-        if (modelSiatka.value === "plik") zapytanie.baza = NAZWA_PLIKU;
+        if (modelSiatka.value === "plik") {
+            zapytanie.baza = NAZWA_PLIKU;
+            zapytanie.polacz = document.getElementById("model-polacz").checked;
+        }
         else zapytanie.obszar = [granice.getSouth(), granice.getWest(), granice.getNorth(), granice.getEast()];
         try {
             const odpowiedz = await fetch(URL_Z_PUNKTOW, {
@@ -591,8 +610,12 @@
         const zLudnoscia = punkty.obszary.length > 0 && punkty.obszary[0].ludnosc !== undefined;
         document.getElementById("obszary-opis").textContent =
             `Usługa „${punkty.usluga}” (${punkty.kolumna}), ${formatLiczby.format(punkty.predkosc_kmh)} km/h, krętość ${formatLiczby.format(punkty.kretosc)}. ` +
-            "Każda komórka należy do obszaru najbliższego punktu" +
-            (zLudnoscia ? " — stąd liczba mieszkańców na placówkę." : ". Bez kolumny ludnosc w pliku bazowym nie ma liczby mieszkańców.");
+            (punkty.polaczone
+                ? "Nowe punkty dodane do istniejących usług. W tabeli tylko komórki, którym nowy punkt skrócił dojście"
+                : "Każda komórka należy do obszaru najbliższego punktu") +
+            (zLudnoscia
+                ? punkty.polaczone ? " — mieszkańcy, którzy zyskali." : " — stąd liczba mieszkańców na placówkę."
+                : ". Bez kolumny ludnosc w pliku bazowym nie ma liczby mieszkańców.");
         const lista = document.getElementById("lista-obszarow");
         lista.replaceChildren();
         const warstwa = L.layerGroup().addTo(mapa);
@@ -618,6 +641,7 @@
     pobierzJson(urlPliku)
         .then((meta) => {
             pokazObszaryObslugi(meta.punkty);
+            podpowiedzUslugi(meta.kolumny);
             if (meta.laczny_dostepny) {
                 poleKolumna.add(new Option("★ Wszystkie usługi naraz (min)", WARTOSC_LACZNY));
             }

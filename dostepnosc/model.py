@@ -123,13 +123,34 @@ def czasy_dojscia(
     return czasy, najblizsze
 
 
+def polacz_z_istniejacymi(stare: list, nowe: list[float]) -> tuple[list[float], list[bool]]:
+    """Nowe punkty dołożone do istniejących usług: w każdej komórce czas do
+    najbliższej z nich (starej albo nowej). Zwraca też, gdzie nowy punkt
+    skrócił czas — tylko te komórki należą do obszarów obsługi nowych punktów."""
+    polaczone, lepiej = [], []
+    for stary, nowy in zip(stare, nowe):
+        if stary is None or nowy < stary:
+            polaczone.append(nowy)
+            lepiej.append(True)
+        else:
+            polaczone.append(stary)
+            lepiej.append(False)
+    return polaczone, lepiej
+
+
 def obszary_obslugi(
-    punkty: list[tuple[float, float]], czasy: list[float], najblizsze: list[int], ludnosc: list[float] | None
+    punkty: list[tuple[float, float]],
+    czasy: list[float],
+    najblizsze: list[int],
+    ludnosc: list[float] | None,
+    maska: list[bool] | None = None,
 ) -> list[dict]:
-    """Dla każdego punktu: ile komórek (i mieszkańców) ma go najbliżej."""
+    """Dla każdego punktu: ile komórek (i mieszkańców) ma go najbliżej.
+
+    `maska` — tylko te komórki (np. te, którym nowy punkt skrócił dojście)."""
     wynik = []
     for nr, (lat, lon) in enumerate(punkty):
-        indeksy = [i for i, n in enumerate(najblizsze) if n == nr]
+        indeksy = [i for i, n in enumerate(najblizsze) if n == nr and (maska is None or maska[i])]
         obszar = {
             "nr": nr + 1,
             "lat": lat,

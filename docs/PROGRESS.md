@@ -1098,3 +1098,18 @@ Status: zamknięty
 
 Testy: 317 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap48_20260929.zip
+
+## ETAP 49 — Dostępność: nowe usługi obok istniejących
+Data: 2026-09-29
+Status: zamknięty
+
+- `model.polacz_z_istniejacymi`, maska w `model.obszary_obslugi`
+- Znalezione w przeglądzie ETAPów 47–48: bez tego „nowa szkoła” liczyła
+  czas tylko do nowych punktów — porównanie ze stanem obecnym było
+  bezużyteczne
+- Sprawdzone w przeglądarce i testem: wynik nigdy gorszy niż stan
+  wyjściowy, porównanie scenariuszy działa
+- `DECISIONS.md`: D-054
+
+Testy: 320 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap49_20260929.zip

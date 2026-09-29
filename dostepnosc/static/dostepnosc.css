@@ -390,6 +390,16 @@
     font-size: 13px;
 }
 
+.model__polacz span:first-child {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.model__polacz .wyciszony {
+    font-size: 12px;
+}
+
 .model__opis {
     margin: 0;
     font-size: 13px;

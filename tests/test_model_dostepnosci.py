@@ -142,3 +142,41 @@ def test_mapa_svg_i_raport_z_punktami(client):
 
     assert client.get(f"/dostepnosc/mapa.svg?plik={PRZYKLAD}&kolumna=brak").status_code == 404
     assert client.get(f"/dostepnosc/raport?plik={PRZYKLAD}&kolumna=brak").status_code == 404
+
+
+# ---------- ETAP 49: dodanie punktów do istniejących usług ----------
+
+
+def test_polacz_z_istniejacymi():
+    polaczone, lepiej = model.polacz_z_istniejacymi([10.0, 3.0, None], [5.0, 8.0, 7.0])
+    assert polaczone == [5.0, 3.0, 7.0] and lepiej == [True, False, True]
+
+
+def test_nowa_szkola_obok_obecnych_daje_porownywalny_scenariusz(client):
+    import os
+
+    sciezka = os.path.join(os.path.dirname(__file__), "..", "dostepnosc", "przyklad", PRZYKLAD)
+    with open(sciezka, encoding="utf-8") as plik:
+        przed = wyniki.wczytaj_csv(plik.read())
+    punkt_luki = h3.cell_to_latlng(przed["komorki"][max(range(len(przed["komorki"])), key=lambda i: przed["kolumny"]["czas_szkola_min"][i])])
+
+    dane = client.post(
+        "/dostepnosc/z-punktow",
+        json={"usluga": "szkola", "punkty": [list(punkt_luki)], "baza": PRZYKLAD, "polacz": True},
+    ).get_json()
+    assert dane["polaczone"] is True
+    po = client.get(f"/dostepnosc/plik/{dane['plik']}/czas_szkola_min").get_json()
+    przed_czasy = dict(zip(przed["komorki"], przed["kolumny"]["czas_szkola_min"]))
+    for cecha in po["geojson"]["features"]:
+        assert cecha["properties"]["wartosc"] <= przed_czasy[cecha["properties"]["h3"]] + 1e-9  # nigdy gorzej
+    assert dane["obszary"][0]["ludnosc"] > 0  # mieszkańcy, którzy zyskali
+
+    porownanie = client.get(f"/dostepnosc/porownanie?przed={PRZYKLAD}&po={dane['plik']}&kolumna=czas_szkola_min")
+    assert porownanie.status_code == 200 and porownanie.get_json()["statystyki"]["poprawa"] > 0
+
+
+def test_polacz_bez_takiej_kolumny_to_czytelny_blad(client):
+    odpowiedz = client.post(
+        "/dostepnosc/z-punktow", json={"usluga": "basen", "punkty": [list(SRODEK)], "baza": PRZYKLAD, "polacz": True}
+    )
+    assert odpowiedz.status_code == 400 and "nie ma z czym połączyć" in odpowiedz.get_json()["blad"]

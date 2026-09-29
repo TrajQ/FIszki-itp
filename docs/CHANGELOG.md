@@ -342,3 +342,10 @@
   zasięgu 5–30 min (powierzchnia i mieszkańcy), najsłabsze ogniwo,
   obszary obsługi, luki; druk do PDF (mapa na pierwszej stronie).
 - Dodano `dostepnosc/druk.py`, `DECISIONS.md` D-053 i 3 testy.
+
+## ETAP 49 — 2026-09-29
+- Dostępność: „Dodaj do istniejących usług z pliku” w szybkim modelu —
+  nowa placówka obok obecnych, wynik gotowy do porównania scenariuszy;
+  obszary obsługi pokazują mieszkańców, którzy zyskali; podpowiedzi
+  nazw usług z pliku.
+- Dodano `DECISIONS.md` D-054 i 3 testy.

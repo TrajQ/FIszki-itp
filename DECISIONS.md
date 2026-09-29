@@ -1122,3 +1122,18 @@ jest tylko idea (te same elementy mapy i format A4).
 **Odrzucone alternatywy:**
 - Wspólny moduł „mapa do druku” dla atlasu i dostępności — odrzucone
   (zasada projektu, patrz wyżej).
+
+## D-054 — Szybki model: „dodaj do istniejących usług”
+Data: 2026-09-29
+
+**Decyzja:** Opcja `polacz` w `/dostepnosc/z-punktow`: gdy plik bazowy
+ma już wskaźnik tej usługi (np. `czas_szkola_min`), nowy czas w komórce
+to minimum ze starego i czasu do nowych punktów. Obszary obsługi nowych
+punktów obejmują wtedy tylko komórki, którym nowy punkt skrócił dojście
+(„mieszkańcy, którzy zyskali”). Bez takiej kolumny — czytelny błąd 400
+zamiast cichego liczenia od zera. Pole usługi podpowiada usługi z pliku.
+
+**Uzasadnienie:** Typowe pytanie planistyczne to „co da nowa szkoła
+obok istniejących?”. Bez połączenia nowy plik miałby czas tylko do
+nowych punktów i porównanie scenariuszy pokazywałoby bzdury. Połączony
+wynik nigdy nie jest gorszy od stanu wyjściowego (test).

@@ -169,7 +169,7 @@ def z_punktow():
         if baza:
             wyniki = _wczytaj(str(baza))
             komorki = wyniki["komorki"]
-            kolumny = {k: v for k, v in wyniki["kolumny"].items() if k != kolumna}
+            kolumny = dict(wyniki["kolumny"])
             ludnosc = wyniki.get("ludnosc")
             rdzen = str(baza)[: -len(".csv")]
         else:
@@ -184,6 +184,17 @@ def z_punktow():
         return jsonify({"blad": "Prędkość, krętość i obszar muszą być liczbami."}), 400
 
     czasy, najblizsze = model.czasy_dojscia(komorki, punkty, predkosc, kretosc)
+    # „Dodaj do istniejących”: nowa szkoła obok obecnych — czas do najbliższej
+    # z nich; obszary obsługi tylko tam, gdzie nowy punkt coś zmienił.
+    polacz = bool(dane.get("polacz")) and bool(baza) and kolumna in wyniki["kolumny"]
+    if bool(dane.get("polacz")) and not polacz:
+        return jsonify(
+            {"blad": f"Plik bazowy nie ma wskaźnika „{kolumna}” — nie ma z czym połączyć. Wybierz istniejącą usługę albo odznacz „dodaj do istniejących”."}
+        ), 400
+    maska = None
+    czasy_nowych = czasy
+    if polacz:
+        czasy, maska = model.polacz_z_istniejacymi(wyniki["kolumny"][kolumna], czasy_nowych)
     kolumny[kolumna] = czasy
     tekst = model.csv_wynikow(komorki, kolumny, ludnosc)
     wyniki_h3.wczytaj_csv(tekst)  # ten sam format co wgrane pliki — sprawdzamy
@@ -203,7 +214,8 @@ def z_punktow():
         "predkosc_kmh": predkosc,
         "kretosc": kretosc,
         "baza": baza or None,
-        "obszary": model.obszary_obslugi(punkty, czasy, najblizsze, ludnosc),
+        "polaczone": polacz,
+        "obszary": model.obszary_obslugi(punkty, czasy_nowych, najblizsze, ludnosc, maska),
     }
     with open(_sciezka_punktow(nazwa), "w", encoding="utf-8") as cel:
         json.dump(punkty_pliku, cel, ensure_ascii=False)
