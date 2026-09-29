@@ -1385,3 +1385,25 @@ pod swoją gminę”. Model językowy nie bierze udziału (liczby z kodu).
 **Odrzucone alternatywy:**
 - Wskaźniki demograficzne pobierane z GUS BDL dla gminy — odrzucone
   na teraz: wymaga wyboru gminy w koncepcji; można dodać później.
+
+## D-066 — Osiedle: raport, szkic SVG i porównanie wariantów
+Data: 2026-09-29
+
+**Decyzja:** Warianty to po prostu osobne koncepcje. Strona
+`/osiedle/porownanie?id=…` (2–4 koncepcje) stawia je obok siebie:
+szkice w jednej skali, bilans, wskaźniki, zgodność z planem („2 z 3”)
+i program. Raport koncepcji (`/osiedle/koncepcje/<id>/raport`) drukuje
+się do PDF z przeglądarki: szkic z legendą, podziałką i strzałką
+północy, bilans, wskaźniki, zgodność, program i przyjęte założenia (z
+wartością typową, gdy zmieniona). Szkic rysuje `osiedle/rysunek_svg.py`
+po stronie serwera. W SVG są tylko liczby i kolory z kodu, więc
+wstawiamy go do strony bez ucieczki. Trasy są w `osiedle/trasy_druk.py`.
+
+**Uzasadnienie:** Wariant jako koncepcja nie wymaga nowego modelu
+danych, a porównanie w jednej skali pokazuje różnice od razu.
+
+**Odrzucone alternatywy:**
+- Warianty wewnątrz jednej koncepcji — odrzucone: więcej kodu, ta sama
+  wartość.
+- Generowanie PDF na serwerze — odrzucone: druk z przeglądarki
+  wystarcza (jak w innych raportach), bez nowej zależności.

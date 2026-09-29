@@ -424,3 +424,11 @@
   przedszkolnym i szkolnym z liczbą oddziałów, zieleń na mieszkańca;
   założenia do zmiany w panelu, zapisywane z koncepcją.
 - Dodano `osiedle/program.py`, `DECISIONS.md` D-065 i 2 testy.
+
+## ETAP 60 — 2026-09-29
+- Osiedle: raport koncepcji do druku/PDF (szkic z legendą, podziałką i
+  północą, bilans, wskaźniki, zgodność z planem, program, założenia),
+  szkic SVG do pobrania, porównanie 2–4 wariantów obok siebie ze
+  szkicami w jednej skali; linki „Raport” i „Porównaj warianty”.
+- Dodano `osiedle/rysunek_svg.py`, `osiedle/trasy_druk.py`,
+  `DECISIONS.md` D-066 i 2 testy.

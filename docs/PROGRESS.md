@@ -1254,3 +1254,15 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: liczby zgodne z ręcznym rachunkiem, zmiana
   założenia przelicza program, zapis po przeładowaniu
 - `DECISIONS.md`: D-065
+
+## ETAP 60 — Osiedle: warianty, raport i eksport
+Data: 2026-09-29
+Status: zamknięty
+
+- `osiedle/rysunek_svg.py` (szkic, wspólna skala), `osiedle/trasy_druk.py`
+  (raport, SVG, porównanie), szablony `raport.html`, `porownanie.html`,
+  `_liczby.html`
+- Sprawdzone w przeglądarce: raport (jasny i ciemny motyw, podgląd
+  druku), porównanie dwóch wariantów
+- Moduł Osiedle ukończony (ETAPy 57–60)
+- `DECISIONS.md`: D-066
