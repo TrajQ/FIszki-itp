@@ -194,6 +194,18 @@ def szkice_strony(pdf_id):
     return jsonify({"propozycje": dobre, "odrzucone": odrzucone})
 
 
+# ---------- Fiszki do druku (ETAP 31) ----------
+
+
+@fiszki_bp.route("/druk")
+def druk():
+    """Karty do wycięcia i złożenia na pół (pytanie | odpowiedź)."""
+    pdf_id = request.args.get("pdf_id", type=int)
+    pdf = _pobierz_pdf_albo_404(pdf_id) if pdf_id is not None else None
+    fiszki = _fiszki_do_eksportu(pdf_id)
+    return render_template("fiszki/druk.html", pdf=pdf, fiszki=fiszki)
+
+
 # ---------- Quiz ABCD (ETAP 26) ----------
 
 DOMYSLNA_LICZBA_PYTAN = 10

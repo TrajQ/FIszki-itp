@@ -755,3 +755,18 @@ ale nieprzydatna na zajęciach i w urzędzie.
 
 **Odrzucone alternatywy:**
 - Dowolna skala dopasowana do arkusza — odrzucone (patrz wyżej).
+
+## D-038 — Karty drukowane jako składane, nie dwustronne
+Data: 2026-09-29
+
+**Decyzja:** Pytanie i odpowiedź drukujemy obok siebie na jednej
+stronie; kartę składa się na pół wzdłuż linii przerywanej.
+
+**Uzasadnienie:** Druk dwustronny wymaga lustrzanego ułożenia kart i
+drukarki, która idealnie trafia w pozycję — w praktyce karty się
+rozjeżdżają. Karta składana działa na każdej drukarce i z każdą
+kolejnością stron.
+
+**Odrzucone alternatywy:**
+- Strony „przody” i „tyły” do druku dwustronnego — odrzucone (patrz
+  wyżej).

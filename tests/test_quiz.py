@@ -88,3 +88,15 @@ def test_najtrudniejsze_fiszki(client):
     assert strona.index("P3?") < strona.index("P1?")
     assert "„nie umiem”: 2 z 3" in strona
     assert "Quiz ABCD" in strona
+
+
+# ---------- ETAP 31: fiszki do druku ----------
+
+
+def test_druk_kart(client):
+    strona = client.get("/fiszki/druk").get_data(as_text=True)
+    assert strona.count('class="karta-druk"') == 5
+    assert "P1?" in strona and "O1" in strona and "a.pdf, s. 1" in strona
+    z_pdf = client.get("/fiszki/druk?pdf_id=2").get_data(as_text=True)
+    assert z_pdf.count('class="karta-druk"') == 2
+    assert client.get("/fiszki/druk?pdf_id=9").status_code == 404

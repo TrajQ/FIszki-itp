@@ -210,3 +210,7 @@
 - MPZP: kalkulator skali mapy (długości, powierzchnie, dobór skali do
   arkusza) — `/mpzp/skala`.
 - Dodano `DECISIONS.md` D-037 i testy.
+
+## ETAP 31 — 2026-09-29
+- Fiszki: karty do druku, wycięcia i złożenia (`/fiszki/druk`).
+- Dodano `DECISIONS.md` D-038 i test.

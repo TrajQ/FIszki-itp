@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block tytul %}Fiszki do druku — Warsztat{% endblock %}
+{% block klasa_body %}strona-druku{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="druk">
+    <div class="druk__akcje">
+        <div>
+            <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) if pdf else url_for('fiszki.index') }}">‹ Wróć</a>
+            <h1>Fiszki do druku</h1>
+            <p class="wyciszony">{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }} · {{ fiszki | length }} kart.
+                Wytnij po linii ciągłej, złóż na pół po przerywanej — pytanie z przodu, odpowiedź z tyłu.</p>
+        </div>
+        <button type="button" onclick="window.print()" {{ 'disabled' if not fiszki }}>Drukuj</button>
+    </div>
+
+    {% if fiszki %}
+    <div class="karty-druk">
+        {% for f in fiszki %}
+        <article class="karta-druk">
+            <div class="karta-druk__strona">
+                <span class="karta-druk__nr">{{ loop.index }}</span>
+                <p class="karta-druk__pytanie">{{ f['pytanie'] }}</p>
+                <span class="karta-druk__zrodlo">{{ f['nazwa_oryginalna'] }}, s. {{ f['strona'] }}</span>
+            </div>
+            <div class="karta-druk__strona karta-druk__strona--tyl">
+                <span class="karta-druk__nr">{{ loop.index }}</span>
+                <p>{{ f['odpowiedz'] }}</p>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="karta pusty-stan">Brak fiszek do wydrukowania.</div>
+    {% endif %}
+</div>
+{% endblock %}

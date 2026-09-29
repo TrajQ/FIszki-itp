@@ -815,3 +815,20 @@ Zrobione:
 
 Testy: 215 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap30_20260929.zip
+
+## ETAP 31 — Fiszki do druku
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `GET /fiszki/druk[?pdf_id=]` — karty do wycięcia i złożenia na pół:
+  pytanie | odpowiedź, obrys ciągły (cięcie), linia przerywana (zgięcie),
+  numer karty na obu połówkach, źródło (plik, strona) w rogu; druk
+  jednostronny, bez dopasowywania stron przy druku dwustronnym
+- Style druku: A4, margines 10 mm, 2 karty w rzędzie (ok. 44 mm
+  wysokości), karty nie dzielą się między strony; przyciski „Drukuj
+  karty” na liście plików i w widoku PDF-a
+- Test: 1 nowy; `DECISIONS.md`: D-038
+
+Testy: 216 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap31_20260929.zip
