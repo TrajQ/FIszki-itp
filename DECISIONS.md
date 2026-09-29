@@ -1270,3 +1270,25 @@ może być współdzielony — zasada niezależnych modułów).
 **Odrzucone alternatywy:**
 - Geokodowanie adresów — odrzucone: wymaga zewnętrznej usługi i zgody
   na jej użycie; współrzędne z QGIS są pewniejsze.
+
+## D-061 — Porządki: trasy w plikach tematycznych na wspólnym blueprincie
+Data: 2026-09-29
+
+**Decyzja:** Największe pliki tras (mpzp 730, fiszki 640, atlas 614
+linii) podzielone na `routes.py` (blueprint + trasy główne + wspólne
+pomocnicze) i pliki `trasy_*.py` z grupami tras, które importują
+blueprint z `routes.py` i rejestrują na nim swoje trasy (import
+podmodułów na końcu `routes.py`). Nazwy tras (endpointy) bez zmian.
+W `routes.py` zostają funkcje, które testy podmieniają (np. zapytania do
+ULDK i planów), żeby podmiana dalej działała. Usunięte nieużywane
+importy (pyflakes czysty, poza zamierzonym importem podmodułów).
+Mapa kodu w README.
+
+**Uzasadnienie:** Pliki po kilkaset linii z kilkoma niezwiązanymi
+funkcjami są trudne do czytania po przerwie — a to projekt, do którego
+autor wraca po miesiącach (CLAUDE.md). Wspólny blueprint zamiast
+nowych blueprintów: adresy URL i `url_for` w szablonach bez zmian.
+
+**Odrzucone alternatywy:**
+- Osobne blueprinty dla podgrup — odrzucone: zmiana nazw endpointów w
+  szablonach i JS, ryzyko pomyłek bez korzyści dla użytkownika.

@@ -10,7 +10,7 @@ dodatkowej biblioteki do odwzorowań (np. pyproj).
 import math
 
 from shapely.affinity import scale, translate
-from shapely.geometry import LineString, mapping
+from shapely.geometry import mapping
 from shapely.geometry.base import BaseGeometry
 
 

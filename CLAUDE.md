@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 55 (dostępność: punkty usług z CSV — zamknięty)
-Ostatni ZIP: releases/warsztat_etap55_20260929.zip
+ETAP: 56 (porządki w kodzie — zamknięty)
+Ostatni ZIP: releases/warsztat_etap56_20260929.zip
 Testy: 344 passed / 0 failed

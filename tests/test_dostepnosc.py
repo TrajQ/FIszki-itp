@@ -45,7 +45,7 @@ def test_wczytaj_csv_srednik_i_przecinek_dziesietny():
         ("", "pusty"),
         ("id,czas_min\n1,2", "Brak kolumny"),
         ("h3\n" + SRODEK, "żadnych kolumn"),
-        (f"h3,czas_min\nabc,2", "poprawnym indeksem"),
+        ("h3,czas_min\nabc,2", "poprawnym indeksem"),
         (f"h3,czas_min\n{SRODEK},dużo", "nie jest liczbą"),
         (f"h3,czas_min\n{SRODEK},\n", "Żadna kolumna"),
         (f"h3,czas_min\n{SRODEK},1\n{h3.cell_to_parent(SRODEK, 8)},2", "różne rozdzielczości"),

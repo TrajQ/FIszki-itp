@@ -1,26 +1,23 @@
-import csv
-import io
 import json
-import math
 from datetime import datetime
 
 from flask import Blueprint, Response, abort, jsonify, render_template, request
-from shapely.errors import GEOSException, ShapelyError
-from shapely.geometry import LineString, Point, Polygon, mapping, shape
+from shapely.errors import GEOSException
+from shapely.geometry import Point, mapping
 
 from dane.uldk import BladULDK, Dzialka
 from dane.uldk import znajdz_dzialke as _znajdz_dzialke
 from dane.uldk import WZOR_ID_DZIALKI
 from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
-from .baza import historia, usun_zapisana, zapisana, zapisane, zapisz_dzialke, zapisz_w_historii
+from .baza import historia, zapisana, zapisane, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
-from . import krajowe, skala, uklady, zabudowa
-from .symbole import opisz_symbol, wszystkie_symbole
+from . import krajowe, uklady
+from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
 from .wfs import wydzielenia_dzialki as _wydzielenia_dzialki
-from .geometria import obszar_analizowany, powierzchnia_m2, szkic_svg, szkice_w_jednej_skali, w_metrach, wymiary
+from .geometria import powierzchnia_m2, szkic_svg, szkice_w_jednej_skali, wymiary
 from .wfs import znajdz_przeznaczenie as _znajdz_przeznaczenie
 
 mpzp_bp = Blueprint(
@@ -233,135 +230,6 @@ def _wspolrzedne(lat: float, lon: float) -> list[dict]:
     return wynik
 
 
-# ---------- Słownik symboli (ETAP 45) ----------
-
-
-@mpzp_bp.route("/symbole")
-def symbole():
-    return render_template("mpzp/symbole.html", symbole=wszystkie_symbole())
-
-
-@mpzp_bp.route("/symbole/rozszyfruj")
-def rozszyfruj_symbol():
-    """„3MN/U” → opisy liter; do pola „rozszyfruj” na stronie słownika."""
-    symbol = (request.args.get("q") or "").strip()[:40]
-    return jsonify({"symbol": symbol, "opis": opisz_symbol(symbol)})
-
-
-# ---------- Moje działki (ETAP 44) ----------
-
-MAKS_DLUGOSC_NOTATKI = 2000
-
-
-@mpzp_bp.route("/zapisane")
-def lista_zapisanych():
-    return jsonify(zapisane())
-
-
-@mpzp_bp.route("/zapisane", methods=["POST"])
-def zapisz_zapisana():
-    """Dodaje działkę do „Moich działek” albo zmienia jej notatkę."""
-    dane = request.get_json(silent=True) or {}
-    dzialka_id = str(dane.get("id") or "").strip()
-    if not WZOR_ID_DZIALKI.match(dzialka_id):
-        return jsonify({"blad": "Niepoprawny identyfikator działki."}), 400
-    try:
-        lat = _liczba_skonczona(dane.get("lat"))
-        lon = _liczba_skonczona(dane.get("lon"))
-        powierzchnia = dane.get("powierzchnia_m2")
-        powierzchnia = None if powierzchnia in (None, "") else _liczba_skonczona(powierzchnia)
-    except (TypeError, ValueError):
-        return jsonify({"blad": "Współrzędne i powierzchnia muszą być liczbami."}), 400
-    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-        return jsonify({"blad": "Współrzędne poza zakresem."}), 400
-    notatka = str(dane.get("notatka") or "").strip()
-    if len(notatka) > MAKS_DLUGOSC_NOTATKI:
-        return jsonify({"blad": f"Notatka może mieć najwyżej {MAKS_DLUGOSC_NOTATKI} znaków."}), 400
-    przeznaczenie = dane.get("przeznaczenie")
-    przeznaczenie = str(przeznaczenie)[:100] if przeznaczenie else None
-    return jsonify(zapisz_dzialke(dzialka_id, przeznaczenie, lat, lon, powierzchnia, notatka))
-
-
-@mpzp_bp.route("/zapisane", methods=["DELETE"])
-def usun_z_zapisanych():
-    if not usun_zapisana(request.args.get("id", "")):
-        return jsonify({"blad": "Tej działki nie ma w „Moich działkach”."}), 404
-    return jsonify({"ok": True})
-
-
-@mpzp_bp.route("/zapisane.csv")
-def zapisane_csv():
-    """„Moje działki” do arkusza (średnik i BOM — Excel z polskimi ustawieniami)."""
-    bufor = io.StringIO()
-    zapis = csv.writer(bufor, delimiter=";")
-    zapis.writerow(["id_dzialki", "przeznaczenie", "powierzchnia_m2", "szerokosc_geogr", "dlugosc_geogr", "notatka", "data_dodania"])
-    for w in zapisane():
-        powierzchnia = "" if w["powierzchnia_m2"] is None else f"{w['powierzchnia_m2']:.1f}".replace(".", ",")
-        zapis.writerow(
-            [w["dzialka_id"], w["przeznaczenie"] or "", powierzchnia, f"{w['lat']:.6f}", f"{w['lon']:.6f}", w["notatka"], w["data_dodania"]]
-        )
-    return Response(
-        "\ufeff" + bufor.getvalue(),
-        mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=moje_dzialki.csv"},
-    )
-
-
-@mpzp_bp.route("/obszar-analizowany", methods=["POST"])
-def obszar_analizowany_wz():
-    """Obszar analizowany do decyzji WZ dla geometrii działki z mapy (ETAP 43)."""
-    dane = request.get_json(silent=True) or {}
-    try:
-        geometria = shape(dane["geometria"])
-        front = _liczba_skonczona(dane.get("front"))
-    except (KeyError, TypeError, ValueError, AttributeError, IndexError, ShapelyError):
-        return jsonify({"blad": "Wymagane: geometria działki (GeoJSON) i szerokość frontu w metrach."}), 400
-    if geometria.geom_type not in ("Polygon", "MultiPolygon") or geometria.is_empty:
-        return jsonify({"blad": "Geometria działki musi być wielokątem."}), 400
-    if powierzchnia_m2(geometria) > 10_000_000:  # 10 km² — to nie jest działka budowlana
-        return jsonify({"blad": "Za duży obszar jak na działkę."}), 400
-    try:
-        return jsonify(obszar_analizowany(geometria, front))
-    except ValueError as e:
-        return jsonify({"blad": str(e)}), 400
-
-
-MAKS_PUNKTOW_POMIARU = 500
-
-
-@mpzp_bp.route("/pomiar", methods=["POST"])
-def pomiar():
-    """Długość łamanej i powierzchnia wieloboku z punktów klikniętych na mapie.
-
-    Te same wzory co powierzchnia działki (mpzp/geometria.py) — lokalna
-    skala na średniej szerokości; dla odległości do kilkunastu km błąd
-    jest znikomy.
-    """
-    dane = request.get_json(silent=True) or {}
-    try:
-        punkty = [(_liczba_skonczona(p[1]), _liczba_skonczona(p[0])) for p in dane.get("punkty") or []]
-    except (TypeError, ValueError, IndexError, KeyError):
-        return jsonify({"blad": "Punkty to lista par [szerokość, długość]."}), 400
-    if not 2 <= len(punkty) <= MAKS_PUNKTOW_POMIARU:
-        return jsonify({"blad": f"Pomiar wymaga od 2 do {MAKS_PUNKTOW_POMIARU} punktów."}), 400
-    if any(not (-180 <= lon <= 180 and -90 <= lat <= 90) for lon, lat in punkty):
-        return jsonify({"blad": "Współrzędne poza zakresem."}), 400
-
-    szerokosc = sum(lat for _, lat in punkty) / len(punkty)
-    linia = w_metrach(LineString(punkty), szerokosc)
-    wynik = {
-        "dlugosc_m": round(linia.length, 2),
-        "ostatni_odcinek_m": round(LineString(linia.coords[-2:]).length, 2),
-    }
-    if len(punkty) >= 3:
-        wielobok = w_metrach(Polygon(punkty), szerokosc)
-        wynik["powierzchnia_m2"] = round(wielobok.area, 1)
-        wynik["obwod_m"] = round(wielobok.exterior.length, 2)
-        if not wielobok.is_valid:
-            wynik["uwaga"] = "Obrys przecina sam siebie — powierzchnia jest niewiarygodna."
-    return jsonify(wynik)
-
-
 def _plan_krajowy_na_json(obiekty: list) -> dict:
     przeznaczenie = krajowe.rozpoznaj_przeznaczenie(obiekty)
     return {
@@ -407,119 +275,6 @@ def warstwy_krajowe():
             "dzialki": {"url": krajowe.URL_KIEG, "warstwy": krajowe.WARSTWY_KIEG},
         }
     )
-
-
-def _liczba_skonczona(tekst) -> float:
-    """float z pola formularza, ale tylko skończony: „nan”, „inf”, „1e400”
-    też są dla Pythona liczbami, a zepsułyby odpowiedź JSON."""
-    wartosc = float(str(tekst).strip().replace(",", ".").replace(" ", ""))
-    if not math.isfinite(wartosc):
-        raise ValueError("liczba nieskończona")
-    return wartosc
-
-
-# ---------- Kalkulator skali mapy (ETAP 30) ----------
-
-
-@mpzp_bp.route("/skala")
-def skala_strona():
-    return render_template(
-        "mpzp/skala.html", skale=skala.SKALE_STANDARDOWE, arkusze=list(skala.ARKUSZE_MM)
-    )
-
-
-@mpzp_bp.route("/skala/licz", methods=["POST"])
-def skala_licz():
-    """Wszystkie przeliczenia naraz; puste pole = tej części nie liczymy."""
-    dane = request.get_json(silent=True) or {}
-
-    def liczba(klucz):
-        wartosc = str(dane.get(klucz, "")).strip()
-        return _liczba_skonczona(wartosc) if wartosc else None
-
-    try:
-        mianownik = liczba("mianownik")
-        if mianownik is None:
-            raise skala.BladSkali("Podaj skalę (np. 1000 dla 1:1000).")
-        wynik = {"mianownik": mianownik}
-        if (v := liczba("dlugosc_rysunek")) is not None:
-            wynik["dlugosc_teren_m"] = skala.dlugosc_w_terenie(v, dane.get("jednostka_rysunek", "cm"), mianownik)
-        if (v := liczba("dlugosc_teren")) is not None:
-            wynik["dlugosc_rysunek_mm"] = skala.dlugosc_na_rysunku(v, dane.get("jednostka_teren", "m"), mianownik)
-        if (v := liczba("pow_rysunek_cm2")) is not None:
-            wynik["pow_teren_m2"] = skala.powierzchnia_w_terenie(v, mianownik)
-        if (v := liczba("pow_teren")) is not None:
-            wynik["pow_rysunek_cm2"] = skala.powierzchnia_na_rysunku(v, dane.get("jednostka_pow", "m2"), mianownik)
-        szer, wys = liczba("teren_szer_m"), liczba("teren_wys_m")
-        if szer is not None and wys is not None:
-            margines = liczba("margines_mm")
-            wynik["dobor"] = skala.dobierz_skale(
-                szer, wys, dane.get("arkusz", "A3"), 20 if margines is None else margines
-            )
-    except KeyError:
-        return jsonify({"blad": "Nieznana jednostka."}), 400
-    except (ValueError, skala.BladSkali) as e:
-        komunikat = str(e) if isinstance(e, skala.BladSkali) else "Wpisz liczby (np. 4,5)."
-        return jsonify({"blad": komunikat}), 400
-    return jsonify(wynik)
-
-
-# ---------- Kalkulator wskaźników zabudowy (ETAP 23) ----------
-
-
-@mpzp_bp.route("/kalkulator")
-def kalkulator():
-    return render_template(
-        "mpzp/kalkulator.html",
-        powierzchnia=request.args.get("powierzchnia", type=float),
-        dzialka_id=request.args.get("dzialka", ""),
-    )
-
-
-def _liczba_lub_none(slownik: dict, klucz: str, typ=float):
-    wartosc = slownik.get(klucz)
-    if wartosc in (None, ""):
-        return None
-    liczba = _liczba_skonczona(wartosc)
-    return int(liczba) if typ is int else liczba
-
-
-@mpzp_bp.route("/kalkulator/licz", methods=["POST"])
-def kalkulator_licz():
-    dane = request.get_json(silent=True) or {}
-    try:
-        # Budynek z rzutem, ale bez liczby kondygnacji, dałby po cichu
-        # powierzchnię całkowitą 0 — lepiej poprosić o uzupełnienie.
-        for b in dane.get("budynki", []):
-            if str(b.get("rzut_m2") or "").strip() and not str(b.get("kondygnacje") or "").strip():
-                raise zabudowa.BladDanych("Podaj liczbę kondygnacji nadziemnych każdego budynku.")
-        budynki = [
-            zabudowa.Budynek(
-                rzut_m2=_liczba_skonczona(b.get("rzut_m2") or 0),
-                kondygnacje=int(_liczba_skonczona(b.get("kondygnacje") or 0)),
-                wysokosc_m=_liczba_lub_none(b, "wysokosc_m"),
-            )
-            for b in dane.get("budynki", [])
-        ]
-        plan = dane.get("ustalenia", {})
-        ustalenia = zabudowa.Ustalenia(
-            max_zabudowa_proc=_liczba_lub_none(plan, "max_zabudowa_proc"),
-            min_intensywnosc=_liczba_lub_none(plan, "min_intensywnosc"),
-            max_intensywnosc=_liczba_lub_none(plan, "max_intensywnosc"),
-            min_pbc_proc=_liczba_lub_none(plan, "min_pbc_proc"),
-            max_wysokosc_m=_liczba_lub_none(plan, "max_wysokosc_m"),
-            max_kondygnacje=_liczba_lub_none(plan, "max_kondygnacje", int),
-        )
-        wynik = zabudowa.policz(
-            _liczba_skonczona(dane.get("powierzchnia_dzialki") or 0),
-            budynki,
-            _liczba_skonczona(dane.get("pbc_m2") or 0),
-            ustalenia,
-        )
-    except (TypeError, ValueError) as e:
-        komunikat = str(e) if isinstance(e, zabudowa.BladDanych) else "Wpisz liczby (np. 450 albo 0,6)."
-        return jsonify({"blad": komunikat}), 400
-    return jsonify(wynik)
 
 
 @mpzp_bp.route("/eksport.geojson")
@@ -728,3 +483,8 @@ def porownanie():
         podzialka=podzialka,
         maks=MAKS_DO_POROWNANIA,
     )
+
+
+# Pozostałe trasy modułu — w osobnych plikach, rejestrują się na mpzp_bp.
+# Import na końcu, bo tamte pliki importują mpzp_bp z tego modułu.
+from . import trasy_narzedzia, trasy_zapisane  # noqa: E402, F401

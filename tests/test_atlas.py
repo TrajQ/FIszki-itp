@@ -895,5 +895,5 @@ def test_endpoint_porownania_wojewodztw(client, monkeypatch):
     assert all(w["wartosc"] == 100 for w in wzgledny["wojewodztwa"])
 
     monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_wojewodztw", lambda z, rok: [])
-    assert client.get(f"/atlas/wojewodztwa-porownanie?zmienna=5&rok=2023&woj=011200000000").status_code == 404
+    assert client.get("/atlas/wojewodztwa-porownanie?zmienna=5&rok=2023&woj=011200000000").status_code == 404
     assert client.get("/atlas/wojewodztwa-porownanie?zmienna=x").status_code == 400

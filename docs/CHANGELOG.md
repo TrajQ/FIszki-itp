@@ -393,3 +393,9 @@
 - Naprawiono przy okazji (wyłapane testem): nazwa punktu nadpisywała
   nazwę zapisanego pliku w odpowiedzi serwera.
 - Dodano `model.punkty_z_csv`, `DECISIONS.md` D-060 i 3 testy.
+
+## ETAP 56 — 2026-09-29
+- Porządki w kodzie (bez zmian funkcji): trasy MPZP, Fiszek i Atlasu
+  podzielone na pliki tematyczne (`trasy_*.py`), wspólne `mpzp/liczby.py`,
+  usunięte nieużywane importy w kodzie i testach, mapa kodu w README.
+- Dodano `DECISIONS.md` D-061.

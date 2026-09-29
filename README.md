@@ -19,3 +19,21 @@ Postęp prac: [docs/PROGRESS.md](docs/PROGRESS.md), decyzje:
 [DECISIONS.md](DECISIONS.md), zasady pracy: [CLAUDE.md](CLAUDE.md).
 
 Testy: `.venv/bin/python -m pytest -q`
+
+## Gdzie co jest w kodzie
+
+Każdy moduł to osobny katalog z blueprintem Flaska. Plik `routes.py`
+tworzy blueprint i ma główne trasy; większe grupy tras są w plikach
+`trasy_*.py`, które rejestrują się na tym samym blueprincie. Obliczenia
+są w osobnych plikach bez Flaska — łatwo je czytać i testować.
+
+| Moduł | Trasy | Obliczenia i dane |
+|---|---|---|
+| `atlas/` | `routes.py` (dane, klasy, autokorelacja, profil, korelacja, eksport), `trasy_druk.py` (mapa do druku) | `statystyki.py`, `autokorelacja.py`, `granice.py` (PRG), `mapa_svg.py`, `baza.py` (cache) |
+| `mpzp/` | `routes.py` (działka, plan, raport, porównanie), `trasy_narzedzia.py` (kalkulatory, pomiar, obszar WZ, symbole), `trasy_zapisane.py` (Moje działki) | `wfs.py` (Poznań), `krajowe.py` (KIMPZP), `geometria.py`, `uklady.py`, `zabudowa.py`, `skala.py`, `symbole.py`, `liczby.py`, `baza.py` |
+| `fiszki/` | `routes.py` (pliki PDF, fiszki, szkice Gemini), `trasy_nauka.py` (powtórki, quiz, egzaminy), `trasy_wymiana.py` (druk, eksport, import, wyszukiwarka) | `powtorki.py`, `tematy.py`, `egzaminy.py`, `quiz.py`, `importer.py`, `statystyki_nauki.py`, `strona.py`, `baza.py` |
+| `dostepnosc/` | `routes.py` | `wyniki.py` (CSV H3), `model.py` (szybki model), `druk.py` (raport) |
+
+Wspólne dla aplikacji: `app.py`, `ochrona.py` (tylko 127.0.0.1, ochrona
+przed obcymi stronami), `kopia.py` (kopia zapasowa), `dane/` (klienci
+usług: GUS BDL, ULDK, Gemini).

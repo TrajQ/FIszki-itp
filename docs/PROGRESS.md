@@ -1196,3 +1196,19 @@ Status: zamknięty
 
 Testy: 344 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap55_20260929.zip
+
+## ETAP 56 — Porządki w kodzie
+Data: 2026-09-29
+Status: zamknięty
+
+- mpzp/routes.py 730 → 490 linii (+ `trasy_narzedzia.py`,
+  `trasy_zapisane.py`, `liczby.py`); fiszki/routes.py 640 → 314
+  (+ `trasy_nauka.py`, `trasy_wymiana.py`); atlas/routes.py 614 → 492
+  (+ `trasy_druk.py`)
+- pyflakes: czysto (poza celowym `from . import trasy_*`); wszystkie
+  pliki JS przechodzą `node --check`; wszystkie strony odpowiadają 200
+- Funkcje bez zmian — pilnują tego testy (344)
+- `DECISIONS.md`: D-061
+
+Testy: 344 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap56_20260929.zip

@@ -1,5 +1,5 @@
 import pytest
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Polygon
 
 from app import create_app
 import mpzp.routes as mpzp_routes
@@ -573,7 +573,7 @@ def test_eksport_geojson_gminy_bez_wfs_ma_przeznaczenie_z_kimpzp(client, monkeyp
 
 # ---------- ETAP 43: wymiary działki, obszar analizowany WZ ----------
 
-from mpzp.geometria import metry_na_stopien, obszar_analizowany, wymiary  # noqa: E402
+from mpzp.geometria import obszar_analizowany, wymiary  # noqa: E402
 
 
 def _prostokat(szer_m, dl_m, lat=52.0, lon=17.0):

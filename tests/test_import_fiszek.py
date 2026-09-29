@@ -1,7 +1,6 @@
 """Import fiszek z pliku (ETAP 54)."""
 
 import io
-import json
 
 import pytest
 
