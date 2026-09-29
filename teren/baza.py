@@ -39,6 +39,15 @@ CREATE TABLE IF NOT EXISTS punkty (
 );
 """
 
+# Kolumny dodane później: CREATE TABLE IF NOT EXISTS nie dodaje ich do
+# istniejącej bazy, więc dopisujemy je przy starcie (bez utraty danych).
+KOLUMNY_DODANE = {
+    # ETAP 72: 1 = położenie poprawione ręcznie w Warsztacie (dokładność GPS nie obowiązuje)
+    "polozenie_reczne": "INTEGER NOT NULL DEFAULT 0",
+    # ETAP 72: czas ostatniej poprawki w Warsztacie
+    "data_poprawki": "TEXT",
+}
+
 
 def folder() -> str:
     sciezka = os.path.join(current_app.instance_path, "teren")
@@ -69,6 +78,10 @@ def close_db(exception=None):
 def init_db():
     db = get_db()
     db.executescript(SCHEMAT)
+    istniejace = {w["name"] for w in db.execute("PRAGMA table_info(punkty)")}
+    for kolumna, definicja in KOLUMNY_DODANE.items():
+        if kolumna not in istniejace:
+            db.execute(f"ALTER TABLE punkty ADD COLUMN {kolumna} {definicja}")
     db.commit()
 
 
@@ -169,4 +182,24 @@ def usun_punkt(projekt_id: int, punkt_id: int) -> bool:
     db.execute("DELETE FROM punkty WHERE id = ?", (punkt_id,))
     db.commit()
     _usun_pliki([wiersz["zdjecie"]])
+    return True
+
+
+def popraw_punkt(projekt_id: int, punkt_id: int, poprawka: dict) -> bool:
+    """Zapisuje poprawkę (ETAP 72). Nowe położenie = położenie ręczne,
+    dokładność GPS przestaje obowiązywać."""
+    db = get_db()
+    if db.execute("SELECT 1 FROM punkty WHERE id = ? AND projekt_id = ?", (punkt_id, projekt_id)).fetchone() is None:
+        return False
+    teraz = datetime.now().isoformat(timespec="seconds")
+    db.execute(
+        "UPDATE punkty SET wartosci = ?, uwagi = ?, data_poprawki = ? WHERE id = ?",
+        (json.dumps(poprawka["wartosci"], ensure_ascii=False), poprawka["uwagi"], teraz, punkt_id),
+    )
+    if "lat" in poprawka:
+        db.execute(
+            "UPDATE punkty SET lat = ?, lng = ?, dokladnosc_m = NULL, polozenie_reczne = 1 WHERE id = ?",
+            (poprawka["lat"], poprawka["lng"], punkt_id),
+        )
+    db.commit()
     return True

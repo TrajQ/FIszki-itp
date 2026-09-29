@@ -377,3 +377,39 @@ button.przycisk--niebezpieczny-tekst {
 .edytor-pol__skala[hidden] {
     display: none;
 }
+
+/* ETAP 72: poprawianie punktu */
+.panel-poprawki {
+    border: 2px solid var(--akcent);
+}
+
+.panel-poprawki[hidden] {
+    display: none;
+}
+
+.poprawka-pola {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.poprawka-pola label,
+.panel-poprawki > label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.poprawka-pola input,
+.poprawka-pola select,
+.panel-poprawki textarea {
+    width: 100%;
+    min-width: 0;
+    font: inherit;
+    font-size: 14px;
+}
+
+.komorka-akcji {
+    white-space: nowrap;
+}

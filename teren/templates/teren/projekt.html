@@ -38,6 +38,23 @@
             <p class="wyciszony opis">Plik JSON z przycisku „Eksportuj plik” w formularzu na telefonie. Punkty już zaimportowane są pomijane.</p>
         </section>
 
+        <section id="panel-poprawki" class="karta stos panel-poprawki" hidden>
+            <div class="rzad rzad--miedzy">
+                <h3>Popraw punkt</h3>
+                <span id="poprawka-opis" class="wyciszony"></span>
+            </div>
+            <div id="poprawka-pola" class="poprawka-pola"></div>
+            <label>Uwagi <textarea id="poprawka-uwagi" rows="2" maxlength="2000"></textarea></label>
+            <div class="rzad">
+                <button id="poprawka-przesun" type="button" class="przycisk--drugi">✥ Przesuń na mapie</button>
+                <span id="poprawka-polozenie" class="wyciszony"></span>
+            </div>
+            <div class="rzad">
+                <button id="poprawka-zapisz" type="button">Zapisz</button>
+                <button id="poprawka-anuluj" type="button" class="przycisk--tekst">Anuluj</button>
+            </div>
+        </section>
+
         <section class="karta stos">
             <h3>Filtr</h3>
             <select id="filtr-pola" aria-label="Pole do filtrowania"></select>

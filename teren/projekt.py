@@ -151,6 +151,23 @@ def _zdjecie(surowe, opis: str) -> bytes | None:
     return dane
 
 
+def sprawdz_poprawke(dane, pola: list[dict]) -> dict:
+    """Poprawka punktu z Warsztatu (ETAP 72): wartości pól, uwagi i
+    opcjonalnie nowe położenie (przesunięcie na mapie)."""
+    if not isinstance(dane, dict):
+        raise BladDanych("Poprawka musi być obiektem.")
+    wynik = {
+        "wartosci": _wartosci(dane.get("wartosci") or {}, pola, "Punkt"),
+        "uwagi": sprawdz_tekst(dane.get("uwagi"), "Uwagi", MAKS_UWAGI, wymagany=False),
+    }
+    if "lat" in dane or "lng" in dane:
+        lat, lng = _liczba(dane.get("lat"), "Szerokość"), _liczba(dane.get("lng"), "Długość")
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            raise BladDanych("Współrzędne poza zakresem.")
+        wynik["lat"], wynik["lng"] = lat, lng
+    return wynik
+
+
 def odczytaj_plik(dane, klucz_projektu: str, pola: list[dict]) -> list[dict]:
     """Plik z telefonu → punkty do zapisania. Cały plik albo nic:
     przy pierwszym błędzie BladDanych z numerem punktu."""

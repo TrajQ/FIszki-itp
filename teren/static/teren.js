@@ -86,7 +86,14 @@
         }
         div.appendChild(lista);
         if (p.uwagi) div.appendChild(element("p", "dymek__uwagi", p.uwagi));
-        div.appendChild(element("p", "wyciszony", `${new Date(p.czas).toLocaleString("pl-PL")}${p.dokladnosc_m !== null ? ` · GPS ± ${Math.round(p.dokladnosc_m)} m` : ""}`));
+        div.appendChild(element("p", "wyciszony", `${new Date(p.czas).toLocaleString("pl-PL")}${p.polozenie_reczne ? " · położenie poprawione ręcznie" : p.dokladnosc_m !== null ? ` · GPS ± ${Math.round(p.dokladnosc_m)} m` : ""}`));
+        const popraw = element("button", "przycisk--tekst", "Popraw");
+        popraw.type = "button";
+        popraw.addEventListener("click", () => {
+            mapa.closePopup();
+            otworzPoprawke(p);
+        });
+        div.appendChild(popraw);
         return div;
     }
 
@@ -145,7 +152,7 @@
             if (p.lat === null) {
                 polozenie.textContent = "brak";
             } else {
-                const pokaz = element("button", "przycisk--tekst", p.dokladnosc_m !== null ? `± ${Math.round(p.dokladnosc_m)} m` : "ręcznie");
+                const pokaz = element("button", "przycisk--tekst", p.polozenie_reczne ? "poprawione" : p.dokladnosc_m !== null ? `± ${Math.round(p.dokladnosc_m)} m` : "ręcznie");
                 pokaz.type = "button";
                 pokaz.title = "Pokaż na mapie";
                 pokaz.addEventListener("click", () => {
@@ -179,8 +186,11 @@
                     komunikat(e.message, true);
                 }
             });
-            const akcje = element("td");
-            akcje.append(usun);
+            const popraw = element("button", "przycisk--tekst", "Popraw");
+            popraw.type = "button";
+            popraw.addEventListener("click", () => otworzPoprawke(p));
+            const akcje = element("td", "komorka-akcji");
+            akcje.append(popraw, usun);
             wiersz.append(polozenie, foto, akcje);
             tabela.appendChild(wiersz);
         }
@@ -214,6 +224,102 @@
     filtrPola.addEventListener("change", () => {
         ukryte = new Set();
         rysuj();
+    });
+
+    // ---------- poprawianie punktu (ETAP 72) ----------
+
+    const panelPoprawki = document.getElementById("panel-poprawki");
+    const polaPoprawki = document.getElementById("poprawka-pola");
+    const opisPolozenia = document.getElementById("poprawka-polozenie");
+    let poprawiany = null; // punkt w edycji
+    let znacznikPrzesuwania = null; // przeciągalny znacznik nowego położenia
+
+    function polePoprawki(pole, wartosc) {
+        const etykieta = element("label", "", pole.nazwa);
+        let kontrolka;
+        if (pole.typ === "wybor" || pole.typ === "tak_nie") {
+            kontrolka = element("select");
+            kontrolka.appendChild(new Option("—", ""));
+            const opcje = pole.typ === "wybor" ? pole.opcje : ["tak", "nie"];
+            for (const o of opcje) kontrolka.appendChild(new Option(o, o));
+            kontrolka.value = wartosc === undefined ? "" : tekstWartosci(wartosc);
+        } else {
+            kontrolka = element("input");
+            kontrolka.type = pole.typ === "liczba" ? "number" : "text";
+            if (pole.typ === "liczba") kontrolka.step = "any";
+            kontrolka.value = wartosc === undefined ? "" : String(wartosc);
+        }
+        kontrolka.dataset.pole = pole.nazwa;
+        kontrolka.dataset.typ = pole.typ;
+        etykieta.append(kontrolka);
+        return etykieta;
+    }
+
+    function zakonczPrzesuwanie() {
+        if (znacznikPrzesuwania) mapa.removeLayer(znacznikPrzesuwania);
+        znacznikPrzesuwania = null;
+        document.getElementById("poprawka-przesun").textContent = "✥ Przesuń na mapie";
+    }
+
+    function otworzPoprawke(p) {
+        zakonczPrzesuwanie();
+        poprawiany = p;
+        panelPoprawki.hidden = false;
+        document.getElementById("poprawka-opis").textContent = new Date(p.czas).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" });
+        polaPoprawki.replaceChildren(...PROJEKT.pola.map((pole) => polePoprawki(pole, p.wartosci[pole.nazwa])));
+        document.getElementById("poprawka-uwagi").value = p.uwagi;
+        opisPolozenia.textContent = p.lat === null ? "punkt bez położenia" : "";
+        panelPoprawki.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function zamknijPoprawke() {
+        zakonczPrzesuwanie();
+        poprawiany = null;
+        panelPoprawki.hidden = true;
+    }
+
+    document.getElementById("poprawka-przesun").addEventListener("click", () => {
+        if (!poprawiany) return;
+        if (znacznikPrzesuwania) return zakonczPrzesuwanie();
+        // Punkt bez położenia wstawiamy na środek mapy — potem przeciągnąć na miejsce.
+        const start = poprawiany.lat === null ? mapa.getCenter() : L.latLng(poprawiany.lat, poprawiany.lng);
+        znacznikPrzesuwania = L.marker(start, { draggable: true, autoPan: true, title: "Przeciągnij w poprawne miejsce" }).addTo(mapa);
+        mapa.setView(start, Math.max(mapa.getZoom(), 18));
+        document.getElementById("poprawka-przesun").textContent = "✕ Nie przesuwaj";
+        opisPolozenia.textContent = "Przeciągnij znacznik w poprawne miejsce.";
+        znacznikPrzesuwania.on("drag", () => {
+            if (poprawiany.lat === null) return;
+            const m = Math.round(mapa.distance(znacznikPrzesuwania.getLatLng(), L.latLng(poprawiany.lat, poprawiany.lng)));
+            opisPolozenia.textContent = `przesunięcie: ${m} m`;
+        });
+    });
+
+    document.getElementById("poprawka-anuluj").addEventListener("click", zamknijPoprawke);
+
+    document.getElementById("poprawka-zapisz").addEventListener("click", async () => {
+        if (!poprawiany) return;
+        const wartosci = {};
+        for (const k of polaPoprawki.querySelectorAll("[data-pole]")) {
+            if (k.value === "") continue;
+            wartosci[k.dataset.pole] = k.dataset.typ === "liczba" ? Number(k.value) : k.dataset.typ === "tak_nie" ? k.value === "tak" : k.value;
+        }
+        const cialo = { wartosci, uwagi: document.getElementById("poprawka-uwagi").value };
+        if (znacznikPrzesuwania) {
+            const { lat, lng } = znacznikPrzesuwania.getLatLng();
+            Object.assign(cialo, { lat, lng });
+        }
+        try {
+            await zapytaj(`${URL_PROJEKTU}/punkty/${poprawiany.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(cialo),
+            });
+            zamknijPoprawke();
+            komunikat("Zapisano poprawkę punktu.", false);
+            await wczytaj(false);
+        } catch (e) {
+            komunikat(e.message, true);
+        }
     });
 
     // ---------- import ----------

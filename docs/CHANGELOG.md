@@ -529,3 +529,10 @@
   `.venv`, usuwanie plików starej wersji, zależności); opis w
   `docs/URUCHOMIENIE.md`.
 - Dodano `aktualizacja.py`, `aktualizuj.sh`, `DECISIONS.md` D-077 i 6 testów.
+
+## ETAP 72 — 2026-09-29
+- Teren: poprawianie punktów po imporcie — wartości pól, uwagi,
+  przesunięcie punktu na mapie przeciąganiem (z odległością w metrach);
+  oznaczenie „poprawione ręcznie” w tabeli, dymku, raporcie, GeoJSON i CSV.
+- Stare bazy dostają nowe kolumny automatycznie.
+- Dodano `DECISIONS.md` D-078 i 2 testy.

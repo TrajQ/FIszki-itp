@@ -17,7 +17,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 from markupsafe import Markup
 
 from . import baza, raport
-from .projekt import FORMAT, TYPY_POL, WZORY, BladDanych, sprawdz_tekst, odczytaj_plik, sprawdz_pola
+from .projekt import FORMAT, TYPY_POL, WZORY, BladDanych, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
     "teren",
@@ -127,7 +127,8 @@ def importuj(projekt_id):
 
 
 def _punkt_dla_strony(projekt_id: int, pt: dict) -> dict:
-    wynik = {k: pt[k] for k in ("id", "lat", "lng", "dokladnosc_m", "czas", "wartosci", "uwagi")}
+    wynik = {k: pt[k] for k in ("id", "lat", "lng", "dokladnosc_m", "czas", "wartosci", "uwagi", "data_poprawki")}
+    wynik["polozenie_reczne"] = bool(pt["polozenie_reczne"])
     wynik["zdjecie"] = url_for("teren.zdjecie", projekt_id=projekt_id, punkt_id=pt["id"]) if pt["zdjecie"] else None
     return wynik
 
@@ -136,6 +137,20 @@ def _punkt_dla_strony(projekt_id: int, pt: dict) -> dict:
 def lista_punktow(projekt_id):
     _projekt_albo_404(projekt_id)
     return jsonify([_punkt_dla_strony(projekt_id, pt) for pt in baza.punkty(projekt_id)])
+
+
+@teren_bp.route("/projekty/<int:projekt_id>/punkty/<int:punkt_id>", methods=["PUT"])
+def popraw_punkt(projekt_id, punkt_id):
+    """Poprawka punktu po imporcie (ETAP 72): wartości, uwagi, położenie."""
+    p = _projekt_albo_404(projekt_id)
+    try:
+        poprawka = sprawdz_poprawke(request.get_json(silent=True), p["pola"])
+    except BladDanych as e:
+        return jsonify({"blad": str(e)}), 400
+    if not baza.popraw_punkt(projekt_id, punkt_id, poprawka):
+        abort(404)
+    pt = next(pt for pt in baza.punkty(projekt_id) if pt["id"] == punkt_id)
+    return jsonify(_punkt_dla_strony(projekt_id, pt))
 
 
 @teren_bp.route("/projekty/<int:projekt_id>/punkty/<int:punkt_id>", methods=["DELETE"])
@@ -161,7 +176,8 @@ def eksport_geojson(projekt_id):
         {
             "type": "Feature",
             "geometry": {"type": "Point", "coordinates": [pt["lng"], pt["lat"]]},
-            "properties": {"id": pt["id"], "czas": pt["czas"], "dokladnosc_m": pt["dokladnosc_m"], **pt["wartosci"],
+            "properties": {"id": pt["id"], "czas": pt["czas"], "dokladnosc_m": pt["dokladnosc_m"],
+                           "polozenie_reczne": bool(pt["polozenie_reczne"]), **pt["wartosci"],
                            "uwagi": pt["uwagi"], "zdjecie": pt["zdjecie"]},
         }
         for pt in baza.punkty(projekt_id)
@@ -180,13 +196,14 @@ def eksport_csv(projekt_id):
     wyjscie = io.StringIO()
     zapis = csv.writer(wyjscie, delimiter=";")
     nazwy_pol = [pole["nazwa"] for pole in p["pola"]]
-    zapis.writerow(["id", "czas", "szerokosc", "dlugosc", "dokladnosc_m", *nazwy_pol, "uwagi", "zdjecie"])
+    zapis.writerow(["id", "czas", "szerokosc", "dlugosc", "dokladnosc_m", "polozenie_reczne", *nazwy_pol, "uwagi", "zdjecie"])
     for pt in baza.punkty(projekt_id):
         wartosci = []
         for nazwa in nazwy_pol:
             w = pt["wartosci"].get(nazwa, "")
             wartosci.append("tak" if w is True else "nie" if w is False else w)
-        zapis.writerow([pt["id"], pt["czas"], pt["lat"], pt["lng"], pt["dokladnosc_m"], *wartosci, pt["uwagi"], pt["zdjecie"] or ""])
+        zapis.writerow([pt["id"], pt["czas"], pt["lat"], pt["lng"], pt["dokladnosc_m"], "tak" if pt["polozenie_reczne"] else "nie",
+                        *wartosci, pt["uwagi"], pt["zdjecie"] or ""])
     return Response(
         "﻿" + wyjscie.getvalue(),  # BOM — Excel otworzy polskie znaki poprawnie
         mimetype="text/csv",

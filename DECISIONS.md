@@ -1679,3 +1679,24 @@ zmianą pozwala wrócić bez gita.
 - `git pull` jako jedyna droga — autor instaluje z ZIP-ów.
 - rsync — nie zawsze zainstalowany, a lista plików wersji i tak jest
   potrzebna do usuwania starych plików.
+
+## D-078 — Teren: poprawki punktów po imporcie
+Data: 2026-09-29
+
+**Decyzja:** Punkt po imporcie można poprawić w Warsztacie (PUT
+`/teren/projekty/<id>/punkty/<pid>`, panel „Popraw punkt” z tabeli albo
+dymka): wartości pól, uwagi, położenie (przeciąganie znacznika na mapie,
+z podglądem przesunięcia w metrach). Przesunięty punkt ma
+`polozenie_reczne = 1`, a dokładność GPS jest kasowana — raport i
+eksporty pokazują „poprawione ręcznie”. Nowe kolumny (`polozenie_reczne`,
+`data_poprawki`) dopisuje `init_db` przez ALTER TABLE, gdy ich brak —
+stare bazy działają bez utraty danych. Ponowny import pliku z telefonu
+nie nadpisuje poprawek (punkty o znanym uid są pomijane).
+
+**Uzasadnienie:** GPS telefonu przy budynkach i pod koronami drzew myli
+się o kilkanaście metrów, a literówki w terenie są normalne. Oznaczenie
+ręcznego położenia zachowuje uczciwość danych w raporcie.
+
+**Odrzucone alternatywy:**
+- Przechowywanie historii wszystkich zmian — więcej kodu niż potrzeba;
+  zostaje data ostatniej poprawki.

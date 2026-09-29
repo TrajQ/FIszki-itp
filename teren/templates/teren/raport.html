@@ -80,7 +80,7 @@
                 <td>{{ p.czas[:10] }}</td>
                 {% for x in projekt.pola %}<td>{% if x.nazwa in p.wartosci %}{{ wartosc(p.wartosci[x.nazwa]) }}{% endif %}</td>{% endfor %}
                 <td>{{ p.uwagi }}</td>
-                <td class="liczba">{% if p.lat is not none %}{{ '%.5f' % p.lat }}, {{ '%.5f' % p.lng }}{% if p.dokladnosc_m is not none %} <span class="wyciszony">±{{ p.dokladnosc_m | round | int }} m</span>{% endif %}{% else %}—{% endif %}</td>
+                <td class="liczba">{% if p.lat is not none %}{{ '%.5f' % p.lat }}, {{ '%.5f' % p.lng }}{% if p.polozenie_reczne %} <span class="wyciszony">poprawione ręcznie</span>{% elif p.dokladnosc_m is not none %} <span class="wyciszony">±{{ p.dokladnosc_m | round | int }} m</span>{% endif %}{% else %}—{% endif %}</td>
             </tr>
             {% endfor %}
             </tbody>

@@ -100,7 +100,7 @@ def test_pelny_obieg(client, tmp_path):
     geo = json.loads(client.get("/teren/projekty/1.geojson").data)
     assert len(geo["features"]) == 2 and geo["features"][0]["properties"]["obiekt"] == "drzewo"
     csv = client.get("/teren/projekty/1.csv").get_data(as_text=True)
-    assert csv.startswith("﻿id;czas;szerokosc;dlugosc;dokladnosc_m;obiekt;gatunek;obwód pnia [cm];stan;uwagi;zdjecie")
+    assert csv.startswith("﻿id;czas;szerokosc;dlugosc;dokladnosc_m;polozenie_reczne;obiekt;gatunek;obwód pnia [cm];stan;uwagi;zdjecie")
 
     assert client.delete(f"/teren/projekty/1/punkty/{punkty[0]['id']}").get_json() == {"ok": True}
     assert len(list((tmp_path / "teren" / "zdjecia").iterdir())) == 2  # zdjęcie usuniętego punktu skasowane
@@ -188,3 +188,53 @@ def test_kolory_skali():
     assert WZORY["zielen"]["pola"][3]["skala"] is True and WZORY["budynki"]["pola"][2]["skala"] is True
     svg = raport_terenu.mapa_svg([{"nr": 1, "lat": 52.4, "lng": 16.9, "wartosci": {"stan": "zły"}}], pole)
     assert 'fill="hsl(43, 70%, 42%)"' in svg
+
+
+# ---------- ETAP 72: poprawianie punktów ----------
+
+
+def test_poprawka_punktu(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    klucz = re.search(r'"klucz": "([^"]+)"', client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)).group(1)
+    tresc = json.dumps(plik(klucz, punkt())).encode()
+    client.post("/teren/projekty/1/import", content_type="multipart/form-data", data={"plik": (io.BytesIO(tresc), "t.json")})
+    pid = client.get("/teren/projekty/1/punkty").get_json()[0]["id"]
+    url = f"/teren/projekty/1/punkty/{pid}"
+
+    # same wartości — położenie i dokładność GPS bez zmian
+    p = client.put(url, json={"wartosci": {"obiekt": "krzew", "stan": "zły"}, "uwagi": " poprawione "}).get_json()
+    assert p["wartosci"] == {"obiekt": "krzew", "stan": "zły"} and p["uwagi"] == "poprawione"
+    assert p["dokladnosc_m"] == 6.2 and p["polozenie_reczne"] is False and p["data_poprawki"]
+
+    p = client.put(url, json={"wartosci": {}, "uwagi": "", "lat": 52.401, "lng": 16.902}).get_json()
+    assert (p["lat"], p["lng"], p["dokladnosc_m"], p["polozenie_reczne"]) == (52.401, 16.902, None, True)
+    assert "poprawione ręcznie" in client.get("/teren/projekty/1/raport").get_data(as_text=True)
+    assert json.loads(client.get("/teren/projekty/1.geojson").data)["features"][0]["properties"]["polozenie_reczne"] is True
+
+    for zle in ({"wartosci": {"stan": "fatalny"}}, {"lat": 95, "lng": 16}, {"lat": "x", "lng": 1}, "tekst"):
+        assert client.put(url, json=zle).status_code == 400
+    assert client.put("/teren/projekty/1/punkty/999", json={"wartosci": {}}).status_code == 404
+
+    # ponowny import pliku z telefonu nie nadpisuje poprawek
+    client.post("/teren/projekty/1/import", content_type="multipart/form-data", data={"plik": (io.BytesIO(tresc), "t.json")})
+    assert client.get("/teren/projekty/1/punkty").get_json()[0]["lat"] == 52.401
+
+
+def test_stara_baza_dostaje_nowe_kolumny(tmp_path):
+    import sqlite3
+
+    (tmp_path / "teren").mkdir()
+    db = sqlite3.connect(tmp_path / "teren" / "teren.db")
+    db.executescript("""
+        CREATE TABLE projekty (id INTEGER PRIMARY KEY AUTOINCREMENT, nazwa TEXT NOT NULL, klucz TEXT NOT NULL UNIQUE, pola TEXT NOT NULL, data_utworzenia TEXT NOT NULL);
+        CREATE TABLE punkty (id INTEGER PRIMARY KEY AUTOINCREMENT, projekt_id INTEGER NOT NULL, uid TEXT NOT NULL, lat REAL, lng REAL,
+            dokladnosc_m REAL, czas TEXT NOT NULL, wartosci TEXT NOT NULL, uwagi TEXT NOT NULL DEFAULT '', zdjecie TEXT, data_importu TEXT NOT NULL);
+        INSERT INTO projekty VALUES (1, 'Stary', 'k', '[]', '2026-09-01');
+        INSERT INTO punkty (projekt_id, uid, lat, lng, czas, wartosci, data_importu) VALUES (1, 'abcdefgh', 52, 17, '2026-09-01', '{}', '2026-09-01');
+    """)
+    db.commit()
+    db.close()
+    app = create_app(instance_path=str(tmp_path))
+    with app.test_client() as c:
+        punkty = c.get("/teren/projekty/1/punkty").get_json()
+    assert punkty[0]["polozenie_reczne"] is False and punkty[0]["data_poprawki"] is None

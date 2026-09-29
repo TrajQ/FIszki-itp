@@ -1405,3 +1405,13 @@ Status: zamknięty
   Pobranych, kopia zapasowa, dane i `.env` nietknięte, stary plik
   usunięty, zależności przez `.venv/bin/pip`, suma dla `uruchom.sh`
 - `DECISIONS.md`: D-077
+
+## ETAP 72 — Teren: poprawianie punktów
+Data: 2026-09-29
+Status: zamknięty
+
+- `projekt.sprawdz_poprawke`, `baza.popraw_punkt` + dopisywanie kolumn,
+  trasa PUT, panel „Popraw punkt” w `teren.js`
+- Sprawdzone w przeglądarce: zmiana stanu i uwag, przeciągnięcie o 23 m,
+  zapis, oznaczenie ręczne (jasny i ciemny motyw); test starej bazy
+- `DECISIONS.md`: D-078
