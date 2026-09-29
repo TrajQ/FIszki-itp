@@ -172,3 +172,8 @@
   podziale działki).
 - Fiszki: niezapisane propozycje ze strony nie przepadają przy błędzie.
 - Dodano testy regresji.
+
+## ETAP 23 — 2026-09-29
+- MPZP: kalkulator wskaźników zabudowy ze sprawdzaniem zgodności z
+  planem (`/mpzp/kalkulator`).
+- Dodano `DECISIONS.md` D-030 i testy.

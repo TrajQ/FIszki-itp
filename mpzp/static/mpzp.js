@@ -54,7 +54,11 @@
         const raport = element("a", "przycisk przycisk--tekst", "Raport do druku ↗");
         raport.href = `${URL_RAPORT}?id=${encodeURIComponent(dzialka.id)}`;
         raport.target = "_blank";
-        naglowek.append(element("h3", "", "Działka"), raport);
+        const kalkulator = element("a", "przycisk przycisk--tekst", "Kalkulator zabudowy");
+        kalkulator.href = `${URL_KALKULATOR}?dzialka=${encodeURIComponent(dzialka.id)}` + (dzialka.powierzchnia_m2 ? `&powierzchnia=${Math.round(dzialka.powierzchnia_m2)}` : "");
+        const linki = element("div", "rzad");
+        linki.append(kalkulator, raport);
+        naglowek.append(element("h3", "", "Działka"), linki);
         sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
         if (dzialka.powierzchnia_m2) {
             sekcja.appendChild(

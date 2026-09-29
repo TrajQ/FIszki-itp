@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block tytul %}Kalkulator zabudowy — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa działek</a>
+        <h1>Kalkulator zabudowy</h1>
+        <p>Wskaźniki zabudowy działki i zgodność z ustaleniami planu. Liczy się na bieżąco.</p>
+    </div>
+</div>
+
+<div class="kalkulator">
+    <form id="formularz-kalkulatora" class="stos" autocomplete="off">
+        <section class="karta stos">
+            <h3>Działka</h3>
+            {% if dzialka_id %}<p class="identyfikator wyciszony">{{ dzialka_id }}</p>{% endif %}
+            <div class="siatka-pol">
+                <label>Powierzchnia działki [m²]
+                    <input name="powierzchnia_dzialki" type="text" inputmode="decimal" value="{{ '%.0f' % powierzchnia if powierzchnia else '' }}" placeholder="np. 1000">
+                </label>
+                <label>Powierzchnia biologicznie czynna [m²]
+                    <input name="pbc_m2" type="text" inputmode="decimal" placeholder="np. 450">
+                </label>
+            </div>
+        </section>
+
+        <section class="karta stos">
+            <div class="rzad rzad--miedzy">
+                <h3>Budynki</h3>
+                <button id="dodaj-budynek" type="button" class="przycisk--drugi">+ Budynek</button>
+            </div>
+            <div class="naglowek-budynkow wyciszony">
+                <span>Rzut [m²]</span><span>Kondygnacje nadziemne</span><span>Wysokość [m]</span><span></span>
+            </div>
+            <div id="budynki" class="stos"></div>
+        </section>
+
+        <section class="karta stos">
+            <h3>Ustalenia planu <span class="wyciszony">(puste = plan nie ustala)</span></h3>
+            <div class="siatka-pol">
+                <label>Maks. powierzchnia zabudowy [%]<input name="max_zabudowa_proc" type="text" inputmode="decimal" placeholder="np. 30"></label>
+                <label>Min. pow. biologicznie czynna [%]<input name="min_pbc_proc" type="text" inputmode="decimal" placeholder="np. 50"></label>
+                <label>Min. intensywność<input name="min_intensywnosc" type="text" inputmode="decimal" placeholder="np. 0,1"></label>
+                <label>Maks. intensywność<input name="max_intensywnosc" type="text" inputmode="decimal" placeholder="np. 0,6"></label>
+                <label>Maks. wysokość [m]<input name="max_wysokosc_m" type="text" inputmode="decimal" placeholder="np. 9"></label>
+                <label>Maks. kondygnacje<input name="max_kondygnacje" type="text" inputmode="numeric" placeholder="np. 2"></label>
+            </div>
+        </section>
+    </form>
+
+    <aside class="stos wyniki-kalkulatora">
+        <section class="karta stos">
+            <h3>Wskaźniki</h3>
+            <p id="blad-kalkulatora" class="komunikat komunikat--blad" hidden></p>
+            <div id="wskazniki" class="kafelki-kalkulatora"></div>
+        </section>
+        <section class="karta stos">
+            <h3>Zgodność z planem</h3>
+            <ul id="zgodnosc" class="zgodnosc"><li class="wyciszony">Wpisz ustalenia planu.</li></ul>
+        </section>
+        <section class="karta stos">
+            <h3>Ile jeszcze można zabudować</h3>
+            <div id="zapas" class="stos"></div>
+        </section>
+        <p class="wyciszony przypis">Uproszczenie: powierzchnia każdej kondygnacji = rzut budynku. Do szybkiej oceny wariantów, nie do projektu budowlanego.</p>
+    </aside>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>const URL_LICZ = "{{ url_for('mpzp.kalkulator_licz') }}";</script>
+<script src="{{ url_for('mpzp.static', filename='kalkulator.js') }}"></script>
+{% endblock %}

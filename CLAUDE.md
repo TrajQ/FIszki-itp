@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 22 (poprawki z przeglądu kodu ETAPów 18–21 — zamknięty)
-Ostatni ZIP: releases/warsztat_etap22_20260929.zip
-Testy: 172 passed / 0 failed
+ETAP: 23 (mpzp — kalkulator wskaźników zabudowy — zamknięty)
+Ostatni ZIP: releases/warsztat_etap23_20260929.zip
+Testy: 178 passed / 0 failed

@@ -11,6 +11,7 @@ from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
+from . import zabudowa
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
@@ -214,6 +215,55 @@ def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
         dane["udzialy"] = []  # główne przeznaczenie już mamy — udziały są dodatkiem
     zapisz_w_historii(dzialka.id, przeznaczenie, punkt.y, punkt.x)
     return jsonify(dane), 200
+
+
+# ---------- Kalkulator wskaźników zabudowy (ETAP 23) ----------
+
+
+@mpzp_bp.route("/kalkulator")
+def kalkulator():
+    return render_template(
+        "mpzp/kalkulator.html",
+        powierzchnia=request.args.get("powierzchnia", type=float),
+        dzialka_id=request.args.get("dzialka", ""),
+    )
+
+
+def _liczba_lub_none(slownik: dict, klucz: str, typ=float):
+    wartosc = slownik.get(klucz)
+    if wartosc in (None, ""):
+        return None
+    return typ(wartosc)
+
+
+@mpzp_bp.route("/kalkulator/licz", methods=["POST"])
+def kalkulator_licz():
+    dane = request.get_json(silent=True) or {}
+    try:
+        budynki = [
+            zabudowa.Budynek(
+                rzut_m2=float(b.get("rzut_m2") or 0),
+                kondygnacje=int(b.get("kondygnacje") or 0),
+                wysokosc_m=_liczba_lub_none(b, "wysokosc_m"),
+            )
+            for b in dane.get("budynki", [])
+        ]
+        plan = dane.get("ustalenia", {})
+        ustalenia = zabudowa.Ustalenia(
+            max_zabudowa_proc=_liczba_lub_none(plan, "max_zabudowa_proc"),
+            min_intensywnosc=_liczba_lub_none(plan, "min_intensywnosc"),
+            max_intensywnosc=_liczba_lub_none(plan, "max_intensywnosc"),
+            min_pbc_proc=_liczba_lub_none(plan, "min_pbc_proc"),
+            max_wysokosc_m=_liczba_lub_none(plan, "max_wysokosc_m"),
+            max_kondygnacje=_liczba_lub_none(plan, "max_kondygnacje", int),
+        )
+        wynik = zabudowa.policz(
+            float(dane.get("powierzchnia_dzialki") or 0), budynki, float(dane.get("pbc_m2") or 0), ustalenia
+        )
+    except (TypeError, ValueError) as e:
+        komunikat = str(e) if isinstance(e, zabudowa.BladDanych) else "Wpisz liczby (np. 450 albo 0,6)."
+        return jsonify({"blad": komunikat}), 400
+    return jsonify(wynik)
 
 
 # Kolory części działki w raporcie — stała kolejność, żeby ten sam

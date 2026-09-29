@@ -622,3 +622,29 @@ Przegląd ETAPów 18–21 wykazał 2 błędy — oba odtworzone i naprawione:
 
 Testy: 172 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap22_20260929.zip
+
+## ETAP 23 — MPZP: kalkulator wskaźników zabudowy
+Data: 2026-09-29
+Status: zamknięty
+
+Analiza potrzeb (student GP, 2. rok): projekty z urbanistyki i
+planowania wymagają ciągłego liczenia wskaźników zabudowy i sprawdzania
+ich z ustaleniami planu — dotąd ręcznie w arkuszu.
+
+Zrobione:
+- `mpzp/zabudowa.py`: wskaźnik powierzchni zabudowy [%], intensywność
+  (powierzchnia całkowita kondygnacji nadziemnych / działka), udział
+  PBC [%], maks. wysokość i kondygnacje; zgodność z ustaleniami planu
+  (każde ustalenie osobno, równość z limitem = spełnione); „ile jeszcze
+  można zabudować” — najostrzejszy z limitów (% zabudowy, min. PBC,
+  maks. intensywność), nigdy ujemny; walidacja danych
+- `GET /mpzp/kalkulator` (opcjonalnie `?powierzchnia=&dzialka=` z panelu
+  działki) i `POST /mpzp/kalkulator/licz`; przecinek dziesiętny
+- Strona kalkulatora: działka, lista budynków (dodawanie/usuwanie),
+  ustalenia planu, wyniki na bieżąco (kafelki, lista ✓/✗, zapas);
+  link „Kalkulator zabudowy” w panelu działki (z jej powierzchnią) i w
+  nagłówku mapy
+- Testy: 6 nowych; `DECISIONS.md`: D-030
+
+Testy: 178 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap23_20260929.zip

@@ -615,3 +615,22 @@ punkt-w-wielokącie, podział działki, szkic w raporcie.
 **Odrzucone alternatywy:**
 - `buffer(0)` — odrzucone: potrafi zgubić części wielokątów typu
   „kokarda”; `make_valid` zachowuje obie części.
+
+## D-030 — Kalkulator zabudowy w module mpzp, liczony na serwerze
+Data: 2026-09-29
+
+**Decyzja:** Kalkulator wskaźników zabudowy jest częścią modułu mpzp
+(`mpzp/zabudowa.py`), a nie osobnym, piątym modułem. Liczy serwer, a
+przeglądarka tylko wysyła pola i pokazuje wynik.
+
+**Uzasadnienie:** Wskaźniki zabudowy to ustalenia planu miejscowego —
+naturalne przedłużenie „działka → przeznaczenie”, a do kalkulatora
+przechodzi się z panelu działki z gotową powierzchnią. Obliczenia w
+Pythonie są testowane w pytest (definicje z ustawy łatwo sprawdzić
+przykładami), a CLAUDE.md przewiduje cztery moduły.
+
+**Odrzucone alternatywy:**
+- Obliczenia tylko w JS — odrzucone: brak testów pytest dla logiki,
+  która ma być wiarygodna na zaliczeniu.
+- Uwzględnianie kondygnacji o różnej powierzchni — odłożone: komplikuje
+  formularz; opisane jako uproszczenie na stronie.

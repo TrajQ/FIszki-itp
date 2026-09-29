@@ -350,3 +350,127 @@ button.wpis-historii:hover {
 .rzad--miedzy {
     justify-content: space-between;
 }
+
+/* ---------- Kalkulator zabudowy ---------- */
+
+.kalkulator {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.kalkulator h3 {
+    margin: 0;
+}
+
+.siatka-pol {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.naglowek-budynkow,
+.wiersz-budynku {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 40px;
+    gap: 8px;
+    align-items: center;
+}
+
+.naglowek-budynkow {
+    font-size: 0.75rem;
+}
+
+.wyniki-kalkulatora {
+    position: sticky;
+    top: 72px;
+}
+
+.kafelki-kalkulatora {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.kafelek-kalkulatora {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--tlo-wyciszone);
+}
+
+.kafelek-kalkulatora__wartosc {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.zgodnosc {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+.zgodnosc li {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.zgodnosc__ikona {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-weight: 700;
+}
+
+.zgodnosc--ok .zgodnosc__ikona {
+    background: var(--sukces-tlo);
+    color: var(--sukces);
+}
+
+.zgodnosc--nie .zgodnosc__ikona {
+    background: var(--blad-tlo);
+    color: var(--blad);
+}
+
+.zgodnosc__liczby {
+    color: var(--tekst-drugi);
+    font-variant-numeric: tabular-nums;
+}
+
+.przypis {
+    font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+    .kalkulator {
+        grid-template-columns: 1fr;
+    }
+
+    .wyniki-kalkulatora {
+        position: static;
+    }
+}
+
+.kafelek-kalkulatora .kafelek__etykieta {
+    color: var(--tekst-drugi);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+#zapas p {
+    margin: 0;
+}
