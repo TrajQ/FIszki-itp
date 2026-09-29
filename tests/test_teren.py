@@ -26,7 +26,7 @@ def plik(klucz, *punkty):
 
 
 def test_sprawdz_pola():
-    assert sprawdz_pola([{"nazwa": "  stan ", "typ": "wybor", "opcje": ["a", " b ", ""]}]) == [{"nazwa": "stan", "typ": "wybor", "opcje": ["a", "b"]}]
+    assert sprawdz_pola([{"nazwa": "  stan ", "typ": "wybor", "opcje": ["a", " b ", ""]}]) == [{"nazwa": "stan", "typ": "wybor", "opcje": ["a", "b"], "skala": False}]
     for zle in ([], [{"nazwa": "", "typ": "tekst"}], [{"nazwa": "x", "typ": "data"}], [{"nazwa": "x", "typ": "wybor", "opcje": ["a"]}],
                 [{"nazwa": "x", "typ": "tekst"}, {"nazwa": "X", "typ": "liczba"}]):
         with pytest.raises(BladDanych):
@@ -171,3 +171,20 @@ def test_strona_raportu(client):
     html = client.get("/teren/projekty/1/raport?pole=").get_data(as_text=True)
     assert '<option value="" selected>jednolity' in html
     assert client.get("/teren/projekty/9/raport").status_code == 404
+
+
+
+# ---------- ETAP 70: kolory skali dobry–zły ----------
+
+
+def test_kolory_skali():
+    pole = sprawdz_pola([{"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "średni", "zły", "do usunięcia"], "skala": True}])[0]
+    assert pole["skala"] is True
+    assert raport_terenu.kolory_pola(pole) == {
+        "dobry": "hsl(130, 70%, 42%)", "średni": "hsl(87, 70%, 42%)", "zły": "hsl(43, 70%, 42%)", "do usunięcia": "hsl(0, 70%, 42%)"}
+    # skala tylko dla listy wyboru; bez skali — zwykła paleta
+    assert sprawdz_pola([{"nazwa": "x", "typ": "tekst", "skala": True}])[0]["skala"] is False
+    assert raport_terenu.kolory_pola({**pole, "skala": False})["dobry"] == raport_terenu.PALETA[0]
+    assert WZORY["zielen"]["pola"][3]["skala"] is True and WZORY["budynki"]["pola"][2]["skala"] is True
+    svg = raport_terenu.mapa_svg([{"nr": 1, "lat": 52.4, "lng": 16.9, "wartosci": {"stan": "zły"}}], pole)
+    assert 'fill="hsl(43, 70%, 42%)"' in svg

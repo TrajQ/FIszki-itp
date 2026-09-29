@@ -56,7 +56,11 @@
         const pole = PROJEKT.pola.find((p) => p.nazwa === filtrPola.value);
         if (!pole) return new Map();
         const wartosci = pole.typ === "wybor" ? pole.opcje : pole.typ === "tak_nie" ? ["tak", "nie"] : [];
-        return new Map([...wartosci, BRAK].map((w, i) => [w, w === BRAK ? "#8e8e93" : PALETA[i % PALETA.length]]));
+        // Skala (ETAP 70): od najlepszej — zielony — do najgorszej — czerwony; ten sam wzór co teren/raport.py.
+        const kolor = (i) => (pole.skala
+            ? `hsl(${wartosci.length < 2 ? 130 : Math.round(130 - (130 * i) / (wartosci.length - 1))}, 70%, 42%)`
+            : PALETA[i % PALETA.length]);
+        return new Map([...wartosci, BRAK].map((w, i) => [w, w === BRAK ? "#8e8e93" : kolor(i)]));
     }
 
     function wartoscFiltra(p) {
@@ -252,12 +256,22 @@
         opcje.placeholder = "opcje po przecinku, np. dobry, średni, zły";
         opcje.dataset.rola = "opcje";
         opcje.hidden = pole.typ !== "wybor";
-        typ.addEventListener("change", () => (opcje.hidden = typ.value !== "wybor"));
+        const skala = element("label", "edytor-pol__skala");
+        const skalaPole = element("input");
+        skalaPole.type = "checkbox";
+        skalaPole.checked = Boolean(pole.skala);
+        skalaPole.dataset.rola = "skala";
+        skala.append(skalaPole, " skala: opcje od najlepszej do najgorszej (kolory od zielonego do czerwonego)");
+        skala.hidden = pole.typ !== "wybor";
+        typ.addEventListener("change", () => {
+            opcje.hidden = typ.value !== "wybor";
+            skala.hidden = typ.value !== "wybor";
+        });
         const usun = element("button", "przycisk--tekst", "✕");
         usun.type = "button";
         usun.title = "Usuń pole";
         usun.addEventListener("click", () => li.remove());
-        li.append(nazwa, typ, usun, opcje);
+        li.append(nazwa, typ, usun, opcje, skala);
         return li;
     }
 
@@ -272,6 +286,7 @@
             nazwa: li.querySelector("[data-rola=nazwa]").value,
             typ: li.querySelector("[data-rola=typ]").value,
             opcje: li.querySelector("[data-rola=opcje]").value.split(",").map((o) => o.trim()).filter(Boolean),
+            skala: li.querySelector("[data-rola=skala]").checked,
         }));
         try {
             const projekt = await zapytaj(URL_PROJEKTU, {

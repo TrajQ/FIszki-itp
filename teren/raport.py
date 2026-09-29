@@ -50,10 +50,19 @@ def zestawienie(pola: list[dict], punkty: list[dict]) -> list[dict]:
     return wynik
 
 
+def kolor_skali(i: int, liczba: int) -> str:
+    """Kolor i-tej opcji skali od najlepszej (zielony) do najgorszej
+    (czerwony) — odcień HSL od 130° do 0°. Ten sam wzór jest w teren.js."""
+    odcien = 130 if liczba < 2 else round(130 - 130 * i / (liczba - 1))
+    return f"hsl({odcien}, 70%, 42%)"
+
+
 def kolory_pola(pole: dict | None) -> dict[str, str]:
     if pole is None:
         return {}
     opcje = pole["opcje"] if pole["typ"] == "wybor" else ["tak", "nie"]
+    if pole.get("skala"):
+        return {o: kolor_skali(i, len(opcje)) for i, o in enumerate(opcje)}
     return {o: PALETA[i % len(PALETA)] for i, o in enumerate(opcje)}
 
 

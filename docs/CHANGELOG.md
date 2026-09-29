@@ -516,3 +516,9 @@
   punktów z dokładnością GPS, dokumentacja fotograficzna z numerami;
   przycisk „Raport do druku” na stronie projektu.
 - Dodano `teren/raport.py`, `DECISIONS.md` D-075 i 3 testy.
+
+## ETAP 70 — 2026-09-29
+- Teren: pole-skala — opcje listy wyboru od najlepszej do najgorszej,
+  kolory od zielonego do czerwonego na mapie projektu i w raporcie;
+  zaznaczenie w edytorze pól, we wzorach pola „stan” już jako skala.
+- Dodano `DECISIONS.md` D-076 i 1 test.

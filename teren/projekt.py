@@ -1,7 +1,9 @@
 """Projekt inwentaryzacji: pola formularza i sprawdzanie pliku z telefonu (ETAP 65).
 
-Pole formularza: {"nazwa", "typ", "opcje"} — typ „wybor” (lista opcji),
-„tekst”, „liczba” albo „tak_nie”. Wartości punktu to słownik
+Pole formularza: {"nazwa", "typ", "opcje", "skala"} — typ „wybor” (lista
+opcji), „tekst”, „liczba” albo „tak_nie”. „skala” (tylko lista wyboru):
+opcje są uporządkowane od najlepszej do najgorszej, więc mapa i raport
+kolorują je od zielonego do czerwonego (ETAP 70). Wartości punktu to słownik
 {nazwa pola: wartość}.
 
 Plik z telefonu (eksport formularza terenowego) to JSON:
@@ -33,7 +35,7 @@ WZORY = {
             {"nazwa": "obiekt", "typ": "wybor", "opcje": ["drzewo", "krzew", "grupa drzew", "żywopłot", "trawnik"]},
             {"nazwa": "gatunek", "typ": "tekst", "opcje": []},
             {"nazwa": "obwód pnia [cm]", "typ": "liczba", "opcje": []},
-            {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "średni", "zły", "do usunięcia"]},
+            {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "średni", "zły", "do usunięcia"], "skala": True},
         ],
     },
     "budynki": {
@@ -41,7 +43,7 @@ WZORY = {
         "pola": [
             {"nazwa": "funkcja", "typ": "wybor", "opcje": ["mieszkaniowa", "usługowa", "mieszana", "przemysłowa", "gospodarcza", "pustostan"]},
             {"nazwa": "kondygnacje", "typ": "liczba", "opcje": []},
-            {"nazwa": "stan techniczny", "typ": "wybor", "opcje": ["dobry", "średni", "zły", "ruina"]},
+            {"nazwa": "stan techniczny", "typ": "wybor", "opcje": ["dobry", "średni", "zły", "ruina"], "skala": True},
             {"nazwa": "wartość kulturowa", "typ": "tak_nie", "opcje": []},
         ],
     },
@@ -49,7 +51,7 @@ WZORY = {
         "nazwa": "Przestrzeń publiczna",
         "pola": [
             {"nazwa": "element", "typ": "wybor", "opcje": ["ławka", "kosz", "oświetlenie", "stojak rowerowy", "plac zabaw", "przystanek", "bariera", "inne"]},
-            {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "średni", "zły"]},
+            {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "średni", "zły"], "skala": True},
             {"nazwa": "dostępny dla wózka", "typ": "tak_nie", "opcje": []},
         ],
     },
@@ -93,7 +95,7 @@ def sprawdz_pola(pola) -> list[dict]:
                 raise BladDanych(f"Pole „{nazwa}”: lista wyboru potrzebuje co najmniej 2 opcji.")
             if len(opcje) > MAKS_OPCJI:
                 raise BladDanych(f"Pole „{nazwa}”: najwyżej {MAKS_OPCJI} opcji.")
-        wynik.append({"nazwa": nazwa, "typ": typ, "opcje": opcje})
+        wynik.append({"nazwa": nazwa, "typ": typ, "opcje": opcje, "skala": typ == "wybor" and p.get("skala") is True})
     return wynik
 
 

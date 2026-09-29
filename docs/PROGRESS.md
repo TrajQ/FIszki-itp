@@ -1383,3 +1383,14 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: 12 punktów, 8 zdjęć JPEG, kolor wg „stan”,
   jasny i ciemny motyw, wydruk do PDF (4 strony A4)
 - `DECISIONS.md`: D-075
+
+## ETAP 70 — Teren: kolory dobry–zły
+Data: 2026-09-29
+Status: zamknięty
+
+- `projekt.py` (klucz `skala`, wzory), `raport.py: kolor_skali`,
+  `teren.js` (kolory mapy, pole w edytorze)
+- Sprawdzone w przeglądarce: mapa projektu, raport, edytor (jasny i
+  ciemny motyw)
+- Projekty utworzone przed tym ETAPem: skalę zaznacza się w edytorze pól
+- `DECISIONS.md`: D-076

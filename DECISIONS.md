@@ -1636,3 +1636,22 @@ numer punktu łączy mapę, tabelę i zdjęcia.
 **Odrzucone alternatywy:**
 - Mapa z podkładem (OSM/ortofotomapa) — zależna od sieci i licencji
   kafelków przy druku; dokładny podkład daje eksport GeoJSON do QGIS.
+
+## D-076 — Teren: pole-skala z kolorami od zielonego do czerwonego
+Data: 2026-09-29
+
+**Decyzja:** Pole „lista wyboru” może być oznaczone jako skala
+(`"skala": true`): opcje są wtedy uporządkowane od najlepszej do
+najgorszej i mapa projektu oraz raport kolorują je od zielonego do
+czerwonego (odcień HSL 130° → 0°, ten sam wzór w `teren/raport.py` i
+`teren.js`). Zaznaczenie w edytorze pól; we wzorach projektów pola
+„stan” i „stan techniczny” są skalą od razu. Pola bez skali — dotychczasowa
+paleta.
+
+**Uzasadnienie:** Kolory z palety po kolei dawały np. „zły” na zielono.
+Znaczenia opcji nie odgadujemy ze słów („zły”, „ruina”) — o kolejności
+decyduje użytkownik, który zna swoje kategorie.
+
+**Odrzucone alternatywy:**
+- Rozpoznawanie słów „dobry/zły” w opcjach — zgadywanie, zawodne dla
+  własnych kategorii.
