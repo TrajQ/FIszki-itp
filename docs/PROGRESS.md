@@ -939,3 +939,17 @@ Przegląd wykazał 4 problemy — wszystkie naprawione:
 
 Testy: 258 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap37_20260929.zip
+
+## ETAP 38 — Dostępność: krzywa, luki, szczegóły komórki
+Data: 2026-09-29
+Status: zamknięty
+
+- `wyniki.krzywa_dostepnosci`, `wyniki.luki`, `wyniki.komorka`
+- Krzywa rysowana w SVG (bez biblioteki wykresów), suwak progu
+- Luki w dostępności z przybliżeniem mapy; okienko komórki z numeracją
+  zapytań
+- Sprawdzone w przeglądarce (jasny i ciemny motyw)
+- `DECISIONS.md`: D-044
+
+Testy: 264 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap38_20260929.zip

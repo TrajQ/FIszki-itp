@@ -891,3 +891,21 @@ testowana w pytest, zamiast drugiej w JS.
 **Pominięte świadomie:** różnica WGS84 ↔ ETRF2000 (rzędu dziesiątek cm)
 — bez znaczenia przy sprawdzaniu działki; do prac geodezyjnych służą
 dane z operatu.
+
+## D-044 — Krzywa dostępności liczona co minutę na serwerze
+Data: 2026-09-29
+
+**Decyzja:** Dla kolumn czasu serwer zwraca krzywą dostępności: udział
+komórek (i mieszkańców, jeśli jest kolumna ludności) w zasięgu t minut
+dla t = 0…60 (albo do pełnego pokrycia). Suwak progu w przeglądarce
+tylko odczytuje punkt krzywej. „Luki” to 10 komórek powyżej 15 min,
+sortowanych po liczbie mieszkańców (bez ludności — po czasie).
+
+**Uzasadnienie:** Liczby tylko z serwera (jak w całym projekcie), a
+suwak działa natychmiast, bez zapytania na każdą zmianę. 61 punktów to
+znikomy dodatek do odpowiedzi. Pełne minuty wystarczą — dane wejściowe
+i tak mają dokładność modelu ruchu pieszego.
+
+**Odrzucone alternatywy:**
+- Zapytanie do serwera przy każdym ruchu suwaka — odrzucone: zbędny ruch.
+- Liczenie udziałów w JS — odrzucone: liczby miałyby dwa źródła.

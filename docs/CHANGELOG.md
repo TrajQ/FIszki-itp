@@ -256,3 +256,12 @@
   w formacie tekstowym brany za „brak planu”, zbyt długi adres WMS przy
   bardzo wielu warstwach, eksport GeoJSON bez przeznaczenia dla gmin
   bez WFS.
+
+## ETAP 38 — 2026-09-29
+- Dostępność: krzywa dostępności (udział powierzchni i mieszkańców w
+  zasięgu 0–60 min) z suwakiem własnego progu.
+- Dostępność: „Luki w dostępności” — 10 komórek poza zasięgiem 15 min z
+  największą liczbą mieszkańców; klik przybliża mapę.
+- Dostępność: klik w heksagon pokazuje wszystkie wskaźniki komórki
+  (`/dostepnosc/plik/<nazwa>/komorka/<h3>`).
+- Dodano `DECISIONS.md` D-044 i 6 testów.

@@ -20,6 +20,7 @@ na podstawie wczytanych wartości.
 
 import csv
 import io
+import math
 import statistics
 
 import h3
@@ -30,6 +31,11 @@ NAZWY_LUDNOSCI = {"ludnosc", "ludność", "populacja", "mieszkancy", "mieszkańc
 MAKS_KOMOREK = 100_000
 PROGI_MINUT = [5, 10, 15, 20, 30]
 LICZBA_KLAS_KWANTYLOWYCH = 5
+# Krzywa dostępności: udział w zasięgu dla każdej pełnej minuty 0..60.
+MAKS_MINUT_KRZYWEJ = 60
+# „Luki”: komórki poza zasięgiem 15 min — najpierw te, gdzie mieszka najwięcej osób.
+PROG_LUK_MIN = 15
+LICZBA_LUK = 10
 
 
 class BladWynikow(Exception):
@@ -173,6 +179,8 @@ def analiza_kolumny(wyniki: dict, kolumna: str) -> dict:
                 w_zasiegu = sum(l for _, w, l in trojki if w <= udzial["prog"])
                 udzial["ludnosc"] = w_zasiegu
                 udzial["procent_ludnosci"] = 100 * w_zasiegu / razem if razem else None
+        stat["krzywa"] = krzywa_dostepnosci(trojki, wyniki.get("ludnosc") is not None)
+        stat["luki"] = luki(trojki, wyniki.get("ludnosc") is not None)
 
     return {
         "kolumna": kolumna,
@@ -181,6 +189,69 @@ def analiza_kolumny(wyniki: dict, kolumna: str) -> dict:
         "statystyki": stat,
         "geojson": {"type": "FeatureCollection", "features": cechy},
     }
+
+
+def krzywa_dostepnosci(trojki: list[tuple], z_ludnoscia: bool) -> list[dict]:
+    """Skumulowany udział komórek (i mieszkańców) w zasięgu t minut, dla
+    t = 0, 1, … aż do pełnego pokrycia albo MAKS_MINUT_KRZYWEJ.
+
+    To klasyczna „krzywa dostępności”: im szybciej rośnie, tym lepiej
+    obsłużony obszar. Z niej suwak progu czyta wynik dla dowolnej minuty.
+    """
+    wartosci = sorted(w for _, w, _ in trojki)
+    n = len(wartosci)
+    razem = sum(l for _, _, l in trojki) if z_ludnoscia else 0
+    po_czasie = sorted((w, l) for _, w, l in trojki)
+    koniec = min(MAKS_MINUT_KRZYWEJ, max(0, math.ceil(wartosci[-1])))
+    krzywa = []
+    i = 0
+    ludnosc_w_zasiegu = 0.0
+    for minuty in range(koniec + 1):
+        while i < n and po_czasie[i][0] <= minuty:
+            ludnosc_w_zasiegu += po_czasie[i][1] or 0
+            i += 1
+        punkt = {"minuty": minuty, "procent": 100 * i / n}
+        if z_ludnoscia:
+            punkt["ludnosc"] = ludnosc_w_zasiegu
+            punkt["procent_ludnosci"] = 100 * ludnosc_w_zasiegu / razem if razem else None
+        krzywa.append(punkt)
+    return krzywa
+
+
+def luki(trojki: list[tuple], z_ludnoscia: bool) -> list[dict]:
+    """Komórki z czasem dojścia > PROG_LUK_MIN — kandydaci na nową usługę.
+
+    Z kolumną ludności sortujemy po liczbie mieszkańców (gdzie problem
+    dotyczy najwięcej osób), bez niej — po czasie dojścia.
+    """
+    daleko = [(k, w, l) for k, w, l in trojki if w > PROG_LUK_MIN and (not z_ludnoscia or (l or 0) > 0)]
+    klucz = (lambda t: (-(t[2] or 0), -t[1])) if z_ludnoscia else (lambda t: -t[1])
+    wynik = []
+    for k, w, l in sorted(daleko, key=klucz)[:LICZBA_LUK]:
+        lat, lon = h3.cell_to_latlng(k)
+        luka = {"h3": k, "wartosc": w, "lat": lat, "lon": lon}
+        if z_ludnoscia:
+            luka["ludnosc"] = l
+        wynik.append(luka)
+    return wynik
+
+
+def komorka(wyniki: dict, indeks: str) -> dict:
+    """Wszystkie wskaźniki jednej komórki (do okienka po kliknięciu)."""
+    indeks = indeks.strip().lower()
+    try:
+        i = wyniki["komorki"].index(indeks)
+    except ValueError:
+        raise KeyError(indeks) from None
+    wartosci = {nazwa: kolumna[i] for nazwa, kolumna in wyniki["kolumny"].items()}
+    wynik = {"h3": indeks, "wartosci": wartosci, "minuty": {n: czy_minuty(n) for n in wartosci}}
+    kolumny = kolumny_minut(wyniki)
+    if len(kolumny) >= 2:
+        czasy = [wartosci[k] for k in kolumny]
+        wynik["czas_laczny"] = None if any(c is None for c in czasy) else max(czasy)
+    if wyniki.get("ludnosc") is not None:
+        wynik["ludnosc"] = wyniki["ludnosc"][i]
+    return wynik
 
 
 NAZWA_LACZNEGO = "czas_laczny_min"

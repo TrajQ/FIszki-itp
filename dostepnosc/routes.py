@@ -192,6 +192,14 @@ def analiza_laczna(nazwa):
         return jsonify({"blad": str(e)}), 422
 
 
+@dostepnosc_bp.route("/plik/<nazwa>/komorka/<indeks>")
+def komorka(nazwa, indeks):
+    try:
+        return jsonify(wyniki_h3.komorka(_wczytaj(nazwa), indeks))
+    except KeyError:
+        return jsonify({"blad": "Plik nie ma takiej komórki."}), 404
+
+
 @dostepnosc_bp.route("/plik/<nazwa>/<kolumna>")
 def analiza(nazwa, kolumna):
     try:

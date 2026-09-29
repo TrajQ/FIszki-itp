@@ -329,3 +329,61 @@ def test_eksport_geojson_dostepnosci(client):
     assert {"przed", "po", "zmiana"} <= set(_json.loads(porownanie.data)["features"][0]["properties"])
     assert "_porownanie_" in porownanie.headers["Content-Disposition"]
     assert client.get(f"/dostepnosc/eksport.geojson?plik={przyklad}&kolumna=nie_ma").status_code == 404
+
+
+# ---------- ETAP 38: krzywa, luki, komórka ----------
+
+
+def _z_ludnoscia():
+    wiersze = ["h3,czas_szkola_min,czas_sklep_min,ludnosc"]
+    # czasy: 0, 3.5, 7, 10.5, 14, 17.5, 21; ludność: 10, 20, …, 70
+    for i, komorka in enumerate(SASIEDZI):
+        wiersze.append(f"{komorka},{i * 3.5},{i},{10 * (i + 1)}")
+    return wyniki.wczytaj_csv("\n".join(wiersze))
+
+
+def test_krzywa_dostepnosci_skumulowana_do_pelnego_pokrycia():
+    stat = wyniki.analiza_kolumny(_z_ludnoscia(), "czas_szkola_min")["statystyki"]
+    krzywa = stat["krzywa"]
+    assert [p["minuty"] for p in krzywa] == list(range(22))  # do ceil(21)
+    assert krzywa[0]["procent"] == pytest.approx(100 / 7)  # tylko komórka z czasem 0
+    assert krzywa[7]["procent"] == pytest.approx(300 / 7)  # 0, 3.5, 7
+    assert krzywa[7]["ludnosc"] == 60 and krzywa[7]["procent_ludnosci"] == pytest.approx(60 / 280 * 100)
+    assert krzywa[-1]["procent"] == pytest.approx(100)
+    # ta sama liczba co kafelek „do 15 min”
+    assert krzywa[15]["procent"] == pytest.approx(stat["udzialy"][2]["procent"])
+
+
+def test_krzywa_bez_ludnosci_i_obcieta_do_60_minut():
+    dane = wyniki.wczytaj_csv("h3,czas_min\n" + "\n".join(f"{k},{90 if i else 2}" for i, k in enumerate(SASIEDZI)))
+    krzywa = wyniki.analiza_kolumny(dane, "czas_min")["statystyki"]["krzywa"]
+    assert len(krzywa) == 61 and "ludnosc" not in krzywa[0]
+    assert krzywa[-1]["procent"] == pytest.approx(100 / 7)  # reszta > 60 min
+
+
+def test_luki_najpierw_najwiecej_mieszkancow():
+    luki = wyniki.analiza_kolumny(_z_ludnoscia(), "czas_szkola_min")["statystyki"]["luki"]
+    # powyżej 15 min: 17.5 (60 os.) i 21 (70 os.)
+    assert [(l["wartosc"], l["ludnosc"]) for l in luki] == [(21.0, 70.0), (17.5, 60.0)]
+    assert 52 < luki[0]["lat"] < 53 and 16 < luki[0]["lon"] < 17
+
+
+def test_luki_bez_ludnosci_po_czasie():
+    luki = wyniki.analiza_kolumny(wyniki.wczytaj_csv(csv_testowy()), "czas_przystanek_min")["statystyki"]["luki"]
+    assert [l["wartosc"] for l in luki] == [21.0, 17.5] and "ludnosc" not in luki[0]
+
+
+def test_komorka_wszystkie_wskazniki():
+    dane = _z_ludnoscia()
+    wynik = wyniki.komorka(dane, SASIEDZI[2].upper())
+    assert wynik["wartosci"] == {"czas_szkola_min": 7.0, "czas_sklep_min": 2.0}
+    assert wynik["czas_laczny"] == 7.0 and wynik["ludnosc"] == 30.0
+    with pytest.raises(KeyError):
+        wyniki.komorka(dane, "8928308280fffff")
+
+
+def test_endpoint_komorki(client):
+    odpowiedz = client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/komorka/891e24a1003ffff")
+    assert odpowiedz.status_code == 200
+    assert odpowiedz.get_json()["wartosci"]["czas_przystanek_min"] == 27.1
+    assert client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/komorka/zly").status_code == 404

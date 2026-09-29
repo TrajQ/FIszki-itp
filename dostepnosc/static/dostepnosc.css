@@ -260,3 +260,115 @@
         height: 60vh;
     }
 }
+
+/* Krzywa dostępności i luki (ETAP 38) */
+.krzywa h4,
+.luki h4 {
+    margin: 8px 0 0;
+}
+
+.krzywa p,
+.luki p {
+    margin: 0;
+    font-size: 13px;
+}
+
+.krzywa__wykres {
+    width: 100%;
+    height: auto;
+}
+
+.krzywa__siatka {
+    stroke: var(--linia-slaba);
+    stroke-width: 1;
+}
+
+.krzywa__os {
+    fill: var(--tekst-drugi);
+    font-size: 10px;
+}
+
+.krzywa__linia {
+    fill: none;
+    stroke: var(--akcent);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+}
+
+.krzywa__linia--ludnosc {
+    stroke: #30d158;
+    stroke-dasharray: 5 4;
+}
+
+.krzywa__znacznik {
+    stroke: var(--tekst);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 3;
+}
+
+.krzywa__suwak {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.krzywa__suwak input {
+    width: 100%;
+    accent-color: var(--akcent);
+}
+
+.krzywa__wynik {
+    font-weight: 500;
+}
+
+.lista-luk {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding-left: 22px;
+    font-size: 13px;
+}
+
+.luka {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+    color: var(--tekst);
+    font-size: 13px;
+    text-align: left;
+}
+
+.luka:hover {
+    background: var(--akcent-tlo);
+}
+
+.okno-komorki__tytul {
+    margin-bottom: 6px;
+    font-family: var(--czcionka-mono);
+    font-size: 12px;
+    color: var(--tekst-drugi);
+}
+
+.okno-komorki table {
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.okno-komorki th {
+    padding: 2px 12px 2px 0;
+    text-align: left;
+    font-weight: 500;
+    color: var(--tekst-drugi);
+}
+
+.okno-komorki td {
+    padding: 2px 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

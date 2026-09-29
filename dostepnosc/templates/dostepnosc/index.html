@@ -65,6 +65,20 @@
                 <p class="wyciszony">Usługa, do której z danej komórki idzie się najdłużej.</p>
                 <ul id="lista-ogniw"></ul>
             </div>
+            <div id="krzywa-blok" class="krzywa stos" hidden>
+                <h4>Krzywa dostępności</h4>
+                <p class="wyciszony">Jaka część obszaru (niebieska linia) i mieszkańców (zielona, gdy plik ma ich liczbę) jest w zasięgu danego czasu dojścia. Przesuń suwak, żeby sprawdzić własny próg.</p>
+                <svg id="krzywa" class="krzywa__wykres" viewBox="0 0 320 170" role="img" aria-label="Krzywa dostępności"></svg>
+                <label class="krzywa__suwak">Próg: <strong id="wartosc-progu">15 min</strong>
+                    <input id="suwak-progu" type="range" min="0" max="60" step="1" value="15">
+                </label>
+                <p id="wynik-progu" class="krzywa__wynik"></p>
+            </div>
+            <div id="luki-blok" class="luki stos" hidden>
+                <h4>Luki w dostępności</h4>
+                <p id="opis-luk" class="wyciszony"></p>
+                <ol id="lista-luk" class="lista-luk"></ol>
+            </div>
             <p id="meta-pliku" class="wyciszony meta-pliku"></p>
             <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
         </section>
@@ -96,6 +110,7 @@
     const URL_PLIK = "{{ url_for('dostepnosc.opis_pliku', nazwa='__PLIK__') }}";
     const URL_POROWNANIE = "{{ url_for('dostepnosc.porownanie') }}";
     const URL_GEOJSON = "{{ url_for('dostepnosc.eksport_geojson') }}";
+    const URL_KOMORKA = "{{ url_for('dostepnosc.komorka', nazwa='__PLIK__', indeks='__H3__') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('dostepnosc.static', filename='dostepnosc.js') }}"></script>

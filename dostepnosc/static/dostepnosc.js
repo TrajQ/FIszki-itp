@@ -32,6 +32,15 @@
     const formatProcentu = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
     const formatZmiany = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
     const legenda = document.getElementById("legenda");
+    const krzywaBlok = document.getElementById("krzywa-blok");
+    const krzywaSvg = document.getElementById("krzywa");
+    const suwakProgu = document.getElementById("suwak-progu");
+    const wartoscProgu = document.getElementById("wartosc-progu");
+    const wynikProgu = document.getElementById("wynik-progu");
+    const lukiBlok = document.getElementById("luki-blok");
+    const listaLuk = document.getElementById("lista-luk");
+    const opisLuk = document.getElementById("opis-luk");
+    let biezacaKrzywa = null;
     const komunikat = document.getElementById("komunikat");
 
     const formatLiczby = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
@@ -199,6 +208,7 @@
                 w.bindTooltip(`${formatLiczby.format(cecha.properties.wartosc)}${jednostka}`, { sticky: true });
                 w.on("mouseover", () => w.setStyle({ weight: 2.5, color: "#1d1d1f" }));
                 w.on("mouseout", () => warstwa.resetStyle(w));
+                w.on("click", (e) => pokazKomorke(cecha.properties.h3, e.latlng));
             },
         }).addTo(mapa);
         if (pierwszeRysowanie) {
@@ -208,7 +218,147 @@
         pokazStatystyki(analiza);
         pokazLegende(analiza, paleta);
         pokazOgniwo(analiza);
+        pokazKrzywa(analiza);
+        pokazLuki(analiza);
         ustawLinkGeojson(null);
+    }
+
+    // ---------- krzywa dostępności i własny próg (ETAP 38) ----------
+    // Punkty krzywej (udział w zasięgu t minut) liczy serwer; tu je rysujemy
+    // i czytamy wartość dla minuty wybranej suwakiem.
+
+    const SVG = "http://www.w3.org/2000/svg";
+    const WYKRES = { lewo: 34, prawo: 312, gora: 8, dol: 146 };
+
+    function svg(tag, atrybuty, tekst) {
+        const el = document.createElementNS(SVG, tag);
+        for (const [k, v] of Object.entries(atrybuty)) el.setAttribute(k, v);
+        if (tekst !== undefined) el.textContent = tekst;
+        return el;
+    }
+
+    function pokazKrzywa(analiza) {
+        const krzywa = analiza.minuty ? analiza.statystyki.krzywa : null;
+        krzywaBlok.hidden = !krzywa || krzywa.length < 2;
+        biezacaKrzywa = krzywaBlok.hidden ? null : krzywa;
+        if (!biezacaKrzywa) return;
+
+        const maksMin = krzywa[krzywa.length - 1].minuty;
+        const x = (m) => WYKRES.lewo + ((WYKRES.prawo - WYKRES.lewo) * m) / maksMin;
+        const y = (p) => WYKRES.dol - ((WYKRES.dol - WYKRES.gora) * p) / 100;
+        krzywaSvg.replaceChildren();
+
+        for (const p of [0, 50, 100]) {
+            krzywaSvg.append(
+                svg("line", { x1: WYKRES.lewo, x2: WYKRES.prawo, y1: y(p), y2: y(p), class: "krzywa__siatka" }),
+                svg("text", { x: WYKRES.lewo - 6, y: y(p) + 4, class: "krzywa__os", "text-anchor": "end" }, `${p}%`)
+            );
+        }
+        const krok = maksMin > 30 ? 15 : 5;
+        for (let m = 0; m <= maksMin; m += krok) {
+            krzywaSvg.append(svg("text", { x: x(m), y: WYKRES.dol + 16, class: "krzywa__os", "text-anchor": m === 0 ? "start" : x(m) > WYKRES.prawo - 20 ? "end" : "middle" }, `${m} min`));
+        }
+
+        const linia = (klucz, klasa) => {
+            const punkty = krzywa.filter((p) => p[klucz] !== undefined && p[klucz] !== null).map((p) => `${x(p.minuty)},${y(p[klucz])}`);
+            if (punkty.length > 1) krzywaSvg.append(svg("polyline", { points: punkty.join(" "), class: klasa }));
+        };
+        linia("procent", "krzywa__linia");
+        linia("procent_ludnosci", "krzywa__linia krzywa__linia--ludnosc");
+        krzywaSvg.append(svg("line", { id: "znacznik-progu", y1: WYKRES.gora, y2: WYKRES.dol, class: "krzywa__znacznik" }));
+
+        suwakProgu.max = String(maksMin);
+        if (Number(suwakProgu.value) > maksMin) suwakProgu.value = String(Math.min(15, maksMin));
+        pokazProg();
+    }
+
+    function pokazProg() {
+        if (!biezacaKrzywa) return;
+        const minuty = Number(suwakProgu.value);
+        const punkt = biezacaKrzywa[Math.min(minuty, biezacaKrzywa.length - 1)];
+        const maksMin = biezacaKrzywa[biezacaKrzywa.length - 1].minuty;
+        const pozycja = WYKRES.lewo + ((WYKRES.prawo - WYKRES.lewo) * punkt.minuty) / maksMin;
+        const znacznik = document.getElementById("znacznik-progu");
+        znacznik.setAttribute("x1", pozycja);
+        znacznik.setAttribute("x2", pozycja);
+        wartoscProgu.textContent = `${punkt.minuty} min`;
+        let tekst = `${formatProcentu.format(punkt.procent)}% powierzchni`;
+        if (punkt.procent_ludnosci !== undefined && punkt.procent_ludnosci !== null) {
+            tekst += ` · ${formatProcentu.format(punkt.procent_ludnosci)}% mieszkańców (${formatLiczby.format(punkt.ludnosc)} os.)`;
+        }
+        wynikProgu.textContent = `${tekst} w zasięgu ${punkt.minuty} min.`;
+    }
+
+    suwakProgu.addEventListener("input", pokazProg);
+
+    // ---------- luki: gdzie brakuje usługi (ETAP 38) ----------
+
+    function pokazLuki(analiza) {
+        const luki = analiza.minuty ? analiza.statystyki.luki : null;
+        lukiBlok.hidden = !luki;
+        if (!luki) return;
+        listaLuk.replaceChildren();
+        const zLudnoscia = luki.length > 0 && luki[0].ludnosc !== undefined;
+        opisLuk.textContent = luki.length
+            ? zLudnoscia
+                ? "Komórki dalej niż 15 min, w których mieszka najwięcej osób — tu nowa usługa pomogłaby najbardziej."
+                : "Komórki najdalej od usługi (powyżej 15 min). Dodaj kolumnę ludnosc, żeby uwzględnić mieszkańców."
+            : "Wszystkie komórki są w zasięgu 15 min.";
+        for (const luka of luki) {
+            const li = document.createElement("li");
+            const przycisk = document.createElement("button");
+            przycisk.type = "button";
+            przycisk.className = "luka";
+            const czas = document.createElement("strong");
+            czas.textContent = `${formatLiczby.format(luka.wartosc)} min`;
+            const opis = document.createElement("span");
+            opis.className = "wyciszony";
+            opis.textContent = zLudnoscia ? `${formatLiczby.format(luka.ludnosc)} mieszk.` : luka.h3;
+            przycisk.append(czas, opis);
+            przycisk.addEventListener("click", () => {
+                mapa.setView([luka.lat, luka.lon], Math.max(mapa.getZoom(), 15));
+                pokazKomorke(luka.h3, L.latLng(luka.lat, luka.lon));
+            });
+            li.appendChild(przycisk);
+            listaLuk.appendChild(li);
+        }
+    }
+
+    // ---------- szczegóły komórki po kliknięciu (ETAP 38) ----------
+
+    let numerKomorki = 0;
+
+    async function pokazKomorke(indeks, miejsce) {
+        const numer = ++numerKomorki;
+        let dane;
+        try {
+            dane = await pobierzJson(URL_KOMORKA.replace("__PLIK__", encodeURIComponent(NAZWA_PLIKU)).replace("__H3__", encodeURIComponent(indeks)));
+        } catch (e) {
+            return;
+        }
+        if (numer !== numerKomorki) return;
+        const tresc = document.createElement("div");
+        tresc.className = "okno-komorki";
+        const tytul = document.createElement("div");
+        tytul.className = "okno-komorki__tytul";
+        tytul.textContent = `Komórka ${dane.h3}`;
+        const tabela = document.createElement("table");
+        const wiersz = (nazwa, wartosc) => {
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.textContent = nazwa;
+            const td = document.createElement("td");
+            td.textContent = wartosc;
+            tr.append(th, td);
+            tabela.appendChild(tr);
+        };
+        for (const [nazwa, wartosc] of Object.entries(dane.wartosci)) {
+            wiersz(nazwa, wartosc === null ? "—" : formatLiczby.format(wartosc) + (dane.minuty[nazwa] ? " min" : ""));
+        }
+        if (dane.czas_laczny !== undefined) wiersz("wszystkie usługi", dane.czas_laczny === null ? "—" : `${formatLiczby.format(dane.czas_laczny)} min`);
+        if (dane.ludnosc !== undefined) wiersz("mieszkańcy", formatLiczby.format(dane.ludnosc));
+        tresc.append(tytul, tabela);
+        L.popup({ maxWidth: 320 }).setLatLng(miejsce).setContent(tresc).openOn(mapa);
     }
 
     // Tylko dla wskaźnika łącznego: która usługa najczęściej jest najdalej.
@@ -266,6 +416,9 @@
         ustawLinkGeojson(poleScenariusz.value);
         opisPorownania.textContent = `Porównanie: ${NAZWA_PLIKU} → ${poleScenariusz.value}`;
         ogniwoEl.hidden = true;
+        krzywaBlok.hidden = true;
+        lukiBlok.hidden = true;
+        biezacaKrzywa = null;
 
         if (warstwa) mapa.removeLayer(warstwa);
         warstwa = L.geoJSON(wynik.geojson, {
