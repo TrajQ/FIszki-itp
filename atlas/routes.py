@@ -1,7 +1,9 @@
+import csv
+import io
 import os
 from dataclasses import asdict
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, Response, jsonify, render_template, request
 
 from dane import bdl
 from dane.bdl import BladBDL
@@ -93,6 +95,10 @@ def opis():
     fakty = statystyki.fakty_do_opisu(
         wynik["zmienna"], wynik["rok"], wynik["wojewodztwo"]["nazwa"], wynik["statystyki"]
     )
+    if "porownanie" in wynik:
+        fakty += statystyki.fakty_zmiany(
+            wynik["porownanie"]["rok_bazowy"], wynik["rok"], wynik["porownanie"]["statystyki"]
+        )
     try:
         tekst = opisz_wskaznik(fakty)
     except BladGemini as e:
@@ -111,26 +117,40 @@ def _parametry_zapytania(zrodlo) -> dict:
         raise ValueError("Parametr woj musi być 12-cyfrowym identyfikatorem BDL województwa.")
     if not 1995 <= rok <= 2100:
         raise ValueError("Niepoprawny rok.")
-    return {"zmienna_id": zmienna_id, "rok": rok, "woj_bdl_id": woj}
+
+    rok_bazowy = zrodlo.get("rok_bazowy")
+    if rok_bazowy in (None, ""):
+        rok_bazowy = None
+    else:
+        try:
+            rok_bazowy = int(rok_bazowy)
+        except (TypeError, ValueError):
+            raise ValueError("rok_bazowy musi być liczbą.")
+        if rok_bazowy >= rok:
+            raise ValueError("Rok bazowy musi być wcześniejszy niż rok badany.")
+    return {"zmienna_id": zmienna_id, "rok": rok, "woj_bdl_id": woj, "rok_bazowy": rok_bazowy}
 
 
 def _wojewodztwa() -> list[dict]:
     return z_cache("wojewodztwa", lambda: [asdict(j) for j in bdl.wojewodztwa()])
 
 
-def _policz_dane(zmienna_id: int, rok: int, woj_bdl_id: str) -> dict:
+def _wartosci(zmienna_id: int, rok: int, woj_bdl_id: str) -> list[dict]:
+    return z_cache(
+        f"dane:{zmienna_id}:{rok}:{woj_bdl_id}",
+        lambda: [asdict(w) for w in bdl.wartosci_dla_gmin(zmienna_id, rok, woj_bdl_id)],
+    )
+
+
+def _policz_dane(zmienna_id: int, rok: int, woj_bdl_id: str, rok_bazowy: int | None = None) -> dict:
     wojewodztwo = next((w for w in _wojewodztwa() if w["bdl_id"] == woj_bdl_id), None)
     if wojewodztwo is None:
         raise LookupError("Nie znaleziono takiego województwa w BDL.")
 
     zmienna = z_cache(f"zmienna:{zmienna_id}", lambda: asdict(bdl.pobierz_zmienna(zmienna_id)))
-    gminy = z_cache(
-        f"dane:{zmienna_id}:{rok}:{woj_bdl_id}",
-        lambda: [asdict(w) for w in bdl.wartosci_dla_gmin(zmienna_id, rok, woj_bdl_id)],
-    )
-    gminy = sorted(gminy, key=lambda g: g["wartosc"], reverse=True)
+    gminy = sorted(_wartosci(zmienna_id, rok, woj_bdl_id), key=lambda g: g["wartosc"], reverse=True)
 
-    return {
+    wynik = {
         "zmienna": zmienna,
         "rok": rok,
         "wojewodztwo": wojewodztwo,
@@ -138,3 +158,47 @@ def _policz_dane(zmienna_id: int, rok: int, woj_bdl_id: str) -> dict:
         "statystyki": statystyki.statystyki(gminy),
         "progi_klas": statystyki.progi_klas([g["wartosc"] for g in gminy]),
     }
+    if rok_bazowy is not None:
+        porownanie = statystyki.porownaj(gminy, _wartosci(zmienna_id, rok_bazowy, woj_bdl_id))
+        wynik["porownanie"] = {
+            "rok_bazowy": rok_bazowy,
+            "gminy": porownanie,
+            "statystyki": statystyki.statystyki_zmiany(porownanie),
+            "progi_zmiany_proc": statystyki.PROGI_ZMIANY_PROC,
+        }
+    return wynik
+
+
+@atlas_bp.route("/eksport.csv")
+def eksport_csv():
+    """Tabela gmin do arkusza (UTF-8 z BOM — polskie znaki w LibreOffice/Excelu)."""
+    try:
+        parametry = _parametry_zapytania(request.args)
+        wynik = _policz_dane(**parametry)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    except LookupError as e:
+        return jsonify({"blad": str(e)}), 404
+
+    bufor = io.StringIO()
+    zapis = csv.writer(bufor)
+    rok = wynik["rok"]
+    if "porownanie" in wynik:
+        rb = wynik["porownanie"]["rok_bazowy"]
+        zapis.writerow(["teryt", "gmina", f"wartosc_{rb}", f"wartosc_{rok}", "zmiana", "zmiana_proc"])
+        for g in wynik["porownanie"]["gminy"]:
+            proc = "" if g["zmiana_proc"] is None else round(g["zmiana_proc"], 2)
+            zapis.writerow([g["teryt"], g["nazwa"], g["wartosc_bazowa"], g["wartosc"], g["zmiana"], proc])
+    else:
+        zapis.writerow(["teryt", "gmina", f"wartosc_{rok}"])
+        for g in wynik["gminy"]:
+            zapis.writerow([g["teryt"], g["nazwa"], g["wartosc"]])
+
+    nazwa = f"atlas_{parametry['zmienna_id']}_{wynik['wojewodztwo']['teryt']}_{rok}.csv"
+    return Response(
+        bufor.getvalue().encode("utf-8-sig"),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={nazwa}"},
+    )

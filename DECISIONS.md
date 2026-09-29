@@ -363,3 +363,27 @@ jednoznaczny; wyszukiwanie po samym numerze wymagałoby wyboru obrębu.
   odłożone: niejednoznaczne wyniki wymagają osobnego interfejsu wyboru.
 - Historia w `localStorage` przeglądarki — odrzucone: znika po
   wyczyszczeniu przeglądarki i nie da się jej testować w pytest.
+
+## D-017 — Atlas: zmiana procentowa ze stałymi klasami
+Data: 2026-09-29
+
+**Decyzja:** Porównanie lat pokazuje zmianę procentową
+`(teraz − wtedy) / |wtedy| × 100`, liczoną w Pythonie, tylko dla gmin z
+danymi w obu latach. Kartogram zmiany ma stałe, symetryczne klasy
+(≤ −10%, −10…−2%, −2…+2%, +2…+10%, > +10%) i skalę rozbieżną
+pomarańcz–szary–niebieski. Gmina z wartością bazową 0 ma zmianę
+bezwzględną, ale nie procentową.
+
+**Uzasadnienie:** Stałe progi pozwalają porównywać mapy różnych
+wskaźników i województw („czy tu jest gorzej niż tam”), a przedział
+±2% wyróżnia gminy praktycznie bez zmian. Pomarańcz/niebieski zamiast
+czerwień/zieleń — czytelne także dla osób z zaburzeniami widzenia barw
+i bez wartościowania („spadek” nie zawsze znaczy „źle”, np. bezrobocie).
+Porównanie tylko gmin obecnych w obu latach, bo zmiany granic gmin
+(np. nowe gminy) dawałyby fałszywe wyniki.
+
+**Odrzucone alternatywy:**
+- Kwantyle zmiany — odrzucone: przy prawie samych wzrostach połowa gmin
+  „ze wzrostem” wyglądałaby jak spadek.
+- Średnioroczne tempo zmian (CAGR) — odrzucone na start: trudniejsze do
+  wyjaśnienia; można dodać później.

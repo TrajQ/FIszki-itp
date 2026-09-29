@@ -186,6 +186,8 @@ def client(tmp_path, monkeypatch):
 
     def wartosci(zmienna_id, rok, woj):
         licznik["dane"] += 1
+        if rok == 2013:  # rok bazowy w testach porównania; Wieliczki brak
+            return [bdl.Wartosc("011212161011", "1261011", "Kraków", 758334.0)]
         return [
             bdl.Wartosc("011212161011", "1261011", "Kraków", 804237.0),
             bdl.Wartosc("011212106032", "1206032", "Wieliczka", 63000.0),
@@ -276,3 +278,91 @@ def test_opis_blad_gemini_zwraca_fakty(client, monkeypatch):
 
     assert odpowiedz.status_code == 502
     assert "fakty" in odpowiedz.get_json()
+
+
+
+# ---------- ETAP 10: porównanie lat i eksport ----------
+
+
+def test_porownaj_liczy_zmiane_i_pomija_braki():
+    teraz = [
+        {"teryt": "1", "nazwa": "A", "wartosc": 110.0},
+        {"teryt": "2", "nazwa": "B", "wartosc": 90.0},
+        {"teryt": "3", "nazwa": "C", "wartosc": 5.0},
+        {"teryt": "4", "nazwa": "D", "wartosc": 7.0},
+    ]
+    wtedy = [
+        {"teryt": "1", "nazwa": "A", "wartosc": 100.0},
+        {"teryt": "2", "nazwa": "B", "wartosc": 100.0},
+        {"teryt": "3", "nazwa": "C", "wartosc": 0.0},
+    ]
+    wynik = statystyki.porownaj(teraz, wtedy)
+
+    assert [g["nazwa"] for g in wynik] == ["A", "B", "C"]  # D bez roku bazowego; C (0 → 5) na końcu
+    assert wynik[0]["zmiana"] == 10.0 and wynik[0]["zmiana_proc"] == pytest.approx(10.0)
+    assert wynik[1]["zmiana_proc"] == pytest.approx(-10.0)
+    assert wynik[2]["zmiana_proc"] is None
+
+    s = statystyki.statystyki_zmiany(wynik)
+    assert (s["wzrosty"], s["spadki"], s["bez_zmian"]) == (2, 1, 0)
+    assert s["najwiekszy_wzrost"]["nazwa"] == "A"
+    assert s["najwiekszy_spadek"]["nazwa"] == "B"
+    assert s["mediana_zmiany_proc"] == pytest.approx(0.0)
+
+
+def test_fakty_zmiany_przechodza_przez_straznika():
+    s = statystyki.statystyki_zmiany(
+        statystyki.porownaj(
+            [{"teryt": "1", "nazwa": "A", "wartosc": 112.5}, {"teryt": "2", "nazwa": "B", "wartosc": 95.0}],
+            [{"teryt": "1", "nazwa": "A", "wartosc": 100.0}, {"teryt": "2", "nazwa": "B", "wartosc": 100.0}],
+        )
+    )
+    fakty = statystyki.fakty_zmiany(2013, 2023, s)
+    assert "Największy wzrost procentowy: A (12,5%)" in fakty
+    sprawdz_liczby("Od 2013 do 2023 najbardziej wzrosła gmina A (12,5%), a spadła B (-5%).", fakty)
+
+
+def test_dane_z_porownaniem(client):
+    dane = client.get(f"/atlas/dane?{ZAPYTANIE}&rok_bazowy=2013").get_json()
+    p = dane["porownanie"]
+    assert p["rok_bazowy"] == 2013
+    assert [g["nazwa"] for g in p["gminy"]] == ["Kraków"]
+    assert p["gminy"][0]["zmiana"] == 804237.0 - 758334.0
+    assert p["statystyki"]["wzrosty"] == 1
+    assert p["progi_zmiany_proc"] == statystyki.PROGI_ZMIANY_PROC
+
+
+@pytest.mark.parametrize("rok_bazowy", ["2023", "2030", "abc"])
+def test_dane_zly_rok_bazowy(client, rok_bazowy):
+    assert client.get(f"/atlas/dane?{ZAPYTANIE}&rok_bazowy={rok_bazowy}").status_code == 400
+
+
+def test_eksport_csv_wartosci_i_porownania(client):
+    import csv as csv_mod
+    import io as io_mod
+
+    odpowiedz = client.get(f"/atlas/eksport.csv?{ZAPYTANIE}")
+    assert odpowiedz.mimetype == "text/csv"
+    wiersze = list(csv_mod.reader(io_mod.StringIO(odpowiedz.data.decode("utf-8-sig"))))
+    assert wiersze[0] == ["teryt", "gmina", "wartosc_2023"]
+    assert wiersze[1] == ["1261011", "Kraków", "804237.0"]
+    assert "atlas_72305_12_2023.csv" in odpowiedz.headers["Content-Disposition"]
+
+    odpowiedz = client.get(f"/atlas/eksport.csv?{ZAPYTANIE}&rok_bazowy=2013")
+    wiersze = list(csv_mod.reader(io_mod.StringIO(odpowiedz.data.decode("utf-8-sig"))))
+    assert wiersze[0] == ["teryt", "gmina", "wartosc_2013", "wartosc_2023", "zmiana", "zmiana_proc"]
+    assert wiersze[1][:2] == ["1261011", "Kraków"]
+    assert float(wiersze[1][5]) == pytest.approx(round((804237 - 758334) / 758334 * 100, 2))
+
+    assert client.get("/atlas/eksport.csv?zmienna=1").status_code == 400
+
+
+def test_opis_z_porownaniem_dostaje_fakty_zmiany(client, monkeypatch):
+    otrzymane = []
+    monkeypatch.setattr(atlas_routes, "opisz_wskaznik", lambda fakty: otrzymane.extend(fakty) or "Opis.")
+    client.post(
+        "/atlas/opis",
+        data=json.dumps({"zmienna": 72305, "rok": 2023, "woj": "011200000000", "rok_bazowy": 2013}),
+        content_type="application/json",
+    )
+    assert "Porównanie z rokiem: 2013" in otrzymane

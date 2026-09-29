@@ -294,3 +294,30 @@ Zrobione:
 
 Testy: 108 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap9_20260929.zip
+
+## ETAP 10 — Atlas: porównanie lat i eksport CSV
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `atlas/statystyki.py`: `porownaj` (zmiana bezwzględna i procentowa dla
+  gmin obecnych w obu latach; przy wartości bazowej 0 procent = brak),
+  `statystyki_zmiany` (wzrosty, spadki, mediana zmiany, największy
+  wzrost/spadek), `fakty_zmiany` dla opisu, stałe progi klas zmiany
+  −10 / −2 / +2 / +10%
+- `/atlas/dane` i `POST /atlas/opis` przyjmują opcjonalny `rok_bazowy`
+  (musi być wcześniejszy niż rok badany); opis dostaje fakty o zmianie
+  — strażnik liczb obowiązuje nadal
+- `GET /atlas/eksport.csv` — tabela gmin (wartości albo porównanie),
+  UTF-8 z BOM
+- Frontend: pole „Porównaj z”, przełącznik segmentowy Wartość/Zmiana,
+  kartogram rozbieżny (spadek pomarańczowy, wzrost niebieski), kafelki
+  zmiany, ranking po zmianie procentowej (kolor +/−, dymek „przed →
+  po”), przycisk „Pobierz CSV”
+- Poprawka: przy pierwszym wczytaniu kartogram mógł się przybliżać do
+  maksimum (mapa w ukrytym kontenerze) — `invalidateSize()` przed
+  dopasowaniem widoku
+- Testy: 8 nowych; `DECISIONS.md`: D-017
+
+Testy: 116 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap10_20260929.zip

@@ -27,6 +27,9 @@
     <label>Rok
         <select id="pole-rok"></select>
     </label>
+    <label>Porównaj z
+        <select id="pole-rok-bazowy"><option value="">— bez porównania —</option></select>
+    </label>
     <button id="przycisk-pokaz" type="submit" disabled>Pokaż</button>
 </form>
 <p id="wybrany-wskaznik" class="wybrany-wskaznik wyciszony">Wybierz wskaźnik z listy podpowiedzi.</p>
@@ -34,6 +37,13 @@
 <p id="komunikat-atlasu" class="komunikat komunikat--blad" hidden></p>
 
 <div id="wyniki" hidden>
+    <div class="pasek-wynikow">
+        <div id="przelacznik-trybu" class="przelacznik" role="tablist" hidden>
+            <button type="button" data-tryb="wartosc" class="przelacznik__opcja przelacznik__opcja--aktywna">Wartość</button>
+            <button type="button" data-tryb="zmiana" class="przelacznik__opcja">Zmiana</button>
+        </div>
+        <a id="link-eksport" class="przycisk przycisk--drugi" href="#">Pobierz CSV</a>
+    </div>
     <div class="uklad-atlasu">
         <section class="karta karta-mapy">
             <div id="mapa-atlasu"></div>
@@ -42,12 +52,7 @@
         </section>
 
         <aside class="stos">
-            <div class="kafelki">
-                <div class="karta kafelek"><span class="kafelek__etykieta">Gmin z danymi</span><span id="stat-liczba" class="kafelek__wartosc"></span></div>
-                <div class="karta kafelek"><span class="kafelek__etykieta">Mediana</span><span id="stat-mediana" class="kafelek__wartosc"></span></div>
-                <div class="karta kafelek kafelek--szeroki"><span class="kafelek__etykieta">Najwyżej</span><span id="stat-max" class="kafelek__wartosc kafelek__wartosc--mala"></span></div>
-                <div class="karta kafelek kafelek--szeroki"><span class="kafelek__etykieta">Najniżej</span><span id="stat-min" class="kafelek__wartosc kafelek__wartosc--mala"></span></div>
-            </div>
+            <div id="kafelki" class="kafelki"></div>
 
             <section class="karta stos">
                 <div class="rzad rzad--miedzy">
@@ -80,6 +85,7 @@
     const URL_DANE = "{{ url_for('atlas.dane') }}";
     const URL_GRANICE = "{{ url_for('atlas.granice_wojewodztwa', teryt_woj='00') }}";
     const URL_OPIS = "{{ url_for('atlas.opis') }}";
+    const URL_EKSPORT = "{{ url_for('atlas.eksport_csv') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('atlas.static', filename='atlas.js') }}"></script>

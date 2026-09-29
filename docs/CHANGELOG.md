@@ -93,3 +93,10 @@
 - MPZP: historia ostatnio sprawdzonych działek (`/mpzp/historia`,
   baza `instance/mpzp/mpzp.db`).
 - Dodano `DECISIONS.md` D-016 i testy.
+
+## ETAP 10 — 2026-09-29
+- Atlas: porównanie z rokiem bazowym (zmiana %, kartogram rozbieżny,
+  ranking zmian, fakty zmiany w opisie).
+- Atlas: eksport tabeli gmin do CSV (`/atlas/eksport.csv`).
+- Poprawiono przybliżenie kartogramu przy pierwszym wczytaniu.
+- Dodano `DECISIONS.md` D-017 i testy.

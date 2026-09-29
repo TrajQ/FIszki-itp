@@ -3,7 +3,7 @@
 /* Panel wyboru: wskaźnik szeroki, reszta w wąskich kolumnach. */
 .panel-wyboru {
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 1.4fr) minmax(0, 0.8fr) auto;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 1.1fr) auto;
     align-items: end;
     gap: 16px;
     padding: 20px 24px;
@@ -60,6 +60,52 @@
 .wybrany-wskaznik {
     margin: 10px 4px 24px;
     font-size: 0.85rem;
+}
+
+/* Pasek nad wynikami: przełącznik trybu i eksport. */
+.pasek-wynikow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* Przełącznik segmentowy w stylu Apple. */
+.przelacznik {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--tlo-wyciszone);
+}
+
+button.przelacznik__opcja {
+    padding: 6px 18px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--tekst);
+    font-weight: 500;
+}
+
+button.przelacznik__opcja:hover {
+    background: transparent;
+    color: var(--akcent);
+}
+
+button.przelacznik__opcja--aktywna,
+button.przelacznik__opcja--aktywna:hover {
+    background: var(--tlo-karty);
+    color: var(--tekst);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.wartosc-plus {
+    color: var(--sukces);
+}
+
+.wartosc-minus {
+    color: var(--blad);
 }
 
 /* Mapa po lewej, statystyki i opis po prawej. */

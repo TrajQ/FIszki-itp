@@ -1,11 +1,16 @@
 // Moduł atlas: wybór wskaźnika BDL, kartogram gmin, statystyki, ranking, opis.
 // Wszystkie liczby przychodzą z serwera (dane GUS + statystyki liczone w
 // Pythonie); tutaj tylko je formatujemy i rysujemy.
+//
+// Dwa tryby: „wartość” (rok badany) i „zmiana” (względem roku bazowego,
+// dostępny, gdy wybrano porównanie).
 (function () {
     "use strict";
 
-    // Skala sekwencyjna 5 klas: od jasnego do ciemnego niebieskiego.
+    // Wartość: skala sekwencyjna 5 klas, od jasnego do ciemnego niebieskiego.
     const KOLORY_KLAS = ["#d6e8ff", "#9ecbff", "#5aa7ff", "#1f7ae0", "#0b4fa8"];
+    // Zmiana: skala rozbieżna — spadek (pomarańcz), bez zmian (szary), wzrost (niebieski).
+    const KOLORY_ZMIANY = ["#c2410c", "#fb923c", "#d1d1d6", "#60a5fa", "#1d4ed8"];
     const KOLOR_BRAK = "#c7c7cc";
     const OSTATNI_ROK = new Date().getFullYear() - 1;
     const PIERWSZY_ROK = 2002;
@@ -15,10 +20,14 @@
     const podpowiedzi = document.getElementById("podpowiedzi");
     const poleWoj = document.getElementById("pole-woj");
     const poleRok = document.getElementById("pole-rok");
+    const poleRokBazowy = document.getElementById("pole-rok-bazowy");
     const przyciskPokaz = document.getElementById("przycisk-pokaz");
     const wybranyWskaznikEl = document.getElementById("wybrany-wskaznik");
     const komunikat = document.getElementById("komunikat-atlasu");
     const wynikiEl = document.getElementById("wyniki");
+    const przelacznik = document.getElementById("przelacznik-trybu");
+    const linkEksport = document.getElementById("link-eksport");
+    const kafelkiEl = document.getElementById("kafelki");
     const komunikatMapy = document.getElementById("komunikat-mapy");
     const legendaEl = document.getElementById("legenda");
     const listaRankingu = document.getElementById("lista-rankingu");
@@ -29,9 +38,12 @@
     const listaFaktow = document.getElementById("lista-faktow");
 
     const formatLiczby = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
+    const formatProcentu = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
 
     let wybranaZmienna = null; // {id, nazwa, jednostka}
     let biezaceDane = null;
+    let tryb = "wartosc";
+    let granice = null; // GeoJSON gmin bieżącego województwa
     let warstwaGmin = null;
     let numerZapytania = 0; // chroni przed nadpisaniem wyniku starszą odpowiedzią
     const wierszePoTeryt = new Map();
@@ -60,6 +72,13 @@
         return dane;
     }
 
+    function element(tag, klasa, tekst) {
+        const el = document.createElement(tag);
+        if (klasa) el.className = klasa;
+        if (tekst !== undefined) el.textContent = tekst;
+        return el;
+    }
+
     function pokazKomunikat(tresc) {
         komunikat.textContent = tresc;
         komunikat.hidden = !tresc;
@@ -70,19 +89,41 @@
         return formatLiczby.format(liczba) + (jednostka ? ` ${jednostka}` : "");
     }
 
-    function klasa(wartosc) {
-        const progi = biezaceDane.progi_klas;
+    function procent(liczba) {
+        return liczba === null ? "—" : `${formatProcentu.format(liczba)}%`;
+    }
+
+    // Numer klasy według progów (klasa i obejmuje wartości ≤ progi[i]).
+    function numerKlasy(wartosc, progi) {
         let i = 0;
         while (i < progi.length && wartosc > progi[i]) i += 1;
-        // Przy mniejszej liczbie klas rozciągamy kolory na całą skalę.
+        return i;
+    }
+
+    // Kolor dla gminy w bieżącym trybie.
+    function kolorGminy(gmina) {
+        if (!gmina) return KOLOR_BRAK;
+        if (tryb === "zmiana") {
+            if (gmina.zmiana_proc === null || gmina.zmiana_proc === undefined) return KOLOR_BRAK;
+            return KOLORY_ZMIANY[numerKlasy(gmina.zmiana_proc, biezaceDane.porownanie.progi_zmiany_proc)];
+        }
+        const progi = biezaceDane.progi_klas;
         const liczbaKlas = progi.length + 1;
-        return liczbaKlas === 1 ? KOLORY_KLAS.length - 1 : Math.round((i * (KOLORY_KLAS.length - 1)) / (liczbaKlas - 1));
+        const i = numerKlasy(gmina.wartosc, progi);
+        // Przy mniejszej liczbie klas rozciągamy kolory na całą skalę.
+        return KOLORY_KLAS[liczbaKlas === 1 ? KOLORY_KLAS.length - 1 : Math.round((i * (KOLORY_KLAS.length - 1)) / (liczbaKlas - 1))];
+    }
+
+    // Gminy do pokazania w bieżącym trybie, już posortowane przez serwer.
+    function gminyTrybu() {
+        return tryb === "zmiana" ? biezaceDane.porownanie.gminy : biezaceDane.gminy;
     }
 
     // ---------- panel wyboru ----------
 
     for (let rok = OSTATNI_ROK; rok >= PIERWSZY_ROK; rok -= 1) {
         poleRok.add(new Option(String(rok), String(rok)));
+        poleRokBazowy.add(new Option(String(rok), String(rok)));
     }
     poleRok.value = String(OSTATNI_ROK - 1); // najnowszy rok bywa jeszcze niepełny
 
@@ -133,16 +174,9 @@
     }
 
     function elementPodpowiedzi(tekst, zmienna) {
-        const li = document.createElement("li");
-        li.textContent = tekst;
-        if (!zmienna) {
-            li.className = "podpowiedzi__info";
-            return li;
-        }
-        const jednostka = document.createElement("span");
-        jednostka.className = "etykieta";
-        jednostka.textContent = zmienna.jednostka || "—";
-        li.appendChild(jednostka);
+        const li = element("li", zmienna ? "" : "podpowiedzi__info", tekst);
+        if (!zmienna) return li;
+        li.appendChild(element("span", "etykieta", zmienna.jednostka || "—"));
         li.tabIndex = 0;
         const wybierz = () => {
             wybranaZmienna = zmienna;
@@ -166,6 +200,10 @@
     formularz.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!wybranaZmienna || !poleWoj.value) return;
+        if (poleRokBazowy.value && Number(poleRokBazowy.value) >= Number(poleRok.value)) {
+            pokazKomunikat("Rok porównania musi być wcześniejszy niż rok badany.");
+            return;
+        }
 
         const numer = ++numerZapytania;
         const terytWoj = poleWoj.selectedOptions[0].dataset.teryt;
@@ -174,6 +212,7 @@
         przyciskPokaz.textContent = "Pobieranie…";
         try {
             const parametry = new URLSearchParams({ zmienna: wybranaZmienna.id, rok: poleRok.value, woj: poleWoj.value });
+            if (poleRokBazowy.value) parametry.set("rok_bazowy", poleRokBazowy.value);
             const dane = await pobierzJson(`${URL_DANE}?${parametry}`);
             if (numer !== numerZapytania) return;
             if (dane.gminy.length === 0) {
@@ -182,11 +221,18 @@
                 return;
             }
             biezaceDane = dane;
+            linkEksport.href = `${URL_EKSPORT}?${parametry}`;
+            const jestPorownanie = Boolean(dane.porownanie && dane.porownanie.gminy.length);
+            if (dane.porownanie && !jestPorownanie) {
+                pokazKomunikat(`Brak danych z roku ${dane.porownanie.rok_bazowy} do porównania — pokazuję same wartości.`);
+            }
+            przelacznik.hidden = !jestPorownanie;
+            ustawTryb(jestPorownanie ? "zmiana" : "wartosc", false);
             wynikiEl.hidden = false;
-            pokazStatystyki();
-            pokazRanking();
             resetujOpis();
-            await pokazKartogram(terytWoj, numer);
+            await wczytajGranice(terytWoj, numer);
+            if (numer !== numerZapytania) return;
+            odswiezWidok();
         } catch (err) {
             pokazKomunikat(err.message);
         } finally {
@@ -195,16 +241,61 @@
         }
     });
 
+    function ustawTryb(nowy, odswiez = true) {
+        tryb = nowy;
+        for (const przycisk of przelacznik.querySelectorAll("button")) {
+            przycisk.classList.toggle("przelacznik__opcja--aktywna", przycisk.dataset.tryb === nowy);
+        }
+        if (odswiez) odswiezWidok();
+    }
+
+    przelacznik.addEventListener("click", (e) => {
+        const przycisk = e.target.closest("button[data-tryb]");
+        if (przycisk && przycisk.dataset.tryb !== tryb) ustawTryb(przycisk.dataset.tryb);
+    });
+
+    function odswiezWidok() {
+        pokazStatystyki();
+        pokazRanking();
+        rysujKartogram();
+        pokazLegende();
+    }
+
+    // ---------- kafelki ----------
+
+    function kafelek(etykieta, wartosc, { szeroki = false, jednostka = "", klasaWartosci = "" } = {}) {
+        const div = element("div", `karta kafelek${szeroki ? " kafelek--szeroki" : ""}`);
+        const w = element("span", `kafelek__wartosc${szeroki ? " kafelek__wartosc--mala" : ""} ${klasaWartosci}`, wartosc);
+        if (jednostka) w.appendChild(element("span", "kafelek__jednostka", jednostka));
+        div.append(element("span", "kafelek__etykieta", etykieta), w);
+        return div;
+    }
+
     function pokazStatystyki() {
+        kafelkiEl.replaceChildren();
+        if (tryb === "zmiana") {
+            const p = biezaceDane.porownanie;
+            const s = p.statystyki;
+            kafelkiEl.append(
+                kafelek("Wzrost", String(s.wzrosty ?? 0), { jednostka: "gmin", klasaWartosci: "wartosc-plus" }),
+                kafelek("Spadek", String(s.spadki ?? 0), { jednostka: "gmin", klasaWartosci: "wartosc-minus" })
+            );
+            if (s.mediana_zmiany_proc !== undefined) {
+                kafelkiEl.append(
+                    kafelek(`Mediana zmiany ${p.rok_bazowy}→${biezaceDane.rok}`, procent(s.mediana_zmiany_proc), { szeroki: true }),
+                    kafelek("Największy wzrost", `${s.najwiekszy_wzrost.nazwa} · ${procent(s.najwiekszy_wzrost.zmiana_proc)}`, { szeroki: true }),
+                    kafelek("Największy spadek", `${s.najwiekszy_spadek.nazwa} · ${procent(s.najwiekszy_spadek.zmiana_proc)}`, { szeroki: true })
+                );
+            }
+            return;
+        }
         const s = biezaceDane.statystyki;
-        document.getElementById("stat-liczba").textContent = s.liczba_gmin;
-        const mediana = document.getElementById("stat-mediana");
-        const jednostka = document.createElement("span");
-        jednostka.className = "kafelek__jednostka";
-        jednostka.textContent = biezaceDane.zmienna.jednostka || "";
-        mediana.replaceChildren(formatLiczby.format(s.mediana), jednostka);
-        document.getElementById("stat-max").textContent = `${s.max.nazwa} · ${zJednostka(s.max.wartosc)}`;
-        document.getElementById("stat-min").textContent = `${s.min.nazwa} · ${zJednostka(s.min.wartosc)}`;
+        kafelkiEl.append(
+            kafelek("Gmin z danymi", String(s.liczba_gmin)),
+            kafelek("Mediana", formatLiczby.format(s.mediana), { jednostka: biezaceDane.zmienna.jednostka }),
+            kafelek("Najwyżej", `${s.max.nazwa} · ${zJednostka(s.max.wartosc)}`, { szeroki: true }),
+            kafelek("Najniżej", `${s.min.nazwa} · ${zJednostka(s.min.wartosc)}`, { szeroki: true })
+        );
     }
 
     // ---------- ranking (wykres słupkowy) ----------
@@ -212,87 +303,94 @@
     function pokazRanking() {
         listaRankingu.replaceChildren();
         wierszePoTeryt.clear();
-        const maks = Math.max(...biezaceDane.gminy.map((g) => Math.abs(g.wartosc))) || 1;
+        const gminy = gminyTrybu();
+        const miara = (g) => Math.abs(tryb === "zmiana" ? g.zmiana_proc ?? 0 : g.wartosc);
+        const maks = Math.max(...gminy.map(miara)) || 1;
 
-        biezaceDane.gminy.forEach((gmina, indeks) => {
-            const li = document.createElement("li");
-            li.className = "wiersz-rankingu";
+        gminy.forEach((gmina, indeks) => {
+            const li = element("li", "wiersz-rankingu");
             li.dataset.nazwa = gmina.nazwa.toLowerCase();
 
-            const miejsce = document.createElement("span");
-            miejsce.className = "wiersz-rankingu__miejsce";
-            miejsce.textContent = indeks + 1;
-
-            const nazwa = document.createElement("span");
-            nazwa.className = "wiersz-rankingu__nazwa";
-            nazwa.textContent = gmina.nazwa;
-
-            const tor = document.createElement("span");
-            tor.className = "wiersz-rankingu__tor";
-            const slupek = document.createElement("span");
-            slupek.className = "wiersz-rankingu__slupek";
-            slupek.style.width = `${(Math.abs(gmina.wartosc) / maks) * 100}%`;
-            slupek.style.background = KOLORY_KLAS[klasa(gmina.wartosc)];
+            const tor = element("span", "wiersz-rankingu__tor");
+            const slupek = element("span", "wiersz-rankingu__slupek");
+            slupek.style.width = `${(miara(gmina) / maks) * 100}%`;
+            slupek.style.background = kolorGminy(gmina);
             tor.appendChild(slupek);
 
-            const wartosc = document.createElement("span");
-            wartosc.className = "wiersz-rankingu__wartosc";
-            wartosc.textContent = formatLiczby.format(gmina.wartosc);
+            let tekstWartosci = formatLiczby.format(gmina.wartosc);
+            let klasa = "";
+            if (tryb === "zmiana") {
+                tekstWartosci = procent(gmina.zmiana_proc);
+                klasa = gmina.zmiana > 0 ? " wartosc-plus" : gmina.zmiana < 0 ? " wartosc-minus" : "";
+                li.title = `${formatLiczby.format(gmina.wartosc_bazowa)} → ${formatLiczby.format(gmina.wartosc)}`;
+            }
 
-            li.append(miejsce, nazwa, tor, wartosc);
+            li.append(
+                element("span", "wiersz-rankingu__miejsce", String(indeks + 1)),
+                element("span", "wiersz-rankingu__nazwa", gmina.nazwa),
+                tor,
+                element("span", `wiersz-rankingu__wartosc${klasa}`, tekstWartosci)
+            );
             li.addEventListener("mouseenter", () => podswietl(gmina.teryt, true));
             li.addEventListener("mouseleave", () => podswietl(gmina.teryt, false));
             li.addEventListener("click", () => przybliz(gmina.teryt));
             listaRankingu.appendChild(li);
             wierszePoTeryt.set(gmina.teryt, li);
         });
-        filtrRankingu.value = "";
+        filtrujRanking();
     }
 
-    filtrRankingu.addEventListener("input", () => {
+    function filtrujRanking() {
         const fraza = filtrRankingu.value.trim().toLowerCase();
         for (const li of listaRankingu.children) {
             li.hidden = fraza !== "" && !li.dataset.nazwa.includes(fraza);
         }
-    });
+    }
+
+    filtrRankingu.addEventListener("input", filtrujRanking);
 
     // ---------- kartogram ----------
 
-    async function pokazKartogram(terytWoj, numer) {
+    async function wczytajGranice(terytWoj, numer) {
         komunikatMapy.hidden = true;
-        if (warstwaGmin) mapa.removeLayer(warstwaGmin);
-        warstwaGmin = null;
-        warstwyPoTeryt.clear();
-        pokazLegende();
-        setTimeout(() => mapa.invalidateSize(), 0);
-
-        let granice;
+        granice = null;
         try {
-            granice = await pobierzJson(URL_GRANICE.replace("/00", `/${terytWoj}`));
+            const wynik = await pobierzJson(URL_GRANICE.replace("/00", `/${terytWoj}`));
+            if (numer === numerZapytania) granice = wynik;
         } catch (e) {
             komunikatMapy.textContent = `Kartogram niedostępny: ${e.message}. Ranking i statystyki obok są kompletne.`;
             komunikatMapy.hidden = false;
-            return;
         }
-        if (numer !== numerZapytania) return;
+    }
 
-        const wartosci = new Map(biezaceDane.gminy.map((g) => [g.teryt, g]));
+    function rysujKartogram() {
+        if (warstwaGmin) mapa.removeLayer(warstwaGmin);
+        warstwaGmin = null;
+        warstwyPoTeryt.clear();
+        // Kontener mapy był ukryty przy pierwszym wczytaniu — bez tego
+        // Leaflet liczy przybliżenie dla mapy o rozmiarze 0 × 0.
+        mapa.invalidateSize();
+        if (!granice) return;
+
+        const poTeryt = new Map(gminyTrybu().map((g) => [g.teryt, g]));
         warstwaGmin = L.geoJSON(granice, {
-            style: (cecha) => {
-                const gmina = wartosci.get(cecha.properties.teryt);
-                return {
-                    color: "#ffffff",
-                    weight: 0.8,
-                    fillOpacity: 0.85,
-                    fillColor: gmina ? KOLORY_KLAS[klasa(gmina.wartosc)] : KOLOR_BRAK,
-                };
-            },
+            style: (cecha) => ({
+                color: "#ffffff",
+                weight: 0.8,
+                fillOpacity: 0.85,
+                fillColor: kolorGminy(poTeryt.get(cecha.properties.teryt)),
+            }),
             onEachFeature: (cecha, warstwa) => {
-                const gmina = wartosci.get(cecha.properties.teryt);
-                const dymek = document.createElement("div");
-                const nazwa = document.createElement("strong");
-                nazwa.textContent = cecha.properties.nazwa;
-                dymek.append(nazwa, document.createElement("br"), gmina ? zJednostka(gmina.wartosc) : "brak danych");
+                const gmina = poTeryt.get(cecha.properties.teryt);
+                let tresc = "brak danych";
+                if (gmina) {
+                    tresc =
+                        tryb === "zmiana"
+                            ? `${procent(gmina.zmiana_proc)} (${formatLiczby.format(gmina.wartosc_bazowa)} → ${formatLiczby.format(gmina.wartosc)})`
+                            : zJednostka(gmina.wartosc);
+                }
+                const dymek = element("div");
+                dymek.append(element("strong", "", cecha.properties.nazwa), element("br"), tresc);
                 warstwa.bindTooltip(dymek, { sticky: true });
                 warstwa.on("mouseover", () => podswietl(cecha.properties.teryt, true));
                 warstwa.on("mouseout", () => podswietl(cecha.properties.teryt, false));
@@ -306,24 +404,39 @@
         mapa.fitBounds(warstwaGmin.getBounds(), { padding: [12, 12] });
     }
 
+    function wierszLegendy(kolor, opis) {
+        const wiersz = element("div", "legenda__wiersz");
+        const probka = element("span", "legenda__kolor");
+        probka.style.background = kolor;
+        wiersz.append(probka, opis);
+        return wiersz;
+    }
+
     function pokazLegende() {
         legendaEl.replaceChildren();
-        const progi = biezaceDane.progi_klas;
-        const s = biezaceDane.statystyki;
-        const granice = [s.min.wartosc, ...progi, s.max.wartosc];
-        for (let i = 0; i < granice.length - 1; i += 1) {
-            const wiersz = document.createElement("div");
-            wiersz.className = "legenda__wiersz";
-            const kolor = document.createElement("span");
-            kolor.className = "legenda__kolor";
-            kolor.style.background = KOLORY_KLAS[klasa(granice[i + 1])];
-            wiersz.append(kolor, `${formatLiczby.format(granice[i])} – ${formatLiczby.format(granice[i + 1])}`);
-            legendaEl.appendChild(wiersz);
+        if (tryb === "zmiana") {
+            const p = biezaceDane.porownanie.progi_zmiany_proc;
+            legendaEl.appendChild(element("div", "legenda__tytul", `zmiana ${biezaceDane.porownanie.rok_bazowy}→${biezaceDane.rok}`));
+            for (let i = 0; i <= p.length; i += 1) {
+                let opis;
+                if (i === 0) opis = `≤ ${procent(p[0])}`;
+                else if (i === p.length) opis = `> ${procent(p[i - 1])}`;
+                else opis = `${procent(p[i - 1])} … ${procent(p[i])}`;
+                legendaEl.appendChild(wierszLegendy(KOLORY_ZMIANY[i], opis));
+            }
+            return;
         }
-        const tytul = document.createElement("div");
-        tytul.className = "legenda__tytul";
-        tytul.textContent = biezaceDane.zmienna.jednostka || "wartość";
-        legendaEl.prepend(tytul);
+        const s = biezaceDane.statystyki;
+        const progiLegendy = [s.min.wartosc, ...biezaceDane.progi_klas, s.max.wartosc];
+        legendaEl.appendChild(element("div", "legenda__tytul", biezaceDane.zmienna.jednostka || "wartość"));
+        for (let i = 0; i < progiLegendy.length - 1; i += 1) {
+            legendaEl.appendChild(
+                wierszLegendy(
+                    kolorGminy({ wartosc: progiLegendy[i + 1] }),
+                    `${formatLiczby.format(progiLegendy[i])} – ${formatLiczby.format(progiLegendy[i + 1])}`
+                )
+            );
+        }
     }
 
     function podswietl(teryt, wlacz) {
@@ -346,9 +459,12 @@
 
     // ---------- opis przez Gemini ----------
 
+    const TEKST_OPISU =
+        "Gemini opisze wynik słowami. Liczby w opisie są sprawdzane: każda musi pochodzić z danych GUS.";
+
     function resetujOpis() {
         opisEl.className = "wyciszony";
-        opisEl.textContent = "Gemini opisze wynik słowami. Liczby w opisie są sprawdzane: każda musi pochodzić z danych GUS.";
+        opisEl.textContent = TEKST_OPISU;
         faktyEl.hidden = true;
     }
 
@@ -357,15 +473,17 @@
         przyciskOpis.disabled = true;
         opisEl.className = "wyciszony";
         opisEl.textContent = "Generowanie opisu…";
+        const zapytanie = { zmienna: biezaceDane.zmienna.id, rok: biezaceDane.rok, woj: biezaceDane.wojewodztwo.bdl_id };
+        if (biezaceDane.porownanie) zapytanie.rok_bazowy = biezaceDane.porownanie.rok_bazowy;
         try {
             const odpowiedz = await fetch(URL_OPIS, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ zmienna: biezaceDane.zmienna.id, rok: biezaceDane.rok, woj: biezaceDane.wojewodztwo.bdl_id }),
+                body: JSON.stringify(zapytanie),
             });
             const dane = await odpowiedz.json();
             if (dane.fakty) {
-                listaFaktow.replaceChildren(...dane.fakty.map((f) => Object.assign(document.createElement("li"), { textContent: f })));
+                listaFaktow.replaceChildren(...dane.fakty.map((f) => element("li", "", f)));
                 faktyEl.hidden = false;
             }
             if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);

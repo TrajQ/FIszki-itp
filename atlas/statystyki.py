@@ -77,5 +77,69 @@ def fakty_do_opisu(zmienna: dict, rok: int, wojewodztwo: str, stat: dict) -> lis
     return fakty
 
 
+# Klasy zmiany procentowej (kartogram rozbieżny): stałe i symetryczne
+# wokół zera, żeby „spadek” i „wzrost” były porównywalne między wskaźnikami.
+PROGI_ZMIANY_PROC = [-10.0, -2.0, 2.0, 10.0]
+
+
+def porownaj(gminy: list[dict], gminy_bazowe: list[dict]) -> list[dict]:
+    """Zmiana między rokiem bazowym a badanym dla gmin obecnych w obu latach.
+
+    zmiana_proc jest None, gdy wartość bazowa to 0 (dzielenie przez zero).
+    Wynik posortowany malejąco po zmianie procentowej (None na końcu).
+    """
+    bazowe = {g["teryt"]: g["wartosc"] for g in gminy_bazowe}
+    wynik = []
+    for g in gminy:
+        if g["teryt"] not in bazowe:
+            continue
+        baza = bazowe[g["teryt"]]
+        wynik.append(
+            {
+                **g,
+                "wartosc_bazowa": baza,
+                "zmiana": g["wartosc"] - baza,
+                "zmiana_proc": None if baza == 0 else (g["wartosc"] - baza) / abs(baza) * 100,
+            }
+        )
+    wynik.sort(key=lambda g: (g["zmiana_proc"] is None, -(g["zmiana_proc"] or 0)))
+    return wynik
+
+
+def statystyki_zmiany(porownanie: list[dict]) -> dict:
+    procenty = [g["zmiana_proc"] for g in porownanie if g["zmiana_proc"] is not None]
+    if not procenty:
+        return {"liczba_gmin": len(porownanie)}
+    z_procentem = [g for g in porownanie if g["zmiana_proc"] is not None]
+    return {
+        "liczba_gmin": len(porownanie),
+        "wzrosty": sum(1 for g in porownanie if g["zmiana"] > 0),
+        "spadki": sum(1 for g in porownanie if g["zmiana"] < 0),
+        "bez_zmian": sum(1 for g in porownanie if g["zmiana"] == 0),
+        "mediana_zmiany_proc": statistics.median(procenty),
+        "najwiekszy_wzrost": _para_zmiany(z_procentem[0]),
+        "najwiekszy_spadek": _para_zmiany(z_procentem[-1]),
+    }
+
+
+def fakty_zmiany(rok_bazowy: int, rok: int, stat: dict) -> list[str]:
+    if "mediana_zmiany_proc" not in stat:
+        return []
+    wz, sp = stat["najwiekszy_wzrost"], stat["najwiekszy_spadek"]
+    return [
+        f"Porównanie z rokiem: {rok_bazowy}",
+        f"Liczba gmin porównanych: {stat['liczba_gmin']}",
+        f"Gminy ze wzrostem wartości od {rok_bazowy} do {rok}: {stat['wzrosty']}",
+        f"Gminy ze spadkiem wartości od {rok_bazowy} do {rok}: {stat['spadki']}",
+        f"Mediana zmiany procentowej: {format_liczby(stat['mediana_zmiany_proc'])}%",
+        f"Największy wzrost procentowy: {wz['nazwa']} ({format_liczby(wz['zmiana_proc'])}%)",
+        f"Największy spadek procentowy: {sp['nazwa']} ({format_liczby(sp['zmiana_proc'])}%)",
+    ]
+
+
+def _para_zmiany(g: dict) -> dict:
+    return {"nazwa": g["nazwa"], "zmiana_proc": g["zmiana_proc"], "zmiana": g["zmiana"]}
+
+
 def _para(w: dict) -> dict:
     return {"nazwa": w["nazwa"], "wartosc": w["wartosc"]}
