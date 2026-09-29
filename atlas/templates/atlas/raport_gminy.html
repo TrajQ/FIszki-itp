@@ -15,11 +15,19 @@
     <p class="komunikat komunikat--blad">{{ blad }}</p>
     {% else %}
     <section class="raport-gminy__strona">
-        <h1>{{ gmina.nazwa }}</h1>
-        <p class="wyciszony">
-            {{ {'1': 'gmina miejska', '2': 'gmina wiejska', '3': 'gmina miejsko-wiejska'}[gmina.bdl_id[-1]] }}
-            · województwo {{ wojewodztwo.nazwa }} · TERYT {{ gmina.teryt }}
-        </p>
+        <div class="raport-gminy__naglowek">
+            <div>
+                <h1>{{ gmina.nazwa }}</h1>
+                <p class="wyciszony">
+                    {{ {'1': 'gmina miejska', '2': 'gmina wiejska', '3': 'gmina miejsko-wiejska'}[gmina.bdl_id[-1]] }}
+                    · województwo {{ wojewodztwo.nazwa }} · TERYT {{ gmina.teryt }}
+                </p>
+            </div>
+            <figure class="raport-gminy__polozenie">
+                <img id="mapa-polozenia" src="{{ url_for('atlas.raport_gminy_mapa', gmina_bdl_id=gmina.bdl_id) }}" alt="Położenie gminy {{ gmina.nazwa }} w województwie {{ wojewodztwo.nazwa }}" width="420" height="360">
+                <figcaption class="wyciszony">Położenie w województwie · granice: PRG, GUGiK</figcaption>
+            </figure>
+        </div>
 
         {% if not wskazniki %}
         <p class="komunikat komunikat--ostrzezenie">Zestaw wskaźników raportu jest pusty. <a href="{{ url_for('atlas.raport_gminy_wybor') }}">Dodaj wskaźniki</a> — np. ludność, saldo migracji, bezrobotni.</p>

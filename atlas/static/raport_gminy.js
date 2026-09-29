@@ -119,6 +119,19 @@
         }
     });
 
+    // Mapa położenia: przy błędzie PRG (np. brak sieci) zostaje sam podpis z przyczyną.
+    const mapaPolozenia = document.getElementById("mapa-polozenia");
+    async function brakMapy() {
+        const figura = mapaPolozenia.closest("figure");
+        figura.classList.add("raport-gminy__polozenie--brak");
+        const odpowiedz = await fetch(mapaPolozenia.src).catch(() => null);
+        const przyczyna = odpowiedz ? await odpowiedz.text() : "brak połączenia z aplikacją";
+        figura.querySelector("figcaption").textContent = `Mapa położenia niedostępna: ${przyczyna}`;
+    }
+    // Obrazek mógł się już nie wczytać, zanim ten skrypt podpiął obsługę błędu.
+    if (mapaPolozenia.complete && mapaPolozenia.naturalWidth === 0) brakMapy();
+    else mapaPolozenia.addEventListener("error", brakMapy);
+
     document.getElementById("data-raportu").textContent = new Date().toLocaleDateString("pl-PL");
     wczytajWszystkie();
 })();

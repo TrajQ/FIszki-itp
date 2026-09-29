@@ -142,3 +142,62 @@ def _polnoc() -> list[str]:
         f'<polygon points="{x},{y - 30} {x - 10},{y} {x},{y - 7} {x + 10},{y}" fill="#1d1d1f"/>',
         f'<text x="{x}" y="{y + 18}" font-size="14" font-weight="700" fill="#1d1d1f" text-anchor="middle">N</text>',
     ]
+
+
+# ---------- Mapa położenia gminy w raporcie gminy (ETAP 73) ----------
+
+KOLOR_TLA_GMIN = "#e5e5ea"
+KOLOR_GMINY = "#0071e3"
+
+
+def polozenie_gminy_svg(granice: dict, teryt_gminy: str, szerokosc: int = 420, wysokosc: int = 360) -> str:
+    """Mała mapa: gminy województwa szare, wybrana gmina wyróżniona;
+    podziałka i północ. To samo odwzorowanie co kartogram."""
+    cechy = [c for c in granice["features"] if _pierscienie(c["geometry"])]
+    if not any(c["properties"].get("teryt") == teryt_gminy for c in cechy):
+        raise ValueError("W granicach PRG nie ma tej gminy.")
+    min_lon, min_lat, max_lon, max_lat = _zasieg(cechy)
+    wsp_dlugosci = math.cos(math.radians((min_lat + max_lat) / 2))
+    margines, dol = 12, 34
+    szer_stopni = (max_lon - min_lon) * wsp_dlugosci
+    wys_stopni = max_lat - min_lat
+    skala = min((szerokosc - 2 * margines) / szer_stopni, (wysokosc - margines - dol) / wys_stopni)
+    przesun_x = margines + ((szerokosc - 2 * margines) - szer_stopni * skala) / 2
+    przesun_y = margines + ((wysokosc - margines - dol) - wys_stopni * skala) / 2
+
+    def punkt(lon: float, lat: float) -> str:
+        return f"{przesun_x + (lon - min_lon) * wsp_dlugosci * skala:.1f},{przesun_y + (max_lat - lat) * skala:.1f}"
+
+    def sciezka(cecha) -> str:
+        return " ".join(
+            "M" + " L".join(punkt(lon, lat) for lon, lat in p) + " Z" for p in _pierscienie(cecha["geometry"])
+        )
+
+    czesci = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{szerokosc}" height="{wysokosc}" viewBox="0 0 {szerokosc} {wysokosc}" '
+        f'font-family="Helvetica, Arial, sans-serif"><rect width="{szerokosc}" height="{wysokosc}" fill="#ffffff"/>',
+        '<g stroke="#ffffff" stroke-width="0.5" stroke-linejoin="round">',
+    ]
+    wybrana = None
+    for cecha in cechy:
+        if cecha["properties"].get("teryt") == teryt_gminy:
+            wybrana = cecha  # rysujemy na końcu, żeby obrys był na wierzchu
+            continue
+        czesci.append(f'<path d="{sciezka(cecha)}" fill="{KOLOR_TLA_GMIN}" fill-rule="evenodd"/>')
+    nazwa = escape(wybrana["properties"].get("nazwa") or teryt_gminy)
+    czesci.append(
+        f'</g><path d="{sciezka(wybrana)}" fill="{KOLOR_GMINY}" fill-rule="evenodd" stroke="#1d1d1f" stroke-width="1.2">'
+        f"<title>{nazwa}</title></path>"
+    )
+    km_na_px = KM_NA_STOPIEN / skala
+    km = dlugosc_podzialki_km(km_na_px, maks_px=szerokosc / 3)
+    dl = km / km_na_px
+    y = wysokosc - 18
+    czesci += [
+        f'<rect x="{margines}" y="{y}" width="{dl / 2:.1f}" height="5" fill="#1d1d1f"/>',
+        f'<rect x="{margines + dl / 2:.1f}" y="{y}" width="{dl / 2:.1f}" height="5" fill="#ffffff" stroke="#1d1d1f" stroke-width="1"/>',
+        f'<text x="{margines + dl + 6:.1f}" y="{y + 6}" font-size="11" fill="#1d1d1f">{km:g} km</text>',
+        f'<polygon points="{szerokosc - 20},{y - 16} {szerokosc - 27},{y + 4} {szerokosc - 20},{y - 1} {szerokosc - 13},{y + 4}" fill="#1d1d1f"/>',
+        "</svg>",
+    ]
+    return "\n".join(czesci)

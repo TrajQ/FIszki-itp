@@ -1415,3 +1415,13 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: zmiana stanu i uwag, przeciągnięcie o 23 m,
   zapis, oznaczenie ręczne (jasny i ciemny motyw); test starej bazy
 - `DECISIONS.md`: D-078
+
+## ETAP 73 — Atlas: mapa położenia w raporcie gminy
+Data: 2026-09-29
+Status: zamknięty
+
+- `mapa_svg.polozenie_gminy_svg`, trasa `.../mapa.svg`, nagłówek raportu
+  z mapą, obsługa błędu w `raport_gminy.js`
+- Sprawdzone w przeglądarce z podstawionymi granicami i z błędem PRG
+- Nie sprawdzone tutaj: prawdziwe granice PRG (sieć zablokowana)
+- `DECISIONS.md`: D-079

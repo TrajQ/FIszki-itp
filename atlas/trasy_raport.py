@@ -13,13 +13,15 @@ Funkcje z routes.py wołamy przez moduł (routes._wartosci_wskaznika),
 
 from dataclasses import asdict
 
-from flask import abort, jsonify, render_template, request
+import os
+
+from flask import Response, abort, jsonify, render_template, request
 
 from dane import bdl, gemini
 from dane.bdl import BladBDL
 
-from . import baza, raport, routes, statystyki
-from .baza import z_cache
+from . import baza, granice, mapa_svg, raport, routes, statystyki
+from .baza import folder_modulu, z_cache
 from .routes import atlas_bp
 
 
@@ -175,3 +177,16 @@ def raport_gminy_opis(gmina_bdl_id):
         return jsonify({"opis": gemini.opisz_gmine(fakty), "fakty": fakty})
     except gemini.BladGemini as e:
         return jsonify({"blad": str(e), "fakty": fakty}), 502
+
+
+@atlas_bp.route("/raport-gminy/<gmina_bdl_id>/mapa.svg")
+def raport_gminy_mapa(gmina_bdl_id):
+    """Mapa położenia gminy w województwie (ETAP 73) — granice z PRG,
+    z tej samej pamięci podręcznej co kartogram."""
+    try:
+        gmina, wojewodztwo = _gmina_albo_404(gmina_bdl_id)
+        kolekcja = granice.granice_gmin(wojewodztwo["teryt"], os.path.join(folder_modulu(), "granice"))
+        svg = mapa_svg.polozenie_gminy_svg(kolekcja, gmina["teryt"])
+    except (BladBDL, granice.BladGranic, ValueError) as e:
+        return Response(str(e), status=502, mimetype="text/plain")
+    return Response(svg, mimetype="image/svg+xml")

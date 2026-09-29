@@ -976,3 +976,39 @@ button.przelacznik__opcja--aktywna:hover {
         padding: 0;
     }
 }
+
+/* ETAP 73: mapa położenia gminy w raporcie */
+.raport-gminy__naglowek {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 24px;
+    align-items: start;
+}
+
+.raport-gminy__polozenie {
+    margin: 0;
+}
+
+.raport-gminy__polozenie img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--linia);
+    border-radius: var(--promien-maly);
+    background: #ffffff;
+}
+
+.raport-gminy__polozenie figcaption {
+    margin-top: 4px;
+    font-size: 11px;
+}
+
+.raport-gminy__polozenie--brak img {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    .raport-gminy__naglowek {
+        grid-template-columns: 1fr;
+    }
+}

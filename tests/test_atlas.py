@@ -1009,3 +1009,41 @@ def test_raport_gminy_opis_sprawdza_liczby(raport_client, monkeypatch):
     Odpowiedz.text = "Kraków ma 900 mieszkańców."  # liczba spoza faktów
     r = c.post(f"/atlas/raport-gminy/{GMINA}/opis")
     assert r.status_code == 502 and "900" in r.get_json()["blad"] and r.get_json()["fakty"]
+
+
+# ---------- ETAP 73: mapa położenia gminy ----------
+
+
+def _kwadrat(teryt, x, y, nazwa="G"):
+    return {"type": "Feature", "properties": {"teryt": teryt, "nazwa": nazwa},
+            "geometry": {"type": "Polygon", "coordinates": [[[x, y], [x + 0.2, y], [x + 0.2, y + 0.1], [x, y + 0.1], [x, y]]]}}
+
+
+def test_polozenie_gminy_svg():
+    from atlas import mapa_svg
+
+    kolekcja = {"type": "FeatureCollection", "features": [_kwadrat("1261011", 19.9, 50.0, "Kraków <&>"), _kwadrat("1212033", 19.5, 50.0)]}
+    svg = mapa_svg.polozenie_gminy_svg(kolekcja, "1261011")
+    assert svg.count("<path") == 2 and mapa_svg.KOLOR_GMINY in svg and mapa_svg.KOLOR_TLA_GMIN in svg
+    assert "Kraków &lt;&amp;&gt;" in svg and " km</text>" in svg
+    assert svg.index(mapa_svg.KOLOR_TLA_GMIN) < svg.index(mapa_svg.KOLOR_GMINY)  # wybrana na wierzchu
+    with pytest.raises(ValueError):
+        mapa_svg.polozenie_gminy_svg(kolekcja, "9999999")
+
+
+def test_trasa_mapy_raportu_gminy(raport_client, monkeypatch):
+    from atlas import granice
+
+    kolekcja = {"type": "FeatureCollection", "features": [_kwadrat("1261011", 19.9, 50.0), _kwadrat("1212033", 19.5, 50.0)]}
+    wywolania = []
+    monkeypatch.setattr(granice, "granice_gmin", lambda teryt, folder: wywolania.append(teryt) or kolekcja)
+    r = raport_client.get(f"/atlas/raport-gminy/{GMINA}/mapa.svg")
+    assert r.status_code == 200 and r.mimetype == "image/svg+xml" and wywolania == ["12"]
+    assert f"/atlas/raport-gminy/{GMINA}/mapa.svg" in raport_client.get(f"/atlas/raport-gminy/{GMINA}").get_data(as_text=True)
+
+    def blad(teryt, folder):
+        raise granice.BladGranic("Błąd połączenia z PRG")
+
+    monkeypatch.setattr(granice, "granice_gmin", blad)
+    r = raport_client.get(f"/atlas/raport-gminy/{GMINA}/mapa.svg")
+    assert r.status_code == 502 and "PRG" in r.get_data(as_text=True)

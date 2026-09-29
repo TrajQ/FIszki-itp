@@ -59,6 +59,6 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 72 (teren: poprawianie punktów — zamknięty)
-Ostatni ZIP: releases/warsztat_etap72_20260929.zip
-Testy: 416 passed / 0 failed
+ETAP: 73 (atlas: mapa położenia w raporcie gminy — zamknięty)
+Ostatni ZIP: releases/warsztat_etap73_20260929.zip
+Testy: 418 passed / 0 failed

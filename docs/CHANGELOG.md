@@ -536,3 +536,9 @@
   oznaczenie „poprawione ręcznie” w tabeli, dymku, raporcie, GeoJSON i CSV.
 - Stare bazy dostają nowe kolumny automatycznie.
 - Dodano `DECISIONS.md` D-078 i 2 testy.
+
+## ETAP 73 — 2026-09-29
+- Atlas: mapa położenia gminy w Raporcie gminy (gminy województwa,
+  wyróżniona gmina, podziałka, północ; przy błędzie PRG — podpis z
+  przyczyną).
+- Dodano `DECISIONS.md` D-079 i 2 testy.

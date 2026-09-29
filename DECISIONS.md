@@ -1700,3 +1700,19 @@ ręcznego położenia zachowuje uczciwość danych w raporcie.
 **Odrzucone alternatywy:**
 - Przechowywanie historii wszystkich zmian — więcej kodu niż potrzeba;
   zostaje data ostatniej poprawki.
+
+## D-079 — Raport gminy: mapa położenia z granic PRG
+Data: 2026-09-29
+
+**Decyzja:** Raport gminy ma w nagłówku mapę położenia
+(`/atlas/raport-gminy/<id>/mapa.svg`, `mapa_svg.polozenie_gminy_svg`):
+gminy województwa na szaro, wybrana gmina wyróżniona i narysowana na
+wierzchu, podziałka, północ. Granice z tej samej pamięci podręcznej PRG
+co kartogram, to samo odwzorowanie. Obrazek ładuje się niezależnie od
+tabeli; przy błędzie PRG zostaje podpis z przyczyną.
+
+**Uzasadnienie:** Wydruk raportu bez lokalizacji gminy był niepełny;
+kod rysowania granic już był w module.
+
+**Odrzucone alternatywy:**
+- Mapa na podkładzie kafelkowym — zależna od sieci przy druku.
