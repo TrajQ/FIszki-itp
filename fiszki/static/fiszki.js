@@ -383,26 +383,52 @@ przyciskZapiszPropozycje.addEventListener("click", async () => {
     );
     przyciskZapiszPropozycje.disabled = true;
     let zapisane = 0;
-    for (const li of wybrane) {
-        const [pytanie, odpowiedz] = li.querySelectorAll("textarea");
-        if (!pytanie.value.trim() || !odpowiedz.value.trim()) continue;
-        const wynik = await fetch(URL_FISZKI, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                strona: stronaPropozycji,
-                fragment_tekstu: li.dataset.fragment,
-                pytanie: pytanie.value.trim(),
-                odpowiedz: odpowiedz.value.trim(),
-            }),
-        });
-        if (wynik.ok) zapisane += 1;
+    let nieudane = 0;
+    try {
+        for (const li of wybrane) {
+            const [pytanie, odpowiedz] = li.querySelectorAll("textarea");
+            if (!pytanie.value.trim() || !odpowiedz.value.trim()) {
+                nieudane += 1;
+                li.classList.add("propozycja--blad");
+                continue;
+            }
+            let ok = false;
+            try {
+                const wynik = await fetch(URL_FISZKI, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        strona: stronaPropozycji,
+                        fragment_tekstu: li.dataset.fragment,
+                        pytanie: pytanie.value.trim(),
+                        odpowiedz: odpowiedz.value.trim(),
+                    }),
+                });
+                ok = wynik.ok;
+            } catch (e) {
+                ok = false;
+            }
+            // Zapisane znikają z listy; nieudane zostają do poprawy i ponownej próby.
+            if (ok) {
+                zapisane += 1;
+                li.remove();
+            } else {
+                nieudane += 1;
+                li.classList.add("propozycja--blad");
+            }
+        }
+    } finally {
+        przyciskZapiszPropozycje.disabled = false;
     }
-    przyciskZapiszPropozycje.disabled = false;
-    przyciskZapiszPropozycje.hidden = true;
-    listaPropozycji.replaceChildren();
-    statusPropozycji.className = "komunikat komunikat--sukces";
-    statusPropozycji.textContent = `Zapisano fiszki: ${zapisane} (strona ${stronaPropozycji}).`;
+    const zostalo = listaPropozycji.querySelectorAll(".propozycja").length;
+    przyciskZapiszPropozycje.hidden = zostalo === 0;
+    if (nieudane) {
+        statusPropozycji.className = "komunikat komunikat--blad";
+        statusPropozycji.textContent = `Zapisano ${zapisane}, nie udało się zapisać ${nieudane} (zaznaczone na czerwono) — popraw i spróbuj ponownie.`;
+    } else {
+        statusPropozycji.className = "komunikat komunikat--sukces";
+        statusPropozycji.textContent = `Zapisano fiszki: ${zapisane} (strona ${stronaPropozycji}).`;
+    }
     await odswiezListeFiszek();
 });
 

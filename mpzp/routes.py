@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from flask import Blueprint, abort, jsonify, render_template, request
+from shapely.errors import GEOSException
 from shapely.geometry import Point, mapping
 
 from dane.uldk import BladULDK, Dzialka
@@ -248,10 +249,15 @@ def raport():
             u["kolor"] = KOLORY_RAPORTU[kolor_symbolu[u["przeznaczenie"]] % len(KOLORY_RAPORTU)]
         # Na szkicu całe wydzielenia wokół działki, przycięte do okolicy.
         otoczenie = dzialka.geometria.buffer(dzialka.geometria.length * 0.15)
-        for wydzielenie, _ in pary:
+        for wydzielenie, czesc in pary:
             symbol = wydzielenie.atrybuty.get(gmina.pole_przeznaczenia) or "?"
-            if symbol in kolor_symbolu:
-                czesci.append((wydzielenie.geometria.intersection(otoczenie), kolor_symbolu[symbol]))
+            if symbol not in kolor_symbolu:
+                continue
+            try:
+                ksztalt = wydzielenie.geometria.intersection(otoczenie)
+            except GEOSException:
+                ksztalt = czesc  # awaryjnie sama część w działce
+            czesci.append((ksztalt, kolor_symbolu[symbol]))
         if not udzialy and blad is None:
             blad = "Brak planu miejscowego dla tej działki."
 

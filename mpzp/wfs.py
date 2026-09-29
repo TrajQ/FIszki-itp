@@ -12,6 +12,8 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 
 import requests
+from shapely import make_valid
+from shapely.errors import GEOSException
 from shapely.geometry import MultiPolygon, Point, Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.strtree import STRtree
@@ -69,12 +71,19 @@ def wydzielenia_dzialki(gmina: Gmina, dzialka: BaseGeometry) -> list[tuple[Wydzi
     (wydzielenie, część działki w tym wydzieleniu); puste części pomija.
     """
     warstwa = _warstwa(gmina)
+    if not dzialka.is_valid:
+        dzialka = make_valid(dzialka)
     wynik = []
     for indeks in warstwa.drzewo.query(dzialka):
         wydzielenie = warstwa.wydzielenia[indeks]
-        if not wydzielenie.geometria.intersects(dzialka):
+        try:
+            if not wydzielenie.geometria.intersects(dzialka):
+                continue
+            czesc = wydzielenie.geometria.intersection(dzialka)
+        except GEOSException:
+            # Geometria nie do naprawienia — pomijamy to jedno wydzielenie,
+            # zamiast wywracać całe sprawdzenie działki.
             continue
-        czesc = wydzielenie.geometria.intersection(dzialka)
         if not czesc.is_empty and czesc.area > 0:
             wynik.append((wydzielenie, czesc))
     return wynik
@@ -157,6 +166,10 @@ def _sparsuj_cechy(cecha, pole_geometrii: str) -> Wydzielenie | None:
 
     if geometria is None:
         return None
+    # Dane planów zdarzają się z wielokątami przecinającymi same siebie —
+    # na takich przecięcie z działką kończy się błędem GEOS. Naprawiamy od razu.
+    if not geometria.is_valid:
+        geometria = make_valid(geometria)
     return Wydzielenie(geometria=geometria, atrybuty=atrybuty)
 
 

@@ -384,3 +384,29 @@ def test_szkic_svg_ma_sciezki():
     assert szkic["dzialka"].startswith("M ")
     assert len(szkic["czesci"]) == 1
     assert szkic["viewbox"].startswith("0 0 ")
+
+
+# ---------- poprawki z przeglądu ETAPów 18–21 ----------
+
+
+def test_parser_naprawia_wielokat_przecinajacy_sam_siebie():
+    gml = """<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2"
+      xmlns:app="x" numberMatched="1" numberReturned="1"><wfs:member><app:W>
+      <app:shape><gml:Polygon><gml:exterior><gml:LinearRing>
+        <gml:posList>52.399 16.899 52.402 16.902 52.399 16.902 52.402 16.899 52.399 16.899</gml:posList>
+      </gml:LinearRing></gml:exterior></gml:Polygon></app:shape><app:symb_t>MN</app:symb_t>
+    </app:W></wfs:member></wfs:FeatureCollection>"""
+    wydzielenia, _, _ = mpzp_wfs._sparsuj_kolekcje(gml, "shape")
+    assert wydzielenia[0].geometria.is_valid
+
+
+def test_wydzielenia_dzialki_nie_wywraca_sie_na_zlej_geometrii(monkeypatch):
+    from shapely.geometry import Polygon as P
+
+    kokarda = P([(16.899, 52.399), (16.902, 52.402), (16.902, 52.399), (16.899, 52.402)])
+    dobre = Wydzielenie(box(16.899, 52.399, 16.902, 52.402), {"symb_t": "ZP"})
+    monkeypatch.setitem(
+        mpzp_wfs._cache, GMINA_PILOTAZOWA.teryt_prefiks, mpzp_wfs._WarstwaGminy([Wydzielenie(kokarda, {"symb_t": "MN"}), dobre])
+    )
+    pary = mpzp_wfs.wydzielenia_dzialki(GMINA_PILOTAZOWA, box(16.9, 52.4, 16.901, 52.401))
+    assert [w.atrybuty["symb_t"] for w, _ in pary] == ["ZP"]

@@ -600,3 +600,25 @@ Zrobione:
 
 Testy: 170 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap21_20260929.zip
+
+## ETAP 22 — Poprawki z przeglądu kodu (ETAPy 18–21)
+Data: 2026-09-29
+Status: zamknięty
+
+Przegląd ETAPów 18–21 wykazał 2 błędy — oba odtworzone i naprawione:
+1. MPZP: wielokąt planu przecinający sam siebie (częsty w danych gmin)
+   powodował `GEOSException` przy liczeniu podziału działki → błąd 500
+   także dla kliknięć, które wcześniej działały. Geometrie z WFS są
+   teraz naprawiane (`make_valid`) przy wczytywaniu, a przecięcie jest
+   zabezpieczone — nienaprawialne wydzielenie jest pomijane, reszta działa
+   (także w raporcie)
+2. Fiszki: przy częściowo nieudanym zapisie propozycji ze strony lista
+   była czyszczona i niezapisane propozycje przepadały; przy zerwanym
+   połączeniu przycisk zostawał zablokowany. Teraz zapisane znikają,
+   nieudane zostają oznaczone na czerwono do ponownej próby, przycisk
+   zawsze wraca (`try/finally`) — sprawdzone w przeglądarce z
+   przechwyconym błędem 500
+- Testy: 2 nowe
+
+Testy: 172 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap22_20260929.zip

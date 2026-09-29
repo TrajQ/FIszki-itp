@@ -598,3 +598,20 @@ odcina szum obliczeń sieciowych.
   same indeksy gwarantują porównanie „komórka w komórkę”.
 - Uzupełnianie brakujących komórek zerem — odrzucone: fałszowałoby
   zmianę dostępności.
+
+## D-029 — Naprawa geometrii przy wczytywaniu danych WFS
+Data: 2026-09-29
+
+**Decyzja:** Każda geometria wydzielenia z WFS, która nie jest poprawna
+(np. przecina sama siebie), jest naprawiana `shapely.make_valid` od razu
+przy parsowaniu; operacje przecięcia są dodatkowo chronione — błąd GEOS
+pomija jedno wydzielenie zamiast całego zapytania.
+
+**Uzasadnienie:** Dane planów miejscowych przygotowują różne biura i
+narzędzia; niepoprawne wielokąty to norma, nie wyjątek. Naprawa w jednym
+miejscu (przy wczytaniu) chroni wszystkie późniejsze operacje:
+punkt-w-wielokącie, podział działki, szkic w raporcie.
+
+**Odrzucone alternatywy:**
+- `buffer(0)` — odrzucone: potrafi zgubić części wielokątów typu
+  „kokarda”; `make_valid` zachowuje obie części.

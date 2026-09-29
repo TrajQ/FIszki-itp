@@ -166,3 +166,9 @@
   mapa zmian czasu dojścia.
 - Drugi syntetyczny plik przykładowy (scenariusz „nowa szkoła”).
 - Dodano `DECISIONS.md` D-028 i testy.
+
+## ETAP 22 — 2026-09-29
+- MPZP: naprawa niepoprawnych geometrii z WFS (brak błędu 500 przy
+  podziale działki).
+- Fiszki: niezapisane propozycje ze strony nie przepadają przy błędzie.
+- Dodano testy regresji.
