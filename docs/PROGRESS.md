@@ -1113,3 +1113,19 @@ Status: zamknięty
 
 Testy: 320 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap49_20260929.zip
+
+## ETAP 50 — Fiszki: tematy
+Data: 2026-09-29
+Status: zamknięty
+
+- `tematy.normalizuj/ustaw/tematy_fiszek/wszystkie`, tabela
+  `tematy_fiszek` (ON DELETE CASCADE)
+- Filtr `temat` w `/powtorka`, `/powtorka/kolejka`, `/quiz`,
+  `/quiz/pytania`, `/druk`
+- Przy okazji: ręczny zapis fiszki nie sprawdzał odpowiedzi serwera
+- Sprawdzone w przeglądarce (lista tematów, edycja, zapamiętany temat
+  nowych fiszek, powtórka z tematu)
+- `DECISIONS.md`: D-055
+
+Testy: 324 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap50_20260929.zip

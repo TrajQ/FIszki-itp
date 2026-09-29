@@ -10,7 +10,7 @@
         <div>
             <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) if pdf else url_for('fiszki.index') }}">‹ Wróć</a>
             <h1>Fiszki do druku</h1>
-            <p class="wyciszony">{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }} · {{ fiszki | length }} kart.
+            <p class="wyciszony">{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }}{% if temat %} · temat: {{ temat }}{% endif %} · {{ fiszki | length }} kart.
                 Wytnij po linii ciągłej, złóż na pół po przerywanej — pytanie z przodu, odpowiedź z tyłu.</p>
         </div>
         <button type="button" onclick="window.print()" {{ 'disabled' if not fiszki }}>Drukuj</button>

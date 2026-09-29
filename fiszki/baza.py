@@ -38,6 +38,14 @@ CREATE TABLE IF NOT EXISTS powtorki (
 -- ETAP 18: dziennik każdej odpowiedzi w powtórce — do statystyk nauki.
 -- Bez klucza obcego z kaskadą celowo: usunięcie fiszki nie kasuje
 -- historii nauki (liczba powtórek w danym dniu się nie zmienia).
+-- ETAP 50: tematy fiszek (wiele na fiszkę). Kaskada: usunięcie fiszki
+-- usuwa jej tematy.
+CREATE TABLE IF NOT EXISTS tematy_fiszek (
+    fiszka_id INTEGER NOT NULL REFERENCES fiszki(id) ON DELETE CASCADE,
+    temat TEXT NOT NULL,
+    PRIMARY KEY (fiszka_id, temat)
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,

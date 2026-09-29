@@ -21,7 +21,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import powtorki, quiz as quiz_fiszek, statystyki_nauki
+from . import powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
 from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
@@ -62,6 +62,7 @@ def index():
         pudelka=_liczby_w_pudelkach(),
         nauka=statystyki_nauki.policz(db, powtorki.dzisiaj()),
         najtrudniejsze=quiz_fiszek.najtrudniejsze(db),
+        tematy=tematy.wszystkie(db, _WARUNEK_DO_POWTORKI, dzis),
     )
 
 
@@ -71,6 +72,15 @@ _WARUNEK_DO_POWTORKI = (
     "fiszki.id IS NOT NULL AND "
     "(powtorki.fiszka_id IS NULL OR powtorki.nastepna_powtorka <= :dzis)"
 )
+
+
+# Filtr po temacie (ETAP 50) — dokładna pisownia z listy tematów.
+_WARUNEK_TEMATU = "fiszki.id IN (SELECT fiszka_id FROM tematy_fiszek WHERE temat = :temat)"
+
+
+def _temat_z_zapytania() -> str | None:
+    temat = " ".join((request.args.get("temat") or "").split())
+    return temat or None
 
 
 def podsumowanie() -> dict:
@@ -134,7 +144,8 @@ def upload():
 @fiszki_bp.route("/<int:pdf_id>/")
 def widok_pdf(pdf_id):
     pdf = _pobierz_pdf_albo_404(pdf_id)
-    return render_template("fiszki/pdf.html", pdf=pdf)
+    wszystkie_tematy = [t["temat"] for t in tematy.wszystkie(get_db(), _WARUNEK_DO_POWTORKI, powtorki.dzisiaj().isoformat())]
+    return render_template("fiszki/pdf.html", pdf=pdf, tematy=wszystkie_tematy)
 
 
 @fiszki_bp.route("/<int:pdf_id>/plik")
@@ -152,7 +163,8 @@ def lista_fiszek(pdf_id):
     fiszki = db.execute(
         "SELECT * FROM fiszki WHERE pdf_id = ? ORDER BY strona, id", (pdf_id,)
     ).fetchall()
-    return jsonify([dict(f) for f in fiszki])
+    po_fiszce = tematy.tematy_fiszek(db)
+    return jsonify([{**dict(f), "tematy": po_fiszce.get(f["id"], [])} for f in fiszki])
 
 
 @fiszki_bp.route("/<int:pdf_id>/szkic", methods=["POST"])
@@ -202,8 +214,9 @@ def druk():
     """Karty do wycięcia i złożenia na pół (pytanie | odpowiedź)."""
     pdf_id = request.args.get("pdf_id", type=int)
     pdf = _pobierz_pdf_albo_404(pdf_id) if pdf_id is not None else None
-    fiszki = _fiszki_do_eksportu(pdf_id)
-    return render_template("fiszki/druk.html", pdf=pdf, fiszki=fiszki)
+    temat = _temat_z_zapytania()
+    fiszki = _fiszki_do_eksportu(pdf_id, temat)
+    return render_template("fiszki/druk.html", pdf=pdf, fiszki=fiszki, temat=temat)
 
 
 # ---------- Quiz ABCD (ETAP 26) ----------
@@ -215,7 +228,7 @@ DOMYSLNA_LICZBA_PYTAN = 10
 def quiz():
     pdf_id = request.args.get("pdf_id", type=int)
     pdf = _pobierz_pdf_albo_404(pdf_id) if pdf_id is not None else None
-    return render_template("fiszki/quiz.html", pdf=pdf)
+    return render_template("fiszki/quiz.html", pdf=pdf, temat=_temat_z_zapytania())
 
 
 @fiszki_bp.route("/quiz/pytania")
@@ -229,7 +242,11 @@ def quiz_pytania():
     db = get_db()
     # Dystraktory bierzemy ze wszystkich fiszek, pytania — z wybranego zakresu.
     wszystkie = [dict(w) for w in db.execute("SELECT * FROM fiszki ORDER BY id").fetchall()]
-    zakres = [f for f in wszystkie if pdf_id is None or f["pdf_id"] == pdf_id]
+    temat = _temat_z_zapytania()
+    z_tematem = {f["id"] for f in _fiszki_do_eksportu(None, temat)} if temat else None
+    zakres = [
+        f for f in wszystkie if (pdf_id is None or f["pdf_id"] == pdf_id) and (z_tematem is None or f["id"] in z_tematem)
+    ]
     if not zakres:
         return jsonify({"blad": "Brak fiszek w tym zakresie."}), 404
 
@@ -257,6 +274,10 @@ def zapisz_fiszke(pdf_id):
 
     if not isinstance(strona, int) or not fragment_tekstu or not pytanie or not odpowiedz:
         abort(400, "Brak wymaganych pól fiszki.")
+    try:
+        lista_tematow = tematy.normalizuj(dane.get("tematy"))
+    except tematy.BladTematow as e:
+        abort(400, str(e))
 
     db = get_db()
     cursor = db.execute(
@@ -264,10 +285,11 @@ def zapisz_fiszke(pdf_id):
            VALUES (?, ?, ?, ?, ?, ?)""",
         (pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, datetime.now().isoformat()),
     )
+    tematy.ustaw(db, cursor.lastrowid, lista_tematow)
     db.commit()
 
     nowa = db.execute("SELECT * FROM fiszki WHERE id = ?", (cursor.lastrowid,)).fetchone()
-    return jsonify(dict(nowa)), 201
+    return jsonify({**dict(nowa), "tematy": tematy.tematy_fiszek(db).get(cursor.lastrowid, [])}), 201
 
 
 @fiszki_bp.route("/<int:pdf_id>/fiszki/<int:fiszka_id>", methods=["DELETE"])
@@ -290,28 +312,44 @@ def edytuj_fiszke(pdf_id, fiszka_id):
     # w źródle, więc zmiana ich oderwałaby fiszkę od PDF-a.
     if not pytanie or not odpowiedz:
         abort(400, "Pytanie i odpowiedź nie mogą być puste.")
+    try:
+        # Bez pola „tematy” tematy zostają bez zmian (stare wywołania).
+        lista_tematow = tematy.normalizuj(dane["tematy"]) if "tematy" in dane else None
+    except tematy.BladTematow as e:
+        abort(400, str(e))
 
     db = get_db()
     cursor = db.execute(
         "UPDATE fiszki SET pytanie = ?, odpowiedz = ? WHERE id = ? AND pdf_id = ?",
         (pytanie, odpowiedz, fiszka_id, pdf_id),
     )
-    db.commit()
     if cursor.rowcount == 0:
         abort(404)
+    if lista_tematow is not None:
+        tematy.ustaw(db, fiszka_id, lista_tematow)
+    db.commit()
 
     zmieniona = db.execute("SELECT * FROM fiszki WHERE id = ?", (fiszka_id,)).fetchone()
-    return jsonify(dict(zmieniona))
+    return jsonify({**dict(zmieniona), "tematy": tematy.tematy_fiszek(db).get(fiszka_id, [])})
 
 
-def _fiszki_do_eksportu(pdf_id=None):
-    """Fiszki jednego PDF-a albo (pdf_id=None) wszystkie, z nazwą pliku."""
+def _fiszki_do_eksportu(pdf_id=None, temat=None):
+    """Fiszki jednego PDF-a albo (pdf_id=None) wszystkie, z nazwą pliku;
+    opcjonalnie tylko z danego tematu."""
     db = get_db()
-    zapytanie = """SELECT fiszki.*, pdfy.nazwa_oryginalna
-                   FROM fiszki JOIN pdfy ON pdfy.id = fiszki.pdf_id"""
-    if pdf_id is None:
-        return db.execute(zapytanie + " ORDER BY pdfy.nazwa_oryginalna, strona, fiszki.id").fetchall()
-    return db.execute(zapytanie + " WHERE pdf_id = ? ORDER BY strona, fiszki.id", (pdf_id,)).fetchall()
+    warunki, parametry = [], {}
+    if pdf_id is not None:
+        warunki.append("pdf_id = :pdf_id")
+        parametry["pdf_id"] = pdf_id
+    if temat is not None:
+        warunki.append(_WARUNEK_TEMATU)
+        parametry["temat"] = temat
+    gdzie = (" WHERE " + " AND ".join(warunki)) if warunki else ""
+    kolejnosc = " ORDER BY strona, fiszki.id" if pdf_id is not None else " ORDER BY pdfy.nazwa_oryginalna, strona, fiszki.id"
+    return db.execute(
+        "SELECT fiszki.*, pdfy.nazwa_oryginalna FROM fiszki JOIN pdfy ON pdfy.id = fiszki.pdf_id" + gdzie + kolejnosc,
+        parametry,
+    ).fetchall()
 
 
 def _nazwa_pliku_eksportu(pdf, rozszerzenie):
@@ -442,7 +480,7 @@ def powtorka():
     pdf = _pobierz_pdf_albo_404(pdf_id) if pdf_id is not None else None
     # Tryb „przed egzaminem” (ETAP 39): wszystkie fiszki, bez zapisu ocen.
     wszystkie = request.args.get("wszystkie") == "1"
-    return render_template("fiszki/powtorka.html", pdf=pdf, wszystkie=wszystkie)
+    return render_template("fiszki/powtorka.html", pdf=pdf, wszystkie=wszystkie, temat=_temat_z_zapytania())
 
 
 @fiszki_bp.route("/powtorka/kolejka")
@@ -457,6 +495,10 @@ def kolejka_powtorki():
     wszystkie = request.args.get("wszystkie") == "1"
     parametry = {"dzis": powtorki.dzisiaj().isoformat()}
     warunek = "1 = 1" if wszystkie else _WARUNEK_DO_POWTORKI
+    temat = _temat_z_zapytania()
+    if temat:
+        warunek += " AND " + _WARUNEK_TEMATU
+        parametry["temat"] = temat
     filtr_pdf = ""
     if pdf_id is not None:
         filtr_pdf = "AND fiszki.pdf_id = :pdf_id"

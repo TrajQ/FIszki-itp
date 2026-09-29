@@ -9,7 +9,7 @@
         <div>
             <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) if pdf else url_for('fiszki.index') }}">‹ {{ 'Wróć do pliku' if pdf else 'Fiszki' }}</a>
             <h1>Quiz</h1>
-            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }} · wybierz jedną odpowiedź</p>
+            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }}{% if temat %} · temat: <strong>{{ temat }}</strong>{% endif %} · wybierz jedną odpowiedź</p>
         </div>
         <span id="postep-quizu" class="etykieta etykieta--akcent"></span>
     </div>
@@ -48,7 +48,7 @@
 
 {% block skrypty %}
 <script>
-    const URL_PYTANIA = "{{ url_for('fiszki.quiz_pytania', pdf_id=pdf['id']) if pdf else url_for('fiszki.quiz_pytania') }}";
+    const URL_PYTANIA = "{{ url_for('fiszki.quiz_pytania', pdf_id=pdf['id'] if pdf else None, temat=temat) }}";
     const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
 </script>
 <script src="{{ url_for('fiszki.static', filename='quiz.js') }}"></script>

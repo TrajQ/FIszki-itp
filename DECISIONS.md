@@ -1137,3 +1137,23 @@ zamiast cichego liczenia od zera. Pole usługi podpowiada usługi z pliku.
 obok istniejących?”. Bez połączenia nowy plik miałby czas tylko do
 nowych punktów i porównanie scenariuszy pokazywałoby bzdury. Połączony
 wynik nigdy nie jest gorszy od stanu wyjściowego (test).
+
+## D-055 — Tematy fiszek: osobna tabela wiele-do-wielu
+Data: 2026-09-29
+
+**Decyzja:** Tabela `tematy_fiszek (fiszka_id, temat)` z kaskadowym
+usuwaniem. Tematy wpisuje się po przecinku (przy edycji fiszki albo
+jako „temat nowych fiszek” na stronie PDF-a — zapamiętany w
+przeglądarce osobno dla pliku). Porównanie bez wielkości liter; zapisuje
+się pierwsza użyta pisownia. Filtr `temat` działa w kolejce powtórki
+(także „przed egzaminem”), quizie i kartach do druku. Strona fiszek ma
+listę tematów z liczbą fiszek i fiszek do powtórki dziś.
+
+**Uzasadnienie:** Przed kolokwium powtarza się materiał z konkretnych
+wykładów, a nie wszystko naraz; jeden PDF często obejmuje kilka tematów,
+a jeden temat — kilka PDF-ów, stąd relacja wiele-do-wielu zamiast
+kolumny. Osobna tabela nie wymaga migracji starych baz.
+
+**Odrzucone alternatywy:**
+- Kolumna `temat` w `fiszki` — odrzucone: jeden temat na fiszkę i
+  ALTER TABLE na istniejących bazach.

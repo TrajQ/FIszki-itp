@@ -68,6 +68,29 @@
 </form>
 </div>
 
+{# Polska odmiana: 1 fiszka, 2–4 fiszki (ale 12–14 fiszek), 5+ fiszek. #}
+{% macro odmiana_fiszek(n) %}{% if n == 1 %}fiszka{% elif n % 10 in [2, 3, 4] and n % 100 not in [12, 13, 14] %}fiszki{% else %}fiszek{% endif %}{% endmacro %}
+{% if tematy %}
+{# Tematy (ETAP 50): powtórka, quiz i druk tylko z jednego tematu. #}
+<section class="karta stos tematy">
+    <h3>Tematy</h3>
+    <ul class="lista-tematow">
+        {% for t in tematy %}
+        <li class="temat">
+            <span class="temat__nazwa">{{ t.temat }}</span>
+            <span class="wyciszony temat__liczby">{{ t.fiszki }} {{ odmiana_fiszek(t.fiszki) }}{% if t.do_powtorki %} · <strong>{{ t.do_powtorki }} dziś</strong>{% endif %}</span>
+            <span class="temat__akcje">
+                {% if t.do_powtorki %}<a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.powtorka', temat=t.temat) }}">Powtórka</a>{% endif %}
+                <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.powtorka', temat=t.temat, wszystkie=1) }}" title="Wszystkie fiszki tematu, bez zmiany harmonogramu">Przed egzaminem</a>
+                <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.quiz', temat=t.temat) }}">Quiz</a>
+                <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.druk', temat=t.temat) }}">Druk</a>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
 {% if nauka.powtorki_30_dni %}
 <section class="karta nauka">
     <div class="nauka__liczby">

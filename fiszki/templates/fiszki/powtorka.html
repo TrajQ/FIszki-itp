@@ -9,7 +9,7 @@
         <div>
             <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) if pdf else url_for('fiszki.index') }}">‹ {{ 'Wróć do pliku' if pdf else 'Fiszki' }}</a>
             <h1>{{ 'Przed egzaminem' if wszystkie else 'Powtórka' }}</h1>
-            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }}{% if wszystkie %} · wszystkie fiszki, oceny nie zmieniają harmonogramu{% endif %}</p>
+            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }}{% if temat %} · temat: <strong>{{ temat }}</strong>{% endif %}{% if wszystkie %} · wszystkie fiszki, oceny nie zmieniają harmonogramu{% endif %}</p>
         </div>
         <span id="postep-tekst" class="etykieta etykieta--akcent"></span>
     </div>
@@ -64,7 +64,7 @@
 
 {% block skrypty %}
 <script>
-    const URL_KOLEJKA = "{{ url_for('fiszki.kolejka_powtorki', pdf_id=pdf['id'] if pdf else None, wszystkie=1 if wszystkie else None) }}";
+    const URL_KOLEJKA = "{{ url_for('fiszki.kolejka_powtorki', pdf_id=pdf['id'] if pdf else None, wszystkie=1 if wszystkie else None, temat=temat) }}";
     const TRYB_EGZAMINU = {{ 'true' if wszystkie else 'false' }};
     const URL_POWTORKA = "{{ url_for('fiszki.powtorka') }}";
     const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";

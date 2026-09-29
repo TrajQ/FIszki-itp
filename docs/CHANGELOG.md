@@ -349,3 +349,11 @@
   obszary obsługi pokazują mieszkańców, którzy zyskali; podpowiedzi
   nazw usług z pliku.
 - Dodano `DECISIONS.md` D-054 i 3 testy.
+
+## ETAP 50 — 2026-09-29
+- Fiszki: tematy (np. „kolokwium 1”) — przy edycji i dla nowych fiszek,
+  etykiety na liście, lista tematów na stronie fiszek z powtórką, trybem
+  „przed egzaminem”, quizem i drukiem tylko z danego tematu.
+- Zapis nowej fiszki sprawdza odpowiedź serwera (wcześniej błąd zapisu
+  zamykał formularz bez komunikatu).
+- Dodano `fiszki/tematy.py`, `DECISIONS.md` D-055 i 4 testy.

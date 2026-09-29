@@ -823,3 +823,64 @@ button.przycisk--ocena-trudne:hover {
     font-size: 12px;
     color: var(--tekst-drugi);
 }
+
+/* ---------- ETAP 50: tematy ---------- */
+
+.lista-tematow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.temat {
+    display: grid;
+    grid-template-columns: minmax(120px, auto) 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.temat__nazwa {
+    font-weight: 600;
+}
+
+.temat__liczby {
+    font-size: 13px;
+}
+
+.temat__akcje {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.fiszka-tematy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.etykieta--temat {
+    background: rgba(94, 92, 230, 0.14);
+    color: #5e5ce6;
+}
+
+@media (max-width: 700px) {
+    .temat {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tematy-nowych {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--tekst-drugi);
+}

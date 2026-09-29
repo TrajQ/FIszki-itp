@@ -15,6 +15,23 @@ const przyciskPoprzednia = document.getElementById("strona-poprzednia");
 const przyciskNastepna = document.getElementById("strona-nastepna");
 const przyciskZaproponuj = document.getElementById("przycisk-zaproponuj");
 const formularzFiszki = document.getElementById("formularz-fiszki");
+
+// Temat nowych fiszek (ETAP 50) — zapamiętany osobno dla każdego pliku,
+// żeby przy kolejnym otwarciu PDF-a nie trzeba było go wpisywać.
+const poleTematowNowych = document.getElementById("pole-tematy-nowych");
+const kluczTematow = `fiszki.tematyNowych.${location.pathname}`;
+try {
+    poleTematowNowych.value = localStorage.getItem(kluczTematow) || "";
+} catch (e) {
+    // bez localStorage pole jest po prostu puste
+}
+poleTematowNowych.addEventListener("change", () => {
+    try {
+        localStorage.setItem(kluczTematow, poleTematowNowych.value.trim());
+    } catch (e) {
+        // zapamiętanie to tylko wygoda
+    }
+});
 const podgladFragmentu = document.getElementById("podglad-fragmentu");
 const statusGemini = document.getElementById("status-gemini");
 const polePytanie = document.getElementById("pole-pytanie");
@@ -144,16 +161,29 @@ przyciskZapisz.addEventListener("click", async () => {
         return;
     }
 
-    await fetch(URL_FISZKI, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            strona: zaznaczonyFragment.strona,
-            fragment_tekstu: zaznaczonyFragment.tekst,
-            pytanie,
-            odpowiedz,
-        }),
-    });
+    let wynik;
+    try {
+        wynik = await fetch(URL_FISZKI, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                strona: zaznaczonyFragment.strona,
+                fragment_tekstu: zaznaczonyFragment.tekst,
+                pytanie,
+                odpowiedz,
+                tematy: poleTematowNowych.value,
+            }),
+        });
+    } catch (e) {
+        statusGemini.textContent = "Błąd połączenia z serwerem — fiszka nie została zapisana.";
+        return;
+    }
+    // Formularz znika dopiero po udanym zapisie — inaczej treść przepadłaby po cichu.
+    if (!wynik.ok) {
+        statusGemini.textContent =
+            wynik.status === 400 ? "Nie zapisano: sprawdź tematy (najwyżej 10, każdy do 30 znaków)." : `Nie zapisano (błąd ${wynik.status}).`;
+        return;
+    }
 
     formularzFiszki.hidden = true;
     ukryjPrzyciskZaproponuj();
@@ -184,6 +214,17 @@ async function odswiezListeFiszek() {
         odpowiedzEl.className = "fiszka-odpowiedz";
         odpowiedzEl.textContent = fiszka.odpowiedz;
         li.append(pytanie, odpowiedzEl);
+        if (fiszka.tematy && fiszka.tematy.length) {
+            const tematyEl = document.createElement("div");
+            tematyEl.className = "fiszka-tematy";
+            for (const temat of fiszka.tematy) {
+                const znacznik = document.createElement("span");
+                znacznik.className = "etykieta etykieta--temat";
+                znacznik.textContent = temat;
+                tematyEl.appendChild(znacznik);
+            }
+            li.appendChild(tematyEl);
+        }
 
         const akcje = document.createElement("div");
         akcje.className = "fiszka-akcje";
@@ -226,6 +267,12 @@ function pokazEdycje(li, fiszka) {
     polePytanieEdycja.value = fiszka.pytanie;
     const poleOdpowiedzEdycja = document.createElement("textarea");
     poleOdpowiedzEdycja.value = fiszka.odpowiedz;
+    // Tematy (ETAP 50): po przecinku, np. „kolokwium 1, planowanie”.
+    const poleTematowEdycja = document.createElement("input");
+    poleTematowEdycja.type = "text";
+    poleTematowEdycja.value = (fiszka.tematy || []).join(", ");
+    poleTematowEdycja.placeholder = "np. kolokwium 1, planowanie";
+    poleTematowEdycja.setAttribute("list", "lista-tematow-podpowiedzi");
     const statusEdycji = document.createElement("p");
 
     const przyciskZapiszZmiany = przycisk("Zapisz zmiany", "", async () => {
@@ -238,10 +285,10 @@ function pokazEdycje(li, fiszka) {
         const wynik = await fetch(`${URL_FISZKI}/${fiszka.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pytanie, odpowiedz }),
+            body: JSON.stringify({ pytanie, odpowiedz, tematy: poleTematowEdycja.value }),
         });
         if (!wynik.ok) {
-            statusEdycji.textContent = "Nie udało się zapisać zmian.";
+            statusEdycji.textContent = wynik.status === 400 ? "Sprawdź tematy: najwyżej 10, każdy do 30 znaków." : "Nie udało się zapisać zmian.";
             return;
         }
         await odswiezListeFiszek();
@@ -252,12 +299,14 @@ function pokazEdycje(li, fiszka) {
     etykietaPytania.append("Pytanie", polePytanieEdycja);
     const etykietaOdpowiedzi = document.createElement("label");
     etykietaOdpowiedzi.append("Odpowiedź", poleOdpowiedzEdycja);
+    const etykietaTematow = document.createElement("label");
+    etykietaTematow.append("Tematy (po przecinku)", poleTematowEdycja);
     const przyciski = document.createElement("div");
     przyciski.className = "rzad";
     przyciski.append(przyciskZapiszZmiany, przyciskAnulujEdycje);
 
     statusEdycji.className = "wyciszony";
-    li.append(etykietaPytania, etykietaOdpowiedzi, statusEdycji, przyciski);
+    li.append(etykietaPytania, etykietaOdpowiedzi, etykietaTematow, statusEdycji, przyciski);
 }
 
 async function pokazWZrodle(fiszka) {
@@ -402,6 +451,7 @@ przyciskZapiszPropozycje.addEventListener("click", async () => {
                         fragment_tekstu: li.dataset.fragment,
                         pytanie: pytanie.value.trim(),
                         odpowiedz: odpowiedz.value.trim(),
+                        tematy: poleTematowNowych.value,
                     }),
                 });
                 ok = wynik.ok;

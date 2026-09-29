@@ -69,6 +69,11 @@
             </div>
         </div>
 
+        <label class="karta tematy-nowych">Temat nowych fiszek (opcjonalnie, po przecinku)
+            <input id="pole-tematy-nowych" type="text" placeholder="np. kolokwium 1" list="lista-tematow-podpowiedzi" maxlength="200">
+            <datalist id="lista-tematow-podpowiedzi">{% for t in tematy %}<option value="{{ t }}">{% endfor %}</datalist>
+        </label>
+
         <div class="karta stos">
             <div class="naglowek-panelu">
                 <h3>Fiszki z tego pliku</h3>
