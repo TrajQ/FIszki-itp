@@ -487,4 +487,4 @@ def porownanie():
 
 # Pozostałe trasy modułu — w osobnych plikach, rejestrują się na mpzp_bp.
 # Import na końcu, bo tamte pliki importują mpzp_bp z tego modułu.
-from . import trasy_narzedzia, trasy_zapisane  # noqa: E402, F401
+from . import trasy_kronika, trasy_narzedzia, trasy_zapisane  # noqa: E402, F401

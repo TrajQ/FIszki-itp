@@ -842,3 +842,71 @@ button.wpis-zapisany {
 .podzialka-porownania {
     color: var(--tekst);
 }
+
+/* ---------- Kronika zmian (ETAP 64) ---------- */
+.przelacznik-kroniki button.przycisk--drugi.aktywny {
+    background: var(--akcent);
+    color: #ffffff;
+}
+
+.kronika__suwak {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.kronika__suwak input[type="range"] {
+    flex: 1;
+    accent-color: var(--akcent);
+}
+
+.kronika__rok {
+    min-width: 3.5em;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.kronika__porownanie-wybor {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.kronika__porownanie-wybor[hidden],
+.kronika__suwak[hidden],
+.kronika__mapa[hidden] {
+    display: none;
+}
+
+.kronika__mapy {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.kronika__mapy--dwie {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.kronika__mapa {
+    height: calc(100vh - 330px);
+    min-height: 420px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.kronika__uwaga {
+    margin: 0;
+    font-size: 12px;
+}
+
+@media (max-width: 800px) {
+    .kronika__mapy--dwie {
+        grid-template-columns: 1fr;
+    }
+
+    .kronika__mapa {
+        height: 50vh;
+    }
+}

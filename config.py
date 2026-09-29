@@ -16,3 +16,10 @@ class Config:
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
     GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
     GUS_BDL_API_KEY = os.environ.get("GUS_BDL_API_KEY", "")
+
+    # ETAP 64: usługa WMS z archiwalnymi ortofotomapami (Kronika zmian w MPZP).
+    # Lata Warsztat odczytuje z GetCapabilities tej usługi — adres można
+    # zmienić tutaj, jeśli GUGiK go przeniesie.
+    ORTO_ARCHIWALNA_WMS = os.environ.get(
+        "ORTO_ARCHIWALNA_WMS", "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolutionTime"
+    )

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block tytul %}Kronika zmian — MPZP — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block klasa_body %}strona--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa działek</a>
+        <h1>Kronika zmian</h1>
+        <p>
+            {% if dzialka %}Działka <span class="identyfikator">{{ dzialka.id }}</span> na ortofotomapach z różnych lat.
+            {% else %}Ortofotomapy z różnych lat. Żeby zobaczyć granicę działki, otwórz kronikę z panelu działki na mapie MPZP.{% endif %}
+        </p>
+    </div>
+    <div class="rzad przelacznik-kroniki" role="group" aria-label="Tryb">
+        <button type="button" class="przycisk--drugi aktywny" data-tryb="suwak">Suwak lat</button>
+        <button type="button" class="przycisk--drugi" data-tryb="porownanie">Dwa lata obok siebie</button>
+    </div>
+</div>
+
+{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+
+<section class="karta stos kronika">
+    <div id="panel-suwaka" class="kronika__suwak">
+        <button id="rok-wstecz" type="button" class="przycisk--drugi" aria-label="Rok wcześniej">‹</button>
+        <input id="suwak-lat" type="range" min="0" max="0" value="0" step="1" disabled aria-label="Rok zdjęcia">
+        <button id="rok-dalej" type="button" class="przycisk--drugi" aria-label="Rok później">›</button>
+        <strong id="rok-suwaka" class="kronika__rok">…</strong>
+        <button id="odtworz" type="button" class="przycisk--drugi" disabled>▶ Odtwórz</button>
+    </div>
+    <div id="panel-porownania" class="kronika__porownanie-wybor" hidden>
+        <label>Lewa mapa <select id="rok-lewy"></select></label>
+        <label>Prawa mapa <select id="rok-prawy"></select></label>
+    </div>
+    <p id="uwaga-przedzial" class="wyciszony kronika__uwaga" hidden>Usługa podaje lata jako przedział — nie dla każdego roku w tym miejscu jest zdjęcie. Pusta mapa = brak nalotu w tym roku.</p>
+
+    <div id="mapy" class="kronika__mapy">
+        <div id="mapa-lewa" class="kronika__mapa"></div>
+        <div id="mapa-prawa" class="kronika__mapa" hidden></div>
+    </div>
+    <p class="wyciszony kronika__uwaga">Zdjęcia: ortofotomapa archiwalna GUGiK (usługa WMS, lata odczytane z jej opisu). Granica działki: ULDK — stan obecny, dawniej granice mogły być inne.</p>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_LATA = "{{ url_for('mpzp.kronika_lata') }}";
+    const DZIALKA = {{ dzialka | tojson }};
+    const PUNKT = {{ punkt | tojson }};
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('mpzp.static', filename='kronika.js') }}"></script>
+{% endblock %}

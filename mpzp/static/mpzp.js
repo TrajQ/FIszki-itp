@@ -179,8 +179,11 @@
         geoportal.target = "_blank";
         geoportal.rel = "noopener noreferrer";
         geoportal.title = "Działka w serwisie geoportal.gov.pl (ewidencja, ortofotomapa, plany)";
+        const kronika = element("a", "przycisk przycisk--tekst", "Kronika zmian");
+        kronika.href = `${URL_KRONIKA}?id=${encodeURIComponent(dzialka.id)}`;
+        kronika.title = "Ortofotomapy z różnych lat w miejscu tej działki";
         const linki = element("div", "rzad");
-        linki.append(kalkulator, raport, geojson, geoportal);
+        linki.append(kalkulator, raport, kronika, geojson, geoportal);
         naglowek.append(element("h3", "", "Działka"), linki);
         sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
         sekcja.appendChild(sekcjaZapisu(dzialka));

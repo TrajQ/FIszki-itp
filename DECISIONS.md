@@ -1494,3 +1494,28 @@ nie psuje reszty.
 - Gotowy zestaw wskaźników z identyfikatorami w kodzie — odrzucone
   (zgadywanie identyfikatorów).
 - Jedno zapytanie liczące cały raport — długie czekanie bez postępu.
+
+## D-070 — MPZP: Kronika zmian z latami odczytanymi z opisu usługi WMS
+Data: 2026-09-29
+
+**Decyzja:** Strona `/mpzp/kronika` (z panelu działki albo nagłówka
+MPZP) pokazuje ortofotomapy archiwalne w miejscu działki: suwak lat z
+odtwarzaniem albo dwa lata obok siebie na zsynchronizowanych mapach, z
+granicą działki z ULDK. Adres usługi WMS jest w konfiguracji
+(`ORTO_ARCHIWALNA_WMS`, domyślnie usługa archiwalna GUGiK
+„StandardResolutionTime”). Lat nie ma w kodzie: serwer
+(`dane/ortofoto.py`) czyta GetCapabilities (pamięć 24 h) i obsługuje
+dwa zapisy — wymiar czasu warstwy (lista dat → parametr TIME; przedział
+→ zapytanie o cały rok z ostrzeżeniem w interfejsie) albo osobną
+warstwę na rok (rok w nazwie/tytule). Kafelki pobiera przeglądarka
+(Leaflet WMS), jak podkład ortofotomapy w innych modułach.
+
+**Uzasadnienie:** Z tego środowiska nie da się sprawdzić, jakie lata i w
+jakiej postaci podaje usługa GUGiK — wpisanie ich z pamięci byłoby
+zgadywaniem. Opis usługi jest źródłem prawdy; gdy GUGiK zmieni adres,
+wystarczy wpis w `.env`.
+
+**Odrzucone alternatywy:**
+- Lista lat w kodzie — zgadywanie i starzenie się listy.
+- Pobieranie kafelków przez serwer Warsztatu — niepotrzebne pośrednictwo;
+  pozostałe mapy też biorą kafelki wprost z usług.

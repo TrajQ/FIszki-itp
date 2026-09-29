@@ -12,7 +12,8 @@ kogoś, kto wróci do niego za trzy miesiące.
 ## Moduły
 - atlas       — wskaźniki GUS BDL dla gmin, kartogramy, generowanie opisów,
                 raport gminy
-- mpzp        — czytnik planów miejscowych, działka → przeznaczenie
+- mpzp        — czytnik planów miejscowych, działka → przeznaczenie,
+                kronika zmian (ortofotomapy archiwalne)
 - fiszki      — generator fiszek z PDF z kotwicą w źródle
 - dostepnosc  — analiza dostępności pieszej, siatka H3 (czyta gotowe wyniki)
 - osiedle     — koncepcja osiedla rysowana na mapie: bilans terenu,
@@ -22,7 +23,6 @@ kogoś, kto wróci do niego za trzy miesiące.
                 Gemini z cytatami sprawdzanymi w tekście i kotwicą w PDF
 
 Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
-- mpzp        — „Kronika zmian”: ortofotomapy z różnych lat na suwaku
 - teren       — nowy moduł: inwentaryzacja w terenie (telefon zbiera dane
                 bez połączenia z Warsztatem — ten działa tylko na 127.0.0.1)
 
@@ -59,6 +59,6 @@ Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 63 (atlas: raport gminy — zamknięty)
-Ostatni ZIP: releases/warsztat_etap63_20260929.zip
-Testy: 382 passed / 0 failed
+ETAP: 64 (mpzp: kronika zmian — zamknięty)
+Ostatni ZIP: releases/warsztat_etap64_20260929.zip
+Testy: 389 passed / 0 failed

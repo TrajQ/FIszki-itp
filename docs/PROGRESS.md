@@ -1307,3 +1307,17 @@ Status: zamknięty
 - Nie sprawdzone tutaj: prawdziwe API BDL (sieć zablokowana), w tym
   nowe zapytanie o listę gmin — do sprawdzenia u autora
 - `DECISIONS.md`: D-069
+
+## ETAP 64 — MPZP: Kronika zmian
+Data: 2026-09-29
+Status: zamknięty
+
+- `dane/ortofoto.py` (GetCapabilities → lata), `mpzp/trasy_kronika.py`,
+  szablon `kronika.html`, `kronika.js`, style w `mpzp.css`
+- Sprawdzone w przeglądarce z atrapą usługi WMS (kafelki z rokiem z
+  parametru TIME): suwak, przyciski, dwa lata obok siebie, granica
+  działki (jasny i ciemny motyw)
+- Nie sprawdzone tutaj: prawdziwa usługa GUGiK (sieć zablokowana) —
+  do sprawdzenia u autora; jeśli lat nie ma, komunikat wskazuje
+  ustawienie ORTO_ARCHIWALNA_WMS
+- `DECISIONS.md`: D-070

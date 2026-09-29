@@ -18,6 +18,7 @@
         <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.kalkulator') }}">Kalkulator zabudowy</a>
         <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.skala_strona') }}">Skala mapy</a>
         <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.symbole') }}">Symbole planu</a>
+        <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.kronika') }}">Kronika zmian</a>
         <button id="przycisk-odswiez" type="button" class="przycisk--drugi" title="Ponowne pobranie warstwy planów Poznania (WFS)">Odśwież dane Poznania</button>
     </div>
 </div>
@@ -61,6 +62,7 @@
     const URL_PODPOWIEDZI = "{{ url_for('mpzp.podpowiedzi') }}";
     const URL_RAPORT = "{{ url_for('mpzp.raport') }}";
     const URL_KALKULATOR = "{{ url_for('mpzp.kalkulator') }}";
+    const URL_KRONIKA = "{{ url_for('mpzp.kronika') }}";
     const URL_GEOJSON = "{{ url_for('mpzp.eksport_geojson') }}";
     const URL_WARSTWY_KRAJOWE = "{{ url_for('mpzp.warstwy_krajowe') }}";
     const URL_POMIAR = "{{ url_for('mpzp.pomiar') }}";

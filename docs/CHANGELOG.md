@@ -461,3 +461,12 @@
 - Dodano `atlas/raport.py`, `atlas/trasy_raport.py`,
   `bdl.gminy_wojewodztwa`, `gemini.opisz_gmine`, `DECISIONS.md` D-069
   i 5 testów.
+
+## ETAP 64 — 2026-09-29
+- MPZP: **Kronika zmian** — ortofotomapy archiwalne GUGiK w miejscu
+  działki: suwak lat z odtwarzaniem, dwa lata obok siebie na
+  zsynchronizowanych mapach, granica działki z ULDK; lata odczytywane z
+  opisu usługi WMS (wymiar czasu albo warstwy z rokiem); link z panelu
+  działki i z nagłówka MPZP.
+- Dodano `dane/ortofoto.py`, `mpzp/trasy_kronika.py`, ustawienie
+  `ORTO_ARCHIWALNA_WMS` (`.env.example`), `DECISIONS.md` D-070 i 7 testów.
