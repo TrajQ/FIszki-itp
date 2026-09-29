@@ -43,7 +43,9 @@
 - Naprawiono wczytywanie PDF-a: wywołanie `getDocument` dostosowane do
   pdf.js 6.x.
 - Usunięto przypadkowy gitlink `FIszki-itp` (zagnieżdżone repozytorium).
-- Naprawiono pusty podgląd PDF-a: polyfill `Map.getOrInsertComputed`
-  (`polyfill_map.mjs`) i punkt wejścia workera `pdf_worker.mjs`.
-- Dodano `DECISIONS.md` D-007, D-008.
+- Naprawiono pusty podgląd PDF-a: pdf.js 6.3.289 w wersji legacy
+  (z polyfillami dla starszych przeglądarek); błąd wczytania PDF-a
+  wyświetlany na stronie.
+- Dodano `uruchom.sh`, `zainstaluj_ikone.sh` i `docs/URUCHOMIENIE.md`.
+- Dodano `DECISIONS.md` D-007, D-008 (zastąpiona), D-009, D-010.
 - Dodano testy edycji i eksportu.

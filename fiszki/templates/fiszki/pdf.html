@@ -12,6 +12,7 @@
 
     <div id="widok-glowny">
         <div id="widok-pdf">
+            <p id="blad-pdf" hidden></p>
             <div id="nawigacja-stron">
                 <button id="strona-poprzednia" type="button">← poprzednia</button>
                 <span id="numer-strony"></span>
@@ -50,7 +51,7 @@
         const URL_PLIK = "{{ url_for('fiszki.plik_pdf', pdf_id=pdf['id']) }}";
         const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
         const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
-        const URL_WORKER = "{{ url_for('fiszki.static', filename='pdf_worker.mjs') }}";
+        const URL_WORKER = "{{ url_for('fiszki.static', filename='pdfjs/pdf.worker.min.mjs') }}";
     </script>
     <script type="module" src="{{ url_for('fiszki.static', filename='fiszki.js') }}"></script>
 </body>

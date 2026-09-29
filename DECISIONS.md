@@ -152,6 +152,8 @@ zależności, format czytelny i łatwy do sprawdzenia w edytorze. Kolumna
 ## D-008 — Polyfill `Map.getOrInsertComputed` dla pdf.js 6.x
 Data: 2026-09-29
 
+**Status:** zastąpiona przez D-009 (polyfill usunięty).
+
 **Decyzja:** Zostajemy przy pdf.js 6.3.289 i dokładamy własny polyfill
 (`fiszki/static/polyfill_map.mjs`) dla `Map`/`WeakMap.prototype.getOrInsert`
 i `getOrInsertComputed`. Polyfill jest importowany jako pierwszy w
@@ -170,4 +172,53 @@ martwym kodem do usunięcia bez skutków ubocznych.
   sprawdzania zmian API `TextLayer`, więcej ryzyka niż polyfill.
 - Łatanie `pdf.min.mjs` / `pdf.worker.min.mjs` — odrzucone, zmiany w
   zminifikowanym kodzie zewnętrznym ginęłyby przy każdej aktualizacji.
+
+## D-009 — pdf.js w wersji legacy zamiast ręcznego polyfilla
+Data: 2026-09-29
+
+**Decyzja:** Pliki `fiszki/static/pdfjs/pdf.min.mjs` i
+`pdf.worker.min.mjs` pochodzą z `legacy/build/` paczki pdfjs-dist 6.3.289
+(ta sama wersja i to samo API co wcześniej, inny wariant buildu). Ręczny
+polyfill z D-008 (`polyfill_map.mjs`, `pdf_worker.mjs`) usunięty.
+Dodatkowo `fiszki.js` pokazuje błąd wczytania PDF-a na stronie
+(`#blad-pdf`) zamiast milczeć.
+
+**Uzasadnienie:** Po D-008 PDF nadal nie wyświetlał się na Linux Mint.
+Nowoczesny build pdf.js 6.3 używa wielu świeżych API przeglądarki
+(`Promise.try`, `Uint8Array.fromBase64`, `Math.sumPrecise`,
+`Float16Array`, `URL.parse`, `Map.getOrInsertComputed`…) — łatanie ich po
+kolei to zabawa w kotka i myszkę. Build legacy jest oficjalnie
+przygotowany przez projekt pdf.js dla starszych przeglądarek i zawiera
+polyfille (core-js). Sprawdzone w Chromium z usuniętymi w/w API: strona
+się rysuje, warstwa tekstu i „pokaż w źródle” działają. Minimalne
+wymaganie: przeglądarka z `Promise.withResolvers` (Firefox 121+, Chrome
+119+, czyli od początku 2024 r.).
+
+**Odrzucone alternatywy:**
+- Dalsze ręczne polyfille (D-008) — odrzucone, nie wiadomo, ile ich
+  jeszcze brakuje; każdy to kod do utrzymania.
+- Powrót do pdf.js 5.x — odrzucone, legacy 6.3 rozwiązuje problem bez
+  zmiany API w `fiszki.js`.
+
+## D-010 — Skrypt startowy i ikona na pulpit
+Data: 2026-09-29
+
+**Decyzja:** `uruchom.sh` startuje `app.py` z `.venv`, czeka aż serwer
+odpowie i otwiera przeglądarkę (`xdg-open`); zamknięcie okna terminala
+zatrzymuje serwer. `zainstaluj_ikone.sh` generuje `warsztat.desktop` na
+pulpicie i w `~/.local/share/applications` ze ścieżką bezwzględną do
+projektu i oznacza go jako zaufany dla Nemo. Instrukcja w
+`docs/URUCHOMIENIE.md`.
+
+**Uzasadnienie:** CLAUDE.md zakłada uruchamianie ikoną z pulpitu, a
+takiego mechanizmu nie było. Terminal widoczny (`Terminal=true`), bo to
+w nim widać błędy serwera i łatwo aplikację zamknąć. Plik `.desktop`
+generowany, a nie trzymany w repo, bo wymaga ścieżki bezwzględnej,
+różnej na każdym komputerze.
+
+**Odrzucone alternatywy:**
+- Usługa systemd użytkownika (serwer w tle stale) — odrzucone, zbędna
+  złożoność i serwer działający, gdy nikt go nie używa.
+- Gotowy `.desktop` w repo ze stałą ścieżką — odrzucone, psuje się po
+  przeniesieniu katalogu.
 

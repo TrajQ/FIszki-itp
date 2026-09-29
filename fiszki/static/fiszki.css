@@ -10,6 +10,11 @@
     position: relative;
 }
 
+#blad-pdf {
+    color: #b00020;
+    font-weight: bold;
+}
+
 #nawigacja-stron {
     margin-bottom: 0.5rem;
 }

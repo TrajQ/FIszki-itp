@@ -1,7 +1,6 @@
 // Moduł ES (nie IIFE) — wymagane przez pdf.js, który jest wektorowany
 // wyłącznie jako .mjs. Tag <script type="module"> daje ten sam efekt
 // izolacji zasięgu co IIFE, więc nie łamie to duchu konwencji z CLAUDE.md.
-import "./polyfill_map.mjs"; // musi być przed pdf.js
 import * as pdfjsLib from "./pdfjs/pdf.min.mjs";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = URL_WORKER;
@@ -23,15 +22,23 @@ const poleOdpowiedz = document.getElementById("pole-odpowiedz");
 const przyciskZapisz = document.getElementById("zapisz-fiszke");
 const przyciskAnuluj = document.getElementById("anuluj-fiszke");
 const listaFiszekEl = document.getElementById("lista-fiszek");
+const bladPdfEl = document.getElementById("blad-pdf");
 
 let dokumentPdf = null;
 let numerStrony = 1;
 let zaznaczonyFragment = null; // { tekst, strona }
 
 async function wczytajDokument() {
-    // pdf.js 6.x przyjmuje wyłącznie obiekt parametrów (sam string z URL już nie działa).
-    dokumentPdf = await pdfjsLib.getDocument({ url: URL_PLIK }).promise;
-    await renderujStrone(1);
+    try {
+        // pdf.js 6.x przyjmuje wyłącznie obiekt parametrów (sam string z URL już nie działa).
+        dokumentPdf = await pdfjsLib.getDocument({ url: URL_PLIK }).promise;
+        await renderujStrone(1);
+    } catch (e) {
+        // Bez tego błąd widać tylko w konsoli, a strona jest po prostu pusta.
+        bladPdfEl.textContent = `Nie udało się wyświetlić PDF-a: ${e.message}`;
+        bladPdfEl.hidden = false;
+        console.error(e);
+    }
 }
 
 async function renderujStrone(nr) {
