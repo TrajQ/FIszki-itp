@@ -98,3 +98,47 @@ def test_endpoint_nowa_siatka_i_bledy(client):
     assert client.post("/dostepnosc/z-punktow", json={"usluga": "", "punkty": [list(SRODEK)], "obszar": [52.40, 16.91, 52.41, 16.94]}).status_code == 400
     assert client.post("/dostepnosc/z-punktow", json={"usluga": "x", "punkty": [list(SRODEK)], "obszar": [52.40, 16.91, 52.41, 16.94], "kretosc": "nan"}).status_code == 400
     assert client.post("/dostepnosc/z-punktow", json={"usluga": "x", "punkty": [list(SRODEK)], "baza": "../../etc.csv"}).status_code == 404
+
+
+# ---------- ETAP 48: raport i mapa do druku ----------
+
+from dostepnosc import druk  # noqa: E402
+
+PRZYKLAD = "przyklad_poznan_syntetyczny.csv"
+
+
+def test_legenda_minut_liczy_komorki_w_klasach():
+    dane = wyniki.wczytaj_csv("h3,czas_min\n" + "\n".join(
+        f"{k},{t}" for k, t in zip(sorted(h3.grid_disk(h3.latlng_to_cell(*SRODEK, 9), 1)), [1, 4, 7, 12, 18, 25, 40])
+    ))
+    legenda = druk.legenda(wyniki.analiza_kolumny(dane, "czas_min"))
+    assert [opis for _, opis, _ in legenda] == ["≤ 5 min", "5 – 10 min", "10 – 15 min", "15 – 20 min", "20 – 30 min", "> 30 min"]
+    assert [ile for _, _, ile in legenda] == [2, 1, 1, 1, 1, 1]
+    assert legenda[0][0] == druk.KOLORY_MINUT[0]
+
+
+def test_podzialka_w_metrach():
+    assert druk.dlugosc_podzialki_m(10) == 1000  # 1 km = 100 px
+    assert druk.dlugosc_podzialki_m(0.1) == 100  # nic się nie mieści: najkrótsza
+
+
+def test_mapa_svg_i_raport_z_punktami(client):
+    odpowiedz = client.get(f"/dostepnosc/mapa.svg?plik={PRZYKLAD}&kolumna=czas_szkola_min")
+    assert odpowiedz.status_code == 200 and odpowiedz.mimetype == "image/svg+xml"
+    svg = odpowiedz.get_data(as_text=True)
+    assert svg.count("<polygon") > 600 and "Dane syntetyczne" in svg and ">N</text>" in svg
+
+    laczny = client.get(f"/dostepnosc/raport?plik={PRZYKLAD}&kolumna=laczny").get_data(as_text=True)
+    assert "Najsłabsze ogniwo" in laczny and "≤ 15 min" in laczny and "Mieszkańcy" in laczny
+
+    nowy = client.post(
+        "/dostepnosc/z-punktow", json={"usluga": "Żłobek", "punkty": [list(SRODEK)], "baza": PRZYKLAD}
+    ).get_json()["plik"]
+    raport = client.get(f"/dostepnosc/raport?plik={nowy}&kolumna=czas_zlobek_min").get_data(as_text=True)
+    assert "Obszary obsługi — Żłobek" in raport
+    svg = client.get(f"/dostepnosc/mapa.svg?plik={nowy}&kolumna=czas_zlobek_min&pobierz=1")
+    assert "attachment" in svg.headers["Content-Disposition"]
+    assert "punkt usługi" in svg.get_data(as_text=True) and "Szybki model" in svg.get_data(as_text=True)
+
+    assert client.get(f"/dostepnosc/mapa.svg?plik={PRZYKLAD}&kolumna=brak").status_code == 404
+    assert client.get(f"/dostepnosc/raport?plik={PRZYKLAD}&kolumna=brak").status_code == 404

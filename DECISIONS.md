@@ -1102,3 +1102,23 @@ barier (rzeki, tory) — to nie zastępuje analizy sieciowej.
   nowe zależności (np. networkx/osmnx), duże pobrania, a z kontenera, w
   którym powstaje kod, OSM jest niedostępny do sprawdzenia.
 - Liczenie w przeglądarce — odrzucone: liczby tylko z serwera.
+
+## D-053 — Raport dostępności do druku: własny SVG w module
+Data: 2026-09-29
+
+**Decyzja:** `dostepnosc/druk.py` rysuje mapę A4 (heksagony H3, punkty
+usług, legenda z liczbą komórek, podziałka w m/km, strzałka północy,
+źródło danych), a `/dostepnosc/raport` składa stronę do druku: mapa,
+mediana/min/maks, udział powierzchni i mieszkańców w zasięgu 5–30 min,
+najsłabsze ogniwo, obszary obsługi, luki. Przypis mówi, skąd są liczby
+(przykład syntetyczny / szybki model z parametrami / wgrany plik).
+
+**Uzasadnienie:** Wynik analizy dostępności trafia do pracy
+zaliczeniowej — potrzebna jest mapa z obowiązkowymi elementami i tabela,
+a nie zrzut ekranu. Implementacja osobna od atlas/mapa_svg.py, bo
+CLAUDE.md zabrania wspólnych abstrakcji dla dwóch modułów; wspólna
+jest tylko idea (te same elementy mapy i format A4).
+
+**Odrzucone alternatywy:**
+- Wspólny moduł „mapa do druku” dla atlasu i dostępności — odrzucone
+  (zasada projektu, patrz wyżej).

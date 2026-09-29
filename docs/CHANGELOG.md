@@ -335,3 +335,10 @@
   numerowane punkty na mapie.
 - Mapa dostępności zostaje w oknie przy przewijaniu panelu.
 - Dodano `dostepnosc/model.py`, `DECISIONS.md` D-052 i 12 testów.
+
+## ETAP 48 — 2026-09-29
+- Dostępność: „Raport do druku ↗” — mapa A4 (SVG do pobrania) z legendą,
+  podziałką, północą, punktami usług i źródłem oraz tabele: udział w
+  zasięgu 5–30 min (powierzchnia i mieszkańcy), najsłabsze ogniwo,
+  obszary obsługi, luki; druk do PDF (mapa na pierwszej stronie).
+- Dodano `dostepnosc/druk.py`, `DECISIONS.md` D-053 i 3 testy.

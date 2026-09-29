@@ -22,6 +22,10 @@
         const parametry = new URLSearchParams({ plik: NAZWA_PLIKU, kolumna });
         if (po) parametry.set("po", po);
         linkGeojson.href = `${URL_GEOJSON}?${parametry}`;
+        // Raport do druku jest dla jednego wskaźnika — w porównaniu scenariuszy ukryty.
+        const linkRaport = document.getElementById("link-raport");
+        linkRaport.hidden = Boolean(po);
+        linkRaport.href = `${URL_RAPORT}?${new URLSearchParams({ plik: NAZWA_PLIKU, kolumna })}`;
     }
     // Zmiana czasu (po − przed): szybciej = niebieski, wolniej = pomarańczowy, szary = bez zmian.
     const KOLORY_ZMIANY = ["#1d4ed8", "#60a5fa", "#d1d1d6", "#fb923c", "#c2410c"];

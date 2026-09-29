@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block tytul %}Raport dostępności — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-dostepnosci{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('dostepnosc.static', filename='dostepnosc.css') }}">{% endblock %}
+
+{% macro liczba(x) %}{{ ('%.1f' % x).rstrip('0').rstrip('.').replace('.', ',') }}{% endmacro %}
+{% macro tys(x) %}{{ '{:,.0f}'.format(x).replace(',', ' ') }}{% endmacro %}
+
+{% block tresc %}
+{% set s = r.analiza.statystyki %}
+{% set parametry = {'plik': r.plik, 'kolumna': r.kolumna} %}
+<div class="raport-dostepnosci">
+    <div class="raport-dostepnosci__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('dostepnosc.index', plik=r.plik) }}">‹ Dostępność</a>
+        <div class="rzad">
+            <a class="przycisk przycisk--drugi" href="{{ url_for('dostepnosc.mapa_do_druku', pobierz=1, **parametry) }}">Pobierz mapę SVG</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>
+    </div>
+
+    <img class="raport-dostepnosci__mapa" src="{{ url_for('dostepnosc.mapa_do_druku', **parametry) }}" alt="Mapa: {{ r.tytul }}">
+
+    <section class="raport-dostepnosci__strona">
+        <h2>{{ r.tytul }}</h2>
+        <p class="wyciszony">{{ r.podtytul }}</p>
+
+        <div class="raport-dostepnosci__liczby">
+            <div><span>Mediana</span><strong>{{ liczba(s.mediana) }}{{ ' min' if r.analiza.minuty }}</strong></div>
+            <div><span>Minimum</span><strong>{{ liczba(s.min) }}{{ ' min' if r.analiza.minuty }}</strong></div>
+            <div><span>Maksimum</span><strong>{{ liczba(s.max) }}{{ ' min' if r.analiza.minuty }}</strong></div>
+            {% if s.ludnosc_razem is defined %}<div><span>Mieszkańcy</span><strong>{{ tys(s.ludnosc_razem) }}</strong></div>{% endif %}
+        </div>
+
+        {% if r.progi_raportu %}
+        <h3>Udział w zasięgu</h3>
+        <table class="tabela">
+            <tr><th>Czas dojścia</th>{% for m in progi_minut %}<th class="liczba">≤ {{ m }} min</th>{% endfor %}</tr>
+            <tr><td>Powierzchnia (komórki)</td>{% for p in r.progi_raportu %}<td class="liczba">{{ liczba(p.procent) }}%</td>{% endfor %}</tr>
+            {% if r.progi_raportu[0].procent_ludnosci is defined %}
+            <tr><td>Mieszkańcy</td>{% for p in r.progi_raportu %}<td class="liczba">{{ liczba(p.procent_ludnosci) }}% <span class="wyciszony">({{ tys(p.ludnosc) }})</span></td>{% endfor %}</tr>
+            {% endif %}
+        </table>
+        {% endif %}
+
+        {% if r.analiza.najslabsze_ogniwo %}
+        <h3>Najsłabsze ogniwo</h3>
+        <table class="tabela">
+            <tr><th>Usługa najdalej od komórki</th><th class="liczba">Komórki</th><th class="liczba">Udział</th></tr>
+            {% for o in r.analiza.najslabsze_ogniwo %}<tr><td>{{ o.kolumna }}</td><td class="liczba">{{ o.komorki }}</td><td class="liczba">{{ liczba(o.procent) }}%</td></tr>{% endfor %}
+        </table>
+        {% endif %}
+
+        {% if r.punkty %}
+        <h3>Obszary obsługi — {{ r.punkty_pliku.usluga }}</h3>
+        <table class="tabela">
+            <tr><th>Punkt</th><th class="liczba">Komórki</th>{% if r.punkty[0].ludnosc is defined %}<th class="liczba">Mieszkańcy</th>{% endif %}<th class="liczba">Śr. czas</th><th class="liczba">Maks. czas</th></tr>
+            {% for o in r.punkty %}
+            <tr><td>{{ o.nr }}</td><td class="liczba">{{ o.komorki }}</td>{% if o.ludnosc is defined %}<td class="liczba">{{ tys(o.ludnosc) }}</td>{% endif %}
+                <td class="liczba">{{ liczba(o.sredni_czas_min) ~ ' min' if o.sredni_czas_min is not none else '—' }}</td>
+                <td class="liczba">{{ liczba(o.maks_czas_min) ~ ' min' if o.maks_czas_min is not none else '—' }}</td></tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+
+        {% if s.luki %}
+        <h3>Luki w dostępności (powyżej 15 min)</h3>
+        <table class="tabela">
+            <tr><th>Komórka H3</th><th class="liczba">Czas</th>{% if s.luki[0].ludnosc is defined %}<th class="liczba">Mieszkańcy</th>{% endif %}</tr>
+            {% for l in s.luki %}<tr><td class="identyfikator">{{ l.h3 }}</td><td class="liczba">{{ liczba(l.wartosc) }} min</td>{% if l.ludnosc is defined %}<td class="liczba">{{ tys(l.ludnosc) }}</td>{% endif %}</tr>{% endfor %}
+        </table>
+        {% endif %}
+
+        <p class="przypis">{% for p in r.przypisy %}{{ p }} {% endfor %}</p>
+    </section>
+</div>
+{% endblock %}

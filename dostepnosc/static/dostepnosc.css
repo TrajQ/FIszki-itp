@@ -444,3 +444,84 @@ button.model__wstawiaj--aktywny {
     padding: 6px 4px;
     white-space: nowrap;
 }
+
+/* Raport do druku (ETAP 48) */
+.raport-dostepnosci {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 1123px;
+    margin: 0 auto;
+}
+
+.raport-dostepnosci__akcje {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.raport-dostepnosci__mapa {
+    width: 100%;
+    height: auto;
+    border-radius: var(--promien);
+    background: #ffffff;
+    box-shadow: var(--cien);
+}
+
+.raport-dostepnosci__strona {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+    border-radius: var(--promien);
+    background: var(--tlo-karty);
+    box-shadow: var(--cien);
+}
+
+.raport-dostepnosci__strona h2,
+.raport-dostepnosci__strona h3 {
+    margin: 12px 0 0;
+}
+
+.raport-dostepnosci__liczby {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+.raport-dostepnosci__liczby div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--tlo-wyciszone);
+}
+
+.raport-dostepnosci__liczby span {
+    font-size: 12px;
+    color: var(--tekst-drugi);
+}
+
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 8mm;
+    }
+
+    .strona-raportu-dostepnosci .pasek-nawigacji,
+    .raport-dostepnosci__akcje {
+        display: none;
+    }
+
+    .raport-dostepnosci__mapa {
+        box-shadow: none;
+        border-radius: 0;
+        break-after: page;
+    }
+
+    .raport-dostepnosci__strona {
+        box-shadow: none;
+        padding: 0;
+    }
+}

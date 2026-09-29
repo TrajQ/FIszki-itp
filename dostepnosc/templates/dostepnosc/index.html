@@ -80,7 +80,10 @@
                 <ol id="lista-luk" class="lista-luk"></ol>
             </div>
             <p id="meta-pliku" class="wyciszony meta-pliku"></p>
-            <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
+            <div class="rzad">
+                <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
+                <a id="link-raport" class="przycisk przycisk--drugi" href="#" target="_blank" title="Mapa A4 z legendą, podziałką i źródłem + tabele — do wydruku albo PDF">Raport do druku ↗</a>
+            </div>
         </section>
 
         <section id="obszary-obslugi" class="karta stos" hidden>
@@ -151,6 +154,7 @@
     const URL_PLIK = "{{ url_for('dostepnosc.opis_pliku', nazwa='__PLIK__') }}";
     const URL_POROWNANIE = "{{ url_for('dostepnosc.porownanie') }}";
     const URL_GEOJSON = "{{ url_for('dostepnosc.eksport_geojson') }}";
+    const URL_RAPORT = "{{ url_for('dostepnosc.raport') }}";
     const URL_Z_PUNKTOW = "{{ url_for('dostepnosc.z_punktow') }}";
     const URL_INDEKS = "{{ url_for('dostepnosc.index') }}";
     const URL_KOMORKA = "{{ url_for('dostepnosc.komorka', nazwa='__PLIK__', indeks='__H3__') }}";

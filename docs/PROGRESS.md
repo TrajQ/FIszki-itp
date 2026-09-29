@@ -1084,3 +1084,17 @@ Status: zamknięty
 
 Testy: 314 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap47_20260929.zip
+
+## ETAP 48 — Dostępność: raport do druku
+Data: 2026-09-29
+Status: zamknięty
+
+- `druk.kolory_klas`, `druk.legenda`, `druk.mapa_svg` (limit 30 000
+  komórek), `/dostepnosc/mapa.svg`, `/dostepnosc/raport`
+- Link „Raport do druku” odpowiada bieżącemu wskaźnikowi; ukryty w
+  trybie porównania scenariuszy
+- Sprawdzone w przeglądarce (plik z punktami usług)
+- `DECISIONS.md`: D-053
+
+Testy: 317 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap48_20260929.zip

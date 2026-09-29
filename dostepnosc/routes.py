@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 import math
 
-from . import model
+from . import druk, model
 from . import wyniki as wyniki_h3
 from .wyniki import BladWynikow
 
@@ -318,3 +318,81 @@ def usun(nazwa):
     if os.path.isfile(_sciezka_punktow(nazwa)):
         os.remove(_sciezka_punktow(nazwa))
     return redirect(url_for("dostepnosc.index"))
+
+
+# ---------- Raport do druku (ETAP 48) ----------
+
+PROGI_RAPORTU_MIN = (5, 10, 15, 20, 30)
+
+
+def _raport(plik: str, kolumna: str) -> dict:
+    """Analiza + opis do mapy i strony raportu. kolumna=laczny — wszystkie usługi."""
+    dane = _wczytaj(plik)
+    if kolumna == "laczny":
+        analiza = wyniki_h3.analiza_laczna(dane)
+        tytul = "Czas dojścia do wszystkich usług naraz"
+    else:
+        analiza = wyniki_h3.analiza_kolumny(dane, kolumna)
+        tytul = f"Czas dojścia: {kolumna}" if analiza["minuty"] else f"Wskaźnik: {kolumna}"
+    stat = analiza["statystyki"]
+    punkty_pliku = _punkty_pliku(plik)
+    punkty = punkty_pliku["obszary"] if punkty_pliku and punkty_pliku["kolumna"] == kolumna else None
+
+    przypisy = []
+    if plik in PLIKI_PRZYKLADOWE:
+        przypisy.append("Dane syntetyczne (plik przykładowy) — nie opisują rzeczywistej dostępności.")
+    elif punkty:
+        przypisy.append(
+            f"Szybki model: odległość w linii prostej × krętość {punkty_pliku['kretosc']:g}, prędkość "
+            f"{punkty_pliku['predkosc_kmh']:g} km/h".replace(".", ",") + " — bez sieci ulic i barier."
+        )
+    else:
+        przypisy.append(f"Źródło: wyniki analizy z pliku {plik}.")
+    przypisy.append("Siatka heksagonalna H3 (Uber). Opracowanie w aplikacji Warsztat.")
+
+    krzywa = {p["minuty"]: p for p in stat.get("krzywa", [])}
+    return {
+        "plik": plik,
+        "kolumna": kolumna,
+        "analiza": analiza,
+        "tytul": tytul,
+        "podtytul": f"{plik} · rozdzielczość H3 {stat['rozdzielczosc']} · komórek: {stat['liczba_komorek']}",
+        "przypisy": przypisy,
+        "punkty": punkty,
+        "punkty_pliku": punkty_pliku if punkty else None,
+        "legenda": druk.legenda(analiza),
+        "progi_raportu": [_punkt_krzywej(krzywa, m) for m in PROGI_RAPORTU_MIN] if krzywa else [],
+    }
+
+
+def _punkt_krzywej(krzywa: dict, minuty: int) -> dict:
+    """Punkt krzywej dla progu. Krzywa kończy się przy pełnym pokryciu —
+    próg dalej niż jej koniec ma ten sam udział co ostatni punkt."""
+    return krzywa.get(minuty) or krzywa[max(krzywa)]
+
+
+@dostepnosc_bp.route("/mapa.svg")
+def mapa_do_druku():
+    try:
+        r = _raport(request.args.get("plik", ""), request.args.get("kolumna", ""))
+        svg = druk.mapa_svg(r["analiza"], r["tytul"], r["podtytul"], r["przypisy"], r["punkty"])
+    except KeyError:
+        return jsonify({"blad": "Plik nie ma takiego wskaźnika."}), 404
+    except (BladWynikow, ValueError) as e:
+        return jsonify({"blad": str(e)}), 422
+    naglowki = {}
+    if request.args.get("pobierz"):
+        nazwa = secure_filename(f"mapa_{r['plik'][:-4]}_{r['kolumna']}.svg")
+        naglowki["Content-Disposition"] = f"attachment; filename={nazwa}"
+    return Response(svg, mimetype="image/svg+xml", headers=naglowki)
+
+
+@dostepnosc_bp.route("/raport")
+def raport():
+    try:
+        r = _raport(request.args.get("plik", ""), request.args.get("kolumna", ""))
+    except KeyError:
+        abort(404, "Plik nie ma takiego wskaźnika.")
+    except BladWynikow as e:
+        abort(422, str(e))
+    return render_template("dostepnosc/raport.html", r=r, progi_minut=PROGI_RAPORTU_MIN)
