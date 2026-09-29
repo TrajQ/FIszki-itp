@@ -12,7 +12,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V10M9 20V4M15 20v-7M21 20V8"/></svg>
         </span>
         <h2>Atlas</h2>
-        <p class="karta__opis">Wskaźniki GUS BDL dla gmin, kartogramy i opisy wyników.</p>
+        <p class="karta__opis">Wskaźniki GUS dla gmin: kartogramy, zmiany w czasie, profil gminy, korelacje.</p>
         {% if p.atlas %}<span class="karta__meta">{{ p.atlas }} {{ 'zestaw' if p.atlas == 1 else 'zestawów' }} danych zapisanych lokalnie</span>{% endif %}
     </a>
     <a class="karta karta--link" href="{{ url_for('mpzp.index') }}">
@@ -20,7 +20,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
         </span>
         <h2>MPZP</h2>
-        <p class="karta__opis">Kliknij działkę na mapie i sprawdź jej przeznaczenie w planie miejscowym.</p>
+        <p class="karta__opis">Działka → przeznaczenie w planie, podział na przeznaczenia, raport, kalkulator zabudowy.</p>
         {% if p.mpzp and p.mpzp.ostatnia %}
         <span class="karta__meta">Ostatnio: <code>{{ p.mpzp.ostatnia.dzialka_id }}</code>
             <span class="etykieta etykieta--sukces">{{ p.mpzp.ostatnia.przeznaczenie or 'bez planu' }}</span></span>
@@ -31,7 +31,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg>
         </span>
         <h2>Fiszki</h2>
-        <p class="karta__opis">Fiszki z PDF-ów z kotwicą w źródle i powtórkami.</p>
+        <p class="karta__opis">Fiszki z PDF-ów z kotwicą w źródle, powtórki, quiz ABCD i statystyki nauki.</p>
         {% if p.fiszki and p.fiszki.fiszki %}
         <span class="karta__meta">
             {% if p.fiszki.do_powtorki %}<span class="etykieta etykieta--akcent">{{ p.fiszki.do_powtorki }} do powtórki dziś</span>
@@ -44,7 +44,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/><circle cx="12" cy="12" r="3"/></svg>
         </span>
         <h2>Dostępność</h2>
-        <p class="karta__opis">Dostępność piesza na siatce heksagonalnej H3.</p>
+        <p class="karta__opis">Dostępność piesza na siatce H3: miasto 15-minutowe, mieszkańcy, scenariusze.</p>
         {% if p.dostepnosc and p.dostepnosc.pliki %}<span class="karta__meta">Twoje pliki wyników: {{ p.dostepnosc.pliki }}</span>{% endif %}
     </a>
 </section>
