@@ -215,6 +215,12 @@
     let opoznienieMianownika = null;
     poleMianownik.addEventListener("input", () => {
         clearTimeout(opoznienieMianownika);
+        // Edycja tekstu ręcznie = rezygnacja z wybranego mianownika
+        // (inaczej mapa dalej dzieliłaby przez niewidoczny już wskaźnik).
+        if (mianownik && poleMianownik.value !== mianownik.nazwa) {
+            mianownik = null;
+            wyczyscMianownik.hidden = true;
+        }
         const fraza = poleMianownik.value.trim();
         if (fraza.length < 3) {
             podpowiedziMianownik.hidden = true;

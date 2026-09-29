@@ -54,6 +54,8 @@
             if (moj !== numer) return;
             bladEl.textContent = e.message;
             bladEl.hidden = false;
+            // Stare wyniki nie mogą udawać odpowiedzi na błędne dane.
+            for (const pole of formularz.querySelectorAll("[data-wynik]")) pole.textContent = "—";
         }
     }
 

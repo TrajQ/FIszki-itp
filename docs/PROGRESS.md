@@ -850,3 +850,24 @@ Zrobione:
 
 Testy: 217 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap32_20260929.zip
+
+## ETAP 33 — Poprawki z przeglądu kodu (ETAPy 28–32)
+Data: 2026-09-29
+Status: zamknięty
+
+Przegląd wykazał 4 błędy — wszystkie naprawione:
+1. Atlas: ręczne skasowanie lub zmiana tekstu mianownika nie wyłączała
+   go — mapa, eksport, profil i opis dalej dzieliły przez niewidoczny
+   wskaźnik; teraz edycja pola = rezygnacja z mianownika
+2. Skala: margines 0 był traktowany jak „nie podano” (20 mm), a ujemny
+   margines powiększał pole arkusza ponad papier → 0 działa, ujemny jest
+   błędem
+3. Skala i kalkulator zabudowy: „nan”, „inf”, „1e400” przechodziły jako
+   liczby i psuły odpowiedź JSON → wspólna `_liczba_skonczona`
+   odrzuca liczby nieskończone z czytelnym komunikatem
+4. Skala: po błędzie zostawały stare wyniki, które wyglądały jak wynik dla
+   nowych danych → czyszczone do „—”
+- Testy: 5 nowych
+
+Testy: 222 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap33_20260929.zip

@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime
 
 from flask import Blueprint, Response, abort, jsonify, render_template, request
@@ -218,6 +219,15 @@ def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
     return jsonify(dane), 200
 
 
+def _liczba_skonczona(tekst) -> float:
+    """float z pola formularza, ale tylko skończony: „nan”, „inf”, „1e400”
+    też są dla Pythona liczbami, a zepsułyby odpowiedź JSON."""
+    wartosc = float(str(tekst).strip().replace(",", ".").replace(" ", ""))
+    if not math.isfinite(wartosc):
+        raise ValueError("liczba nieskończona")
+    return wartosc
+
+
 # ---------- Kalkulator skali mapy (ETAP 30) ----------
 
 
@@ -234,8 +244,8 @@ def skala_licz():
     dane = request.get_json(silent=True) or {}
 
     def liczba(klucz):
-        wartosc = str(dane.get(klucz, "")).strip().replace(",", ".").replace(" ", "")
-        return float(wartosc) if wartosc else None
+        wartosc = str(dane.get(klucz, "")).strip()
+        return _liczba_skonczona(wartosc) if wartosc else None
 
     try:
         mianownik = liczba("mianownik")
@@ -252,7 +262,10 @@ def skala_licz():
             wynik["pow_rysunek_cm2"] = skala.powierzchnia_na_rysunku(v, dane.get("jednostka_pow", "m2"), mianownik)
         szer, wys = liczba("teren_szer_m"), liczba("teren_wys_m")
         if szer is not None and wys is not None:
-            wynik["dobor"] = skala.dobierz_skale(szer, wys, dane.get("arkusz", "A3"), liczba("margines_mm") or 20)
+            margines = liczba("margines_mm")
+            wynik["dobor"] = skala.dobierz_skale(
+                szer, wys, dane.get("arkusz", "A3"), 20 if margines is None else margines
+            )
     except KeyError:
         return jsonify({"blad": "Nieznana jednostka."}), 400
     except (ValueError, skala.BladSkali) as e:
@@ -277,7 +290,8 @@ def _liczba_lub_none(slownik: dict, klucz: str, typ=float):
     wartosc = slownik.get(klucz)
     if wartosc in (None, ""):
         return None
-    return typ(wartosc)
+    liczba = _liczba_skonczona(wartosc)
+    return int(liczba) if typ is int else liczba
 
 
 @mpzp_bp.route("/kalkulator/licz", methods=["POST"])
@@ -291,8 +305,8 @@ def kalkulator_licz():
                 raise zabudowa.BladDanych("Podaj liczbę kondygnacji nadziemnych każdego budynku.")
         budynki = [
             zabudowa.Budynek(
-                rzut_m2=float(b.get("rzut_m2") or 0),
-                kondygnacje=int(b.get("kondygnacje") or 0),
+                rzut_m2=_liczba_skonczona(b.get("rzut_m2") or 0),
+                kondygnacje=int(_liczba_skonczona(b.get("kondygnacje") or 0)),
                 wysokosc_m=_liczba_lub_none(b, "wysokosc_m"),
             )
             for b in dane.get("budynki", [])
@@ -307,7 +321,10 @@ def kalkulator_licz():
             max_kondygnacje=_liczba_lub_none(plan, "max_kondygnacje", int),
         )
         wynik = zabudowa.policz(
-            float(dane.get("powierzchnia_dzialki") or 0), budynki, float(dane.get("pbc_m2") or 0), ustalenia
+            _liczba_skonczona(dane.get("powierzchnia_dzialki") or 0),
+            budynki,
+            _liczba_skonczona(dane.get("pbc_m2") or 0),
+            ustalenia,
         )
     except (TypeError, ValueError) as e:
         komunikat = str(e) if isinstance(e, zabudowa.BladDanych) else "Wpisz liczby (np. 450 albo 0,6)."

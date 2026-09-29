@@ -219,3 +219,7 @@
 - Kopia zapasowa danych użytkownika jako ZIP (`/kopia-zapasowa`) z
   instrukcją przywracania.
 - Dodano `DECISIONS.md` D-039 i test.
+
+## ETAP 33 — 2026-09-29
+- Naprawiono 4 błędy z przeglądu ETAPów 28–32 (mianownik w atlasie,
+  margines i liczby nieskończone w kalkulatorach, stare wyniki skali).

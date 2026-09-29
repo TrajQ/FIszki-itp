@@ -58,6 +58,8 @@ def dobierz_skale(szerokosc_m: float, wysokosc_m: float, arkusz: str, margines_m
     w orientacji pionowej albo poziomej."""
     if szerokosc_m <= 0 or wysokosc_m <= 0:
         raise BladSkali("Wymiary terenu muszą być dodatnie.")
+    if margines_mm < 0:
+        raise BladSkali("Margines nie może być ujemny.")
     if arkusz not in ARKUSZE_MM:
         raise BladSkali(f"Nieznany arkusz: {arkusz}.")
     krotszy, dluzszy = ARKUSZE_MM[arkusz]

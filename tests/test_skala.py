@@ -57,3 +57,23 @@ def test_endpoint_skali(client):
 
     for zle in [{"mianownik": ""}, {"mianownik": "abc"}, {"mianownik": "1000", "dlugosc_rysunek": "1", "jednostka_rysunek": "stopa"}]:
         assert client.post("/mpzp/skala/licz", data=json.dumps(zle), content_type="application/json").status_code == 400
+
+
+def test_margines_zero_i_ujemny(client):
+    baza = {"mianownik": "1000", "teren_szer_m": "280", "teren_wys_m": "190", "arkusz": "A4"}
+    # 280 × 190 m przy 1:1000 = 280 × 190 mm — mieści się na A4 (297 × 210) tylko bez
+    # marginesu; z marginesem 20 mm pole ma 257 × 170 mm, więc potrzeba 1:2000
+    zero = client.post("/mpzp/skala/licz", data=json.dumps({**baza, "margines_mm": "0"}), content_type="application/json").get_json()
+    assert zero["dobor"]["mianownik"] == 1000
+    domyslny = client.post("/mpzp/skala/licz", data=json.dumps(baza), content_type="application/json").get_json()
+    assert domyslny["dobor"]["mianownik"] == 2000
+    ujemny = client.post("/mpzp/skala/licz", data=json.dumps({**baza, "margines_mm": "-50"}), content_type="application/json")
+    assert ujemny.status_code == 400
+
+
+@pytest.mark.parametrize("zla", ["nan", "inf", "1e400", "-inf"])
+def test_liczby_nieskonczone_odrzucone(client, zla):
+    odp = client.post("/mpzp/skala/licz", data=json.dumps({"mianownik": zla}), content_type="application/json")
+    assert odp.status_code == 400 and odp.get_json()["blad"] == "Wpisz liczby (np. 4,5)."
+    kalk = {"powierzchnia_dzialki": zla, "budynki": [], "ustalenia": {}}
+    assert client.post("/mpzp/kalkulator/licz", data=json.dumps(kalk), content_type="application/json").status_code == 400

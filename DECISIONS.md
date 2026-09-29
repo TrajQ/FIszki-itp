@@ -788,3 +788,14 @@ skopiowanie pliku w trakcie zapisu może dać uszkodzoną bazę.
 - Przycisk „przywróć z ZIP” — odrzucone (patrz wyżej).
 - Kopia z cache granic — odrzucone: duże pliki, które i tak pobiorą
   się ponownie.
+
+## D-040 — Pola liczbowe: tylko liczby skończone
+Data: 2026-09-29
+
+**Decyzja:** Wszystkie liczby z formularzy kalkulatorów przechodzą przez
+`_liczba_skonczona` (przecinek dziesiętny, spacje, odrzucenie `nan`,
+`inf` i przepełnienia).
+
+**Uzasadnienie:** `float()` w Pythonie przyjmuje „nan” i „inf”, a JSON
+nie ma takich wartości — przeglądarka nie odczytałaby odpowiedzi.
+Jedna funkcja zamiast osobnych warunków w każdym polu.
