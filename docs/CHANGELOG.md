@@ -249,3 +249,10 @@
   „Cofnij punkt”, Esc kończy), `POST /mpzp/pomiar`.
 - MPZP: link „Geoportal ↗” — działka w geoportal.gov.pl.
 - Dodano `DECISIONS.md` D-043 i 16 testów.
+
+## ETAP 37 — 2026-09-29
+- Naprawiono 4 problemy z przeglądu ETAPów 34–36: nazwa wybranego
+  województwa na kartogramie przy spóźnionym tle, raport błędu KIMPZP
+  w formacie tekstowym brany za „brak planu”, zbyt długi adres WMS przy
+  bardzo wielu warstwach, eksport GeoJSON bez przeznaczenia dla gmin
+  bez WFS.

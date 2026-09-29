@@ -41,6 +41,9 @@ WARSTWY_KIEG = "dzialki,numery_dzialek"
 # Używane tylko, gdy GetCapabilities nie odpowie.
 WARSTWY_ZAPASOWE = ["raster", "wektor-str", "wektor-lzb", "wektor-pow", "wektor-lin", "wektor-pkt", "granice"]
 WAZNOSC_LISTY_WARSTW_S = 24 * 3600
+# Powyżej tylu warstw pytamy o warstwę główną (grupę) zamiast wymieniać
+# wszystkie — inaczej adres zapytania robi się za długi.
+MAKS_WARSTW_W_ZAPYTANIU = 30
 
 # Okno zapytania GetFeatureInfo: ok. 70 × 110 m wokół punktu, 101 × 101 px,
 # punkt dokładnie w środku (piksel 50, 50).
@@ -67,7 +70,7 @@ class ObiektPlanu:
     atrybuty: dict = field(default_factory=dict)
 
 
-_warstwy_cache: dict = {"czas": 0.0, "warstwy": None, "uklady": None}
+_warstwy_cache: dict = {"czas": 0.0, "warstwy": None, "uklady": None, "glowna": None}
 
 
 # ---------- lista warstw ----------
@@ -81,8 +84,27 @@ def warstwy() -> list[dict]:
     lista = sparsuj_capabilities(tekst)
     if not lista:
         raise BladKIMPZP("Usługa KIMPZP nie podała żadnej warstwy.")
-    _warstwy_cache.update(czas=time.time(), warstwy=lista, uklady=uklady_wspolrzednych(tekst))
+    _warstwy_cache.update(
+        czas=time.time(), warstwy=lista, uklady=uklady_wspolrzednych(tekst), glowna=warstwa_glowna(tekst)
+    )
     return lista
+
+
+def warstwa_glowna(tekst: str) -> dict | None:
+    """Nazwana warstwa najwyższego poziomu (grupa wszystkich) albo None."""
+    capability = _xml(tekst).find(f"{NS_WMS}Capability")
+    glowna = capability.find(f"{NS_WMS}Layer") if capability is not None else None
+    if glowna is None or not (glowna.findtext(f"{NS_WMS}Name") or "").strip():
+        return None
+    return {"nazwa": glowna.findtext(f"{NS_WMS}Name").strip(), "zapytywalna": glowna.get("queryable") == "1"}
+
+
+def _ogranicz(nazwy: list[str], glowna: dict | None, tylko_zapytywalna: bool = False) -> list[str]:
+    if len(nazwy) <= MAKS_WARSTW_W_ZAPYTANIU or glowna is None:
+        return nazwy[:MAKS_WARSTW_W_ZAPYTANIU] if glowna is None else nazwy
+    if tylko_zapytywalna and not glowna["zapytywalna"]:
+        return nazwy[:MAKS_WARSTW_W_ZAPYTANIU]
+    return [glowna["nazwa"]]
 
 
 def sparsuj_capabilities(tekst: str) -> list[dict]:
@@ -113,7 +135,7 @@ def uklady_wspolrzednych(tekst: str) -> set[str]:
 def nazwy_warstw() -> tuple[list[str], bool]:
     """(nazwy warstw, czy z GetCapabilities). Przy błędzie — lista zapasowa."""
     try:
-        return [w["nazwa"] for w in warstwy()], True
+        return _ogranicz([w["nazwa"] for w in warstwy()], _warstwy_cache["glowna"]), True
     except BladKIMPZP:
         return list(WARSTWY_ZAPASOWE), False
 
@@ -134,7 +156,9 @@ def czy_mercator() -> bool:
 def plan_w_punkcie(lat: float, lon: float) -> list[ObiektPlanu]:
     """Obiekty planów (atrybuty) w punkcie; pusta lista = brak planu w KIMPZP."""
     try:
-        zapytywalne = [w["nazwa"] for w in warstwy() if w["zapytywalna"]]
+        zapytywalne = _ogranicz(
+            [w["nazwa"] for w in warstwy() if w["zapytywalna"]], _warstwy_cache["glowna"], tylko_zapytywalna=True
+        )
     except BladKIMPZP:
         zapytywalne = list(WARSTWY_ZAPASOWE)
     if not zapytywalne:
@@ -189,6 +213,9 @@ WZOR_OBIEKTU = re.compile(r"^\s*Feature\s")
 
 def sparsuj_tekst(tekst: str) -> list[ObiektPlanu]:
     """Odpowiedź GetFeatureInfo w formacie text/plain MapServera."""
+    if "ServiceException" in tekst or "msWMS" in tekst:
+        # raport błędu (XML albo tekst MapServera) to nie „brak planu”
+        raise BladKIMPZP(f"KIMPZP zwróciła błąd: {' '.join(tekst.split())[:300]}")
     wynik: list[ObiektPlanu] = []
     warstwa = ""
     for linia in tekst.splitlines():

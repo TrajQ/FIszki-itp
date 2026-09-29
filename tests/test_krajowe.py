@@ -46,9 +46,9 @@ Layer 'granice'
 
 @pytest.fixture(autouse=True)
 def czysty_cache():
-    krajowe._warstwy_cache.update(czas=0.0, warstwy=None, uklady=None)
+    krajowe._warstwy_cache.update(czas=0.0, warstwy=None, uklady=None, glowna=None)
     yield
-    krajowe._warstwy_cache.update(czas=0.0, warstwy=None, uklady=None)
+    krajowe._warstwy_cache.update(czas=0.0, warstwy=None, uklady=None, glowna=None)
 
 
 def test_capabilities_daje_tylko_liscie_z_flaga_zapytywalnosci():
@@ -133,3 +133,32 @@ def test_nazwy_warstw_bez_uslugi_to_lista_zapasowa(monkeypatch):
 
     monkeypatch.setattr(krajowe, "_pobierz", pobierz)
     assert krajowe.nazwy_warstw() == (krajowe.WARSTWY_ZAPASOWE, False)
+
+
+def test_blad_uslugi_w_odpowiedzi_tekstowej_to_nie_brak_planu():
+    with pytest.raises(BladKIMPZP):
+        krajowe.sparsuj_tekst("msWMSGetFeatureInfo(): WMS server error. Invalid layer(s)")
+
+
+def test_duzo_warstw_zastepuje_warstwa_glowna(monkeypatch):
+    liscie = "".join(f'<Layer queryable="1"><Name>gmina_{i}</Name></Layer>' for i in range(40))
+    capabilities = (
+        '<WMS_Capabilities xmlns="http://www.opengis.net/wms"><Capability>'
+        f'<Layer queryable="1"><Name>plany</Name>{liscie}</Layer></Capability></WMS_Capabilities>'
+    )
+    zapytania = []
+
+    def pobierz(url, parametry):
+        zapytania.append(parametry)
+        return capabilities if parametry["request"] == "GetCapabilities" else "<msGMLOutput/>"
+
+    monkeypatch.setattr(krajowe, "_pobierz", pobierz)
+
+    assert krajowe.nazwy_warstw() == (["plany"], True)
+    assert krajowe.plan_w_punkcie(52.0, 19.0) == []
+    assert zapytania[-1]["query_layers"] == "plany"
+
+
+def test_malo_warstw_zostaja_liscie():
+    assert krajowe.warstwa_glowna(CAPABILITIES) == {"nazwa": "KIMPZP", "zapytywalna": False}
+    assert krajowe._ogranicz(["a", "b"], {"nazwa": "KIMPZP", "zapytywalna": False}) == ["a", "b"]

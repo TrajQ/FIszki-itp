@@ -451,7 +451,17 @@ def eksport_geojson():
         }
     ]
     gmina = znajdz_gmine(dzialka.teryt_gminy)
-    if gmina is not None:
+    if gmina is None:
+        # Bez WFS nie ma części działki — dopisujemy przeznaczenie z KIMPZP.
+        punkt = dzialka.geometria.representative_point()
+        try:
+            obiekty = plan_krajowy(punkt.y, punkt.x)
+        except krajowe.BladKIMPZP:
+            obiekty = []  # sama działka też się przyda w QGIS
+        if obiekty:
+            cechy[0]["properties"]["przeznaczenie_kimpzp"] = krajowe.rozpoznaj_przeznaczenie(obiekty)
+            cechy[0]["properties"]["plan_kimpzp"] = krajowe.tytul_planu(obiekty)
+    else:
         try:
             pary = znajdz_wydzielenia_dzialki(gmina, dzialka.geometria)
         except BladWFS as e:

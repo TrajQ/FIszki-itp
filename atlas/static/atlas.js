@@ -72,6 +72,7 @@
     mapa.attributionControl.addAttribution("granice: PRG GUGiK, dane: GUS BDL");
     mapa.createPane("tlo").style.zIndex = 250; // pod warstwą gmin (400)
     let warstwaTla = null;
+    let terytNaMapie = null; // województwo aktualnie pokazane kartogramem
     const etykietyWojewodztw = new Map(); // teryt → warstwa z etykietą
 
     function rysujTlo(kolekcja) {
@@ -88,6 +89,9 @@
                 etykietyWojewodztw.set(cecha.properties.teryt, warstwa);
             },
         }).addTo(mapa);
+        // Tło bywa gotowe dopiero po kartogramie (pierwsze pobranie z PRG
+        // trwa) — wtedy od razu chowamy nazwę pokazanego województwa.
+        if (terytNaMapie) pokazEtykietyOprocz(terytNaMapie);
     }
 
     // Nazwa wybranego województwa zasłaniałaby kartogram — chowamy tylko ją.
@@ -591,7 +595,8 @@
             },
         }).addTo(mapa);
         mapa.fitBounds(warstwaGmin.getBounds(), { padding: [12, 12] });
-        if (warstwaTla) pokazEtykietyOprocz(poleWoj.selectedOptions[0].dataset.teryt);
+        terytNaMapie = biezaceDane.wojewodztwo.teryt;
+        if (warstwaTla) pokazEtykietyOprocz(terytNaMapie);
     }
 
     function wierszLegendy(kolor, opis) {

@@ -556,3 +556,16 @@ def test_pomiar_obrys_przecinajacy_sie_ma_uwage(client):
 def test_pomiar_zle_dane(client, tresc):
     odpowiedz = client.post("/mpzp/pomiar", json=tresc)
     assert odpowiedz.status_code == 400 and "blad" in odpowiedz.get_json()
+
+
+def test_eksport_geojson_gminy_bez_wfs_ma_przeznaczenie_z_kimpzp(client, monkeypatch):
+    from mpzp.krajowe import ObiektPlanu
+
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_warszawa())
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: [ObiektPlanu("w", {"symbol": "U", "tytul": "Plan X"})])
+
+    cechy = client.get("/mpzp/eksport.geojson?id=146501_1.0001.AR_1.1").get_json()["features"]
+
+    assert len(cechy) == 1
+    assert cechy[0]["properties"]["przeznaczenie_kimpzp"] == "U"
+    assert cechy[0]["properties"]["plan_kimpzp"] == "Plan X"

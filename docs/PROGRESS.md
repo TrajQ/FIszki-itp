@@ -919,3 +919,23 @@ Status: zamknięty
 
 Testy: 254 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap36_20260929.zip
+
+## ETAP 37 — Poprawki z przeglądu kodu (ETAPy 34–36)
+Data: 2026-09-29
+Status: zamknięty
+
+Przegląd wykazał 4 problemy — wszystkie naprawione:
+1. Atlas: gdy tło województw (pierwsze pobranie z PRG) przyszło po
+   kartogramie, nazwa wybranego województwa zasłaniała mapę → tło po
+   wczytaniu chowa nazwę województwa z kartogramu (`terytNaMapie`,
+   brane z danych, nie z listy, którą można już było zmienić)
+2. KIMPZP: raport błędu w formacie tekstowym dawał pustą listę, czyli
+   komunikat „brak planu” → teraz błąd usługi
+3. KIMPZP: przy >30 warstwach w GetCapabilities adres WMS byłby bardzo
+   długi → pytamy o nazwaną warstwę główną (grupę)
+4. Eksport GeoJSON dla gmin bez WFS miał samą działkę → dochodzą
+   `przeznaczenie_kimpzp` i `plan_kimpzp`
+- Testy: 4 nowe
+
+Testy: 258 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap37_20260929.zip
