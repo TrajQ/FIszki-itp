@@ -190,6 +190,41 @@ przyciskZapisz.addEventListener("click", async () => {
     await odswiezListeFiszek();
 });
 
+// ---------- import z pliku (ETAP 54) ----------
+
+const formularzImportu = document.getElementById("formularz-importu");
+
+// 1 fiszka, 2–4 fiszki (ale 12–14 fiszek), 5+ fiszek.
+function odmianaFiszek(n) {
+    if (n === 1) return "fiszkę";
+    if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return "fiszki";
+    return "fiszek";
+}
+const wynikImportu = document.getElementById("wynik-importu");
+
+formularzImportu.addEventListener("submit", async (zdarzenie) => {
+    zdarzenie.preventDefault();
+    const przyciskImportu = formularzImportu.querySelector("button");
+    przyciskImportu.disabled = true;
+    wynikImportu.hidden = false;
+    wynikImportu.textContent = "Importuję…";
+    try {
+        const odpowiedz = await fetch(URL_IMPORT, { method: "POST", body: new FormData(formularzImportu) });
+        const dane = await odpowiedz.json();
+        if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
+        let tekst = `Dodano ${dane.dodane} ${odmianaFiszek(dane.dodane)}.`;
+        if (dane.duplikaty) tekst += ` Pominięto powtórzone: ${dane.duplikaty}.`;
+        if (dane.liczba_blednych) tekst += ` Błędne wiersze (${dane.liczba_blednych}): ${dane.bledne.join("; ")}.`;
+        wynikImportu.textContent = tekst;
+        formularzImportu.reset();
+        await odswiezListeFiszek();
+    } catch (e) {
+        wynikImportu.textContent = e.message;
+    } finally {
+        przyciskImportu.disabled = false;
+    }
+});
+
 async function odswiezListeFiszek() {
     const odpowiedz = await fetch(URL_FISZKI);
     const fiszki = await odpowiedz.json();
@@ -229,7 +264,7 @@ async function odswiezListeFiszek() {
         const akcje = document.createElement("div");
         akcje.className = "fiszka-akcje";
 
-        akcje.appendChild(przycisk("Pokaż w źródle", "przycisk--tekst", () => pokazWZrodle(fiszka)));
+        if (fiszka.strona) akcje.appendChild(przycisk("Pokaż w źródle", "przycisk--tekst", () => pokazWZrodle(fiszka)));
         akcje.appendChild(przycisk("Edytuj", "przycisk--tekst", () => pokazEdycje(li, fiszka)));
         akcje.appendChild(
             przycisk("Usuń", "przycisk--niebezpieczny", async () => {
@@ -240,7 +275,7 @@ async function odswiezListeFiszek() {
 
         const strona = document.createElement("span");
         strona.className = "etykieta fiszka-strona";
-        strona.textContent = `s. ${fiszka.strona}`;
+        strona.textContent = fiszka.strona ? `s. ${fiszka.strona}` : "import";
         akcje.appendChild(strona);
 
         li.appendChild(akcje);
@@ -310,6 +345,7 @@ function pokazEdycje(li, fiszka) {
 }
 
 async function pokazWZrodle(fiszka) {
+    if (!fiszka.strona) return; // fiszka zaimportowana — nie ma kotwicy w PDF-ie
     await renderujStrone(fiszka.strona);
     podswietlFragment(fiszka.fragment_tekstu);
 }

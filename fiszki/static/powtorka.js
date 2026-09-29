@@ -97,8 +97,9 @@
         if (trybPisania.checked) poleOdpowiedzi.focus();
         odpowiedzEl.textContent = tyl(fiszka);
         fragmentEl.textContent = fiszka.fragment_tekstu;
+        fragmentEl.hidden = !fiszka.fragment_tekstu; // fiszka z importu nie ma cytatu
         pudelkoEl.textContent = `Pudełko ${fiszka.pudelko} z 5`;
-        zrodloEl.textContent = `${fiszka.nazwa_oryginalna}, s. ${fiszka.strona} ↗`;
+        zrodloEl.textContent = fiszka.strona ? `${fiszka.nazwa_oryginalna}, s. ${fiszka.strona} ↗` : `${fiszka.nazwa_oryginalna} (import) ↗`;
         zrodloEl.href = URL_PDF_WZOR.replace("/0/", `/${fiszka.pdf_id}/`) + `?fiszka=${fiszka.id}`;
 
         // Animacja wejścia karty.

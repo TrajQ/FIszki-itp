@@ -21,7 +21,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import egzaminy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
+from . import egzaminy, importer, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
 from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
@@ -396,7 +396,7 @@ def _odpowiedz_anki(fiszki, pdf):
     Plik → Importuj. Kolumny: pytanie, odpowiedź, źródło (plik i strona)."""
     wiersze = ["#separator:tab", "#html:true"]
     for f in fiszki:
-        zrodlo = f"{f['nazwa_oryginalna']}, s. {f['strona']}"
+        zrodlo = f"{f['nazwa_oryginalna']}, s. {f['strona']}" if f["strona"] else f["nazwa_oryginalna"]
         wiersze.append(
             "\t".join(_pole_anki(t) for t in (f["pytanie"], f["odpowiedz"], zrodlo))
         )
@@ -591,3 +591,50 @@ def dodaj_egzamin():
 def usun_egzamin(egzamin_id):
     egzaminy.usun(get_db(), egzamin_id)
     return redirect(url_for("fiszki.index"))
+
+
+# ---------- Import fiszek (ETAP 54) ----------
+
+
+@fiszki_bp.route("/<int:pdf_id>/import", methods=["POST"])
+def importuj(pdf_id):
+    """Fiszki z pliku (Anki, Quizlet, CSV) do tego PDF-a; duplikaty pomijamy."""
+    _pobierz_pdf_albo_404(pdf_id)
+    plik = request.files.get("plik")
+    if plik is None or not plik.filename:
+        return jsonify({"blad": "Nie wybrano pliku."}), 400
+    zawartosc = plik.read(importer.MAKS_ROZMIAR_B + 1)
+    if len(zawartosc) > importer.MAKS_ROZMIAR_B:
+        return jsonify({"blad": "Plik jest za duży (limit 1 MB)."}), 400
+    try:
+        tekst = zawartosc.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return jsonify({"blad": "Plik musi być zapisany w UTF-8."}), 400
+    try:
+        nowe, bledne = importer.wczytaj(tekst)
+        lista_tematow = tematy.normalizuj(request.form.get("tematy"))
+    except (importer.BladImportu, tematy.BladTematow) as e:
+        return jsonify({"blad": str(e)}), 400
+
+    db = get_db()
+    istniejace = {
+        (w["pytanie"], w["odpowiedz"])
+        for w in db.execute("SELECT pytanie, odpowiedz FROM fiszki WHERE pdf_id = ?", (pdf_id,))
+    }
+    dodane = duplikaty = 0
+    teraz = datetime.now().isoformat()
+    for f in nowe:
+        klucz = (f["pytanie"], f["odpowiedz"])
+        if klucz in istniejace:
+            duplikaty += 1
+            continue
+        istniejace.add(klucz)
+        kursor = db.execute(
+            """INSERT INTO fiszki (pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, data_utworzenia)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (pdf_id, f["strona"], f["fragment_tekstu"], f["pytanie"], f["odpowiedz"], teraz),
+        )
+        tematy.ustaw(db, kursor.lastrowid, lista_tematow)
+        dodane += 1
+    db.commit()
+    return jsonify({"dodane": dodane, "duplikaty": duplikaty, "bledne": bledne[:20], "liczba_blednych": len(bledne)})

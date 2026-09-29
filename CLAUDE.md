@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 53 (mpzp: porównanie działek — zamknięty)
-Ostatni ZIP: releases/warsztat_etap53_20260929.zip
-Testy: 335 passed / 0 failed
+ETAP: 54 (fiszki: import z pliku — zamknięty)
+Ostatni ZIP: releases/warsztat_etap54_20260929.zip
+Testy: 341 passed / 0 failed

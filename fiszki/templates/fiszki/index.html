@@ -178,7 +178,7 @@
             <a class="wynik-szukania" href="{{ url_for('fiszki.widok_pdf', pdf_id=f.pdf_id) }}?fiszka={{ f.id }}">
                 <div class="fiszka-pytanie">{{ f.pytanie }}</div>
                 <span class="wynik-szukania__zrodlo">{{ f.nazwa_oryginalna }}
-s. {{ f.strona }}</span>
+{{ 's. %d' % f.strona if f.strona else 'import' }}</span>
                 <div class="wynik-szukania__odpowiedz">„nie umiem”: {{ f.bledy }} z {{ f.proby }}</div>
             </a>
         </li>

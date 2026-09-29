@@ -1170,3 +1170,16 @@ Status: zamknięty
 
 Testy: 335 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap53_20260929.zip
+
+## ETAP 54 — Fiszki: import z pliku
+Data: 2026-09-29
+Status: zamknięty
+
+- `importer.wczytaj`, `POST /fiszki/<pdf_id>/import`
+- Strona 0 obsłużona w: liście fiszek, powtórce, quizie, wyszukiwarce,
+  najtrudniejszych, druku, eksporcie Anki
+- Sprawdzone w przeglądarce (import z Anki z błędnym wierszem, powtórka)
+- `DECISIONS.md`: D-059
+
+Testy: 341 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap54_20260929.zip

@@ -1222,3 +1222,27 @@ porównaniu.
 
 **Odrzucone alternatywy:**
 - Zapisywanie geometrii w „Moich działkach” — odrzucone (patrz wyżej).
+
+## D-059 — Import fiszek: do istniejącego PDF-a, strona 0 = bez kotwicy
+Data: 2026-09-29
+
+**Decyzja:** `fiszki/importer.py` czyta eksport Anki (nagłówki `#…`,
+HTML → tekst), Quizlet (tabulator), CSV/TSV z nagłówkiem `pytanie`/
+`odpowiedz` (własny eksport — wtedy wraca strona i fragment) albo bez
+nagłówka (2 kolumny). Import trafia do wybranego PDF-a, opcjonalnie z
+tematem; powtórzone pary pytanie–odpowiedź w tym PDF-ie są pomijane,
+błędne wiersze wypisane. Fiszka bez kotwicy ma stronę 0 i pusty
+fragment — interfejs nie pokazuje wtedy „w źródle” ani numeru strony.
+Limity: 1 MB, 2000 fiszek, 5000 znaków w polu.
+
+**Uzasadnienie:** Studenci mają fiszki z wcześniejszych semestrów w
+Anki albo Quizlecie; przepisywanie ich ręcznie zniechęca. Import do
+PDF-a zamiast osobnych „talii” nie zmienia modelu danych (każda fiszka
+należy do pliku) i działa ze wszystkim, co już jest: powtórki, tematy,
+egzaminy, quiz.
+
+**Odrzucone alternatywy:**
+- Talie bez PDF-a — odrzucone: zmiana schematu i wszystkich widoków,
+  które zakładają plik źródłowy.
+- Import pakietów .apkg Anki — odrzucone: to archiwum z bazą SQLite i
+  mediami; eksport tekstowy Anki wystarcza.

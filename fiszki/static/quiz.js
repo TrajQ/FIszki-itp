@@ -91,7 +91,7 @@
                 link.href = URL_PDF_WZOR.replace("/0/", `/${p.pdf_id}/`) + `?fiszka=${p.fiszka_id}`;
                 link.append(
                     el("div", "fiszka-pytanie", p.pytanie),
-                    el("span", "wynik-szukania__zrodlo", `s. ${p.strona} ↗`),
+                    el("span", "wynik-szukania__zrodlo", p.strona ? `s. ${p.strona} ↗` : "import ↗"),
                     el("div", "wynik-szukania__odpowiedz", p.odpowiedzi[p.poprawna])
                 );
                 li.appendChild(link);

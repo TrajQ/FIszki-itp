@@ -377,3 +377,11 @@
   w tej samej skali z podziałką, wymiary, zwartość, przeznaczenie,
   obszar analizowany WZ, notatki, linki do raportów.
 - Dodano `geometria.szkice_w_jednej_skali`, `DECISIONS.md` D-058 i 2 testy.
+
+## ETAP 54 — 2026-09-29
+- Fiszki: „Importuj fiszki z pliku” na stronie PDF-a — Anki (.txt),
+  Quizlet, CSV (także własny eksport z kotwicą); temat dla importu,
+  pomijanie duplikatów, lista błędnych wierszy.
+- Fiszki bez kotwicy (import) — etykieta „import” zamiast strony, bez
+  „Pokaż w źródle” i pustego cytatu w powtórce.
+- Dodano `fiszki/importer.py`, `DECISIONS.md` D-059 i 6 testów.

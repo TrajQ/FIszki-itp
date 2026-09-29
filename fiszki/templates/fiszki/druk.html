@@ -23,7 +23,7 @@
             <div class="karta-druk__strona">
                 <span class="karta-druk__nr">{{ loop.index }}</span>
                 <p class="karta-druk__pytanie">{{ f['pytanie'] }}</p>
-                <span class="karta-druk__zrodlo">{{ f['nazwa_oryginalna'] }}, s. {{ f['strona'] }}</span>
+                <span class="karta-druk__zrodlo">{{ f['nazwa_oryginalna'] }}{% if f['strona'] %}, s. {{ f['strona'] }}{% endif %}</span>
             </div>
             <div class="karta-druk__strona karta-druk__strona--tyl">
                 <span class="karta-druk__nr">{{ loop.index }}</span>

@@ -980,3 +980,14 @@ button.przycisk--ocena-trudne:hover {
     justify-content: center;
     gap: 4px 24px;
 }
+
+/* Import fiszek (ETAP 54) */
+.import-fiszek summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.import-fiszek p {
+    margin: 8px 0;
+    font-size: 13px;
+}

@@ -69,6 +69,17 @@
             </div>
         </div>
 
+        <details class="karta import-fiszek">
+            <summary>Importuj fiszki z pliku</summary>
+            <p class="wyciszony">Eksport z Anki (.txt), Quizlet (pojęcie ⇥ definicja) albo CSV: kolumny pytanie i odpowiedź. Z eksportu CSV tej aplikacji wraca też kotwica w PDF-ie. Powtórzone fiszki są pomijane.</p>
+            <form id="formularz-importu" class="stos">
+                <input type="file" name="plik" accept=".txt,.csv,.tsv,text/plain,text/csv" required>
+                <input type="text" name="tematy" placeholder="Temat importowanych fiszek (opcjonalnie)" list="lista-tematow-podpowiedzi" maxlength="200">
+                <button type="submit" class="przycisk--drugi">Importuj</button>
+            </form>
+            <p id="wynik-importu" class="wyciszony" hidden></p>
+        </details>
+
         <label class="karta tematy-nowych">Temat nowych fiszek (opcjonalnie, po przecinku)
             <input id="pole-tematy-nowych" type="text" placeholder="np. kolokwium 1" list="lista-tematow-podpowiedzi" maxlength="200">
             <datalist id="lista-tematow-podpowiedzi">{% for t in tematy %}<option value="{{ t }}">{% endfor %}</datalist>
@@ -93,6 +104,7 @@
 <script>
     const PDF_ID = {{ pdf['id'] }};
     const URL_PLIK = "{{ url_for('fiszki.plik_pdf', pdf_id=pdf['id']) }}";
+    const URL_IMPORT = "{{ url_for('fiszki.importuj', pdf_id=pdf['id']) }}";
     const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
     const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
     const URL_SZKICE_STRONY = "{{ url_for('fiszki.szkice_strony', pdf_id=pdf['id']) }}";
