@@ -312,3 +312,10 @@
   automatycznie, lista w panelu bocznym (klik → działka na mapie),
   eksport CSV, notatka w raporcie do druku.
 - Dodano `DECISIONS.md` D-050 i 8 testów.
+
+## ETAP 45 — 2026-09-29
+- MPZP: strona „Symbole planu” — rozszyfrowanie symbolu (np. 3MN/U),
+  tabela oznaczeń z grupami i filtrem.
+- Słownik zwyczajowych oznaczeń (MU, ML, UC, UO, UZ, UK, UT, UP, ZN, ZI,
+  KS, IT, O, PG) z wyraźną etykietą „zwyczajowe” w panelu działki.
+- Dodano `DECISIONS.md` D-051 i 2 testy.

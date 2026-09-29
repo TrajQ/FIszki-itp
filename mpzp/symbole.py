@@ -44,6 +44,42 @@ SLOWNIK = {
     "K": "tereny infrastruktury technicznej — kanalizacja",
 }
 
+# Oznaczenia spoza listy rozporządzenia, ale często spotykane w planach
+# (ETAP 45). Znaczenie bywa różne w różnych gminach — dlatego osobny
+# słownik, a panel mówi wprost, że to oznaczenie zwyczajowe.
+SLOWNIK_ZWYCZAJOWY = {
+    "MU": "tereny zabudowy mieszkaniowo-usługowej",
+    "ML": "tereny zabudowy rekreacji indywidualnej (letniskowej)",
+    "UC": "tereny obiektów handlowych o powierzchni sprzedaży powyżej 2000 m²",
+    "UO": "tereny usług oświaty",
+    "UZ": "tereny usług zdrowia",
+    "UK": "tereny usług kultu religijnego",
+    "UT": "tereny usług turystyki",
+    "UP": "tereny usług publicznych",
+    "ZN": "tereny zieleni naturalnej",
+    "ZI": "tereny zieleni izolacyjnej",
+    "KS": "tereny obsługi komunikacji samochodowej (np. parkingi)",
+    "IT": "tereny infrastruktury technicznej",
+    "O": "tereny gospodarki odpadami",
+    "PG": "tereny powierzchniowej eksploatacji kopalin",
+}
+
+# Grupy do tabeli w słowniku — po pierwszej literze symbolu.
+GRUPY = {
+    "M": "Zabudowa mieszkaniowa",
+    "U": "Usługi, sport i rekreacja",
+    "P": "Produkcja, składy, eksploatacja",
+    "R": "Rolnictwo",
+    "Z": "Zieleń i lasy",
+    "W": "Wody i wodociągi",
+    "K": "Komunikacja i kanalizacja",
+    "E": "Infrastruktura techniczna",
+    "G": "Infrastruktura techniczna",
+    "C": "Infrastruktura techniczna",
+    "I": "Infrastruktura techniczna",
+    "O": "Infrastruktura techniczna",
+}
+
 # Symbol w planie to zwykle numer porządkowy + litery, np. „1MN”, „12KDL”,
 # czasem numer na końcu („MN1”) albo przeznaczenie mieszane („MN/U”,
 # „MW,U”). Wyciągamy grupy wielkich liter.
@@ -53,12 +89,27 @@ _WZOR_LITER = re.compile(r"[A-ZĄĆĘŁŃÓŚŹŻ]+")
 def opisz_symbol(symbol: str | None) -> list[dict]:
     """„3MN/U” → [{"symbol": "MN", "opis": ...}, {"symbol": "U", "opis": ...}].
 
-    Symbol spoza słownika ma opis None — frontend pokaże „brak w słowniku”.
+    Symbol spoza słowników ma opis None — frontend pokaże „brak w słowniku”.
+    `zwyczajowe` = True, gdy opis pochodzi ze słownika zwyczajowego.
     """
     if not symbol:
         return []
     wynik = []
     for litery in _WZOR_LITER.findall(symbol.upper()):
-        if litery not in {c["symbol"] for c in wynik}:
-            wynik.append({"symbol": litery, "opis": SLOWNIK.get(litery)})
+        if litery in {c["symbol"] for c in wynik}:
+            continue
+        opis = SLOWNIK.get(litery)
+        zwyczajowe = opis is None and litery in SLOWNIK_ZWYCZAJOWY
+        wynik.append({"symbol": litery, "opis": opis or SLOWNIK_ZWYCZAJOWY.get(litery), "zwyczajowe": zwyczajowe})
     return wynik
+
+
+def wszystkie_symbole() -> list[dict]:
+    """Cały słownik do tabeli: grupa, symbol, opis, źródło — posortowany."""
+    wiersze = [
+        {"symbol": s, "opis": o, "zwyczajowe": False} for s, o in SLOWNIK.items()
+    ] + [{"symbol": s, "opis": o, "zwyczajowe": True} for s, o in SLOWNIK_ZWYCZAJOWY.items()]
+    for w in wiersze:
+        w["grupa"] = GRUPY.get(w["symbol"][0], "Inne")
+    kolejnosc = list(dict.fromkeys(GRUPY.values()))
+    return sorted(wiersze, key=lambda w: (kolejnosc.index(w["grupa"]) if w["grupa"] in kolejnosc else 99, w["symbol"]))

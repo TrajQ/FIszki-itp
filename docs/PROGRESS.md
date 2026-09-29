@@ -1041,3 +1041,16 @@ Status: zamknięty
 
 Testy: 296 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap44_20260929.zip
+
+## ETAP 45 — MPZP: słownik symboli planu
+Data: 2026-09-29
+Status: zamknięty
+
+- `symbole.SLOWNIK_ZWYCZAJOWY`, `GRUPY`, `wszystkie_symbole`; flaga
+  `zwyczajowe` w `opisz_symbol`
+- `/mpzp/symbole`, `/mpzp/symbole/rozszyfruj`, `static/symbole.js`
+- Sprawdzone w przeglądarce (jasny i ciemny motyw)
+- `DECISIONS.md`: D-051
+
+Testy: 298 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap45_20260929.zip

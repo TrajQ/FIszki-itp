@@ -458,9 +458,14 @@
     // Opis symbolu ze słownika (np. MN/U → dwie pozycje).
     function sekcjaOpisu(opisy) {
         const lista = element("ul", "opis-symbolu");
-        for (const { symbol, opis } of opisy) {
+        for (const { symbol, opis, zwyczajowe } of opisy) {
             const li = element("li");
             li.append(element("span", "etykieta etykieta--sukces", symbol), element("span", opis ? "" : "wyciszony", opis || "brak w słowniku — sprawdź legendę planu"));
+            if (zwyczajowe) {
+                const znak = element("span", "etykieta", "zwyczajowe");
+                znak.title = "Oznaczenie spoza rozporządzenia z 2003 r. — znaczenie ustala legenda planu";
+                li.appendChild(znak);
+            }
             lista.appendChild(li);
         }
         return lista;

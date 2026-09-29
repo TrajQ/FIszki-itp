@@ -691,3 +691,27 @@ def test_zapisane_nie_znikaja_z_historia_i_trafiaja_do_csv_i_raportu(client, mon
     )
     html = client.get(f"/mpzp/raport?id={ID_ZAPISANEJ}").get_data(as_text=True)
     assert "projekt; urbanistyka" in html
+
+
+# ---------- ETAP 45: słownik symboli ----------
+
+
+def test_symbole_zwyczajowe_oznaczone():
+    opis = {o["symbol"]: o for o in opisz_symbol("2MN/UO")}
+    assert opis["MN"]["zwyczajowe"] is False
+    assert opis["UO"]["zwyczajowe"] is True and "oświaty" in opis["UO"]["opis"]
+    assert opisz_symbol("QQ")[0] == {"symbol": "QQ", "opis": None, "zwyczajowe": False}
+
+
+def test_slownik_symboli_strona_i_rozszyfruj(client):
+    from mpzp.symbole import SLOWNIK, SLOWNIK_ZWYCZAJOWY, wszystkie_symbole
+
+    wszystkie = wszystkie_symbole()
+    assert len(wszystkie) == len(SLOWNIK) + len(SLOWNIK_ZWYCZAJOWY)
+    assert not set(SLOWNIK) & set(SLOWNIK_ZWYCZAJOWY)  # zwyczajowe nie nadpisują rozporządzenia
+    assert wszystkie[0]["grupa"] == "Zabudowa mieszkaniowa"
+
+    html = client.get("/mpzp/symbole").get_data(as_text=True)
+    assert "tereny zieleni urządzonej" in html and "zwyczajowe" in html
+    dane = client.get("/mpzp/symbole/rozszyfruj?q=12KDL").get_json()
+    assert dane["opis"][0]["opis"] == "tereny dróg publicznych — droga lokalna"

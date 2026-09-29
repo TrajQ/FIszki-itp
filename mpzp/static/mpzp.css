@@ -769,3 +769,25 @@ button.wpis-zapisany {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Słownik symboli (ETAP 45) */
+.rozszyfruj {
+    margin-bottom: 16px;
+}
+
+.rozszyfruj input {
+    font-size: 1.2rem;
+    font-family: var(--czcionka-mono);
+}
+
+.filtr-symboli {
+    max-width: 320px;
+}
+
+.tabela-symboli td:first-child {
+    width: 90px;
+}
+
+.tabela-symboli td:last-child {
+    white-space: nowrap;
+}

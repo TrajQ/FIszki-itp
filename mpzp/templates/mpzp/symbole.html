@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block tytul %}Symbole planu — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa działek</a>
+        <h1>Symbole planu</h1>
+        <p>Oznaczenia literowe przeznaczenia terenu w planach miejscowych. Wpisz symbol z rysunku planu, np. <code>3MN/U</code> albo <code>12KDL</code>.</p>
+    </div>
+</div>
+
+<section class="karta stos rozszyfruj">
+    <label>Rozszyfruj symbol
+        <input id="pole-symbolu" type="search" placeholder="np. 3MN/U" autocomplete="off" maxlength="40">
+    </label>
+    <ul id="wynik-symbolu" class="opis-symbolu"></ul>
+</section>
+
+<section class="karta stos">
+    <div class="rzad rzad--miedzy">
+        <h3>Słownik</h3>
+        <input id="filtr-symboli" type="search" placeholder="Szukaj: symbol albo słowo, np. zieleń" class="filtr-symboli">
+    </div>
+    <table class="tabela tabela-symboli">
+        <thead><tr><th>Symbol</th><th>Przeznaczenie</th><th>Grupa</th></tr></thead>
+        <tbody id="lista-symboli">
+            {% for s in symbole %}
+            <tr data-szukaj="{{ (s.symbol ~ ' ' ~ s.opis ~ ' ' ~ s.grupa) | lower }}">
+                <td><span class="etykieta etykieta--sukces">{{ s.symbol }}</span></td>
+                <td>{{ s.opis }}{% if s.zwyczajowe %} <span class="etykieta" title="Spoza rozporządzenia z 2003 r. — znaczenie ustala legenda konkretnego planu">zwyczajowe</span>{% endif %}</td>
+                <td class="wyciszony">{{ s.grupa }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p id="brak-symboli" class="wyciszony" hidden>Nic nie pasuje.</p>
+    <p class="przypis">Podstawa: rozporządzenie Ministra Infrastruktury z 26 sierpnia 2003 r. w sprawie wymaganego zakresu projektu miejscowego planu zagospodarowania przestrzennego (Dz.U. 2003 nr 164 poz. 1587). Oznaczenia „zwyczajowe” są spoza rozporządzenia — gminy stosują je często, ale nie zawsze w tym samym znaczeniu. Numer przed literami (np. 3 w „3MN”) to numer porządkowy terenu. Zawsze rozstrzyga legenda i tekst uchwały.</p>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_ROZSZYFRUJ = "{{ url_for('mpzp.rozszyfruj_symbol') }}";
+</script>
+<script src="{{ url_for('mpzp.static', filename='symbole.js') }}"></script>
+{% endblock %}

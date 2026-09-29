@@ -1051,3 +1051,24 @@ zamiast kolumny w `historia`, bo cykl życia jest inny.
 **Odrzucone alternatywy:**
 - Flaga „ulubiona” w tabeli historii — odrzucone: wpis znikałby po 20
   kolejnych sprawdzeniach albo historia przestałaby mieć limit.
+
+## D-051 — Słownik symboli: rozporządzenie osobno, oznaczenia zwyczajowe osobno
+Data: 2026-09-29
+
+**Decyzja:** Do słownika z rozporządzenia z 2003 r. dochodzi osobny
+`SLOWNIK_ZWYCZAJOWY` (np. MU, ML, UC, UO, UZ, ZN, ZI, KS) — oznaczenia
+spoza rozporządzenia, ale częste w planach. `opisz_symbol` zwraca flagę
+`zwyczajowe`, a interfejs pokazuje ją jako etykietę z wyjaśnieniem.
+Słownik nigdy nie nadpisuje oznaczeń z rozporządzenia (test). Strona
+`/mpzp/symbole`: rozszyfrowanie symbolu i tabela z filtrem.
+
+**Uzasadnienie:** Student czyta plany różnych gmin i trafia na symbole
+spoza rozporządzenia; „brak w słowniku” nic mu nie mówi. Ale znaczenie
+takich symboli różni się między gminami — mieszanie ich z oznaczeniami
+z rozporządzenia sugerowałoby pewność, której nie ma.
+
+**Odrzucone alternatywy:**
+- Jeden wspólny słownik — odrzucone: znika informacja o źródle opisu.
+- Symbole z rozporządzenia z 2021 r. o danych przestrzennych aktów
+  planowania — odrzucone na teraz: bez weryfikacji pełnej listy w
+  źródle nie dopisujemy (zasada „nie zgaduj”).

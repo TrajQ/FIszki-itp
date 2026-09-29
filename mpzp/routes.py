@@ -16,7 +16,7 @@ from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, usun_zapisana, zapisana, zapisane, zapisz_dzialke, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
 from . import krajowe, skala, uklady, zabudowa
-from .symbole import opisz_symbol
+from .symbole import opisz_symbol, wszystkie_symbole
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
 from .wfs import wydzielenia_dzialki as _wydzielenia_dzialki
@@ -231,6 +231,21 @@ def _wspolrzedne(lat: float, lon: float) -> list[dict]:
         for uklad in (uklady.pl1992(lat, lon), uklady.pl2000(lat, lon)):
             wynik.append({**uklad, "x": round(uklad["x"], 2), "y": round(uklad["y"], 2)})
     return wynik
+
+
+# ---------- Słownik symboli (ETAP 45) ----------
+
+
+@mpzp_bp.route("/symbole")
+def symbole():
+    return render_template("mpzp/symbole.html", symbole=wszystkie_symbole())
+
+
+@mpzp_bp.route("/symbole/rozszyfruj")
+def rozszyfruj_symbol():
+    """„3MN/U” → opisy liter; do pola „rozszyfruj” na stronie słownika."""
+    symbol = (request.args.get("q") or "").strip()[:40]
+    return jsonify({"symbol": symbol, "opis": opisz_symbol(symbol)})
 
 
 # ---------- Moje działki (ETAP 44) ----------

@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 44 (mpzp: Moje działki z notatkami — zamknięty)
-Ostatni ZIP: releases/warsztat_etap44_20260929.zip
-Testy: 296 passed / 0 failed
+ETAP: 45 (mpzp: słownik symboli planu — zamknięty)
+Ostatni ZIP: releases/warsztat_etap45_20260929.zip
+Testy: 298 passed / 0 failed
