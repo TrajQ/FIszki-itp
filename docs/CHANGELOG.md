@@ -385,3 +385,11 @@
 - Fiszki bez kotwicy (import) — etykieta „import” zamiast strony, bez
   „Pokaż w źródle” i pustego cytatu w powtórce.
 - Dodano `fiszki/importer.py`, `DECISIONS.md` D-059 i 6 testów.
+
+## ETAP 55 — 2026-09-29
+- Dostępność: „Wczytaj punkty z pliku CSV” w szybkim modelu — punkty
+  (z nazwami) na mapie do przejrzenia, pominięte wiersze z opisem;
+  nazwy placówek w obszarach obsługi i w raporcie do druku.
+- Naprawiono przy okazji (wyłapane testem): nazwa punktu nadpisywała
+  nazwę zapisanego pliku w odpowiedzi serwera.
+- Dodano `model.punkty_z_csv`, `DECISIONS.md` D-060 i 3 testy.

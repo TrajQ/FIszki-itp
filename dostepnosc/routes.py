@@ -152,6 +152,24 @@ def _liczba(wartosc, domyslna: float) -> float:
     return liczba
 
 
+@dostepnosc_bp.route("/punkty-z-pliku", methods=["POST"])
+def punkty_z_pliku():
+    """Wczytuje punkty usług z CSV — do przejrzenia na mapie przed liczeniem."""
+    plik = request.files.get("plik")
+    if plik is None or not plik.filename:
+        return jsonify({"blad": "Nie wybrano pliku."}), 400
+    zawartosc = plik.read(1_000_001)
+    if len(zawartosc) > 1_000_000:
+        return jsonify({"blad": "Plik jest za duży (limit 1 MB)."}), 400
+    try:
+        punkty, bledy = model.punkty_z_csv(zawartosc.decode("utf-8-sig"))
+    except UnicodeDecodeError:
+        return jsonify({"blad": "Plik musi być zapisany w UTF-8."}), 400
+    except model.BladModelu as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify({"punkty": punkty, "bledy": bledy[:20], "liczba_bledow": len(bledy)})
+
+
 @dostepnosc_bp.route("/z-punktow", methods=["POST"])
 def z_punktow():
     """Czas dojścia do punktów usług wstawionych na mapie → nowy plik wyników.
@@ -217,6 +235,11 @@ def z_punktow():
         "polaczone": polacz,
         "obszary": model.obszary_obslugi(punkty, czasy_nowych, najblizsze, ludnosc, maska),
     }
+    # Nazwy punktów (np. z pliku CSV) — tylko do tabeli obszarów obsługi.
+    nazwy = dane.get("nazwy") if isinstance(dane.get("nazwy"), list) else []
+    for obszar, nazwa_punktu in zip(punkty_pliku["obszary"], nazwy):
+        if nazwa_punktu:
+            obszar["nazwa"] = str(nazwa_punktu).strip()[: model.MAKS_DLUGOSC_NAZWY]
     with open(_sciezka_punktow(nazwa), "w", encoding="utf-8") as cel:
         json.dump(punkty_pliku, cel, ensure_ascii=False)
     return jsonify({"plik": nazwa, **punkty_pliku})

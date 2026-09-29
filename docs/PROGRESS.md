@@ -1183,3 +1183,16 @@ Status: zamknięty
 
 Testy: 341 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap54_20260929.zip
+
+## ETAP 55 — Dostępność: punkty usług z CSV
+Data: 2026-09-29
+Status: zamknięty
+
+- `model.punkty_z_csv`, `POST /dostepnosc/punkty-z-pliku`, pole `nazwy`
+  w `/dostepnosc/z-punktow`
+- Sprawdzone w przeglądarce: plik z błędnym wierszem, połączenie z
+  istniejącymi szkołami, nazwy w tabeli
+- `DECISIONS.md`: D-060
+
+Testy: 344 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap55_20260929.zip

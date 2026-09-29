@@ -1246,3 +1246,27 @@ egzaminy, quiz.
   które zakładają plik źródłowy.
 - Import pakietów .apkg Anki — odrzucone: to archiwum z bazą SQLite i
   mediami; eksport tekstowy Anki wystarcza.
+
+## D-060 — Punkty usług z CSV: tylko WGS84, przegląd na mapie przed liczeniem
+Data: 2026-09-29
+
+**Decyzja:** `POST /dostepnosc/punkty-z-pliku` czyta CSV z punktami
+(nagłówki lat/lon, szerokosc/dlugosc, X/Y z QGIS, opcjonalnie nazwa;
+bez nagłówka dwie pierwsze kolumny, kolejność rozpoznana po zakresie
+współrzędnych Polski; przecinek dziesiętny przy średniku). Serwer tylko
+sprawdza i zwraca punkty — przeglądarka stawia z nich znaczniki, które
+można usunąć albo uzupełnić kliknięciem, i dopiero „Policz” liczy
+model. Nazwy trafiają do obszarów obsługi (tabela, raport).
+Współrzędne muszą być w stopniach (EPSG:4326); PL-1992 odrzucamy z
+podpowiedzią, jak wyeksportować dane z QGIS.
+
+**Uzasadnienie:** Listy szkół czy przychodni student ma zwykle w
+arkuszu albo w QGIS — klikanie kilkudziesięciu punktów jest żmudne i
+niedokładne. Przegląd na mapie przed liczeniem pozwala wyłapać błędne
+współrzędne. Przeliczania z PL-1992 nie dodajemy, bo wymagałoby
+odwrotnego odwzorowania w module dostępności (kod z mpzp/uklady.py nie
+może być współdzielony — zasada niezależnych modułów).
+
+**Odrzucone alternatywy:**
+- Geokodowanie adresów — odrzucone: wymaga zewnętrznej usługi i zgody
+  na jej użycie; współrzędne z QGIS są pewniejsze.

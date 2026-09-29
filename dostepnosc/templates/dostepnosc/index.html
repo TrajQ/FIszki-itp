@@ -134,6 +134,10 @@
                 </label>
                 <p class="przypis">Czas = odległość w linii prostej × krętość ÷ prędkość. Model nie zna rzek, torów ani ogrodzeń — do szybkiego porównania wariantów, nie zamiast analizy sieciowej.</p>
             </details>
+            <label class="model__plik">Albo wczytaj punkty z pliku CSV
+                <input id="model-plik" type="file" accept=".csv,.txt,text/csv">
+                <span class="wyciszony">Kolumny lat i lon w stopniach (EPSG:4326), opcjonalnie nazwa. Z QGIS: eksport warstwy punktowej do CSV z geometrią jako X/Y w EPSG:4326.</span>
+            </label>
             <div class="rzad">
                 <button id="model-wstawiaj" type="button" class="przycisk--drugi">Wstawiaj punkty</button>
                 <button id="model-wyczysc" type="button" class="przycisk--tekst" hidden>Wyczyść</button>
@@ -160,6 +164,7 @@
     const URL_POROWNANIE = "{{ url_for('dostepnosc.porownanie') }}";
     const URL_GEOJSON = "{{ url_for('dostepnosc.eksport_geojson') }}";
     const URL_RAPORT = "{{ url_for('dostepnosc.raport') }}";
+    const URL_PUNKTY_Z_PLIKU = "{{ url_for('dostepnosc.punkty_z_pliku') }}";
     const URL_Z_PUNKTOW = "{{ url_for('dostepnosc.z_punktow') }}";
     const URL_INDEKS = "{{ url_for('dostepnosc.index') }}";
     const URL_KOMORKA = "{{ url_for('dostepnosc.komorka', nazwa='__PLIK__', indeks='__H3__') }}";

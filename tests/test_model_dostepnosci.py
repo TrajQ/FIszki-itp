@@ -180,3 +180,50 @@ def test_polacz_bez_takiej_kolumny_to_czytelny_blad(client):
         "/dostepnosc/z-punktow", json={"usluga": "basen", "punkty": [list(SRODEK)], "baza": PRZYKLAD, "polacz": True}
     )
     assert odpowiedz.status_code == 400 and "nie ma z czym połączyć" in odpowiedz.get_json()["blad"]
+
+
+# ---------- ETAP 55: punkty usług z pliku CSV ----------
+
+import io  # noqa: E402
+
+
+def test_punkty_z_csv_naglowki_przecinek_i_kolejnosc():
+    punkty, bledy = model.punkty_z_csv("nazwa;lat;lon\nSP 1;52,40;16,92\nzły;a;b\n")
+    assert punkty == [{"lat": 52.40, "lon": 16.92, "nazwa": "SP 1"}]
+    assert bledy == ["wiersz 3: brak liczbowych współrzędnych"]
+    # bez nagłówka, kolejność x,y (długość, szerokość) — rozpoznana po zakresie
+    punkty, _ = model.punkty_z_csv("16.92,52.40,Szkoła\n")
+    assert punkty == [{"lat": 52.40, "lon": 16.92, "nazwa": "Szkoła"}]
+    # nagłówek QGIS: X = długość, Y = szerokość
+    assert model.punkty_z_csv("X,Y,name\n16.9,52.4,A\n")[0][0] == {"lat": 52.4, "lon": 16.9, "nazwa": "A"}
+
+
+def test_punkty_z_csv_bledy():
+    with pytest.raises(model.BladModelu):
+        model.punkty_z_csv("")
+    with pytest.raises(model.BladModelu):
+        model.punkty_z_csv("lat,lon\n500000,300000\n")  # PL-1992 zamiast stopni — nic nie przechodzi
+    with pytest.raises(model.BladModelu):
+        model.punkty_z_csv("\n".join(f"52.{i:03d},16.9" for i in range(model.MAKS_PUNKTOW + 1)))
+
+
+def test_endpoint_punktow_z_pliku_i_nazwy_w_obszarach(client):
+    odpowiedz = client.post(
+        "/dostepnosc/punkty-z-pliku",
+        data={"plik": (io.BytesIO("lat;lon;nazwa\n52,4064;16,9252;SP 1\n".encode("utf-8")), "szkoly.csv")},
+        content_type="multipart/form-data",
+    )
+    punkty = odpowiedz.get_json()["punkty"]
+    assert punkty == [{"lat": 52.4064, "lon": 16.9252, "nazwa": "SP 1"}]
+
+    wynik = client.post(
+        "/dostepnosc/z-punktow",
+        json={"usluga": "szkoła", "punkty": [[p["lat"], p["lon"]] for p in punkty], "nazwy": ["SP 1"], "baza": PRZYKLAD},
+    ).get_json()
+    assert wynik["obszary"][0]["nazwa"] == "SP 1"
+    raport = client.get(f"/dostepnosc/raport?plik={wynik['plik']}&kolumna=czas_szkola_min").get_data(as_text=True)
+    assert "1. SP 1" in raport
+
+    zly = client.post("/dostepnosc/punkty-z-pliku", data={"plik": (io.BytesIO("ą".encode("cp1250")), "x.csv")}, content_type="multipart/form-data")
+    assert zly.status_code == 400
+    assert client.post("/dostepnosc/punkty-z-pliku", data={}, content_type="multipart/form-data").status_code == 400

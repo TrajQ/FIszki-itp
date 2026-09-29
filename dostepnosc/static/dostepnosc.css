@@ -535,3 +535,14 @@ button.model__wstawiaj--aktywny {
         padding: 0;
     }
 }
+
+/* Punkty z pliku (ETAP 55) */
+.model__plik .wyciszony {
+    font-size: 12px;
+}
+
+.tabela-obszarow td:first-child {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

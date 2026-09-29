@@ -520,9 +520,10 @@
         odswiezPunkty();
     }
 
-    function dodajPunkt(latlng) {
+    function dodajPunkt(latlng, nazwa = "") {
         const znacznik = L.marker(latlng, { icon: ikonaPunktu(punktyModelu.length + 1), keyboard: false }).addTo(warstwaPunktow);
-        const wpis = { latlng, znacznik };
+        if (nazwa) znacznik.bindTooltip(nazwa);
+        const wpis = { latlng, znacznik, nazwa };
         znacznik.on("click", () => {
             if (!wstawianie) return;
             warstwaPunktow.removeLayer(znacznik);
@@ -537,6 +538,32 @@
     // otwierać okienko komórki — sprawdzamy tryb w obu miejscach.
     mapa.on("click", (e) => {
         if (wstawianie) dodajPunkt(e.latlng);
+    });
+
+    // Punkty z pliku CSV (ETAP 55): serwer sprawdza plik, tu stawiamy
+    // znaczniki — można je jeszcze usunąć albo dołożyć kliknięciem.
+    const modelPlik = document.getElementById("model-plik");
+    modelPlik.addEventListener("change", async () => {
+        if (!modelPlik.files.length) return;
+        modelBlad.hidden = true;
+        const formularz = new FormData();
+        formularz.append("plik", modelPlik.files[0]);
+        try {
+            const odpowiedz = await fetch(URL_PUNKTY_Z_PLIKU, { method: "POST", body: formularz });
+            const dane = await odpowiedz.json();
+            if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
+            for (const p of dane.punkty) dodajPunkt(L.latLng(p.lat, p.lon), p.nazwa);
+            mapa.fitBounds(L.latLngBounds(punktyModelu.map((p) => p.latlng)), { padding: [40, 40], maxZoom: 15 });
+            if (dane.liczba_bledow) {
+                modelBlad.textContent = `Pominięte wiersze (${dane.liczba_bledow}): ${dane.bledy.join("; ")}.`;
+                modelBlad.hidden = false;
+            }
+        } catch (e) {
+            modelBlad.textContent = e.message;
+            modelBlad.hidden = false;
+        } finally {
+            modelPlik.value = "";
+        }
     });
 
     // „Dodaj do istniejących” ma sens tylko na siatce bieżącego pliku.
@@ -577,6 +604,7 @@
         const zapytanie = {
             usluga: modelUsluga.value,
             punkty: punktyModelu.map((p) => [p.latlng.lat, p.latlng.lng]),
+            nazwy: punktyModelu.map((p) => p.nazwa || ""),
             predkosc_kmh: modelPredkosc.value,
             kretosc: modelKretosc.value,
         };
@@ -623,7 +651,7 @@
             const tr = document.createElement("tr");
             tr.title = `Komórek w obszarze: ${o.komorki}`;
             const komorki = [
-                `${o.nr}`,
+                o.nazwa ? `${o.nr}. ${o.nazwa}` : `${o.nr}`,
                 zLudnoscia ? formatLiczby.format(o.ludnosc) : "—",
                 o.sredni_czas_min === null ? "—" : `${formatLiczby.format(o.sredni_czas_min)} / ${formatLiczby.format(o.maks_czas_min)} min`,
             ];

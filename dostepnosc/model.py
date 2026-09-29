@@ -180,3 +180,66 @@ def csv_wynikow(komorki: list[str], kolumny: dict[str, list], ludnosc: list[floa
             wiersz.append(f"{ludnosc[i]:g}")
         zapis.writerow(wiersz)
     return bufor.getvalue()
+
+
+# ---------- Punkty usług z pliku CSV (ETAP 55) ----------
+
+NAGLOWKI_SZEROKOSCI = {"lat", "latitude", "szerokosc", "szerokość", "y", "szer"}
+NAGLOWKI_DLUGOSCI = {"lon", "lng", "long", "longitude", "dlugosc", "długość", "x", "dl"}
+NAGLOWKI_NAZWY = {"nazwa", "name", "opis", "placowka", "placówka"}
+MAKS_DLUGOSC_NAZWY = 60
+
+
+def _liczba_wsp(tekst: str) -> float:
+    liczba = float(tekst.strip().replace(" ", "").replace(",", "."))
+    if not math.isfinite(liczba):
+        raise ValueError("liczba nieskończona")
+    return liczba
+
+
+def punkty_z_csv(tekst: str) -> tuple[list[dict], list[str]]:
+    """CSV z punktami w WGS84 → ([{"lat", "lon", "nazwa"}], błędy wierszy).
+
+    Kolumny rozpoznajemy po nagłówku (lat/lon, szerokosc/dlugosc, y/x,
+    nazwa). Bez nagłówka: dwie pierwsze kolumny to współrzędne, a która
+    jest szerokością, poznajemy po zakresie (Polska: szerokość 49–55°,
+    długość 14–24,2° — zakresy się nie nakładają).
+    """
+    tekst = tekst.lstrip("﻿")
+    if not tekst.strip():
+        raise BladModelu("Plik jest pusty.")
+    pierwsza = tekst.splitlines()[0]
+    # średnik, gdy jest (wtedy przecinek bywa dziesiętny: „52,40;16,92”)
+    separator = "\t" if "\t" in pierwsza else ";" if ";" in pierwsza else ","
+    wiersze = [w for w in csv.reader(io.StringIO(tekst), delimiter=separator) if any(p.strip() for p in w)]
+
+    naglowek = [p.strip().lower() for p in wiersze[0]]
+    kol_lat = next((i for i, n in enumerate(naglowek) if n in NAGLOWKI_SZEROKOSCI), None)
+    kol_lon = next((i for i, n in enumerate(naglowek) if n in NAGLOWKI_DLUGOSCI), None)
+    kol_nazwa = next((i for i, n in enumerate(naglowek) if n in NAGLOWKI_NAZWY), None)
+    if kol_lat is not None and kol_lon is not None:
+        dane, pierwszy_nr = wiersze[1:], 2
+    else:
+        dane, pierwszy_nr, kol_lat, kol_lon = wiersze, 1, 0, 1
+        kol_nazwa = 2  # opcjonalna trzecia kolumna
+
+    punkty, bledy = [], []
+    for nr, wiersz in enumerate(dane, start=pierwszy_nr):
+        try:
+            a, b = _liczba_wsp(wiersz[kol_lat]), _liczba_wsp(wiersz[kol_lon])
+        except (IndexError, ValueError):
+            bledy.append(f"wiersz {nr}: brak liczbowych współrzędnych")
+            continue
+        # bez nagłówka kolejność bywa odwrotna (x, y) — rozpoznajemy po zakresie
+        if not (48 <= a <= 56) and 48 <= b <= 56:
+            a, b = b, a
+        if not (-90 <= a <= 90 and -180 <= b <= 180):
+            bledy.append(f"wiersz {nr}: współrzędne poza zakresem — potrzebne stopnie WGS84 (EPSG:4326)")
+            continue
+        nazwa = wiersz[kol_nazwa].strip()[:MAKS_DLUGOSC_NAZWY] if kol_nazwa is not None and kol_nazwa < len(wiersz) else ""
+        punkty.append({"lat": a, "lon": b, "nazwa": nazwa})
+        if len(punkty) > MAKS_PUNKTOW:
+            raise BladModelu(f"Za dużo punktów w pliku (limit {MAKS_PUNKTOW}).")
+    if not punkty:
+        raise BladModelu("W pliku nie znaleziono punktów. Potrzebne kolumny lat i lon w stopniach (EPSG:4326).")
+    return punkty, bledy
