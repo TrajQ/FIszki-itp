@@ -82,6 +82,10 @@ def zapisz_koncepcje(koncepcja_id):
         ustawienia = dane.get("ustawienia")
         if ustawienia is not None and not isinstance(ustawienia, dict):
             raise BladKoncepcji("Ustawienia muszą być obiektem.")
+        # ETAP 67: projekt z modułu teren pokazywany jako warstwa punktów
+        teren = (ustawienia or {}).get("teren_projekt")
+        if teren is not None and (isinstance(teren, bool) or not isinstance(teren, int)):
+            raise BladKoncepcji("Projekt terenowy: oczekiwano numeru projektu.")
         # walidacja przed zapisem: nowy rysunek i nowe ustawienia razem
         wynik = bilans(
             geojson if geojson is not None else obecna["geojson"],

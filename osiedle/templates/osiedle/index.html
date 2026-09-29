@@ -41,6 +41,9 @@
                 <button id="zmien-nazwe" type="button" class="przycisk--tekst">Zmień nazwę</button>
                 <button id="usun-koncepcje" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń koncepcję</button>
             </div>
+            <label id="warstwa-terenu" class="warstwa-terenu" hidden>Punkty z inwentaryzacji (moduł Teren)
+                <select id="projekt-terenu"><option value="">— nie pokazuj —</option></select>
+            </label>
             <p id="komunikat" class="komunikat komunikat--blad" hidden></p>
         </section>
 
@@ -152,6 +155,8 @@
     const OBSZAR = {{ obszar | tojson }};
     const FUNKCJE = {{ funkcje | tojson }};
     const DOMYSLNE = {{ domyslne | tojson }};
+    const URL_TEREN_PROJEKTY = "{{ url_for('teren.lista_projektow') }}";
+    const URL_TEREN_PUNKTY = "{{ url_for('teren.lista_punktow', projekt_id=0) }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('static', filename='leaflet-draw/leaflet.draw.js') }}"></script>

@@ -1574,3 +1574,21 @@ nie mieści się w oknie o szerokości połowy ekranu.
 **Odrzucone alternatywy:**
 - Zapis bez opóźnienia po każdej zmianie — więcej zapytań przy
   przesuwaniu wierzchołków, a problem kolejności i tak zostaje.
+
+## D-073 — Osiedle: punkty z modułu Teren jako warstwa podglądu
+Data: 2026-09-29
+
+**Decyzja:** Koncepcja osiedla może pokazywać punkty jednego projektu
+inwentaryzacji (wybór w panelu „Koncepcja”, zapisany w
+`ustawienia.teren_projekt`). Osiedle pobiera je przez istniejące trasy
+modułu Teren (`/teren/projekty.json` — nowa lista, `/teren/projekty/<id>/punkty`).
+Warstwa jest tylko do podglądu: poza rysunkiem, nie wchodzi do bilansu
+ani do eksportu. Pusta koncepcja przybliża mapę do punktów. Usunięty
+projekt terenowy — wybór po cichu wraca do „nie pokazuj”.
+
+**Uzasadnienie:** Inwentaryzacja to podstawa koncepcji (np. drzewa do
+zachowania). Moduły zostają niezależne: Osiedle używa publicznych tras
+Terenu jak zewnętrznej usługi, bez wspólnego kodu.
+
+**Odrzucone alternatywy:**
+- Kopiowanie punktów do koncepcji — dwie wersje tych samych danych.

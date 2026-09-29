@@ -52,6 +52,12 @@ def index():
     return render_template("teren/index.html", projekty=baza.projekty(), wzory=WZORY, blad=request.args.get("blad"))
 
 
+@teren_bp.route("/projekty.json")
+def lista_projektow():
+    """Lista projektów dla innych modułów (np. warstwa punktów w Osiedlu, ETAP 67)."""
+    return jsonify([{"id": p["id"], "nazwa": p["nazwa"], "liczba_punktow": p["liczba_punktow"]} for p in baza.projekty()])
+
+
 @teren_bp.route("/projekty", methods=["POST"])
 def nowy_projekt():
     try:

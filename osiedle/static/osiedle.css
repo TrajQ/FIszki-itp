@@ -389,3 +389,31 @@ button.przycisk--niebezpieczny-tekst {
         break-after: page;
     }
 }
+
+/* ETAP 67: punkty z modułu Teren */
+.warstwa-terenu {
+    font-size: 13px;
+}
+
+.warstwa-terenu[hidden] {
+    display: none;
+}
+
+.dymek-terenu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+}
+
+.dymek-terenu p {
+    margin: 4px 0;
+}
+
+.dymek-terenu__zdjecie {
+    width: 100%;
+    max-height: 160px;
+    margin-bottom: 4px;
+    object-fit: cover;
+    border-radius: 8px;
+}

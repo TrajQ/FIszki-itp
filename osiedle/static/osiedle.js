@@ -12,6 +12,7 @@
     const linkiKoncepcji = document.getElementById("linki-koncepcji");
     const linkGeojson = document.getElementById("link-geojson");
     const linkRaport = document.getElementById("link-raport");
+    const warstwaTerenuEl = document.getElementById("warstwa-terenu");
     const sekcjaRysowania = document.getElementById("sekcja-rysowania");
     const sekcjaBilansu = document.getElementById("sekcja-bilansu");
     const wybranyTerenEl = document.getElementById("wybrany-teren");
@@ -191,8 +192,79 @@
     }
 
     function ustawieniaZFormularza() {
-        return { ...(koncepcja.ustawienia || {}), plan: wpisane(polaUstalen, "ustalenie"), program: wpisane(polaZalozen, "zalozenie") };
+        return {
+            ...(koncepcja.ustawienia || {}),
+            plan: wpisane(polaUstalen, "ustalenie"),
+            program: wpisane(polaZalozen, "zalozenie"),
+            teren_projekt: projektTerenu.value ? Number(projektTerenu.value) : null,
+        };
     }
+
+    // ---------- punkty z modułu Teren (ETAP 67) ----------
+    // Tylko do podglądu: warstwa poza rysunkiem, nie wchodzi do bilansu.
+
+    const projektTerenu = document.getElementById("projekt-terenu");
+    const warstwaTerenu = L.featureGroup().addTo(mapa);
+    let numerTerenu = 0;
+
+    function tekstWartosci(w) {
+        return w === true ? "tak" : w === false ? "nie" : String(w);
+    }
+
+    function dymekTerenu(p) {
+        const div = element("div", "dymek-terenu");
+        if (p.zdjecie) {
+            const img = element("img", "dymek-terenu__zdjecie");
+            img.src = p.zdjecie;
+            img.alt = "Zdjęcie z terenu";
+            div.appendChild(img);
+        }
+        for (const [nazwa, w] of Object.entries(p.wartosci)) {
+            const wiersz = element("div");
+            wiersz.append(element("span", "wyciszony", `${nazwa}: `), element("strong", "", tekstWartosci(w)));
+            div.appendChild(wiersz);
+        }
+        if (p.uwagi) div.appendChild(element("p", "", p.uwagi));
+        div.appendChild(element("span", "wyciszony", new Date(p.czas).toLocaleDateString("pl-PL")));
+        return div;
+    }
+
+    async function pokazTeren() {
+        const numer = ++numerTerenu;
+        warstwaTerenu.clearLayers();
+        if (!projektTerenu.value) return;
+        try {
+            const punkty = await zapytaj(URL_TEREN_PUNKTY.replace(/0\/punkty$/, `${projektTerenu.value}/punkty`));
+            if (numer !== numerTerenu) return;
+            for (const p of punkty) {
+                if (p.lat === null) continue;
+                L.circleMarker([p.lat, p.lng], { radius: 6, weight: 2, color: "#ffffff", fillColor: "#1d1d1f", fillOpacity: 0.9 })
+                    .bindPopup(() => dymekTerenu(p), { maxWidth: 260 })
+                    .addTo(warstwaTerenu);
+            }
+            warstwaTerenu.bringToFront();
+            // Pusta koncepcja: pokaż miejsce inwentaryzacji, żeby od razu rysować w nim.
+            if (!rysunek.getLayers().length && warstwaTerenu.getLayers().length) {
+                mapa.fitBounds(warstwaTerenu.getBounds(), { padding: [60, 60], maxZoom: 18 });
+            }
+        } catch (e) {
+            pokazKomunikat(`Punkty z terenu: ${e.message}`);
+        }
+    }
+
+    async function wczytajProjektyTerenu() {
+        try {
+            const projekty = await zapytaj(URL_TEREN_PROJEKTY);
+            for (const p of projekty) projektTerenu.appendChild(new Option(`${p.nazwa} (${p.liczba_punktow} pkt)`, String(p.id)));
+        } catch (e) {
+            // bez listy projektów wybór zostaje pusty — rysowanie działa dalej
+        }
+    }
+
+    projektTerenu.addEventListener("change", () => {
+        pokazTeren();
+        zapiszRysunek();
+    });
 
     mapa.on("click", () => zaznacz(null));
 
@@ -403,7 +475,9 @@
         if (!id) {
             koncepcja = null;
             mapa.removeControl(kontrolkaRysowania);
-            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, akcjeKoncepcji, linkiKoncepcji].forEach((el) => (el.hidden = true));
+            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = true));
+            projektTerenu.value = "";
+            pokazTeren();
             return;
         }
         const dane = await zapytaj(`${URL_KONCEPCJE}/${id}`);
@@ -421,7 +495,11 @@
             },
         });
         kontrolkaRysowania.addTo(mapa);
-        [sekcjaRysowania, akcjeKoncepcji, linkiKoncepcji].forEach((el) => (el.hidden = false));
+        [sekcjaRysowania, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = false));
+        const zapisanyTeren = (dane.ustawienia || {}).teren_projekt;
+        // projekt mógł zostać usunięty w module Teren — wtedy nic nie pokazujemy
+        projektTerenu.value = [...projektTerenu.options].some((o) => o.value === String(zapisanyTeren)) ? String(zapisanyTeren) : "";
+        pokazTeren();
         linkGeojson.href = `${URL_KONCEPCJE}/${id}.geojson`;
         linkRaport.href = `${URL_KONCEPCJE}/${id}/raport`;
         stanZapisu.textContent = "";
@@ -475,5 +553,6 @@
     } catch (e) {
         // bez localStorage zaczynamy od listy
     }
-    wczytajListe(ostatnia).catch(() => wczytajListe().catch((e) => pokazKomunikat(e.message)));
+    // Najpierw lista projektów terenowych — otwarta koncepcja ustawia z niej swój wybór.
+    wczytajProjektyTerenu().then(() => wczytajListe(ostatnia).catch(() => wczytajListe().catch((e) => pokazKomunikat(e.message))));
 })();

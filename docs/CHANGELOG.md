@@ -493,3 +493,10 @@
 - Zaktualizowane teksty: strona główna (siedem narzędzi, opisy kart),
   instrukcja w kopii zapasowej, opis danych użytkownika.
 - Dodano `DECISIONS.md` D-072.
+
+## ETAP 67 — 2026-09-29
+- Osiedle: warstwa „Punkty z inwentaryzacji” — wybór projektu z modułu
+  Teren, punkty z dymkiem (wartości pól, zdjęcie, uwagi), wybór
+  zapamiętany w koncepcji, pusta koncepcja przybliża mapę do punktów.
+- Teren: lista projektów w JSON (`/teren/projekty.json`).
+- Dodano `DECISIONS.md` D-073 i 1 test.

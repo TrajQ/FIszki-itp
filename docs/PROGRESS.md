@@ -1351,3 +1351,13 @@ Status: zamknięty
 - Szerokość stron sprawdzona w trzech rozmiarach okna
 - Testy: jeden nowy przypadek (historia pytań po usunięciu aktu)
 - `DECISIONS.md`: D-072
+
+## ETAP 67 — Osiedle: punkty z Terenu na mapie koncepcji
+Data: 2026-09-29
+Status: zamknięty
+
+- `osiedle.js`: warstwa punktów terenowych, `ustawienia.teren_projekt`
+  (walidacja w `osiedle/routes.py`), `teren/routes.py: lista_projektow`
+- Sprawdzone w przeglądarce: 8 punktów z importu, dymek, wybór po
+  przeładowaniu zachowany
+- `DECISIONS.md`: D-073

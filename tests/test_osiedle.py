@@ -238,3 +238,18 @@ def test_raport_svg_i_porownanie(client):
     assert html.count("<svg") == 2 and "Wariant B" in html
     assert "1 z 1" in html and "0 z 1" in html  # B: 24% > 20%
     assert "Zaznacz co najmniej dwie" in client.get(f"/osiedle/porownanie?id={ids[0]}").get_data(as_text=True)
+
+
+# ---------- ETAP 67: punkty z modułu Teren ----------
+
+
+def test_projekt_terenu_w_ustawieniach(client):
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Z terenem"}).get_json()
+    url = f"/osiedle/koncepcje/{k['id']}"
+    assert client.put(url, json={"ustawienia": {"teren_projekt": 3}}).get_json()["ustawienia"]["teren_projekt"] == 3
+    assert client.put(url, json={"ustawienia": {"teren_projekt": None}}).status_code == 200
+    for zle in ("3", True, 2.5):
+        assert client.put(url, json={"ustawienia": {"teren_projekt": zle}}).status_code == 400
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    assert client.get("/teren/projekty.json").get_json() == [{"id": 1, "nazwa": "Zieleń", "liczba_punktow": 0}]
+    assert "/teren/projekty.json" in client.get("/osiedle/").get_data(as_text=True)
