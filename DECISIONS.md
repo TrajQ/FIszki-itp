@@ -1655,3 +1655,27 @@ decyduje użytkownik, który zna swoje kategorie.
 **Odrzucone alternatywy:**
 - Rozpoznawanie słów „dobry/zły” w opcjach — zgadywanie, zawodne dla
   własnych kategorii.
+
+## D-077 — Aktualizacja z ZIP-a skryptem, z kopią zapasową i listą plików wersji
+Data: 2026-09-29
+
+**Decyzja:** `./aktualizuj.sh` (logika w `aktualizacja.py`, tylko
+biblioteka standardowa Pythona) aktualizuje instalację z pobranego
+ZIP-a: znajduje najnowszy `warsztat_etap*.zip` w Pobranych (albo
+wskazany), sprawdza ZIP (katalog `warsztat/`, `app.py`, brak ścieżek
+wychodzących poza katalog), przerywa, gdy aplikacja działa, robi kopię
+zapasową w `~/warsztat_kopie/`, podmienia pliki programu, nigdy nie
+dotyka `instance/`, `.env`, `.venv/`, usuwa pliki z poprzedniej wersji
+nieobecne w nowej (lista w `.pliki_wersji`; przy pierwszym użyciu nic
+nie usuwa) i instaluje zależności, zapisując sumę `requirements.txt` tak
+jak `uruchom.sh`. Skrypt bash ma całą treść w funkcji — bash wczytuje ją
+przed wykonaniem, więc podmiana skryptu w trakcie nie szkodzi.
+
+**Uzasadnienie:** Autor aktualizuje po każdym ETAPie, ręczne
+przenoszenie plików grozi nadpisaniem danych albo `.env`. Kopia przed
+zmianą pozwala wrócić bez gita.
+
+**Odrzucone alternatywy:**
+- `git pull` jako jedyna droga — autor instaluje z ZIP-ów.
+- rsync — nie zawsze zainstalowany, a lista plików wersji i tak jest
+  potrzebna do usuwania starych plików.

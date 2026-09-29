@@ -59,6 +59,6 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 70 (teren: kolory dobry–zły — zamknięty)
-Ostatni ZIP: releases/warsztat_etap70_20260929.zip
-Testy: 408 passed / 0 failed
+ETAP: 71 (aktualizacja jednym poleceniem — zamknięty)
+Ostatni ZIP: releases/warsztat_etap71_20260929.zip
+Testy: 414 passed / 0 failed

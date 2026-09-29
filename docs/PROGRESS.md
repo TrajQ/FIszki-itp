@@ -1394,3 +1394,14 @@ Status: zamknięty
   ciemny motyw)
 - Projekty utworzone przed tym ETAPem: skalę zaznacza się w edytorze pól
 - `DECISIONS.md`: D-076
+
+## ETAP 71 — Aktualizacja jednym poleceniem
+Data: 2026-09-29
+Status: zamknięty
+
+- `aktualizacja.py` + `aktualizuj.sh`; `.pliki_wersji` w `.gitignore`;
+  opis ikony bez listy modułów
+- Sprawdzone na prawdziwej instalacji w katalogu tymczasowym: ZIP z
+  Pobranych, kopia zapasowa, dane i `.env` nietknięte, stary plik
+  usunięty, zależności przez `.venv/bin/pip`, suma dla `uruchom.sh`
+- `DECISIONS.md`: D-077

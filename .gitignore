@@ -6,3 +6,4 @@ __pycache__/
 instance/
 releases/
 .pytest_cache/
+.pliki_wersji

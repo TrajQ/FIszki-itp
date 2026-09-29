@@ -522,3 +522,10 @@
   kolory od zielonego do czerwonego na mapie projektu i w raporcie;
   zaznaczenie w edytorze pól, we wzorach pola „stan” już jako skala.
 - Dodano `DECISIONS.md` D-076 i 1 test.
+
+## ETAP 71 — 2026-09-29
+- Aktualizacja jednym poleceniem: `./aktualizuj.sh` (kopia zapasowa w
+  `~/warsztat_kopie/`, podmiana plików bez ruszania danych, `.env` i
+  `.venv`, usuwanie plików starej wersji, zależności); opis w
+  `docs/URUCHOMIENIE.md`.
+- Dodano `aktualizacja.py`, `aktualizuj.sh`, `DECISIONS.md` D-077 i 6 testów.

@@ -27,10 +27,24 @@ Bez ikony: `cd ~/warsztat && ./uruchom.sh`.
 
 ## Aktualizacja
 
-`git pull` (albo rozpakowanie nowego ZIP-a w to samo miejsce, z
-zachowaniem `.venv`, `.env` i `instance/`). Przy następnym starcie
-`uruchom.sh` sam doinstaluje nowe zależności, jeśli zmienił się
-`requirements.txt`. W przeglądarce odśwież stronę przez Ctrl+Shift+R.
+Zamknij Warsztat (okno terminala), pobierz nowy ZIP do katalogu Pobrane
+i uruchom w katalogu projektu:
+
+```bash
+./aktualizuj.sh                        # najnowszy warsztat_etap*.zip z Pobranych
+./aktualizuj.sh ~/Pobrane/plik.zip     # albo wskazany ZIP
+```
+
+Skrypt najpierw robi kopię zapasową (kod, `instance/`, `.env`) w
+`~/warsztat_kopie/`, potem podmienia pliki programu, usuwa pliki, których
+nie ma w nowej wersji, i doinstalowuje zależności. Dane (`instance/`),
+klucze (`.env`) i środowisko (`.venv/`) zostają bez zmian. W
+przeglądarce odśwież stronę przez Ctrl+Shift+R.
+
+Powrót do poprzedniej wersji: rozpakuj kopię z `~/warsztat_kopie/`
+(zawiera katalog `warsztat/` z kodem i danymi sprzed aktualizacji).
+
+Z gita: `git pull` — `uruchom.sh` sam doinstaluje zależności.
 
 ## Klucze w `.env`
 

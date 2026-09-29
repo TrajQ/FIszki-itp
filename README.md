@@ -18,6 +18,8 @@ danych jednym kliknięciem na stronie głównej. Liczby zawsze liczy kod —
 model językowy tylko opisuje i proponuje treść do zatwierdzenia.
 
 Uruchomienie na Linux Mint: [docs/URUCHOMIENIE.md](docs/URUCHOMIENIE.md).
+Aktualizacja z pobranego ZIP-a: `./aktualizuj.sh` (kopia zapasowa, dane
+i klucze bez zmian).
 Postęp prac: [docs/PROGRESS.md](docs/PROGRESS.md), decyzje:
 [DECISIONS.md](DECISIONS.md), zasady pracy: [CLAUDE.md](CLAUDE.md).
 

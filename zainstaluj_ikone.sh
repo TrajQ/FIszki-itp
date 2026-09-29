@@ -16,7 +16,7 @@ mkdir -p "$MENU" "$PULPIT"
 TRESC="[Desktop Entry]
 Type=Application
 Name=Warsztat
-Comment=Atlas, MPZP, Fiszki, Dostępność — lokalnie na 127.0.0.1
+Comment=Warsztat gospodarki przestrzennej — lokalnie na 127.0.0.1
 Exec=\"$KATALOG/uruchom.sh\"
 Path=$KATALOG
 Icon=applications-science
