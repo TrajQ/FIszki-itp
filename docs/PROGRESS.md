@@ -1361,3 +1361,15 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: 8 punktów z importu, dymek, wybór po
   przeładowaniu zachowany
 - `DECISIONS.md`: D-073
+
+## ETAP 68 — Przepisy → Fiszki
+Data: 2026-09-29
+Status: zamknięty
+
+- `fiszki/zewnetrzne.py`, trasa POST `/przepisy/pytania/<id>/fiszka`,
+  `tekst.teksty_stron`, `pytania.strona_cytatu`, formularz w `pytania.js`
+- Sprawdzone w przeglądarce na PDF-ie ustawy: pytanie → „+ Fiszka” →
+  fiszka ze stroną 2 → w Fiszkach „Pokaż w źródle” podświetla cytat
+- Znaleziony przy okazji i naprawiony błąd podglądu PDF w fiszkach
+  (lewy brzeg strony poza obszarem przewijania)
+- `DECISIONS.md`: D-074

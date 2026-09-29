@@ -255,16 +255,19 @@ mark {
     font-size: 0.85rem;
 }
 
-/* Kontener przewija się poziomo, gdy strona PDF jest szersza niż kolumna. */
+/* Kontener przewija się poziomo, gdy strona PDF jest szersza niż kolumna.
+   Środkowanie przez margin: auto, nie justify-content: center — to drugie
+   przy szerszej stronie wypychało jej lewy brzeg poza obszar przewijania
+   (lewa część tekstu była nie do zobaczenia; ETAP 68). */
 #kontener-pdf {
     overflow-x: auto;
     display: flex;
-    justify-content: center;
 }
 
 #warstwa-pdf {
     position: relative;
     display: inline-block;
+    margin: 0 auto;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
     background: #fff;

@@ -57,6 +57,16 @@ def strony_z_pdf(sciezka: str) -> list[str]:
     return strony
 
 
+def teksty_stron(sciezka: str, od: int, do: int) -> dict[int, str]:
+    """Tekst wybranych stron (numeracja od 1) — bez czytania całego aktu."""
+    try:
+        czytnik = PdfReader(sciezka)
+        do = min(do, len(czytnik.pages))
+        return {nr: czytnik.pages[nr - 1].extract_text() or "" for nr in range(max(1, od), do + 1)}
+    except (PdfReadError, ValueError, KeyError, TypeError, OSError):
+        return {}
+
+
 def wiersze_strony(tekst: str) -> list[str]:
     """Wiersze strony bez pustych i bez nagłówków/stopek."""
     wiersze = [w.strip() for w in tekst.splitlines()]

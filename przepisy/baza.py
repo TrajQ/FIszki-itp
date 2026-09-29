@@ -305,6 +305,16 @@ def zapisz_pytanie(pytanie: str, akt_id: int | None, wynik: dict) -> int:
     return pytanie_id
 
 
+def pytanie(pytanie_id: int) -> dict | None:
+    wiersz = get_db().execute("SELECT * FROM pytania WHERE id = ?", (pytanie_id,)).fetchone()
+    return {**dict(wiersz), "wynik": json.loads(wiersz["wynik"])} if wiersz else None
+
+
+def jednostka(jednostka_id: int) -> dict | None:
+    wiersz = get_db().execute("SELECT * FROM jednostki WHERE id = ?", (jednostka_id,)).fetchone()
+    return dict(wiersz) if wiersz else None
+
+
 def historia_pytan() -> list[dict]:
     wiersze = get_db().execute("SELECT * FROM pytania ORDER BY id DESC LIMIT ?", (MAKS_HISTORII,)).fetchall()
     return [{**dict(w), "wynik": json.loads(w["wynik"])} for w in wiersze]

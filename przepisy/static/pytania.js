@@ -44,7 +44,7 @@
 
         if (w.cytaty.length) {
             const lista = element("ol", "cytaty");
-            for (const c of w.cytaty) {
+            for (const [nr, c] of w.cytaty.entries()) {
                 const li = element("li", "cytat");
                 li.append(element("blockquote", "", `„${c.cytat}”`));
                 const zrodlo = element("div", "cytat__zrodlo");
@@ -55,6 +55,16 @@
                 pdf.target = "_blank";
                 pdf.rel = "noopener";
                 zrodlo.append(link, element("span", "wyciszony", ` · ${c.nazwa_aktu} · `), pdf);
+                if (p.id) {
+                    const przycisk = element("button", "przycisk--tekst cytat__fiszka", "+ Fiszka");
+                    przycisk.type = "button";
+                    przycisk.title = "Fiszka do nauki z kotwicą w PDF-ie aktu";
+                    przycisk.addEventListener("click", () => {
+                        przycisk.hidden = true;
+                        li.append(formularzFiszki(p, nr, c, () => (przycisk.hidden = false)));
+                    });
+                    zrodlo.append(przycisk);
+                }
                 li.append(zrodlo);
                 lista.append(li);
             }
@@ -65,6 +75,66 @@
         if (w.przeszukane && w.przeszukane.length) uwagi.push(`model widział: ${w.przeszukane.map((j) => j.oznaczenie).join(", ")}`);
         if (uwagi.length) div.append(element("p", "wyciszony odpowiedz__uwagi", uwagi.join(" · ")));
         return div;
+    }
+
+    // Fiszka z cytatu (ETAP 68): pytanie i odpowiedź do poprawienia przed
+    // zapisem; kotwicą w źródle jest sam cytat na swojej stronie PDF-a.
+    function formularzFiszki(p, nr, c, anuluj) {
+        const f = element("form", "formularz-fiszki");
+        const pole = (etykieta, wartosc, wiersze) => {
+            const l = element("label", "", etykieta);
+            const t = element("textarea");
+            t.rows = wiersze;
+            t.maxLength = 2000;
+            t.value = wartosc;
+            l.append(t);
+            f.append(l);
+            return t;
+        };
+        const pytanie = pole("Pytanie", p.pytanie, 2);
+        const odpowiedz = pole("Odpowiedź", `${c.cytat} (${c.oznaczenie})`, 3);
+        const temat = element("input");
+        temat.type = "text";
+        temat.value = "przepisy";
+        temat.maxLength = 60;
+        const lTemat = element("label", "", "Temat");
+        lTemat.append(temat);
+        f.append(lTemat);
+        const stan = element("p", "wyciszony");
+        const zapisz = element("button", "", "Utwórz fiszkę");
+        zapisz.type = "submit";
+        const wroc = element("button", "przycisk--tekst", "Anuluj");
+        wroc.type = "button";
+        wroc.addEventListener("click", () => {
+            f.remove();
+            anuluj();
+        });
+        const rzad = element("div", "rzad");
+        rzad.append(zapisz, wroc);
+        f.append(rzad, stan);
+        f.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            zapisz.disabled = true;
+            try {
+                const odp = await fetch(`${URL_PYTANIA}${p.id}/fiszka`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ cytat: nr, pytanie: pytanie.value, odpowiedz: odpowiedz.value, tematy: temat.value ? [temat.value] : [] }),
+                });
+                const dane = await odp.json().catch(() => ({}));
+                if (!odp.ok) throw new Error(dane.blad || `Błąd ${odp.status}`);
+                const gotowe = element("p", "komunikat komunikat--sukces");
+                const link = element("a", "", "otwórz w Fiszkach ›");
+                link.href = dane.url;
+                gotowe.append(`Fiszka dodana (kotwica: strona ${dane.strona} PDF-a) — `, link);
+                f.replaceWith(gotowe);
+            } catch (err) {
+                stan.textContent = err.message;
+                stan.className = "komunikat komunikat--blad";
+                zapisz.disabled = false;
+            }
+        });
+        return f;
     }
 
     formularz.addEventListener("submit", async (e) => {

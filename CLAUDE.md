@@ -59,6 +59,6 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 67 (osiedle: punkty z Terenu — zamknięty)
-Ostatni ZIP: releases/warsztat_etap67_20260929.zip
-Testy: 402 passed / 0 failed
+ETAP: 68 (przepisy → fiszki — zamknięty)
+Ostatni ZIP: releases/warsztat_etap68_20260929.zip
+Testy: 404 passed / 0 failed

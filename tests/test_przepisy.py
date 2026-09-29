@@ -233,3 +233,38 @@ def test_api_pytania_i_historia(client, monkeypatch):
     assert "Kontrolne pytanie" in client.get("/przepisy/").get_data(as_text=True)
     client.delete("/przepisy/akty/1")
     assert "Kontrolne pytanie" not in client.get("/przepisy/").get_data(as_text=True)
+
+
+# ---------- ETAP 68: fiszka z cytatu ----------
+
+from przepisy.pytania import strona_cytatu  # noqa: E402
+
+
+def test_strona_cytatu():
+    teksty = {2: "Art. 15. 1. Wójt sporządza\nprojekt planu.", 3: "2. W planie miejscowym określa się obowiązkowo\nintensywność."}
+    assert strona_cytatu(teksty, "określa się  obowiązkowo intensywność", 2) == 3
+    assert strona_cytatu(teksty, "tego nie ma", 2) == 2
+    assert strona_cytatu({}, "cokolwiek", 7) == 7
+
+
+def test_fiszka_z_cytatu(client, monkeypatch):
+    wgraj(client)
+    monkeypatch.setattr(gemini, "odpowiedz_z_przepisow", lambda pytanie, fragmenty: {
+        "odpowiedz": "Obowiązkowo określa się maksymalną intensywność zabudowy.",
+        "cytaty": [{"fragment": 1, "cytat": "określa się obowiązkowo maksymalną intensywność zabudowy"}]})
+    pytanie_id = client.post("/przepisy/pytanie", json={"pytanie": "Co z intensywnością zabudowy?"}).get_json()["id"]
+    url = f"/przepisy/pytania/{pytanie_id}/fiszka"
+
+    r = client.post(url, json={"cytat": 0, "pytanie": "Co plan określa obowiązkowo?", "odpowiedz": "maks. intensywność (art. 15)", "tematy": ["przepisy"]})
+    assert r.status_code == 201
+    wynik = r.get_json()
+    assert wynik["strona"] == 2 and wynik["url"] == f"/fiszki/{wynik['pdf_id']}/"  # atrapa PDF-a: strona początku artykułu
+    fiszki = client.get(f"/fiszki/{wynik['pdf_id']}/fiszki").get_json()
+    assert fiszki[0]["fragment_tekstu"] == "określa się obowiązkowo maksymalną intensywność zabudowy"
+    assert fiszki[0]["strona"] == 2 and fiszki[0]["tematy"] == ["przepisy"]
+
+    # druga fiszka z tego samego aktu — ten sam PDF w fiszkach, bez kopii
+    assert client.post(url, json={"cytat": 0, "pytanie": "Inne pytanie", "odpowiedz": "x"}).get_json()["pdf_id"] == wynik["pdf_id"]
+    assert client.post(url, json={"cytat": 5, "pytanie": "a", "odpowiedz": "b"}).status_code == 400
+    assert client.post(url, json={"cytat": 0, "pytanie": " ", "odpowiedz": "b"}).status_code == 400
+    assert client.post("/przepisy/pytania/999/fiszka", json={"cytat": 0}).status_code == 404

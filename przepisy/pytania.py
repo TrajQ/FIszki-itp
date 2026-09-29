@@ -103,3 +103,13 @@ def sprawdz(surowa: dict, jednostki: list[dict], pytanie: str) -> dict:
             + "). Spróbuj ponownie."
         )
     return {"odpowiedz": odpowiedz, "brak_odpowiedzi": brak, "cytaty": cytaty, "odrzucone_cytaty": odrzucone}
+
+
+def strona_cytatu(teksty_stron: dict[int, str], cytat: str, domyslna: int) -> int:
+    """Strona PDF-a, na której naprawdę jest cytat (jednostka może zajmować
+    kilka stron). Cytat rozcięty końcem strony — zostaje początek jednostki."""
+    szukany = do_porownania(cytat)
+    for nr in sorted(teksty_stron):
+        if szukany in do_porownania(teksty_stron[nr]):
+            return nr
+    return domyslna

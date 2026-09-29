@@ -7,9 +7,10 @@ from flask import Blueprint, abort, jsonify, redirect, render_template, request,
 from werkzeug.utils import secure_filename
 
 from dane import gemini
+from fiszki import zewnetrzne as fiszki_zewnetrzne
 
 from . import baza, pytania
-from .tekst import BladPdf, podziel, strony_z_pdf
+from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
 
 przepisy_bp = Blueprint(
     "przepisy",
@@ -146,3 +147,34 @@ def usun_pytanie(pytanie_id):
     if not baza.usun_pytanie(pytanie_id):
         abort(404)
     return jsonify({"ok": True})
+
+
+@przepisy_bp.route("/pytania/<int:pytanie_id>/fiszka", methods=["POST"])
+def fiszka_z_cytatu(pytanie_id):
+    """Fiszka z cytatu odpowiedzi (ETAP 68): kotwica w PDF-ie aktu — strona,
+    na której naprawdę jest cytat, i sam cytat jako fragment do podświetlenia."""
+    p = baza.pytanie(pytanie_id)
+    if p is None:
+        abort(404)
+    dane = request.get_json(silent=True) or {}
+    cytaty = p["wynik"].get("cytaty", [])
+    nr = dane.get("cytat")
+    if not isinstance(nr, int) or isinstance(nr, bool) or not 0 <= nr < len(cytaty):
+        return jsonify({"blad": "Nie ma takiego cytatu."}), 400
+    c = cytaty[nr]
+    akt = baza.akt(c["akt_id"])
+    if akt is None:
+        return jsonify({"blad": "Akt z tym cytatem został usunięty."}), 404
+    sciezka = os.path.join(baza.folder_plikow(), akt["nazwa_pliku"])
+    j = baza.jednostka(c["jednostka_id"])
+    strona = c["strona"]
+    if j is not None:
+        strona = pytania.strona_cytatu(teksty_stron(sciezka, j["strona_od"], j["strona_do"]), c["cytat"], strona)
+    try:
+        wynik = fiszki_zewnetrzne.dodaj_fiszke(
+            sciezka, f"{akt['nazwa'][:120]}.pdf", strona, c["cytat"],
+            str(dane.get("pytanie") or ""), str(dane.get("odpowiedz") or ""), dane.get("tematy"),
+        )
+    except fiszki_zewnetrzne.BladFiszki as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify({**wynik, "strona": strona, "url": url_for("fiszki.widok_pdf", pdf_id=wynik["pdf_id"])}), 201

@@ -500,3 +500,12 @@
   zapamiętany w koncepcji, pusta koncepcja przybliża mapę do punktów.
 - Teren: lista projektów w JSON (`/teren/projekty.json`).
 - Dodano `DECISIONS.md` D-073 i 1 test.
+
+## ETAP 68 — 2026-09-29
+- Przepisy: „+ Fiszka” przy cytacie odpowiedzi — fiszka z kotwicą w
+  PDF-ie aktu (dokładna strona cytatu, podświetlenie), PDF aktu dodawany
+  do fiszek raz, link do fiszek po zapisie.
+- Fiszki: `fiszki/zewnetrzne.py` (fiszki z innych modułów), tabela
+  `pdf_skroty`; naprawiony podgląd PDF — lewy brzeg szerokiej strony był
+  niewidoczny.
+- Dodano `DECISIONS.md` D-074 i 2 testy.

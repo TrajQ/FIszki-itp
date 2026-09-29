@@ -56,6 +56,13 @@ CREATE TABLE IF NOT EXISTS egzaminy (
     pdf_id INTEGER REFERENCES pdfy(id) ON DELETE CASCADE
 );
 
+-- ETAP 68: PDF-y przekazane z innych modułów (np. akt z modułu przepisy)
+-- rozpoznajemy po sumie SHA-256 — ten sam plik nie trafia do fiszek dwa razy.
+CREATE TABLE IF NOT EXISTS pdf_skroty (
+    pdf_id INTEGER PRIMARY KEY REFERENCES pdfy(id) ON DELETE CASCADE,
+    sha256 TEXT NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,

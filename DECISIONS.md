@@ -1592,3 +1592,27 @@ Terenu jak zewnętrznej usługi, bez wspólnego kodu.
 
 **Odrzucone alternatywy:**
 - Kopiowanie punktów do koncepcji — dwie wersje tych samych danych.
+
+## D-074 — Fiszka z cytatu przepisu: jedno wejście do fiszek z zewnątrz
+Data: 2026-09-29
+
+**Decyzja:** Przy każdym sprawdzonym cytacie odpowiedzi w Przepisach
+jest „+ Fiszka” (pytanie i odpowiedź do poprawienia, temat „przepisy”).
+Przepisy wołają jedną funkcję modułu fiszek:
+`fiszki/zewnetrzne.py: dodaj_fiszke(...)` — to jedyne wejście do
+fiszek z innego modułu. Fiszka dostaje prawdziwą kotwicę: PDF aktu
+kopiowany do plików fiszek raz (rozpoznanie po SHA-256, tabela
+`pdf_skroty`), strona — ta z zakresu stron artykułu, na której tekst
+naprawdę zawiera cytat (pypdf), fragment — sam cytat. Przy okazji
+naprawiono podgląd PDF w fiszkach: strona szersza niż kolumna miała
+niewidoczny lewy brzeg (środkowanie flexboksem), teraz `margin: auto`.
+
+**Uzasadnienie:** Zasada fiszek to kotwica w źródle — fiszka z przepisu
+bez PDF-a byłaby słabsza niż fiszki z podręczników. Jedna, nazwana
+funkcja zamiast sięgania do bazy fiszek z przepisów: zależność jest w
+jednym miejscu i w jedną stronę (przepisy → fiszki).
+
+**Odrzucone alternatywy:**
+- Fiszka bez kotwicy (strona 0, jak import CSV) — traci „Pokaż w źródle”.
+- Współdzielenie pliku PDF między modułami — usunięcie aktu w
+  przepisach psułoby fiszki.
