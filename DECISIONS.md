@@ -671,3 +671,22 @@ populacją gmin województwa, a nie próbą.
 - numpy/scipy — odrzucone: ciężkie zależności dla trzech wzorów.
 - Opis wyniku przez Gemini — odrzucone: stałe progi dają ten sam opis
   za każdym razem i nie ryzykują wymyślonych liczb.
+
+## D-033 — Dystraktory quizu z własnych fiszek, nie z modelu
+Data: 2026-09-29
+
+**Decyzja:** Błędne odpowiedzi w quizie ABCD to odpowiedzi innych
+fiszek użytkownika — najpierw z tego samego PDF-a. Quiz nie zapisuje
+wyników do systemu Leitnera (to osobny tryb sprawdzania się).
+
+**Uzasadnienie:** Model mógłby wygenerować „błędną” odpowiedź, która w
+rzeczywistości jest poprawna albo wprowadza w błąd — w nauce do
+kolokwium to gorsze niż brak quizu. Odpowiedzi z tego samego materiału
+są wiarygodne i tematycznie bliskie, więc quiz nie jest trywialny.
+Oddzielenie od Leitnera chroni harmonogram powtórek przed przypadkowym
+„zgadnięciem” poprawnej odpowiedzi.
+
+**Odrzucone alternatywy:**
+- Dystraktory z Gemini — odrzucone (patrz wyżej).
+- Wynik quizu jako ocena w powtórkach — odrzucone: rozpoznanie
+  odpowiedzi spośród czterech jest łatwiejsze niż jej przypomnienie.

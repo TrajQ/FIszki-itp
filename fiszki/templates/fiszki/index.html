@@ -27,11 +27,14 @@
         </div>
         {% endfor %}
     </div>
-    {% if do_powtorki %}
-    <a class="przycisk przycisk--duzy" href="{{ url_for('fiszki.powtorka') }}">Zacznij powtórkę</a>
-    {% else %}
-    <span class="wyciszony">Na dziś wszystko powtórzone.</span>
-    {% endif %}
+    <div class="rzad">
+        {% if do_powtorki %}
+        <a class="przycisk przycisk--duzy" href="{{ url_for('fiszki.powtorka') }}">Zacznij powtórkę</a>
+        {% else %}
+        <span class="wyciszony">Na dziś wszystko powtórzone.</span>
+        {% endif %}
+        <a class="przycisk przycisk--drugi przycisk--duzy" href="{{ url_for('fiszki.quiz') }}">Quiz ABCD</a>
+    </div>
 </section>
 
 <form class="karta wgrywanie" action="{{ url_for('fiszki.upload') }}" method="post" enctype="multipart/form-data">
@@ -61,6 +64,24 @@
               style="--poziom: {{ (dzien.powtorki / najwiecej) | round(2) }}"></span>
         {% endfor %}
     </div>
+</section>
+{% endif %}
+
+{% if najtrudniejsze %}
+<section class="karta stos trudne">
+    <h3>Najtrudniejsze fiszki</h3>
+    <ul class="wyniki-szukania">
+        {% for f in najtrudniejsze %}
+        <li>
+            <a class="wynik-szukania" href="{{ url_for('fiszki.widok_pdf', pdf_id=f.pdf_id) }}?fiszka={{ f.id }}">
+                <div class="fiszka-pytanie">{{ f.pytanie }}</div>
+                <span class="wynik-szukania__zrodlo">{{ f.nazwa_oryginalna }}
+s. {{ f.strona }}</span>
+                <div class="wynik-szukania__odpowiedz">„nie umiem”: {{ f.bledy }} z {{ f.proby }}</div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
 </section>
 {% endif %}
 

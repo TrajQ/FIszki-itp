@@ -537,6 +537,67 @@ button.przycisk--ocena-dobrze:hover {
     filter: brightness(1.08);
 }
 
+/* ---------- Quiz ---------- */
+
+.odpowiedzi-quizu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+button.odpowiedz-quizu {
+    justify-content: flex-start;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--linia);
+    border-radius: 14px;
+    background: var(--tlo-karty);
+    color: var(--tekst);
+    font-size: 1rem;
+    font-weight: 400;
+    text-align: left;
+}
+
+button.odpowiedz-quizu:hover:not(:disabled) {
+    border-color: var(--akcent);
+    background: var(--akcent-tlo);
+}
+
+button.odpowiedz-quizu:disabled {
+    opacity: 1;
+}
+
+.odpowiedz-quizu__litera {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--tlo-wyciszone);
+    font-weight: 700;
+}
+
+button.odpowiedz-quizu--dobra {
+    border-color: var(--sukces);
+    background: var(--sukces-tlo);
+}
+
+button.odpowiedz-quizu--zla {
+    border-color: var(--blad);
+    background: var(--blad-tlo);
+}
+
+/* ---------- Najtrudniejsze fiszki ---------- */
+
+.trudne h3 {
+    margin: 0;
+}
+
 .koniec-ikona {
     display: grid;
     place-items: center;

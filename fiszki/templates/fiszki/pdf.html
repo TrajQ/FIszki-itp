@@ -19,6 +19,7 @@
               onsubmit="return confirm('Usunąć ten plik razem ze wszystkimi jego fiszkami? Tego nie da się cofnąć.')">
             <button type="submit" class="przycisk--niebezpieczny">Usuń plik</button>
         </form>
+        <a class="przycisk przycisk--drugi" href="{{ url_for('fiszki.quiz', pdf_id=pdf['id']) }}">Quiz</a>
         <a class="przycisk" href="{{ url_for('fiszki.powtorka', pdf_id=pdf['id']) }}">Powtórz fiszki z tego pliku</a>
     </div>
 </div>

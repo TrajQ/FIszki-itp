@@ -186,3 +186,8 @@
 - Atlas: korelacja dwóch wskaźników (r Pearsona, rho Spearmana, R²,
   wykres rozrzutu z linią regresji) — `/atlas/korelacja`.
 - Dodano `DECISIONS.md` D-032 i testy.
+
+## ETAP 26 — 2026-09-29
+- Fiszki: quiz ABCD z własnych fiszek (`/fiszki/quiz`).
+- Fiszki: lista najtrudniejszych fiszek z dziennika powtórek.
+- Dodano `DECISIONS.md` D-033 i testy.

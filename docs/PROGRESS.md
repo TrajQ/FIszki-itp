@@ -696,3 +696,27 @@ Zrobione:
 
 Testy: 191 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap25_20260929.zip
+
+## ETAP 26 — Fiszki: quiz ABCD i najtrudniejsze fiszki
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `fiszki/quiz.py`: `uloz_quiz(zakres, pula, liczba, losowanie)` — pytania z
+  wybranego zakresu (PDF albo wszystko), 3 błędne odpowiedzi z innych
+  fiszek (najpierw z tego samego PDF-a — podobny temat), bez duplikatów
+  treści (porównanie bez wielkości liter i nadmiarowych spacji);
+  wymaga co najmniej 4 fiszek z różnymi odpowiedziami; nic nie generuje
+  model — quiz składa się tylko z zatwierdzonych fiszek
+- `najtrudniejsze(db)` — fiszki z największą liczbą „nie umiem” w
+  dzienniku powtórek (i najgorszym stosunkiem błędów do prób)
+- `GET /fiszki/quiz[?pdf_id=]`, `GET /fiszki/quiz/pytania[?pdf_id=&liczba=&ziarno=]`
+- Strona quizu: odpowiedzi A–D (klawisze 1–4 / A–D, Enter = dalej),
+  natychmiastowa informacja poprawna/błędna, pasek postępu, wynik z
+  listą pomyłek prowadzących do źródła w PDF-ie
+- Lista plików: karta „Najtrudniejsze fiszki”, przycisk „Quiz ABCD”;
+  widok PDF-a: przycisk „Quiz”
+- Testy: 6 nowych; `DECISIONS.md`: D-033
+
+Testy: 197 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap26_20260929.zip

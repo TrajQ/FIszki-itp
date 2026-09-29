@@ -2,6 +2,7 @@ import csv
 import html
 import io
 import os
+import random
 import uuid
 from datetime import datetime
 
@@ -20,7 +21,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import powtorki, statystyki_nauki
+from . import powtorki, quiz as quiz_fiszek, statystyki_nauki
 from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
@@ -60,6 +61,7 @@ def index():
         do_powtorki=sum(p["do_powtorki"] for p in pdfy),
         pudelka=_liczby_w_pudelkach(),
         nauka=statystyki_nauki.policz(db, powtorki.dzisiaj()),
+        najtrudniejsze=quiz_fiszek.najtrudniejsze(db),
     )
 
 
@@ -190,6 +192,40 @@ def szkice_strony(pdf_id):
 
     dobre, odrzucone = zakotwiczone(propozycje, tekst)
     return jsonify({"propozycje": dobre, "odrzucone": odrzucone})
+
+
+# ---------- Quiz ABCD (ETAP 26) ----------
+
+DOMYSLNA_LICZBA_PYTAN = 10
+
+
+@fiszki_bp.route("/quiz")
+def quiz():
+    pdf_id = request.args.get("pdf_id", type=int)
+    pdf = _pobierz_pdf_albo_404(pdf_id) if pdf_id is not None else None
+    return render_template("fiszki/quiz.html", pdf=pdf)
+
+
+@fiszki_bp.route("/quiz/pytania")
+def quiz_pytania():
+    """Pytania quizu: z jednego PDF-a (pdf_id) albo ze wszystkich.
+    `ziarno` — powtarzalne losowanie (testy)."""
+    pdf_id = request.args.get("pdf_id", type=int)
+    liczba = max(1, min(request.args.get("liczba", DOMYSLNA_LICZBA_PYTAN, type=int), 50))
+    ziarno = request.args.get("ziarno", type=int)
+
+    db = get_db()
+    # Dystraktory bierzemy ze wszystkich fiszek, pytania — z wybranego zakresu.
+    wszystkie = [dict(w) for w in db.execute("SELECT * FROM fiszki ORDER BY id").fetchall()]
+    zakres = [f for f in wszystkie if pdf_id is None or f["pdf_id"] == pdf_id]
+    if not zakres:
+        return jsonify({"blad": "Brak fiszek w tym zakresie."}), 404
+
+    try:
+        pytania = quiz_fiszek.uloz_quiz(zakres, wszystkie, liczba, random.Random(ziarno))
+    except quiz_fiszek.ZaMaloFiszek as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify(pytania)
 
 
 @fiszki_bp.route("/statystyki")

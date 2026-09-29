@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block tytul %}Quiz — Fiszki{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="powtorka">
+    <div class="naglowek-strony">
+        <div>
+            <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.widok_pdf', pdf_id=pdf['id']) if pdf else url_for('fiszki.index') }}">‹ {{ 'Wróć do pliku' if pdf else 'Fiszki' }}</a>
+            <h1>Quiz</h1>
+            <p>{{ pdf['nazwa_oryginalna'] if pdf else 'Wszystkie pliki' }} · wybierz jedną odpowiedź</p>
+        </div>
+        <span id="postep-quizu" class="etykieta etykieta--akcent"></span>
+    </div>
+
+    <div class="pasek-postepu"><div id="pasek-postepu-wypelnienie"></div></div>
+    <p id="blad-quizu" class="komunikat komunikat--blad" hidden></p>
+
+    <section id="karta-quizu" class="karta karta-powtorki" hidden>
+        <div class="karta-powtorki__tresc">
+            <p class="karta-powtorki__etykieta">Pytanie</p>
+            <p id="pytanie-quizu" class="karta-powtorki__pytanie"></p>
+            <ol id="odpowiedzi-quizu" class="odpowiedzi-quizu"></ol>
+        </div>
+        <div class="karta-powtorki__akcje">
+            <button id="przycisk-dalej" type="button" class="przycisk--duzy" hidden>Dalej <kbd>Enter</kbd></button>
+        </div>
+    </section>
+
+    <section id="wynik-quizu" class="karta stos" hidden>
+        <div class="pusty-stan">
+            <div class="koniec-ikona">✓</div>
+            <h2 id="wynik-tytul"></h2>
+            <p id="wynik-opis" class="wyciszony"></p>
+        </div>
+        <div id="pomylki" hidden>
+            <h3>Do powtórki</h3>
+            <ul id="lista-pomylek" class="wyniki-szukania"></ul>
+        </div>
+        <div class="rzad">
+            <a class="przycisk" href="">Jeszcze raz</a>
+            <a class="przycisk przycisk--drugi" href="{{ url_for('fiszki.index') }}">Wróć do fiszek</a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_PYTANIA = "{{ url_for('fiszki.quiz_pytania', pdf_id=pdf['id']) if pdf else url_for('fiszki.quiz_pytania') }}";
+    const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
+</script>
+<script src="{{ url_for('fiszki.static', filename='quiz.js') }}"></script>
+{% endblock %}
