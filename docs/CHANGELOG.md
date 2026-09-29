@@ -153,3 +153,8 @@
 - Atlas: profil gminy (miejsce, różnica od mediany, zmiana w czasie,
   wykres liniowy SVG, tabela wartości) — `/atlas/gmina/<bdl_id>`.
 - Dodano `DECISIONS.md` D-026 i testy.
+
+## ETAP 20 — 2026-09-29
+- MPZP: powierzchnia działki, podział na przeznaczenia (m², %),
+  raport działki do wydruku (`/mpzp/raport`).
+- Dodano `DECISIONS.md` D-027 i testy.

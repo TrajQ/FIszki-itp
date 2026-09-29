@@ -545,3 +545,30 @@ Zrobione:
 
 Testy: 158 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap19_20260929.zip
+
+## ETAP 20 — MPZP: powierzchnia, podział działki na przeznaczenia, raport do druku
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `mpzp/geometria.py`: powierzchnia w m² z geometrii WGS84 (lokalna skala
+  metrów na stopień wg elipsoidy WGS84, błąd < 0,1% dla działek — bez
+  pyproj); szkic SVG działki na tle wydzieleń (proporcje w metrach,
+  północ u góry)
+- `mpzp/wfs.py`: `wydzielenia_dzialki` — wszystkie wydzielenia
+  przecinające działkę (indeks STRtree + część wspólna), wspólna funkcja
+  `_warstwa` dla cache
+- `/mpzp/sprawdz` i `/mpzp/dzialka` zwracają `dzialka.powierzchnia_m2`
+  oraz `udzialy` — podział działki na przeznaczenia (m², %; ten sam
+  symbol sumowany, części < 0,5% pomijane jako niedokładność granic)
+- Panel: powierzchnia, „Podział działki” (pasek proporcji + lista z
+  opisem), gdy działka leży w więcej niż jednym przeznaczeniu; etykieta
+  „przeznaczenie w klikniętym punkcie”
+- `GET /mpzp/raport?id=` — raport działki do wydruku / PDF: dane działki,
+  powierzchnia (m², ha), szkic, tabela przeznaczeń z udziałami i opisami,
+  źródła i zastrzeżenie „nie jest wypisem ani wyrysem”; style `@media
+  print` (bez nawigacji i przycisków, kolory zachowane)
+- Testy: 6 nowych; `DECISIONS.md`: D-027
+
+Testy: 164 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap20_20260929.zip

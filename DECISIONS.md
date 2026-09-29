@@ -556,3 +556,23 @@ czytelne dla kogoś, kto uczy się, jak działa wykres.
 - Porównanie z medianą województwa w każdym roku — odrzucone: wymaga
   pobrania danych wszystkich gmin dla każdego roku (dziesiątki zapytań do
   BDL); linia mediany badanego roku daje punkt odniesienia bez tego kosztu.
+
+## D-027 — Powierzchnia z lokalnej skali zamiast biblioteki odwzorowań
+Data: 2026-09-29
+
+**Decyzja:** Powierzchnię działki i jej części liczymy z geometrii WGS84
+przeskalowanej lokalną skalą metrów na stopień (wzory elipsoidy WGS84 dla
+szerokości środka działki). Raport jest stroną HTML ze stylami druku —
+PDF powstaje przez „Drukuj → Zapisz jako PDF” przeglądarki.
+
+**Uzasadnienie:** Dla obiektów wielkości działki błąd jest poniżej 0,1% —
+mniej niż różnice między geometrią a powierzchnią ewidencyjną, o czym
+raport uprzedza. Unikamy zależności (pyproj ciągnie bibliotekę PROJ).
+Raport w HTML korzysta z tych samych stylów co aplikacja, a przeglądarka
+i tak ma dobry eksport do PDF.
+
+**Odrzucone alternatywy:**
+- pyproj + EPSG:2180 — odrzucone: ciężka zależność dla dokładności,
+  której w tym zastosowaniu nie potrzeba.
+- Generowanie PDF po stronie serwera (np. WeasyPrint, ReportLab) —
+  odrzucone: nowa zależność i drugi, osobny szablon wyglądu.

@@ -45,9 +45,50 @@
         panelWyniku.appendChild(element("p", "komunikat komunikat--blad", tresc));
     }
 
+    const KOLORY_UDZIALOW = ["#34c759", "#ff9f0a", "#0a84ff", "#bf5af2", "#ff375f", "#64d2ff"];
+    const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
+
     function sekcjaDzialki(dzialka) {
-        const sekcja = element("div");
-        sekcja.append(element("h3", "", "Działka"), element("div", "identyfikator wyciszony", dzialka.id));
+        const sekcja = element("div", "stos");
+        const naglowek = element("div", "rzad rzad--miedzy");
+        const raport = element("a", "przycisk przycisk--tekst", "Raport do druku ↗");
+        raport.href = `${URL_RAPORT}?id=${encodeURIComponent(dzialka.id)}`;
+        raport.target = "_blank";
+        naglowek.append(element("h3", "", "Działka"), raport);
+        sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
+        if (dzialka.powierzchnia_m2) {
+            sekcja.appendChild(
+                element("div", "powierzchnia", `Powierzchnia: ${formatM2.format(dzialka.powierzchnia_m2)} m² (${(dzialka.powierzchnia_m2 / 10000).toLocaleString("pl-PL", { maximumFractionDigits: 4 })} ha)`)
+            );
+        }
+        return sekcja;
+    }
+
+    // Jak działka dzieli się między przeznaczenia: pasek + lista z m² i %.
+    function sekcjaUdzialow(udzialy) {
+        const sekcja = element("div", "stos");
+        sekcja.appendChild(element("h3", "", "Podział działki"));
+        const pasek = element("div", "pasek-udzialow");
+        const lista = element("ul", "lista-udzialow");
+        udzialy.forEach((u, i) => {
+            const kolor = KOLORY_UDZIALOW[i % KOLORY_UDZIALOW.length];
+            const kawalek = element("span");
+            kawalek.style.flex = String(u.procent);
+            kawalek.style.background = kolor;
+            kawalek.title = `${u.przeznaczenie}: ${u.procent}%`;
+            pasek.appendChild(kawalek);
+            const li = element("li");
+            const probka = element("span", "raport__kolor");
+            probka.style.background = kolor;
+            li.append(
+                probka,
+                element("strong", "", u.przeznaczenie),
+                element("span", "lista-udzialow__liczby", `${u.procent.toLocaleString("pl-PL")}% · ${formatM2.format(u.powierzchnia_m2)} m²`),
+                element("span", "lista-udzialow__opis wyciszony", u.opis.map((o) => o.opis || o.symbol).join(" / "))
+            );
+            lista.appendChild(li);
+        });
+        sekcja.append(pasek, lista);
         return sekcja;
     }
 
@@ -62,13 +103,15 @@
         return lista;
     }
 
-    function pokazWynik(dzialka, wydzielenie) {
+    function pokazWynik(dzialka, wydzielenie, udzialy) {
         panelWyniku.replaceChildren(sekcjaDzialki(dzialka));
+        // Podział pokazujemy, gdy działka leży w więcej niż jednym przeznaczeniu.
+        if (udzialy && udzialy.length > 1) panelWyniku.appendChild(sekcjaUdzialow(udzialy));
 
         const przeznaczenie = element("div", "przeznaczenie");
         przeznaczenie.append(
             element("span", "przeznaczenie__symbol", wydzielenie.przeznaczenie || "?"),
-            element("span", "wyciszony", "symbol przeznaczenia w planie")
+            element("span", "wyciszony", "przeznaczenie w klikniętym punkcie")
         );
         panelWyniku.appendChild(przeznaczenie);
 
@@ -104,7 +147,7 @@
                 style: { color: "#34c759", weight: 2, fillOpacity: 0.3 },
             }).addTo(mapa);
             if (warstwaDzialki) warstwaDzialki.bringToFront();
-            pokazWynik(dane.dzialka, dane.wydzielenie);
+            pokazWynik(dane.dzialka, dane.wydzielenie, dane.udzialy);
         } else if (dane.blad) {
             pokazBlad(dane.blad, dane.dzialka);
         }

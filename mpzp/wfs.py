@@ -53,16 +53,39 @@ def znajdz_przeznaczenie(gmina: Gmina, punkt: Point) -> Wydzielenie | None:
     pamięci procesu. Podnosi BladWFS przy błędzie sieci albo
     nieparsowalnej odpowiedzi.
     """
-    warstwa = _cache.get(gmina.teryt_prefiks)
-    if warstwa is None:
-        warstwa = _pobierz_warstwe(gmina)
-        _cache[gmina.teryt_prefiks] = warstwa
-
+    warstwa = _warstwa(gmina)
     for indeks in warstwa.drzewo.query(punkt):
         wydzielenie = warstwa.wydzielenia[indeks]
         if wydzielenie.geometria.covers(punkt):
             return wydzielenie
     return None
+
+
+def wydzielenia_dzialki(gmina: Gmina, dzialka: BaseGeometry) -> list[tuple[Wydzielenie, BaseGeometry]]:
+    """Wszystkie wydzielenia MPZP przecinające działkę, z częścią wspólną.
+
+    Działka często leży w kilku przeznaczeniach (np. MN i pas drogi KDD) —
+    punkt kliknięcia pokazuje tylko jedno z nich. Zwraca pary
+    (wydzielenie, część działki w tym wydzieleniu); puste części pomija.
+    """
+    warstwa = _warstwa(gmina)
+    wynik = []
+    for indeks in warstwa.drzewo.query(dzialka):
+        wydzielenie = warstwa.wydzielenia[indeks]
+        if not wydzielenie.geometria.intersects(dzialka):
+            continue
+        czesc = wydzielenie.geometria.intersection(dzialka)
+        if not czesc.is_empty and czesc.area > 0:
+            wynik.append((wydzielenie, czesc))
+    return wynik
+
+
+def _warstwa(gmina: Gmina) -> "_WarstwaGminy":
+    warstwa = _cache.get(gmina.teryt_prefiks)
+    if warstwa is None:
+        warstwa = _pobierz_warstwe(gmina)
+        _cache[gmina.teryt_prefiks] = warstwa
+    return warstwa
 
 
 def odswiez(gmina: Gmina) -> None:

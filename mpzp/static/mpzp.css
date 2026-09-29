@@ -206,3 +206,147 @@ button.wpis-historii:hover {
         min-height: 0;
     }
 }
+
+/* ---------- Panel: powierzchnia i podział na przeznaczenia ---------- */
+
+.powierzchnia {
+    font-size: 0.85rem;
+}
+
+/* Pasek podzielony proporcjonalnie do udziałów przeznaczeń. */
+.pasek-udzialow {
+    display: flex;
+    gap: 2px;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.pasek-udzialow span {
+    min-width: 3px;
+}
+
+.lista-udzialow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+}
+
+/* Wiersz: kolor | symbol | liczby, a pod spodem opis na całą szerokość. */
+.lista-udzialow li {
+    display: grid;
+    grid-template-columns: 12px auto 1fr;
+    align-items: center;
+    gap: 2px 8px;
+}
+
+.lista-udzialow__liczby {
+    justify-self: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.lista-udzialow__opis {
+    grid-column: 2 / -1;
+    font-size: 0.78rem;
+}
+
+.lista-udzialow .raport__kolor {
+    width: 12px;
+    height: 12px;
+}
+
+/* ---------- Raport do druku ---------- */
+
+.raport {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.raport__akcje {
+    display: flex;
+    justify-content: space-between;
+}
+
+.raport__nadtytul {
+    margin: 0;
+    color: var(--tekst-drugi);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.raport__naglowek h1 {
+    margin: 4px 0;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.raport__siatka {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 20px;
+}
+
+.raport__szkic svg {
+    display: block;
+    width: 100%;
+    max-height: 320px;
+    color: var(--tekst);
+}
+
+.raport__przypis,
+.raport__stopka {
+    font-size: 0.78rem;
+}
+
+.raport__kolor {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+@media (max-width: 700px) {
+    .raport__siatka {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Wydruk: bez nawigacji i przycisków, białe tło, bez cieni. */
+@media print {
+    .pasek-nawigacji,
+    .raport__akcje {
+        display: none;
+    }
+
+    body {
+        background: #fff;
+        color: #000;
+    }
+
+    .tresc {
+        padding: 0;
+    }
+
+    .karta {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+    }
+
+    .raport__kolor {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
+.rzad--miedzy {
+    justify-content: space-between;
+}

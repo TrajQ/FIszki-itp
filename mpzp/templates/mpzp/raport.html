@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block tytul %}Raport działki {{ dzialka.id }} — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="raport">
+    <div class="raport__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa</a>
+        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+    </div>
+
+    <header class="raport__naglowek">
+        <p class="raport__nadtytul">Raport działki ewidencyjnej</p>
+        <h1 class="identyfikator">{{ dzialka.id }}</h1>
+        <p class="wyciszony">Wygenerowano {{ data }} · aplikacja Warsztat</p>
+    </header>
+
+    <section class="raport__siatka">
+        <div class="karta">
+            <h3>Dane działki</h3>
+            <table class="tabela">
+                <tr><th>Jednostka ewidencyjna</th><td>{{ jednostka }}{% if gmina %} ({{ gmina.nazwa }}){% endif %}</td></tr>
+                <tr><th>Obręb</th><td>{{ obreb }}</td></tr>
+                <tr><th>Numer</th><td>{{ numer }}</td></tr>
+                <tr><th>Powierzchnia (z geometrii)</th><td class="liczba">{{ '{:,.0f}'.format(powierzchnia).replace(',', ' ') }} m² ({{ ('%.4f' % (powierzchnia / 10000)).replace('.', ',') }} ha)</td></tr>
+            </table>
+        </div>
+
+        <div class="karta raport__szkic">
+            <h3>Szkic</h3>
+            <svg viewBox="{{ szkic.viewbox }}" role="img" aria-label="Szkic działki na tle wydzieleń planu">
+                {% for sciezka, nr in szkic.czesci %}
+                <path d="{{ sciezka }}" fill="{{ kolory[nr % kolory|length] }}" fill-opacity="0.35" stroke="{{ kolory[nr % kolory|length] }}" stroke-width="1"/>
+                {% endfor %}
+                <path d="{{ szkic.dzialka }}" fill="none" stroke="currentColor" stroke-width="2.5"/>
+            </svg>
+            <p class="wyciszony raport__przypis">Czarny obrys — działka. Kolory — wydzielenia planu (legenda obok). Północ u góry.</p>
+        </div>
+    </section>
+
+    <section class="karta">
+        <h3>Przeznaczenie w planie miejscowym</h3>
+        {% if blad %}
+        <p class="komunikat komunikat--ostrzezenie">{{ blad }}</p>
+        {% else %}
+        <table class="tabela">
+            <tr><th></th><th>Symbol</th><th>Opis (orientacyjny)</th><th class="liczba">Powierzchnia</th><th class="liczba">Udział</th></tr>
+            {% for u in udzialy %}
+            <tr>
+                <td><span class="raport__kolor" style="background: {{ u.kolor }}"></span></td>
+                <td><strong>{{ u.przeznaczenie }}</strong></td>
+                <td>{% for o in u.opis %}{{ o.symbol }} — {{ o.opis or 'brak w słowniku, sprawdź legendę planu' }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+                <td class="liczba">{{ '{:,.0f}'.format(u.powierzchnia_m2).replace(',', ' ') }} m²</td>
+                <td class="liczba">{{ ('%.1f' % u.procent).replace('.', ',') }}%</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </section>
+
+    <footer class="raport__stopka wyciszony">
+        Źródła: ULDK (GUGiK) — geometria działki; WFS planów miejscowych gminy — wydzielenia.
+        Powierzchnia liczona z geometrii w przybliżeniu (błąd poniżej 0,1%) i może różnić się od
+        powierzchni w ewidencji gruntów. Opisy symboli wg rozporządzenia z 2003 r. mają charakter
+        orientacyjny. <strong>Raport nie jest wypisem ani wyrysem z planu miejscowego</strong> —
+        wiążący jest tekst i rysunek uchwały.
+    </footer>
+</div>
+{% endblock %}

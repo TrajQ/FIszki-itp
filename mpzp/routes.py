@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, render_template, request
+from datetime import datetime
+
+from flask import Blueprint, abort, jsonify, render_template, request
 from shapely.geometry import Point, mapping
 
 from dane.uldk import BladULDK, Dzialka
@@ -11,6 +13,8 @@ from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
+from .wfs import wydzielenia_dzialki as _wydzielenia_dzialki
+from .geometria import powierzchnia_m2, szkic_svg
 from .wfs import znajdz_przeznaczenie as _znajdz_przeznaczenie
 
 mpzp_bp = Blueprint(
@@ -24,6 +28,7 @@ mpzp_bp = Blueprint(
 znajdz_dzialke = _znajdz_dzialke
 znajdz_dzialke_po_id = _znajdz_dzialke_po_id
 szukaj_dzialek = _szukaj_dzialek
+znajdz_wydzielenia_dzialki = _wydzielenia_dzialki
 
 MIN_DLUGOSC_FRAZY = 3
 znajdz_przeznaczenie = _znajdz_przeznaczenie
@@ -40,7 +45,40 @@ def _dzialka_na_json(dzialka: Dzialka) -> dict:
         "id": dzialka.id,
         "geometria": mapping(dzialka.geometria),
         "teryt_gminy": dzialka.teryt_gminy,
+        "powierzchnia_m2": round(powierzchnia_m2(dzialka.geometria), 1),
     }
+
+
+# Części działki mniejsze niż ten próg to zwykle niedokładność granic
+# (działka „dotyka” sąsiedniego wydzielenia) — nie pokazujemy ich.
+MIN_UDZIAL_PROC = 0.5
+
+
+def udzialy_przeznaczen(gmina, dzialka: Dzialka) -> list[dict]:
+    """Jak działka dzieli się między przeznaczenia planu (m² i %).
+
+    Części z tym samym symbolem przeznaczenia są sumowane.
+    """
+    calosc = powierzchnia_m2(dzialka.geometria)
+    if calosc <= 0:
+        return []
+    szerokosc = dzialka.geometria.centroid.y
+    po_symbolu: dict[str, float] = {}
+    for wydzielenie, czesc in znajdz_wydzielenia_dzialki(gmina, dzialka.geometria):
+        symbol = wydzielenie.atrybuty.get(gmina.pole_przeznaczenia) or "?"
+        po_symbolu[symbol] = po_symbolu.get(symbol, 0.0) + powierzchnia_m2(czesc, szerokosc)
+
+    udzialy = [
+        {
+            "przeznaczenie": symbol,
+            "opis": opisz_symbol(symbol),
+            "powierzchnia_m2": round(pole, 1),
+            "procent": round(100 * pole / calosc, 1),
+        }
+        for symbol, pole in po_symbolu.items()
+        if 100 * pole / calosc >= MIN_UDZIAL_PROC
+    ]
+    return sorted(udzialy, key=lambda u: -u["powierzchnia_m2"])
 
 
 def _wydzielenie_na_json(wydzielenie: Wydzielenie) -> dict:
@@ -169,8 +207,69 @@ def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
     przeznaczenie = wydzielenie.atrybuty.get(gmina.pole_przeznaczenia)
     dane["wydzielenie"]["przeznaczenie"] = przeznaczenie
     dane["wydzielenie"]["opis_przeznaczenia"] = opisz_symbol(przeznaczenie)
+    try:
+        dane["udzialy"] = udzialy_przeznaczen(gmina, dzialka)
+    except BladWFS:
+        dane["udzialy"] = []  # główne przeznaczenie już mamy — udziały są dodatkiem
     zapisz_w_historii(dzialka.id, przeznaczenie, punkt.y, punkt.x)
     return jsonify(dane), 200
+
+
+# Kolory części działki w raporcie — stała kolejność, żeby ten sam
+# układ zawsze wyglądał tak samo (kolor wg kolejności udziału).
+KOLORY_RAPORTU = ["#34c759", "#ff9f0a", "#0a84ff", "#bf5af2", "#ff375f", "#64d2ff"]
+
+
+@mpzp_bp.route("/raport")
+def raport():
+    """Raport działki do wydruku / zapisu jako PDF (Ctrl+P w przeglądarce)."""
+    dzialka_id = request.args.get("id", "")
+    try:
+        dzialka = znajdz_dzialke_po_id(dzialka_id)
+    except ValueError as e:
+        abort(400, str(e))
+    except BladULDK as e:
+        abort(502, str(e))
+    if dzialka is None:
+        abort(404, "ULDK nie zna tej działki.")
+
+    gmina = znajdz_gmine(dzialka.teryt_gminy)
+    czesci, udzialy, blad = [], [], None
+    if gmina is None:
+        blad = f"Gmina tej działki nie jest jeszcze obsługiwana (pilotaż: {GMINA_PILOTAZOWA.nazwa})."
+    else:
+        try:
+            pary = znajdz_wydzielenia_dzialki(gmina, dzialka.geometria)
+            udzialy = udzialy_przeznaczen(gmina, dzialka)
+        except BladWFS as e:
+            pary, blad = [], str(e)
+        kolor_symbolu = {u["przeznaczenie"]: i for i, u in enumerate(udzialy)}
+        for u in udzialy:
+            u["kolor"] = KOLORY_RAPORTU[kolor_symbolu[u["przeznaczenie"]] % len(KOLORY_RAPORTU)]
+        # Na szkicu całe wydzielenia wokół działki, przycięte do okolicy.
+        otoczenie = dzialka.geometria.buffer(dzialka.geometria.length * 0.15)
+        for wydzielenie, _ in pary:
+            symbol = wydzielenie.atrybuty.get(gmina.pole_przeznaczenia) or "?"
+            if symbol in kolor_symbolu:
+                czesci.append((wydzielenie.geometria.intersection(otoczenie), kolor_symbolu[symbol]))
+        if not udzialy and blad is None:
+            blad = "Brak planu miejscowego dla tej działki."
+
+    czesci_id = dzialka.id.split(".")
+    return render_template(
+        "mpzp/raport.html",
+        dzialka=dzialka,
+        jednostka=czesci_id[0],
+        obreb=czesci_id[1] if len(czesci_id) > 1 else "",
+        numer=".".join(czesci_id[2:]),
+        powierzchnia=powierzchnia_m2(dzialka.geometria),
+        udzialy=udzialy,
+        szkic=szkic_svg(dzialka.geometria, czesci),
+        kolory=KOLORY_RAPORTU,
+        blad=blad,
+        gmina=gmina,
+        data=datetime.now().strftime("%d.%m.%Y, %H:%M"),
+    )
 
 
 @mpzp_bp.route("/odswiez", methods=["POST"])

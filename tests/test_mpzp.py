@@ -14,6 +14,13 @@ def app(tmp_path):
     return app
 
 
+@pytest.fixture(autouse=True)
+def bez_prawdziwego_wfs(monkeypatch):
+    # Udziały przeznaczeń (ETAP 20) pytają WFS o wszystkie wydzielenia
+    # działki — w testach domyślnie pusto, konkretne testy podmieniają.
+    monkeypatch.setattr(mpzp_routes, "znajdz_wydzielenia_dzialki", lambda gmina, geometria: [])
+
+
 @pytest.fixture
 def client(app):
     with app.test_client() as client:
@@ -278,3 +285,102 @@ def test_podpowiedzi_blad_uldk(client, monkeypatch):
     odpowiedz = client.get("/mpzp/podpowiedzi?q=Jeżyce 14")
     assert odpowiedz.status_code == 502
     assert "ULDK" in odpowiedz.get_json()["blad"]
+
+
+# ---------- ETAP 20: powierzchnia, podział na przeznaczenia, raport ----------
+
+from shapely.geometry import box
+
+from mpzp import wfs as mpzp_wfs
+from mpzp.geometria import metry_na_stopien, powierzchnia_m2, szkic_svg
+from mpzp.gminy import GMINA_PILOTAZOWA
+
+
+def test_powierzchnia_m2_zgodna_z_rachunkiem_recznym():
+    mx, my = metry_na_stopien(52.4)
+    assert 67_900 < mx < 68_100  # ok. 68 km na 1° długości na szer. Poznania
+    assert 111_200 < my < 111_300
+    pole = powierzchnia_m2(box(16.9, 52.4, 16.901, 52.401))
+    assert pole == pytest.approx(0.001 * mx * 0.001 * my, rel=0.002)
+
+
+def _dzialka_kwadrat():
+    # ok. 68 m x 111 m; lewa połowa w MN, prawa w KDD
+    return Dzialka(id="306401_1.0051.AR_18.14", geometria=box(16.900, 52.400, 16.901, 52.401), teryt_gminy="306401")
+
+
+def _dwa_wydzielenia():
+    return [
+        Wydzielenie(box(16.899, 52.399, 16.9005, 52.402), {"symb_t": "1MN"}),
+        Wydzielenie(box(16.9005, 52.399, 16.902, 52.402), {"symb_t": "2KDD"}),
+        Wydzielenie(box(16.95, 52.45, 16.96, 52.46), {"symb_t": "ZP"}),  # daleko
+    ]
+
+
+def test_wydzielenia_dzialki_z_indeksu(monkeypatch):
+    monkeypatch.setitem(mpzp_wfs._cache, GMINA_PILOTAZOWA.teryt_prefiks, mpzp_wfs._WarstwaGminy(_dwa_wydzielenia()))
+    pary = mpzp_wfs.wydzielenia_dzialki(GMINA_PILOTAZOWA, _dzialka_kwadrat().geometria)
+    assert sorted(w.atrybuty["symb_t"] for w, _ in pary) == ["1MN", "2KDD"]
+
+
+def test_sprawdz_zwraca_powierzchnie_i_udzialy(client, monkeypatch):
+    wydzielenia = _dwa_wydzielenia()
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke", lambda lat, lon: _dzialka_kwadrat())
+    monkeypatch.setattr(mpzp_routes, "znajdz_przeznaczenie", lambda g, p: wydzielenia[0])
+    monkeypatch.setattr(
+        mpzp_routes,
+        "znajdz_wydzielenia_dzialki",
+        lambda g, geom: [(w, w.geometria.intersection(geom)) for w in wydzielenia if w.geometria.intersects(geom)],
+    )
+
+    dane = client.get("/mpzp/sprawdz?lat=52.4005&lon=16.9002").get_json()
+
+    assert dane["dzialka"]["powierzchnia_m2"] == pytest.approx(powierzchnia_m2(_dzialka_kwadrat().geometria), rel=0.001)
+    assert [u["przeznaczenie"] for u in dane["udzialy"]] == ["1MN", "2KDD"] or [u["przeznaczenie"] for u in dane["udzialy"]] == ["2KDD", "1MN"]
+    assert sum(u["procent"] for u in dane["udzialy"]) == pytest.approx(100, abs=0.2)
+    assert dane["udzialy"][0]["opis"][0]["opis"] is not None
+
+
+def test_drobny_styk_z_sasiednim_wydzieleniem_pomijany(client, monkeypatch):
+    dzialka = _dzialka_kwadrat()
+    glowne = Wydzielenie(box(16.899, 52.399, 16.902, 52.402), {"symb_t": "MN"})
+    styk = Wydzielenie(box(16.90099, 52.399, 16.902, 52.402), {"symb_t": "KDL"})  # ok. 1% działki
+    monkeypatch.setattr(
+        mpzp_routes, "znajdz_wydzielenia_dzialki", lambda g, geom: [(glowne, dzialka.geometria), (styk, styk.geometria.intersection(dzialka.geometria))]
+    )
+    wynik = mpzp_routes.udzialy_przeznaczen(GMINA_PILOTAZOWA, dzialka)
+    assert [u["przeznaczenie"] for u in wynik] == ["MN", "KDL"]
+    styk_maly = Wydzielenie(box(16.900999, 52.399, 16.902, 52.402), {"symb_t": "KDL"})  # 0,1%
+    monkeypatch.setattr(
+        mpzp_routes, "znajdz_wydzielenia_dzialki", lambda g, geom: [(glowne, dzialka.geometria), (styk_maly, styk_maly.geometria.intersection(dzialka.geometria))]
+    )
+    assert [u["przeznaczenie"] for u in mpzp_routes.udzialy_przeznaczen(GMINA_PILOTAZOWA, dzialka)] == ["MN"]
+
+
+def test_raport_dzialki(client, monkeypatch):
+    # zły format sprawdza prawdziwa funkcja ULDK — zanim cokolwiek podmienimy
+    assert client.get("/mpzp/raport?id=zly").status_code == 400
+
+    wydzielenia = _dwa_wydzielenia()
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_kwadrat())
+    monkeypatch.setattr(
+        mpzp_routes,
+        "znajdz_wydzielenia_dzialki",
+        lambda g, geom: [(w, w.geometria.intersection(geom)) for w in wydzielenia if w.geometria.intersects(geom)],
+    )
+    strona = client.get("/mpzp/raport?id=306401_1.0051.AR_18.14").get_data(as_text=True)
+    assert "Raport działki ewidencyjnej" in strona
+    assert "0051" in strona and "AR_18.14" in strona
+    assert "1MN" in strona and "2KDD" in strona
+    assert "nie jest wypisem" in strona
+    assert "<path" in strona
+
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: None)
+    assert client.get("/mpzp/raport?id=306401_1.0051.AR_18.14").status_code == 404
+
+
+def test_szkic_svg_ma_sciezki():
+    szkic = szkic_svg(box(16.9, 52.4, 16.901, 52.401), [(box(16.8995, 52.3995, 16.9005, 52.4015), 0)])
+    assert szkic["dzialka"].startswith("M ")
+    assert len(szkic["czesci"]) == 1
+    assert szkic["viewbox"].startswith("0 0 ")
