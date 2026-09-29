@@ -50,6 +50,11 @@
     const formatProcentu = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
 
     let wybranaZmienna = null; // {id, nazwa, jednostka}
+    let mianownik = null; // {id, nazwa, jednostka} — wskaźnik względny (ETAP 29)
+    const poleMianownik = document.getElementById("pole-mianownik");
+    const podpowiedziMianownik = document.getElementById("podpowiedzi-mianownik");
+    const poleMnoznik = document.getElementById("pole-mnoznik");
+    const wyczyscMianownik = document.getElementById("wyczysc-mianownik");
     let biezaceDane = null;
     let tryb = "wartosc";
     let granice = null; // GeoJSON gmin bieżącego województwa
@@ -200,7 +205,48 @@
     }
 
     document.addEventListener("click", (e) => {
-        if (!e.target.closest(".pole-wskaznika")) podpowiedzi.hidden = true;
+        if (!e.target.closest(".pole-wskaznika")) {
+            podpowiedzi.hidden = true;
+            podpowiedziMianownik.hidden = true;
+        }
+    });
+
+    // Wyszukiwarka mianownika — ta sama lista wskaźników BDL.
+    let opoznienieMianownika = null;
+    poleMianownik.addEventListener("input", () => {
+        clearTimeout(opoznienieMianownika);
+        const fraza = poleMianownik.value.trim();
+        if (fraza.length < 3) {
+            podpowiedziMianownik.hidden = true;
+            return;
+        }
+        opoznienieMianownika = setTimeout(async () => {
+            podpowiedziMianownik.replaceChildren(element("li", "podpowiedzi__info", "Szukam…"));
+            podpowiedziMianownik.hidden = false;
+            try {
+                const zmienne = await pobierzJson(`${URL_ZMIENNE}?q=${encodeURIComponent(fraza)}`);
+                podpowiedziMianownik.replaceChildren();
+                for (const z of zmienne) {
+                    const li = element("li", "", z.nazwa);
+                    li.appendChild(element("span", "etykieta", z.jednostka || "—"));
+                    li.addEventListener("click", () => {
+                        mianownik = z;
+                        poleMianownik.value = z.nazwa;
+                        podpowiedziMianownik.hidden = true;
+                        wyczyscMianownik.hidden = false;
+                    });
+                    podpowiedziMianownik.appendChild(li);
+                }
+                if (!zmienne.length) podpowiedziMianownik.appendChild(element("li", "podpowiedzi__info", "Brak wskaźników o takiej nazwie."));
+            } catch (err) {
+                podpowiedziMianownik.replaceChildren(element("li", "podpowiedzi__info", `Błąd: ${err.message}`));
+            }
+        }, 350);
+    });
+    wyczyscMianownik.addEventListener("click", () => {
+        mianownik = null;
+        poleMianownik.value = "";
+        wyczyscMianownik.hidden = true;
     });
     poleWoj.addEventListener("change", aktualizujPrzycisk);
 
@@ -222,6 +268,10 @@
         try {
             const parametry = new URLSearchParams({ zmienna: wybranaZmienna.id, rok: poleRok.value, woj: poleWoj.value });
             if (poleRokBazowy.value) parametry.set("rok_bazowy", poleRokBazowy.value);
+            if (mianownik) {
+                parametry.set("mianownik", mianownik.id);
+                parametry.set("mnoznik", poleMnoznik.value);
+            }
             const dane = await pobierzJson(`${URL_DANE}?${parametry}`);
             if (numer !== numerZapytania) return;
             if (dane.gminy.length === 0) {
@@ -230,6 +280,7 @@
                 return;
             }
             biezaceDane = dane;
+            wybranyWskaznikEl.textContent = `Na mapie: ${dane.zmienna.nazwa} [${dane.zmienna.jednostka || "–"}], ${dane.rok}`;
             linkEksport.href = `${URL_EKSPORT}?${parametry}`;
             document.getElementById("link-geojson").href = `${URL_GEOJSON}?${parametry}`;
             const jestPorownanie = Boolean(dane.porownanie && dane.porownanie.gminy.length);
@@ -590,7 +641,10 @@
         profilEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
 
         try {
-            const url = URL_PROFIL.replace("000000000000", gmina.bdl_id) + `?zmienna=${biezaceDane.zmienna.id}`;
+            let url = URL_PROFIL.replace("000000000000", gmina.bdl_id) + `?zmienna=${biezaceDane.zmienna.id}`;
+            if (biezaceDane.zmienna.mianownik) {
+                url += `&mianownik=${biezaceDane.zmienna.mianownik.id}&mnoznik=${biezaceDane.zmienna.mnoznik}`;
+            }
             const dane = await pobierzJson(url);
             if (numer !== numerProfilu) return;
             if (dane.szereg.length < 2) {
@@ -648,6 +702,10 @@
         opisEl.className = "wyciszony";
         opisEl.textContent = "Generowanie opisu…";
         const zapytanie = { zmienna: biezaceDane.zmienna.id, rok: biezaceDane.rok, woj: biezaceDane.wojewodztwo.bdl_id };
+        if (biezaceDane.zmienna.mianownik) {
+            zapytanie.mianownik = biezaceDane.zmienna.mianownik.id;
+            zapytanie.mnoznik = biezaceDane.zmienna.mnoznik;
+        }
         if (biezaceDane.porownanie) zapytanie.rok_bazowy = biezaceDane.porownanie.rok_bazowy;
         try {
             const odpowiedz = await fetch(URL_OPIS, {

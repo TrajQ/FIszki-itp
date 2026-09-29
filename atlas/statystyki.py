@@ -29,6 +29,33 @@ def statystyki(wartosci: list[dict]) -> dict:
     }
 
 
+# ---------- Wskaźniki względne (ETAP 29) ----------
+
+DOZWOLONE_MNOZNIKI = (1, 100, 1000, 10000)
+
+
+def podziel(licznik: list[dict], mianownik: list[dict], mnoznik: int) -> list[dict]:
+    """Wskaźnik względny: licznik / mianownik × mnożnik dla gmin z obiema
+    wartościami (np. mieszkania oddane na 1000 mieszkańców). Gminy z
+    mianownikiem 0 pomijamy — iloraz byłby nieokreślony."""
+    mian = {g["teryt"]: g["wartosc"] for g in mianownik}
+    return [
+        {**g, "wartosc": g["wartosc"] / mian[g["teryt"]] * mnoznik}
+        for g in licznik
+        if mian.get(g["teryt"]) not in (None, 0)
+    ]
+
+
+def podziel_szeregi(licznik: list[dict], mianownik: list[dict], mnoznik: int) -> list[dict]:
+    """To samo dla szeregu czasowego jednej gminy (łączenie po roku)."""
+    mian = {p["rok"]: p["wartosc"] for p in mianownik}
+    return [
+        {"rok": p["rok"], "wartosc": p["wartosc"] / mian[p["rok"]] * mnoznik}
+        for p in licznik
+        if mian.get(p["rok"]) not in (None, 0)
+    ]
+
+
 # ---------- Miary zróżnicowania (ETAP 28) ----------
 
 # Ocena współczynnika zmienności — skala stosowana w polskich

@@ -768,3 +768,27 @@ Zrobione:
 
 Testy: 204 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap28_20260929.zip
+
+## ETAP 29 — Atlas: wskaźniki względne („na 1000 mieszkańców”)
+Data: 2026-09-29
+Status: zamknięty
+
+Analiza potrzeb: wiele zmiennych GUS to liczby bezwzględne (mieszkania,
+bezrobotni, podmioty) — porównanie gmin ma sens dopiero po odniesieniu
+do liczby mieszkańców albo powierzchni.
+
+Zrobione:
+- `atlas/statystyki.py`: `podziel` (licznik / mianownik × mnożnik po
+  TERYT, mianownik 0 pomijany), `podziel_szeregi` (to samo dla lat)
+- Parametry `mianownik` i `mnoznik` (1, 100, 1000, 10 000) w `/atlas/dane`,
+  `/atlas/opis`, eksporcie CSV/GeoJSON, porównaniu lat, korelacji i
+  profilu gminy; nazwa i jednostka wskaźnika budowane automatycznie
+  („… na 1 000 (ludność ogółem)”, „mieszk. / 1 000 osoba”); walidacja
+  (mianownik ≠ licznik, dozwolony mnożnik)
+- Formularz: drugi wiersz „Przelicz na (opcjonalnie)” z wyszukiwarką
+  mianownika, mnożnikiem i przyciskiem „bez przeliczenia”; pod
+  formularzem pełny opis tego, co jest na mapie
+- Testy: 7 nowych; `DECISIONS.md`: D-036
+
+Testy: 211 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap29_20260929.zip

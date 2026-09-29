@@ -100,6 +100,10 @@
             rok: daneMapy.rok,
             woj: daneMapy.wojewodztwo.bdl_id,
         });
+        if (daneMapy.zmienna.mianownik) {
+            parametry.set("mianownik", daneMapy.zmienna.mianownik.id);
+            parametry.set("mnoznik", daneMapy.zmienna.mnoznik);
+        }
         try {
             const odpowiedz = await fetch(`${URL_KORELACJA}?${parametry}`);
             const wynik = await odpowiedz.json();

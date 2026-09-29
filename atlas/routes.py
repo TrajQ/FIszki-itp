@@ -76,10 +76,17 @@ def profil_gminy(gmina_bdl_id):
         return jsonify({"blad": "Identyfikator gminy BDL ma 12 cyfr."}), 400
 
     try:
-        szereg = z_cache(
-            f"szereg:{zmienna_id}:{gmina_bdl_id}",
-            lambda: bdl.szereg_gminy(zmienna_id, gmina_bdl_id),
-        )
+        wzgledne = _parametry_wzgledne(request.args, zmienna_id)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+
+    def szereg_zmiennej(zid):
+        return z_cache(f"szereg:{zid}:{gmina_bdl_id}", lambda: bdl.szereg_gminy(zid, gmina_bdl_id))
+
+    try:
+        szereg = szereg_zmiennej(zmienna_id)
+        if wzgledne["mianownik"] is not None:
+            szereg = statystyki.podziel_szeregi(szereg, szereg_zmiennej(wzgledne["mianownik"]), wzgledne["mnoznik"])
     except BladBDL as e:
         return jsonify({"blad": str(e)}), 502
     return jsonify({"szereg": szereg, "zmiana": statystyki.zmiana_w_szeregu(szereg)})
@@ -149,7 +156,46 @@ def _parametry_zapytania(zrodlo) -> dict:
             raise ValueError("rok_bazowy musi być liczbą.")
         if rok_bazowy >= rok:
             raise ValueError("Rok bazowy musi być wcześniejszy niż rok badany.")
-    return {"zmienna_id": zmienna_id, "rok": rok, "woj_bdl_id": woj, "rok_bazowy": rok_bazowy}
+    return {"zmienna_id": zmienna_id, "rok": rok, "woj_bdl_id": woj, "rok_bazowy": rok_bazowy, **_parametry_wzgledne(zrodlo, zmienna_id)}
+
+
+def _parametry_wzgledne(zrodlo, zmienna_id: int) -> dict:
+    """Opcjonalny wskaźnik względny: mianownik (id zmiennej) i mnożnik."""
+    mianownik = zrodlo.get("mianownik")
+    if mianownik in (None, ""):
+        return {"mianownik": None, "mnoznik": 1}
+    try:
+        mianownik = int(mianownik)
+        mnoznik = int(zrodlo.get("mnoznik") or 1000)
+    except (TypeError, ValueError):
+        raise ValueError("mianownik i mnoznik muszą być liczbami.")
+    if mianownik == zmienna_id:
+        raise ValueError("Mianownik musi być innym wskaźnikiem niż licznik.")
+    if mnoznik not in statystyki.DOZWOLONE_MNOZNIKI:
+        raise ValueError("Mnożnik: 1, 100, 1000 albo 10000.")
+    return {"mianownik": mianownik, "mnoznik": mnoznik}
+
+
+def _opis_zmiennej(zmienna_id: int, mianownik: int | None, mnoznik: int) -> dict:
+    zmienna = z_cache(f"zmienna:{zmienna_id}", lambda: asdict(bdl.pobierz_zmienna(zmienna_id)))
+    if mianownik is None:
+        return zmienna
+    mian = z_cache(f"zmienna:{mianownik}", lambda: asdict(bdl.pobierz_zmienna(mianownik)))
+    na = "" if mnoznik == 1 else f"{mnoznik:,}".replace(",", " ") + " "
+    return {
+        "id": zmienna["id"],
+        "nazwa": f"{zmienna['nazwa']} na {na}({mian['nazwa']})",
+        "jednostka": f"{zmienna['jednostka'] or '–'} / {na}{mian['jednostka'] or '–'}",
+        "mianownik": mian,
+        "mnoznik": mnoznik,
+    }
+
+
+def _wartosci_wskaznika(zmienna_id: int, rok: int, woj_bdl_id: str, mianownik: int | None, mnoznik: int) -> list[dict]:
+    gminy = _wartosci(zmienna_id, rok, woj_bdl_id)
+    if mianownik is None:
+        return gminy
+    return statystyki.podziel(gminy, _wartosci(mianownik, rok, woj_bdl_id), mnoznik)
 
 
 def _wojewodztwa() -> list[dict]:
@@ -163,13 +209,24 @@ def _wartosci(zmienna_id: int, rok: int, woj_bdl_id: str) -> list[dict]:
     )
 
 
-def _policz_dane(zmienna_id: int, rok: int, woj_bdl_id: str, rok_bazowy: int | None = None) -> dict:
+def _policz_dane(
+    zmienna_id: int,
+    rok: int,
+    woj_bdl_id: str,
+    rok_bazowy: int | None = None,
+    mianownik: int | None = None,
+    mnoznik: int = 1,
+) -> dict:
     wojewodztwo = next((w for w in _wojewodztwa() if w["bdl_id"] == woj_bdl_id), None)
     if wojewodztwo is None:
         raise LookupError("Nie znaleziono takiego województwa w BDL.")
 
-    zmienna = z_cache(f"zmienna:{zmienna_id}", lambda: asdict(bdl.pobierz_zmienna(zmienna_id)))
-    gminy = sorted(_wartosci(zmienna_id, rok, woj_bdl_id), key=lambda g: g["wartosc"], reverse=True)
+    zmienna = _opis_zmiennej(zmienna_id, mianownik, mnoznik)
+    gminy = sorted(
+        _wartosci_wskaznika(zmienna_id, rok, woj_bdl_id, mianownik, mnoznik),
+        key=lambda g: g["wartosc"],
+        reverse=True,
+    )
 
     wynik = {
         "zmienna": zmienna,
@@ -180,7 +237,9 @@ def _policz_dane(zmienna_id: int, rok: int, woj_bdl_id: str, rok_bazowy: int | N
         "progi_klas": statystyki.progi_klas([g["wartosc"] for g in gminy]),
     }
     if rok_bazowy is not None:
-        porownanie = statystyki.porownaj(gminy, _wartosci(zmienna_id, rok_bazowy, woj_bdl_id))
+        porownanie = statystyki.porownaj(
+            gminy, _wartosci_wskaznika(zmienna_id, rok_bazowy, woj_bdl_id, mianownik, mnoznik)
+        )
         wynik["porownanie"] = {
             "rok_bazowy": rok_bazowy,
             "gminy": porownanie,
@@ -205,9 +264,11 @@ def korelacja():
     if zmienna2 == parametry["zmienna_id"]:
         return jsonify({"blad": "Wybierz inny wskaźnik niż ten na mapie."}), 400
     try:
-        gminy_x = _wartosci(parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"])
+        gminy_x = _wartosci_wskaznika(
+            parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"]
+        )
         gminy_y = _wartosci(zmienna2, parametry["rok"], parametry["woj_bdl_id"])
-        zmienna_x = z_cache(f"zmienna:{parametry['zmienna_id']}", lambda: asdict(bdl.pobierz_zmienna(parametry["zmienna_id"])))
+        zmienna_x = _opis_zmiennej(parametry["zmienna_id"], parametry["mianownik"], parametry["mnoznik"])
         zmienna_y = z_cache(f"zmienna:{zmienna2}", lambda: asdict(bdl.pobierz_zmienna(zmienna2)))
     except BladBDL as e:
         return jsonify({"blad": str(e)}), 502

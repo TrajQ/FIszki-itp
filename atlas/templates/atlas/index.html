@@ -31,6 +31,21 @@
         <select id="pole-rok-bazowy"><option value="">— bez porównania —</option></select>
     </label>
     <button id="przycisk-pokaz" type="submit" disabled>Pokaż</button>
+    <div class="wiersz-wzgledny">
+        <label class="pole-wskaznika pole-mianownika">Przelicz na (opcjonalnie) — wskaźnik względny
+            <input id="pole-mianownik" type="search" placeholder="np. ludność ogółem, powierzchnia…" autocomplete="off">
+            <ul id="podpowiedzi-mianownik" class="podpowiedzi" hidden></ul>
+        </label>
+        <label>Mnożnik
+            <select id="pole-mnoznik">
+                <option value="1">× 1</option>
+                <option value="100">na 100</option>
+                <option value="1000" selected>na 1000</option>
+                <option value="10000">na 10 000</option>
+            </select>
+        </label>
+        <button id="wyczysc-mianownik" type="button" class="przycisk--tekst" hidden>✕ bez przeliczenia</button>
+    </div>
 </form>
 <p id="wybrany-wskaznik" class="wybrany-wskaznik wyciszony">Wybierz wskaźnik z listy podpowiedzi.</p>
 

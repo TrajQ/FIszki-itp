@@ -573,3 +573,57 @@ def test_fakty_opisu_zawieraja_cv_i_gini():
     fakty = statystyki.fakty_do_opisu({"nazwa": "x", "jednostka": "osoba"}, 2023, "małopolskie", stat)
     assert any(f.startswith("Współczynnik zmienności") for f in fakty)
     assert any(f.startswith("Współczynnik Giniego") for f in fakty)
+
+
+# ---------- ETAP 29: wskaźniki względne ----------
+
+
+def test_podziel_na_1000_i_pomija_zero():
+    licznik = [{"teryt": "1", "nazwa": "A", "wartosc": 50.0}, {"teryt": "2", "nazwa": "B", "wartosc": 5.0}, {"teryt": "3", "nazwa": "C", "wartosc": 1.0}]
+    mian = [{"teryt": "1", "wartosc": 10000.0}, {"teryt": "2", "wartosc": 0.0}]
+    wynik = statystyki.podziel(licznik, mian, 1000)
+    assert wynik == [{"teryt": "1", "nazwa": "A", "wartosc": 5.0}]
+
+
+def test_podziel_szeregi_po_roku():
+    s = statystyki.podziel_szeregi(
+        [{"rok": 2020, "wartosc": 10.0}, {"rok": 2021, "wartosc": 12.0}, {"rok": 2022, "wartosc": 9.0}],
+        [{"rok": 2020, "wartosc": 1000.0}, {"rok": 2021, "wartosc": 1200.0}],
+        100,
+    )
+    assert s == [{"rok": 2020, "wartosc": 1.0}, {"rok": 2021, "wartosc": 1.0}]
+
+
+def test_dane_ze_wskaznikiem_wzglednym(client, monkeypatch):
+    def wartosci(zmienna_id, rok, woj):
+        if zmienna_id == 1000:  # mianownik: ludność
+            return [bdl.Wartosc("011212161011", "1261011", "Kraków", 800000.0), bdl.Wartosc("011212106032", "1206032", "Wieliczka", 60000.0)]
+        return [bdl.Wartosc("011212161011", "1261011", "Kraków", 4000.0), bdl.Wartosc("011212106032", "1206032", "Wieliczka", 600.0)]
+
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", wartosci)
+    dane = client.get(f"/atlas/dane?{ZAPYTANIE}&mianownik=1000&mnoznik=1000").get_json()
+    wartosci_gmin = {g["nazwa"]: g["wartosc"] for g in dane["gminy"]}
+    assert wartosci_gmin == {"Kraków": pytest.approx(5.0), "Wieliczka": pytest.approx(10.0)}
+    assert [g["nazwa"] for g in dane["gminy"]] == ["Wieliczka", "Kraków"]  # ranking po wartości względnej
+    assert "na 1 000" in dane["zmienna"]["nazwa"] and dane["zmienna"]["mnoznik"] == 1000
+    assert dane["zmienna"]["jednostka"] == "osoba / 1 000 osoba"
+
+    # korelacja i opis też używają wartości względnych
+    kor = client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=2000&mianownik=1000&mnoznik=1000").get_json()
+    assert sorted(p["x"] for p in kor["punkty"]) == [pytest.approx(5.0), pytest.approx(10.0)]
+
+
+@pytest.mark.parametrize("zapytanie", ["&mianownik=72305", "&mianownik=1000&mnoznik=7", "&mianownik=abc"])
+def test_zle_parametry_wzgledne(client, zapytanie):
+    assert client.get(f"/atlas/dane?{ZAPYTANIE}{zapytanie}").status_code == 400
+
+
+def test_profil_gminy_wzgledny(client, monkeypatch):
+    def szereg(zmienna, gmina):
+        if zmienna == 1000:
+            return [{"rok": 2020, "wartosc": 1000.0}, {"rok": 2021, "wartosc": 2000.0}]
+        return [{"rok": 2020, "wartosc": 10.0}, {"rok": 2021, "wartosc": 10.0}]
+
+    monkeypatch.setattr(atlas_routes.bdl, "szereg_gminy", szereg)
+    dane = client.get("/atlas/gmina/011212161011?zmienna=72305&mianownik=1000&mnoznik=1000").get_json()
+    assert [p["wartosc"] for p in dane["szereg"]] == [pytest.approx(10.0), pytest.approx(5.0)]

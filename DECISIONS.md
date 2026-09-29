@@ -723,3 +723,21 @@ rozkładu (skośność), którego klasy kwantylowe celowo nie pokazują.
 **Odrzucone alternatywy:**
 - Odchylenie z próby (`stdev`) — odrzucone: to nie jest próba.
 - Indeks Theila — odłożone: Gini jest powszechniej znany na studiach.
+
+## D-036 — Wskaźnik względny wybierany przez użytkownika, nie z listy
+Data: 2026-09-29
+
+**Decyzja:** Mianownik wskaźnika względnego to dowolna zmienna BDL
+wyszukana przez użytkownika (plus mnożnik), a nie stała lista typu
+„na 1000 mieszkańców” z zaszytym identyfikatorem zmiennej.
+
+**Uzasadnienie:** Identyfikatorów zmiennych BDL nie dało się sprawdzić
+na żywo, a zaszycie złego numeru dawałoby błędne wyniki bez ostrzeżenia.
+Wybór z wyszukiwarki jest jawny (nazwa mianownika trafia do nazwy i
+jednostki wskaźnika) i pozwala liczyć też „na km²”, „na 100 podmiotów”
+itd. Dzielenie odbywa się po TERYT i po roku, więc działa w każdym
+widoku atlasu.
+
+**Odrzucone alternatywy:**
+- Gotowy przycisk „na 1000 mieszkańców” — odłożone do czasu
+  potwierdzenia identyfikatora zmiennej ludności w działającym BDL.

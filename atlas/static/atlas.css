@@ -13,6 +13,15 @@
     position: relative;
 }
 
+/* Drugi rząd panelu wyboru: wskaźnik względny. */
+.wiersz-wzgledny {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 160px auto;
+    grid-column: 1 / -1;
+    align-items: end;
+    gap: 16px;
+}
+
 .podpowiedzi {
     position: absolute;
     top: 100%;
@@ -427,6 +436,10 @@ button.przelacznik__opcja--aktywna:hover {
 
     .pole-wskaznika {
         grid-column: 1 / -1;
+    }
+
+    .wiersz-wzgledny {
+        grid-template-columns: 1fr;
     }
 
     .uklad-atlasu {

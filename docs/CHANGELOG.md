@@ -200,3 +200,8 @@
 - Atlas: miary zróżnicowania (σ, współczynnik zmienności, kwartyle,
   max/min, Gini) i histogram rozkładu gmin.
 - Dodano `DECISIONS.md` D-035 i testy.
+
+## ETAP 29 — 2026-09-29
+- Atlas: wskaźniki względne — dowolny wskaźnik podzielony przez drugi z
+  mnożnikiem (np. na 1000 mieszkańców), we wszystkich widokach.
+- Dodano `DECISIONS.md` D-036 i testy.
