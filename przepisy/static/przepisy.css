@@ -282,3 +282,84 @@ button.przycisk--niebezpieczny-tekst {
 .formularz-fiszki p {
     margin: 0;
 }
+
+/* ETAP 77: porównanie wersji aktu */
+.porownanie-formularz {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto;
+    align-items: end;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.porownanie-formularz__opcja {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.porownanie-liczby {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+}
+
+.znacznik {
+    padding: 3px 10px;
+    border-radius: 980px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.znacznik--zmieniona { background: rgba(255, 159, 10, 0.18); color: #b25000; }
+.znacznik--dodana { background: rgba(52, 199, 89, 0.18); color: var(--sukces); }
+.znacznik--usunieta { background: rgba(255, 55, 95, 0.16); color: var(--blad); }
+
+.zmiana {
+    padding: 10px 12px;
+    border-left: 4px solid var(--linia);
+    border-radius: 4px;
+}
+
+.zmiana--zmieniona { border-left-color: #ff9f0a; }
+.zmiana--dodana { border-left-color: #30d158; }
+.zmiana--usunieta { border-left-color: #ff375f; }
+
+.zmiana__pasek {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    font-size: 14px;
+}
+
+.zmiana__pasek a {
+    margin-left: auto;
+    font-size: 12px;
+}
+
+.zmiana__tekst {
+    margin: 4px 0 0;
+    line-height: 1.6;
+}
+
+.zmiana__tekst del,
+.porownanie-liczby + .opis-panelu del {
+    background: rgba(255, 55, 95, 0.16);
+    color: var(--blad);
+}
+
+.zmiana__tekst ins,
+.porownanie-liczby + .opis-panelu ins {
+    background: rgba(52, 199, 89, 0.18);
+    color: var(--sukces);
+    text-decoration: none;
+}
+
+@media (max-width: 800px) {
+    .porownanie-formularz {
+        grid-template-columns: 1fr;
+    }
+}

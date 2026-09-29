@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 from dane import gemini
 from fiszki import zewnetrzne as fiszki_zewnetrzne
 
-from . import baza, pytania
+from . import baza, porownanie, pytania
 from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
 
 przepisy_bp = Blueprint(
@@ -178,3 +178,16 @@ def fiszka_z_cytatu(pytanie_id):
     except fiszki_zewnetrzne.BladFiszki as e:
         return jsonify({"blad": str(e)}), 400
     return jsonify({**wynik, "strona": strona, "url": url_for("fiszki.widok_pdf", pdf_id=wynik["pdf_id"])}), 201
+
+
+@przepisy_bp.route("/porownanie")
+def porownanie_wersji():
+    """Dwie wersje aktu obok siebie: co dodano, usunięto, zmieniono (ETAP 77)."""
+    akty = baza.lista_aktow()
+    a, b = request.args.get("stary", type=int), request.args.get("nowy", type=int)
+    wynik = None
+    if a and b:
+        stary, nowy = _akt_albo_404(a), _akt_albo_404(b)
+        wynik = {"stary": stary, "nowy": nowy, **porownanie.porownaj(baza.jednostki_aktu(a), baza.jednostki_aktu(b))}
+    return render_template("przepisy/porownanie.html", akty=akty, wynik=wynik, stary_id=a, nowy_id=b,
+                           tylko_zmiany=request.args.get("wszystkie") != "1")

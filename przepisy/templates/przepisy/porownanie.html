@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block tytul %}Porównanie wersji aktu — Przepisy — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('przepisy.static', filename='przepisy.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('przepisy.index') }}">‹ Przepisy</a>
+        <h1>Porównanie wersji aktu</h1>
+        <p>Wgraj dwa teksty jednolite tej samej ustawy (np. sprzed i po nowelizacji) i zobacz, co się zmieniło — artykuł po artykule.</p>
+    </div>
+</div>
+
+{% if akty | length < 2 %}
+<p class="karta pusty-stan">Do porównania potrzebne są co najmniej dwa wgrane akty.</p>
+{% else %}
+<form class="karta porownanie-formularz" method="get">
+    <label>Starsza wersja
+        <select name="stary" required>{% for a in akty %}<option value="{{ a.id }}" {{ 'selected' if a.id == stary_id }}>#{{ a.id }} · {{ a.nazwa | truncate(70) }} ({{ a.liczba_stron }} s., dodano {{ a.data_dodania[:10] }})</option>{% endfor %}</select>
+    </label>
+    <label>Nowsza wersja
+        <select name="nowy" required>{% for a in akty %}<option value="{{ a.id }}" {{ 'selected' if a.id == nowy_id or (not nowy_id and loop.index == 2) }}>#{{ a.id }} · {{ a.nazwa | truncate(70) }} ({{ a.liczba_stron }} s., dodano {{ a.data_dodania[:10] }})</option>{% endfor %}</select>
+    </label>
+    <label class="porownanie-formularz__opcja"><input type="checkbox" name="wszystkie" value="1" {{ 'checked' if not tylko_zmiany }}> pokaż też bez zmian</label>
+    <button type="submit">Porównaj</button>
+</form>
+{% endif %}
+
+{% if wynik %}
+{% set l = wynik.liczby %}
+<section class="karta stos">
+    <div class="porownanie-liczby">
+        <span class="znacznik znacznik--zmieniona">zmienione: {{ l['zmieniona'] }}</span>
+        <span class="znacznik znacznik--dodana">dodane: {{ l['dodana'] }}</span>
+        <span class="znacznik znacznik--usunieta">usunięte: {{ l['usunięta'] }}</span>
+        <span class="wyciszony">bez zmian: {{ l['bez zmian'] }}</span>
+    </div>
+    <p class="wyciszony opis-panelu">Jednostki łączone po oznaczeniu („Art. 15”). Artykuł przenumerowany w nowelizacji pokaże się jako usunięty i dodany. Kolor: <del>usunięte słowa</del>, <ins>dodane słowa</ins>.</p>
+    {% for j in wynik.jednostki if not tylko_zmiany or j.status != 'bez zmian' %}
+    <article class="zmiana zmiana--{{ {'zmieniona': 'zmieniona', 'dodana': 'dodana', 'usunięta': 'usunieta', 'bez zmian': 'bez'}[j.status] }}">
+        <div class="zmiana__pasek">
+            <strong>{{ j.oznaczenie }}</strong>
+            <span class="wyciszony">{{ j.status }}</span>
+            {% if j.nowa %}<a class="wyciszony" href="{{ url_for('przepisy.widok_aktu', akt_id=wynik.nowy.id) }}#j{{ j.nowa.id }}">w nowej wersji ›</a>{% endif %}
+        </div>
+        {% if j.status == 'zmieniona' %}
+        <p class="zmiana__tekst">{% for o in j.roznice %}{% if o.typ == '-' %}<del>{{ o.tekst }}</del>{% elif o.typ == '+' %}<ins>{{ o.tekst }}</ins>{% else %}{{ o.tekst }}{% endif %} {% endfor %}</p>
+        {% elif j.status == 'dodana' %}
+        <p class="zmiana__tekst"><ins>{{ j.nowa.tekst }}</ins></p>
+        {% elif j.status == 'usunięta' %}
+        <p class="zmiana__tekst"><del>{{ j.stara.tekst }}</del></p>
+        {% else %}
+        <p class="zmiana__tekst">{{ j.nowa.tekst }}</p>
+        {% endif %}
+    </article>
+    {% else %}
+    <p class="wyciszony">Brak różnic w treści jednostek.</p>
+    {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

@@ -9,6 +9,7 @@
         <h1>Przepisy</h1>
         <p>Wgraj ustawy i rozporządzenia w PDF (np. tekst jednolity z ISAP) i szukaj w nich artykułów.</p>
     </div>
+    <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.porownanie_wersji') }}">Porównaj wersje aktu</a>
 </div>
 
 {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}

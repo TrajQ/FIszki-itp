@@ -268,3 +268,32 @@ def test_fiszka_z_cytatu(client, monkeypatch):
     assert client.post(url, json={"cytat": 5, "pytanie": "a", "odpowiedz": "b"}).status_code == 400
     assert client.post(url, json={"cytat": 0, "pytanie": " ", "odpowiedz": "b"}).status_code == 400
     assert client.post("/przepisy/pytania/999/fiszka", json={"cytat": 0}).status_code == 404
+
+
+# ---------- ETAP 77: porównanie wersji aktu ----------
+
+from przepisy.porownanie import porownaj, roznice_slow  # noqa: E402
+
+
+def test_roznice_slow_i_porownanie():
+    assert roznice_slow("Wójt sporządza projekt planu.", "Wójt  sporządza\nprojekt planu ogólnego.") == [
+        {"typ": "=", "tekst": "Wójt sporządza projekt"}, {"typ": "-", "tekst": "planu."}, {"typ": "+", "tekst": "planu ogólnego."}]
+
+    def j(o, t):
+        return {"oznaczenie": o, "tekst": t, "id": hash(o) % 1000}
+
+    stare = [j("Tytuł", "USTAWA"), j("Art. 1", "Art. 1. Bez zmian."), j("Art. 2", "Art. 2. Stary."), j("Art. 3", "Art. 3. Uchylony później."), j("Art. 4", "Art. 4. Ten sam.")]
+    nowe = [j("Tytuł", "USTAWA"), j("Art. 1", "Art. 1.  Bez\nzmian."), j("Art. 2", "Art. 2. Nowy."), j("Art. 4", "Art. 4. Ten sam."), j("Art. 4a", "Art. 4a. Dodany.")]
+    w = porownaj(stare, nowe)
+    assert [(p["oznaczenie"], p["status"]) for p in w["jednostki"]] == [
+        ("Art. 1", "bez zmian"), ("Art. 2", "zmieniona"), ("Art. 3", "usunięta"), ("Art. 4", "bez zmian"), ("Art. 4a", "dodana")]
+    assert w["liczby"] == {"zmieniona": 1, "dodana": 1, "usunięta": 1, "bez zmian": 2}
+
+
+def test_strona_porownania(client):
+    wgraj(client)
+    wgraj(client)  # druga wersja — atrapa z tym samym tekstem
+    html = client.get("/przepisy/porownanie?stary=1&nowy=2").get_data(as_text=True)
+    assert "zmienione: 0" in html and "Brak różnic" in html
+    assert "Art. 15a" in client.get("/przepisy/porownanie?stary=1&nowy=2&wszystkie=1").get_data(as_text=True)
+    assert client.get("/przepisy/porownanie?stary=1&nowy=9").status_code == 404

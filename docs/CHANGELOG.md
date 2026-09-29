@@ -562,3 +562,9 @@
 - Atlas: Raport gminy — porównanie z drugą gminą (wartość i miejsce w jej
   województwie, wyróżnione kolumny), eksport CSV (jedna albo dwie gminy).
 - Dodano `DECISIONS.md` D-083 i 1 test.
+
+## ETAP 77 — 2026-09-29
+- Przepisy: **porównanie wersji aktu** — artykuły dodane, usunięte i
+  zmienione (różnice słowo po słowie), liczby zmian, odnośniki do nowej
+  wersji.
+- Dodano `przepisy/porownanie.py`, `DECISIONS.md` D-084 i 2 testy.

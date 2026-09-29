@@ -1794,3 +1794,21 @@ sąsiednią albo podobną; CSV — do tabel w pracy.
 
 **Odrzucone alternatywy:**
 - Więcej niż dwie gminy naraz — tabela przestaje się mieścić na A4.
+
+## D-084 — Przepisy: porównanie wersji aktu po oznaczeniach jednostek
+Data: 2026-09-29
+
+**Decyzja:** Strona `/przepisy/porownanie?stary=&nowy=` zestawia dwa
+wgrane akty: jednostki łączone po oznaczeniu („Art. 15”), status dodana /
+usunięta / zmieniona / bez zmian, w zmienionych różnice słowo po słowie
+(`difflib.SequenceMatcher` z biblioteki standardowej; białe znaki nie są
+zmianą). Usunięte jednostki stoją tam, gdzie były w starej wersji.
+Domyślnie tylko zmiany.
+
+**Uzasadnienie:** Nowelizacje (np. reforma planowania z 2023 r.) zmieniają
+dziesiątki artykułów; porównanie tekstów jednolitych pokazuje, co
+naprawdę się zmieniło, bez czytania całości.
+
+**Odrzucone alternatywy:**
+- Dopasowanie przenumerowanych artykułów po podobieństwie treści —
+  zgadywanie; przenumerowanie pokazujemy uczciwie jako usunięcie i dodanie.

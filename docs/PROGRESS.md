@@ -1459,3 +1459,13 @@ Status: zamknięty
 - Sprawdzone w przeglądarce z podstawionym BDL (jasny i ciemny motyw),
   pobranie CSV
 - `DECISIONS.md`: D-083
+
+## ETAP 77 — Przepisy: porównanie wersji aktu
+Data: 2026-09-29
+Status: zamknięty
+
+- `przepisy/porownanie.py`, trasa `/przepisy/porownanie`, szablon
+  `porownanie.html`
+- Sprawdzone w przeglądarce na dwóch PDF-ach ustawy (usunięty art. 2,
+  zmieniony art. 15, dodany art. 15b)
+- `DECISIONS.md`: D-084
