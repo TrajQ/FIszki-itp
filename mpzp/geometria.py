@@ -118,6 +118,24 @@ def obszar_analizowany(geometria: BaseGeometry, szerokosc_frontu_m: float) -> di
     }
 
 
+def szkice_w_jednej_skali(geometrie: list[BaseGeometry], rozmiar: int = 200) -> tuple[list[dict], float]:
+    """Szkice kilku działek w TEJ SAMEJ skali — do porównania kształtu i
+    wielkości. Skala z największej działki; każda wyśrodkowana w swoim polu.
+    Zwraca ([{"viewbox", "sciezka"}], skala w px na metr)."""
+    metryczne = [w_metrach(g, g.centroid.y) for g in geometrie]
+    rozpietosc = max(max(g.bounds[2] - g.bounds[0], g.bounds[3] - g.bounds[1]) for g in metryczne) or 1.0
+    skala = rozmiar * 0.85 / rozpietosc
+    wynik = []
+    for g in metryczne:
+        minx, miny, maxx, maxy = g.bounds
+        srodek_x, srodek_y = (minx + maxx) / 2, (miny + maxy) / 2
+        przesuniety = translate(g, -srodek_x, -srodek_y)
+        w_pikselach = scale(przesuniety, xfact=skala, yfact=-skala, origin=(0, 0))
+        w_pikselach = translate(w_pikselach, rozmiar / 2, rozmiar / 2)
+        wynik.append({"viewbox": f"0 0 {rozmiar} {rozmiar}", "sciezka": _sciezka(w_pikselach)})
+    return wynik, skala
+
+
 def szkic_svg(dzialka: BaseGeometry, czesci: list[tuple[BaseGeometry, int]], rozmiar: int = 320) -> dict:
     """Ścieżki SVG działki i jej części w wydzieleniach — do raportu.
 

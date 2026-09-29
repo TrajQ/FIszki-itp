@@ -20,7 +20,7 @@ from .symbole import opisz_symbol, wszystkie_symbole
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
 from .wfs import wydzielenia_dzialki as _wydzielenia_dzialki
-from .geometria import obszar_analizowany, powierzchnia_m2, szkic_svg, w_metrach, wymiary
+from .geometria import obszar_analizowany, powierzchnia_m2, szkic_svg, szkice_w_jednej_skali, w_metrach, wymiary
 from .wfs import znajdz_przeznaczenie as _znajdz_przeznaczenie
 
 mpzp_bp = Blueprint(
@@ -668,3 +668,63 @@ def odswiez():
     except BladWFS as e:
         return jsonify({"blad": str(e)}), 502
     return jsonify({"ok": True}), 200
+
+
+# ---------- Porównanie działek (ETAP 53) ----------
+
+MAKS_DO_POROWNANIA = 4
+LADNE_PODZIALKI_M = (1, 2, 5, 10, 20, 25, 50, 100, 200, 500)
+
+
+def _dzialka_do_porownania(dzialka_id: str) -> dict:
+    """Wymiary i przeznaczenie jednej działki; błąd usługi — w polu „blad”."""
+    wpis = {"id": dzialka_id, "zapis": zapisana(dzialka_id)}
+    try:
+        dzialka = znajdz_dzialke_po_id(dzialka_id)
+    except (ValueError, BladULDK) as e:
+        return {**wpis, "blad": str(e)}
+    if dzialka is None:
+        return {**wpis, "blad": "ULDK nie zna tej działki."}
+    wpis.update(
+        geometria=dzialka.geometria,
+        powierzchnia_m2=powierzchnia_m2(dzialka.geometria),
+        wymiary=wymiary(dzialka.geometria),
+        udzialy=[],
+        plan=None,
+    )
+    wpis["obszar_wz_m"] = max(3 * wpis["wymiary"]["szerokosc_m"], 50.0)
+    gmina = znajdz_gmine(dzialka.teryt_gminy)
+    try:
+        if gmina is not None:
+            wpis["udzialy"] = udzialy_przeznaczen(gmina, dzialka)
+        else:
+            punkt = dzialka.geometria.representative_point()
+            obiekty = plan_krajowy(punkt.y, punkt.x)
+            wpis["plan"] = _plan_krajowy_na_json(obiekty) if obiekty else None
+    except (BladWFS, krajowe.BladKIMPZP) as e:
+        wpis["blad_planu"] = str(e)
+    return wpis
+
+
+@mpzp_bp.route("/porownanie")
+def porownanie():
+    """Wybór działek z „Moich działek” i tabela porównania obok siebie."""
+    wybrane = list(dict.fromkeys(request.args.getlist("id")))[:MAKS_DO_POROWNANIA]
+    dzialki = [_dzialka_do_porownania(i) for i in wybrane]
+    z_geometria = [d for d in dzialki if "geometria" in d]
+    podzialka = None
+    if z_geometria:
+        szkice, skala = szkice_w_jednej_skali([d["geometria"] for d in z_geometria])
+        for d, szkic in zip(z_geometria, szkice):
+            d["szkic"] = szkic
+        # podziałka ok. 1/4 szerokości szkicu, „ładna” długość
+        metry = max((m for m in LADNE_PODZIALKI_M if m * skala <= 60), default=LADNE_PODZIALKI_M[0])
+        podzialka = {"metry": metry, "px": metry * skala}
+    return render_template(
+        "mpzp/porownanie.html",
+        zapisane=zapisane(),
+        wybrane=wybrane,
+        dzialki=dzialki,
+        podzialka=podzialka,
+        maks=MAKS_DO_POROWNANIA,
+    )

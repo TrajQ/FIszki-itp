@@ -37,7 +37,10 @@
         <section class="karta stos">
             <div class="rzad rzad--miedzy">
                 <h3>Moje działki</h3>
-                <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.zapisane_csv') }}" title="Lista z notatkami do arkusza">CSV</a>
+                <span class="rzad">
+                    <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.porownanie') }}" title="Działki obok siebie, szkice w tej samej skali">Porównaj</a>
+                    <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.zapisane_csv') }}" title="Lista z notatkami do arkusza">CSV</a>
+                </span>
             </div>
             <ul id="zapisane" class="historia"></ul>
         </section>

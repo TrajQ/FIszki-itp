@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block tytul %}Porównanie działek — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
+
+{% macro m(x, miejsca=2) %}{{ ('%.*f' % (miejsca, x)).rstrip('0').rstrip('.').replace('.', ',') }}{% endmacro %}
+{% macro tys(x) %}{{ '{:,.0f}'.format(x).replace(',', ' ') }}{% endmacro %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa działek</a>
+        <h1>Porównanie działek</h1>
+        <p>Wybierz od 2 do {{ maks }} działek z „Moich działek” — zobaczysz je obok siebie, szkice w tej samej skali.</p>
+    </div>
+</div>
+
+{% if not zapisane %}
+<p class="karta pusty-stan">Nie masz jeszcze zapisanych działek. Na mapie kliknij działkę i użyj „☆ Zapisz do moich działek”.</p>
+{% else %}
+<form class="karta stos wybor-porownania" method="get">
+    <div class="wybor-porownania__lista">
+        {% for z in zapisane %}
+        <label class="wybor-porownania__pozycja">
+            <input type="checkbox" name="id" value="{{ z.dzialka_id }}" {{ 'checked' if z.dzialka_id in wybrane }}>
+            <span class="identyfikator">{{ z.dzialka_id }}</span>
+            {% if z.notatka %}<span class="wyciszony">{{ z.notatka }}</span>{% endif %}
+        </label>
+        {% endfor %}
+    </div>
+    <div class="rzad">
+        <button type="submit">Porównaj</button>
+        <span class="wyciszony">Dane pobierane na nowo z ULDK i planów — chwilę to trwa.</span>
+    </div>
+</form>
+{% endif %}
+
+{% if dzialki %}
+<section class="karta tabela-porownania-wrap">
+    <table class="tabela tabela-porownania">
+        <tr>
+            <th></th>
+            {% for d in dzialki %}<th class="identyfikator">{{ d.id }}</th>{% endfor %}
+        </tr>
+        <tr>
+            <th>Szkic (ta sama skala)</th>
+            {% for d in dzialki %}
+            <td>
+                {% if d.szkic %}
+                <svg class="szkic-porownania" viewBox="{{ d.szkic.viewbox }}" role="img" aria-label="Szkic działki {{ d.id }}">
+                    <path d="{{ d.szkic.sciezka }}" fill="rgba(10,132,255,0.18)" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                {% else %}<span class="komunikat komunikat--blad">{{ d.blad }}</span>{% endif %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% if podzialka %}
+        <tr>
+            <th>Podziałka</th>
+            <td colspan="{{ dzialki | length }}">
+                <svg width="{{ podzialka.px + 60 }}" height="22" class="podzialka-porownania">
+                    <rect x="0" y="4" width="{{ podzialka.px }}" height="5" fill="currentColor"/>
+                    <text x="{{ podzialka.px + 6 }}" y="11" font-size="12" fill="currentColor">{{ podzialka.metry }} m</text>
+                </svg>
+            </td>
+        </tr>
+        {% endif %}
+        <tr><th>Powierzchnia</th>{% for d in dzialki %}<td>{% if d.powierzchnia_m2 is defined %}{{ tys(d.powierzchnia_m2) }} m² <span class="wyciszony">({{ m(d.powierzchnia_m2 / 10000, 4) }} ha)</span>{% endif %}</td>{% endfor %}</tr>
+        <tr><th>Szerokość × głębokość</th>{% for d in dzialki %}<td>{% if d.wymiary %}{{ m(d.wymiary.szerokosc_m, 1) }} × {{ m(d.wymiary.glebokosc_m, 1) }} m{% endif %}</td>{% endfor %}</tr>
+        <tr><th>Obwód</th>{% for d in dzialki %}<td>{% if d.wymiary %}{{ m(d.wymiary.obwod_m, 1) }} m{% endif %}</td>{% endfor %}</tr>
+        <tr><th title="4π·P / obwód² — 1 dla koła, ok. 0,79 dla kwadratu">Zwartość</th>{% for d in dzialki %}<td>{% if d.wymiary and d.wymiary.zwartosc is not none %}{{ m(d.wymiary.zwartosc, 3) }}{% endif %}</td>{% endfor %}</tr>
+        <tr>
+            <th>Przeznaczenie w planie</th>
+            {% for d in dzialki %}
+            <td>
+                {% if d.udzialy %}
+                    {% for u in d.udzialy %}<div><strong>{{ u.przeznaczenie }}</strong> {{ m(u.procent, 1) }}%</div>{% endfor %}
+                {% elif d.plan %}
+                    <strong>{{ d.plan.przeznaczenie or '?' }}</strong>{% for o in d.plan.opis_przeznaczenia %}<div class="wyciszony">{{ o.symbol }} — {{ o.opis or 'brak w słowniku' }}</div>{% endfor %}
+                {% elif d.blad_planu %}<span class="wyciszony">{{ d.blad_planu }}</span>
+                {% elif d.wymiary %}<span class="wyciszony">brak planu</span>{% endif %}
+            </td>
+            {% endfor %}
+        </tr>
+        <tr><th title="max(3 × szerokość działki, 50 m) — gdy front to krótszy bok">Obszar analizowany WZ</th>{% for d in dzialki %}<td>{% if d.obszar_wz_m is defined %}{{ m(d.obszar_wz_m, 1) }} m{% endif %}</td>{% endfor %}</tr>
+        <tr><th>Notatka</th>{% for d in dzialki %}<td>{{ d.zapis.notatka if d.zapis else '' }}</td>{% endfor %}</tr>
+        <tr>
+            <th></th>
+            {% for d in dzialki %}<td><a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.raport', id=d.id) }}" target="_blank">Raport ↗</a></td>{% endfor %}
+        </tr>
+    </table>
+</section>
+{% endif %}
+{% endblock %}

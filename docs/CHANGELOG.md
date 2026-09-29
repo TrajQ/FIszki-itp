@@ -371,3 +371,9 @@
   wskaźnika i roku (także względnego), z miejscem wybranego województwa
   i medianą; `/atlas/wojewodztwa-porownanie`.
 - Dodano `DECISIONS.md` D-057 i 2 testy.
+
+## ETAP 53 — 2026-09-29
+- MPZP: „Porównaj” w „Moich działkach” — 2–4 działki obok siebie, szkice
+  w tej samej skali z podziałką, wymiary, zwartość, przeznaczenie,
+  obszar analizowany WZ, notatki, linki do raportów.
+- Dodano `geometria.szkice_w_jednej_skali`, `DECISIONS.md` D-058 i 2 testy.

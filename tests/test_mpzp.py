@@ -729,3 +729,36 @@ def test_slownik_symboli_strona_i_rozszyfruj(client):
 def test_obszar_analizowany_uszkodzona_geometria_to_400(client, geometria):
     odpowiedz = client.post("/mpzp/obszar-analizowany", json={"geometria": geometria, "front": 20})
     assert odpowiedz.status_code == 400
+
+
+# ---------- ETAP 53: porównanie działek ----------
+
+
+def test_szkice_w_jednej_skali():
+    from mpzp.geometria import szkice_w_jednej_skali
+
+    maly, duzy = _prostokat(10, 10), _prostokat(40, 40)
+    szkice, skala = szkice_w_jednej_skali([maly, duzy], rozmiar=200)
+    assert skala == pytest.approx(200 * 0.85 / 40, rel=1e-3)  # skala z większej działki
+    assert len(szkice) == 2 and all(s["sciezka"].startswith("M ") for s in szkice)
+
+
+def test_porownanie_dzialek(client, monkeypatch):
+    from mpzp.krajowe import ObiektPlanu
+
+    dzialki = {
+        "146501_1.0001.1": Dzialka(id="146501_1.0001.1", geometria=_prostokat(20, 40), teryt_gminy="146501"),
+        "146501_1.0001.2": Dzialka(id="146501_1.0001.2", geometria=_prostokat(30, 30), teryt_gminy="146501"),
+    }
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: dzialki.get(i))
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: [ObiektPlanu("w", {"symbol": "MN"})])
+    client.post("/mpzp/zapisane", json={"id": "146501_1.0001.1", "lat": 52, "lon": 17, "notatka": "wariant A"})
+
+    strona = client.get("/mpzp/porownanie").get_data(as_text=True)
+    assert "146501_1.0001.1" in strona and "wariant A" in strona  # lista do wyboru
+
+    html = client.get("/mpzp/porownanie?id=146501_1.0001.1&id=146501_1.0001.2&id=146501_1.0001.9").get_data(as_text=True)
+    assert html.count("szkic-porownania") >= 2
+    assert "20 × 40 m" in html and "30 × 30 m" in html
+    assert "ULDK nie zna tej działki." in html  # trzecia — błąd w kolumnie, reszta działa
+    assert "<strong>MN</strong>" in html and "60 m" in html and "90 m" in html  # obszar WZ: 3 × szerokość

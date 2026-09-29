@@ -1201,3 +1201,24 @@ województw zamiast sumować gminy w aplikacji, bo dla wielu wskaźników
 - Agregacja z gmin — odrzucone (patrz wyżej).
 - Osobny kartogram województw — odrzucone na teraz: ranking z paskami
   jest czytelniejszy przy 16 jednostkach.
+
+## D-058 — Porównanie działek: dane pobierane na nowo, szkice w jednej skali
+Data: 2026-09-29
+
+**Decyzja:** `/mpzp/porownanie` pokazuje 2–4 działki z „Moich działek”
+obok siebie: szkic (wspólna skala z największej działki + podziałka),
+powierzchnię, szerokość × głębokość, obwód, zwartość, przeznaczenie
+(podział z WFS albo plan krajowy), odległość obszaru analizowanego WZ
+(max(3 × szerokość, 50 m) — przy założeniu, że front to krótszy bok)
+i notatkę. Geometrię i plan pobieramy na nowo z ULDK/planów; błąd jednej
+działki pokazujemy w jej kolumnie, reszta działa.
+
+**Uzasadnienie:** Na zajęciach wybiera się lokalizację spośród kilku
+wariantów — porównanie „na oko” na mapie przy różnych przybliżeniach
+myli, a wspólna skala szkiców od razu pokazuje różnicę wielkości i
+kształtu. W „Moich działkach” nie trzymamy geometrii (mogłaby się
+zdezaktualizować po podziale działki), więc pobieramy ją przy
+porównaniu.
+
+**Odrzucone alternatywy:**
+- Zapisywanie geometrii w „Moich działkach” — odrzucone (patrz wyżej).

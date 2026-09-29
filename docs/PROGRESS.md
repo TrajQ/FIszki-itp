@@ -1158,3 +1158,15 @@ Status: zamknięty
 
 Testy: 333 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap52_20260929.zip
+
+## ETAP 53 — MPZP: porównanie działek
+Data: 2026-09-29
+Status: zamknięty
+
+- `/mpzp/porownanie` (GET z listą `id`, do 4), szablon `porownanie.html`
+- Błąd ULDK/planu jednej działki nie psuje pozostałych kolumn
+- Sprawdzone w przeglądarce (trzy działki o różnym kształcie)
+- `DECISIONS.md`: D-058
+
+Testy: 335 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap53_20260929.zip

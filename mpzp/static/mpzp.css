@@ -791,3 +791,54 @@ button.wpis-zapisany {
 .tabela-symboli td:last-child {
     white-space: nowrap;
 }
+
+/* Porównanie działek (ETAP 53) */
+.wybor-porownania {
+    margin-bottom: 16px;
+}
+
+.wybor-porownania__lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 6px;
+}
+
+.wybor-porownania__pozycja {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+    font-size: 13px;
+}
+
+.wybor-porownania__pozycja .wyciszony {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tabela-porownania-wrap {
+    overflow-x: auto;
+}
+
+.tabela-porownania th:first-child {
+    width: 180px;
+}
+
+.tabela-porownania td,
+.tabela-porownania th {
+    vertical-align: top;
+}
+
+.szkic-porownania {
+    width: 180px;
+    height: 180px;
+    color: var(--tekst);
+}
+
+.podzialka-porownania {
+    color: var(--tekst);
+}
