@@ -64,6 +64,26 @@ def dane():
         return jsonify({"blad": str(e)}), 404
 
 
+@atlas_bp.route("/gmina/<gmina_bdl_id>")
+def profil_gminy(gmina_bdl_id):
+    """Szereg czasowy wskaźnika dla jednej gminy (wykres w profilu gminy)."""
+    try:
+        zmienna_id = int(request.args.get("zmienna", ""))
+    except ValueError:
+        return jsonify({"blad": "Wymagany parametr zmienna (liczba)."}), 400
+    if len(gmina_bdl_id) != 12 or not gmina_bdl_id.isdigit():
+        return jsonify({"blad": "Identyfikator gminy BDL ma 12 cyfr."}), 400
+
+    try:
+        szereg = z_cache(
+            f"szereg:{zmienna_id}:{gmina_bdl_id}",
+            lambda: bdl.szereg_gminy(zmienna_id, gmina_bdl_id),
+        )
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    return jsonify({"szereg": szereg, "zmiana": statystyki.zmiana_w_szeregu(szereg)})
+
+
 @atlas_bp.route("/granice/<teryt_woj>")
 def granice_wojewodztwa(teryt_woj):
     if len(teryt_woj) != 2 or not teryt_woj.isdigit():

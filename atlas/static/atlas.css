@@ -223,6 +223,114 @@ button.przelacznik__opcja--aktywna:hover {
     letter-spacing: -0.01em;
 }
 
+/* ---------- Profil gminy ---------- */
+
+.profil h3 {
+    margin: 0;
+}
+
+.profil__miejsce {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+}
+
+.profil__liczby {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 8px;
+}
+
+.profil__liczba {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--tlo-wyciszone);
+}
+
+.profil__wartosc {
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.profil__wykres {
+    position: relative;
+}
+
+.profil__status:empty {
+    display: none;
+}
+
+#profil-tabela-wrap summary {
+    color: var(--tekst-drugi);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* Wykres liniowy (wykres_gminy.js): cienkie linie, dyskretna siatka. */
+.wykres {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.wykres__siatka {
+    stroke: var(--linia-slaba);
+    stroke-width: 1;
+}
+
+.wykres__os {
+    fill: var(--tekst-drugi);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.wykres__linia {
+    fill: none;
+    stroke: var(--akcent);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.wykres__odniesienie {
+    stroke: var(--tekst-drugi);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+}
+
+.wykres__punkt {
+    fill: var(--akcent);
+    stroke: var(--tlo-karty);
+    stroke-width: 2;
+}
+
+.wykres__etykieta {
+    fill: var(--tekst);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.wykres__celownik {
+    stroke: var(--tekst-drugi);
+    stroke-width: 1;
+}
+
+.wykres__dymek {
+    position: absolute;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: var(--tekst);
+    color: var(--tlo-karty);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
 .rzad--miedzy {
     justify-content: space-between;
 }

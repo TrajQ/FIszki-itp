@@ -146,5 +146,20 @@ def _para_zmiany(g: dict) -> dict:
     return {"nazwa": g["nazwa"], "zmiana_proc": g["zmiana_proc"], "zmiana": g["zmiana"]}
 
 
+def zmiana_w_szeregu(szereg: list[dict]) -> dict | None:
+    """Zmiana od pierwszego do ostatniego roku szeregu (bezwzględna i %)."""
+    if len(szereg) < 2:
+        return None
+    pierwszy, ostatni = szereg[0], szereg[-1]
+    return {
+        "od": pierwszy["rok"],
+        "do": ostatni["rok"],
+        "zmiana": ostatni["wartosc"] - pierwszy["wartosc"],
+        "zmiana_proc": None
+        if pierwszy["wartosc"] == 0
+        else (ostatni["wartosc"] - pierwszy["wartosc"]) / abs(pierwszy["wartosc"]) * 100,
+    }
+
+
 def _para(w: dict) -> dict:
     return {"nazwa": w["nazwa"], "wartosc": w["wartosc"]}

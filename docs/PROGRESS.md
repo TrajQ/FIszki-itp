@@ -524,3 +524,24 @@ Zrobione:
 
 Testy: 155 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap18_20260929.zip
+
+## ETAP 19 — Atlas: profil gminy z wykresem w czasie
+Data: 2026-09-29
+Status: zamknięty (endpoint BDL `/data/by-unit` niesprawdzony na żywo)
+
+Zrobione:
+- `dane/bdl.py`: `szereg_gminy(zmienna, gmina)` — wartości zmiennej dla
+  jednej gminy we wszystkich latach (BDL `/data/by-unit/{id}?var-id=`),
+  rosnąco, bez braków
+- `GET /atlas/gmina/<bdl_id>?zmienna=` (cache 30 dni) + zmiana od
+  pierwszego do ostatniego roku (`statystyki.zmiana_w_szeregu`)
+- Karta „profil gminy” po kliknięciu gminy na mapie albo w rankingu:
+  miejsce w województwie, wartość, różnica od mediany województwa,
+  zmiana w całym okresie, wykres liniowy (`atlas/static/wykres_gminy.js`,
+  czyste SVG: linia 2 px, dyskretna siatka, etykieta ostatniej wartości,
+  przerywana linia mediany województwa, celownik z dymkiem), tabela
+  wartości dla dostępności; kolory z tokenów CSS (jasny/ciemny motyw)
+- Testy: 3 nowe; `DECISIONS.md`: D-026
+
+Testy: 158 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap19_20260929.zip

@@ -134,6 +134,25 @@ def wartosci_dla_gmin(zmienna_id: int, rok: int, wojewodztwo_bdl_id: str) -> lis
     return wyniki
 
 
+def szereg_gminy(zmienna_id: int, gmina_bdl_id: str) -> list[dict]:
+    """Wartości zmiennej dla jednej gminy we wszystkich dostępnych latach:
+    [{"rok": 2010, "wartosc": 123.0}, ...] rosnąco po roku (braki pominięte)."""
+    teryt_z_id_bdl(gmina_bdl_id)  # walidacja formatu identyfikatora
+    dane = _pobierz(f"/data/by-unit/{gmina_bdl_id}", {"var-id": zmienna_id})
+    szereg = []
+    for zmienna in dane.get("results", []):
+        if str(zmienna.get("id")) != str(zmienna_id):
+            continue
+        for w in zmienna.get("values", []):
+            if w.get("val") is None:
+                continue
+            try:
+                szereg.append({"rok": int(w["year"]), "wartosc": float(w["val"])})
+            except (KeyError, TypeError, ValueError):
+                continue
+    return sorted(szereg, key=lambda x: x["rok"])
+
+
 def _wartosc_z_roku(wartosci: list[dict], rok: int) -> float | None:
     for w in wartosci:
         if str(w.get("year")) == str(rok) and w.get("val") is not None:

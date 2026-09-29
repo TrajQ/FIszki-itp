@@ -148,3 +148,8 @@
 - Fiszki: statystyki nauki (seria dni, aktywność 30 dni, skuteczność).
 - Naprawiono „Pokaż w źródle” dla fragmentów z kilku linii.
 - Dodano `DECISIONS.md` D-025 i testy.
+
+## ETAP 19 — 2026-09-29
+- Atlas: profil gminy (miejsce, różnica od mediany, zmiana w czasie,
+  wykres liniowy SVG, tabela wartości) — `/atlas/gmina/<bdl_id>`.
+- Dodano `DECISIONS.md` D-026 i testy.

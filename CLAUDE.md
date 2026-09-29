@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 18 (fiszki — propozycje ze strony, statystyki nauki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap18_20260929.zip
-Testy: 155 passed / 0 failed
+ETAP: 19 (atlas — profil gminy z wykresem — zamknięty)
+Ostatni ZIP: releases/warsztat_etap19_20260929.zip
+Testy: 158 passed / 0 failed

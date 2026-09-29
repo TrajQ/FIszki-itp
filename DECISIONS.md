@@ -538,3 +538,21 @@ się nowymi liniami i odstępami.
   przeczytać i ocenić fiszkę, to część nauki.
 - Dopasowanie przybliżone (fuzzy) cytatu — odrzucone: pozwalałoby
   przepuścić parafrazę, której nie ma w źródle.
+
+## D-026 — Wykresy jako własne SVG, bez biblioteki
+Data: 2026-09-29
+
+**Decyzja:** Wykres liniowy profilu gminy jest rysowany ręcznie w SVG
+(`atlas/static/wykres_gminy.js`, ok. 130 linii), style z tokenów CSS.
+
+**Uzasadnienie:** Jedna seria, kilkanaście punktów, linia odniesienia i
+dymek — to za mało, żeby dokładać bibliotekę (Chart.js, D3) wektorowaną
+lokalnie. Własne SVG automatycznie dziedziczy jasny/ciemny motyw i jest
+czytelne dla kogoś, kto uczy się, jak działa wykres.
+
+**Odrzucone alternatywy:**
+- Chart.js / D3 lokalnie — odrzucone: nowa zależność frontendowa dla
+  jednego prostego wykresu.
+- Porównanie z medianą województwa w każdym roku — odrzucone: wymaga
+  pobrania danych wszystkich gmin dla każdego roku (dziesiątki zapytań do
+  BDL); linia mediany badanego roku daje punkt odniesienia bez tego kosztu.

@@ -36,6 +36,15 @@
     const opisEl = document.getElementById("opis");
     const faktyEl = document.getElementById("fakty-opisu");
     const listaFaktow = document.getElementById("lista-faktow");
+    const profilEl = document.getElementById("profil-gminy");
+    const profilNazwa = document.getElementById("profil-nazwa");
+    const profilMiejsce = document.getElementById("profil-miejsce");
+    const profilLiczby = document.getElementById("profil-liczby");
+    const profilWykres = document.getElementById("profil-wykres");
+    const profilStatus = document.getElementById("profil-status");
+    const profilTabelaWrap = document.getElementById("profil-tabela-wrap");
+    const profilTabela = document.getElementById("profil-tabela");
+    let numerProfilu = 0;
 
     const formatLiczby = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
     const formatProcentu = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
@@ -229,6 +238,7 @@
             przelacznik.hidden = !jestPorownanie;
             ustawTryb(jestPorownanie ? "zmiana" : "wartosc", false);
             wynikiEl.hidden = false;
+            profilEl.hidden = true;
             resetujOpis();
             await wczytajGranice(terytWoj, numer);
             if (numer !== numerZapytania) return;
@@ -334,7 +344,10 @@
             );
             li.addEventListener("mouseenter", () => podswietl(gmina.teryt, true));
             li.addEventListener("mouseleave", () => podswietl(gmina.teryt, false));
-            li.addEventListener("click", () => przybliz(gmina.teryt));
+            li.addEventListener("click", () => {
+                przybliz(gmina.teryt);
+                pokazProfil(gmina.teryt);
+            });
             listaRankingu.appendChild(li);
             wierszePoTeryt.set(gmina.teryt, li);
         });
@@ -398,6 +411,7 @@
                 warstwa.on("click", () => {
                     const wiersz = wierszePoTeryt.get(cecha.properties.teryt);
                     if (wiersz) wiersz.scrollIntoView({ block: "center", behavior: "smooth" });
+                    pokazProfil(cecha.properties.teryt);
                 });
                 warstwyPoTeryt.set(cecha.properties.teryt, warstwa);
             },
@@ -457,6 +471,78 @@
             warstwa.openTooltip();
         }
     }
+
+    // ---------- profil gminy (wykres w czasie) ----------
+
+    function liczbaProfilu(etykieta, wartosc, klasa = "") {
+        const div = element("div", "profil__liczba");
+        div.append(element("span", "kafelek__etykieta", etykieta), element("span", `profil__wartosc ${klasa}`, wartosc));
+        return div;
+    }
+
+    async function pokazProfil(teryt) {
+        const gmina = biezaceDane.gminy.find((g) => g.teryt === teryt);
+        if (!gmina) return;
+        const numer = ++numerProfilu;
+        const s = biezaceDane.statystyki;
+        const miejsce = biezaceDane.gminy.indexOf(gmina) + 1;
+
+        profilEl.hidden = false;
+        profilNazwa.textContent = gmina.nazwa;
+        profilMiejsce.textContent = `${miejsce}. miejsce z ${s.liczba_gmin} w województwie (${biezaceDane.rok})`;
+        profilLiczby.replaceChildren(liczbaProfilu(String(biezaceDane.rok), zJednostka(gmina.wartosc)));
+        if (s.mediana) {
+            const odMediany = ((gmina.wartosc - s.mediana) / Math.abs(s.mediana)) * 100;
+            profilLiczby.appendChild(
+                liczbaProfilu("od mediany woj.", procent(odMediany), odMediany > 0 ? "wartosc-plus" : odMediany < 0 ? "wartosc-minus" : "")
+            );
+        }
+        profilWykres.replaceChildren();
+        profilTabelaWrap.hidden = true;
+        profilStatus.textContent = "Pobieranie danych z lat…";
+        profilEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+
+        try {
+            const url = URL_PROFIL.replace("000000000000", gmina.bdl_id) + `?zmienna=${biezaceDane.zmienna.id}`;
+            const dane = await pobierzJson(url);
+            if (numer !== numerProfilu) return;
+            if (dane.szereg.length < 2) {
+                profilStatus.textContent = "Za mało lat z danymi, żeby narysować zmiany.";
+                return;
+            }
+            profilStatus.textContent = "";
+            if (dane.zmiana) {
+                const z = dane.zmiana;
+                profilLiczby.appendChild(
+                    liczbaProfilu(`${z.od}→${z.do}`, procent(z.zmiana_proc), z.zmiana > 0 ? "wartosc-plus" : z.zmiana < 0 ? "wartosc-minus" : "")
+                );
+            }
+            const dymek = element("div", "wykres__dymek");
+            dymek.hidden = true;
+            WykresGminy.rysuj(profilWykres, dane.szereg, {
+                tytul: `${gmina.nazwa}: ${biezaceDane.zmienna.nazwa}`,
+                rokWybrany: biezaceDane.rok,
+                mediana: s.mediana,
+                opisMediany: `mediana ${biezaceDane.rok}`,
+                formatOsi: (w) => new Intl.NumberFormat("pl-PL", { notation: "compact", maximumFractionDigits: 1 }).format(w),
+                formatDymka: zJednostka,
+                dymek,
+            });
+            profilTabela.replaceChildren();
+            for (const p of [...dane.szereg].reverse()) {
+                const wiersz = element("tr");
+                wiersz.append(element("td", "", String(p.rok)), element("td", "liczba", zJednostka(p.wartosc)));
+                profilTabela.appendChild(wiersz);
+            }
+            profilTabelaWrap.hidden = false;
+        } catch (e) {
+            if (numer === numerProfilu) profilStatus.textContent = `Nie udało się pobrać danych z lat: ${e.message}`;
+        }
+    }
+
+    document.getElementById("profil-zamknij").addEventListener("click", () => {
+        profilEl.hidden = true;
+    });
 
     // ---------- opis przez Gemini ----------
 

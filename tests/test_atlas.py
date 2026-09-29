@@ -395,3 +395,53 @@ def test_pusty_wynik_bdl_nie_trafia_do_cache(client, monkeypatch):
     monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", pusto_potem_dane)
     assert client.get(f"/atlas/dane?{ZAPYTANIE}").get_json()["gminy"] == []
     assert len(client.get(f"/atlas/dane?{ZAPYTANIE}").get_json()["gminy"]) == 1
+
+
+# ---------- ETAP 19: profil gminy ----------
+
+
+def test_szereg_gminy_parsuje_i_sortuje(monkeypatch):
+    zapytania = []
+
+    def falszywy_get(url, params, headers, timeout):
+        zapytania.append((url, params))
+        return FalszywaOdpowiedz(
+            {
+                "unitId": "011212161011",
+                "results": [
+                    {"id": 72305, "values": [{"year": "2021", "val": 780000}, {"year": "2019", "val": 779115}, {"year": "2020", "val": None}]},
+                    {"id": 99, "values": [{"year": "2021", "val": 1}]},
+                ],
+            }
+        )
+
+    monkeypatch.setattr(bdl.requests, "get", falszywy_get)
+    szereg = bdl.szereg_gminy(72305, "011212161011")
+
+    assert szereg == [{"rok": 2019, "wartosc": 779115.0}, {"rok": 2021, "wartosc": 780000.0}]
+    assert zapytania[0][0].endswith("/data/by-unit/011212161011")
+    assert zapytania[0][1]["var-id"] == 72305
+
+
+def test_zmiana_w_szeregu():
+    assert statystyki.zmiana_w_szeregu([{"rok": 2010, "wartosc": 100.0}]) is None
+    z = statystyki.zmiana_w_szeregu([{"rok": 2010, "wartosc": 100.0}, {"rok": 2020, "wartosc": 120.0}])
+    assert z == {"od": 2010, "do": 2020, "zmiana": 20.0, "zmiana_proc": pytest.approx(20.0)}
+
+
+def test_profil_gminy_endpoint_z_cache(client, monkeypatch):
+    wywolania = []
+
+    def szereg(zmienna, gmina):
+        wywolania.append(gmina)
+        return [{"rok": 2013, "wartosc": 758334.0}, {"rok": 2023, "wartosc": 804237.0}]
+
+    monkeypatch.setattr(atlas_routes.bdl, "szereg_gminy", szereg)
+    dane = client.get("/atlas/gmina/011212161011?zmienna=72305").get_json()
+    assert len(dane["szereg"]) == 2
+    assert dane["zmiana"]["od"] == 2013
+    client.get("/atlas/gmina/011212161011?zmienna=72305")
+    assert wywolania == ["011212161011"]
+
+    assert client.get("/atlas/gmina/011212161011").status_code == 400
+    assert client.get("/atlas/gmina/123?zmienna=1").status_code == 400
