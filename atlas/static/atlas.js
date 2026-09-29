@@ -65,12 +65,42 @@
 
     // ---------- mapa ----------
 
-    const mapa = L.map("mapa-atlasu", { zoomSnap: 0.25 }).setView([52.1, 19.4], 6);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap, granice: PRG GUGiK, dane: GUS BDL",
-        maxZoom: 18,
-        opacity: 0.5,
-    }).addTo(mapa);
+    // Bez kafelków OSM (ETAP 34): białe tło, a pod kartogramem szare
+    // województwa z PRG — wokół wybranego widać sąsiednie. Gdy PRG nie
+    // odpowie, zostaje samo białe tło (mapa działa dalej).
+    const mapa = L.map("mapa-atlasu", { zoomSnap: 0.25, minZoom: 5, maxZoom: 13 }).setView([52.1, 19.4], 6);
+    mapa.attributionControl.addAttribution("granice: PRG GUGiK, dane: GUS BDL");
+    mapa.createPane("tlo").style.zIndex = 250; // pod warstwą gmin (400)
+    let warstwaTla = null;
+    const etykietyWojewodztw = new Map(); // teryt → warstwa z etykietą
+
+    function rysujTlo(kolekcja) {
+        warstwaTla = L.geoJSON(kolekcja, {
+            pane: "tlo",
+            interactive: false,
+            style: { className: "wojewodztwo-tla", weight: 1 },
+            onEachFeature: (cecha, warstwa) => {
+                warstwa.bindTooltip(cecha.properties.nazwa, {
+                    permanent: true,
+                    direction: "center",
+                    className: "etykieta-wojewodztwa",
+                });
+                etykietyWojewodztw.set(cecha.properties.teryt, warstwa);
+            },
+        }).addTo(mapa);
+    }
+
+    // Nazwa wybranego województwa zasłaniałaby kartogram — chowamy tylko ją.
+    function pokazEtykietyOprocz(terytWybranego) {
+        for (const [teryt, warstwa] of etykietyWojewodztw) {
+            if (teryt === terytWybranego) warstwa.closeTooltip();
+            else warstwa.openTooltip();
+        }
+    }
+
+    pobierzJson(URL_TLO)
+        .then(rysujTlo)
+        .catch(() => {}); // bez tła mapa jest po prostu biała
 
     // ---------- pomocnicze ----------
 
@@ -561,6 +591,7 @@
             },
         }).addTo(mapa);
         mapa.fitBounds(warstwaGmin.getBounds(), { padding: [12, 12] });
+        if (warstwaTla) pokazEtykietyOprocz(poleWoj.selectedOptions[0].dataset.teryt);
     }
 
     function wierszLegendy(kolor, opis) {

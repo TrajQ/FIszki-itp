@@ -175,6 +175,55 @@ def test_granice_blad_serwisu(tmp_path, monkeypatch):
         granice.granice_gmin("12", str(tmp_path))
 
 
+GML_WOJEWODZTW = """<?xml version="1.0" encoding="UTF-8"?>
+<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:ms="http://mapserver.gis.umn.edu/mapserver">
+  <wfs:member><ms:A01_Granice_wojewodztw gml:id="w1"><ms:msGeometry>
+    <gml:Polygon gml:id="p1"><gml:exterior><gml:LinearRing>
+      <gml:posList>49.2 19.0 49.2 21.4 50.5 21.4 50.5 19.0 49.2 19.0</gml:posList>
+    </gml:LinearRing></gml:exterior></gml:Polygon></ms:msGeometry>
+    <ms:JPT_KOD_JE>12</ms:JPT_KOD_JE><ms:JPT_NAZWA_>małopolskie</ms:JPT_NAZWA_>
+  </ms:A01_Granice_wojewodztw></wfs:member>
+  <wfs:member><ms:A01_Granice_wojewodztw gml:id="w2"><ms:msGeometry>
+    <gml:Polygon gml:id="p2"><gml:exterior><gml:LinearRing>
+      <gml:posList>49.4 21.4 49.4 23.5 50.8 23.5 50.8 21.4 49.4 21.4</gml:posList>
+    </gml:LinearRing></gml:exterior></gml:Polygon></ms:msGeometry>
+    <ms:JPT_KOD_JE>18</ms:JPT_KOD_JE><ms:JPT_NAZWA_>podkarpackie</ms:JPT_NAZWA_>
+  </ms:A01_Granice_wojewodztw></wfs:member>
+</wfs:FeatureCollection>"""
+
+
+def test_granice_wojewodztw_bez_filtra_i_z_cache(tmp_path, monkeypatch):
+    wywolania = []
+    monkeypatch.setattr(granice, "_pobierz_gml_wojewodztw", lambda: wywolania.append(1) or GML_WOJEWODZTW)
+
+    kolekcja = granice.granice_wojewodztw(str(tmp_path))
+
+    assert [c["properties"]["teryt"] for c in kolekcja["features"]] == ["12", "18"]
+    assert kolekcja["features"][1]["properties"]["nazwa"] == "podkarpackie"
+    granice.granice_wojewodztw(str(tmp_path))
+    assert wywolania == [1]  # drugie wywołanie z pliku
+
+
+def test_granice_wojewodztw_pusta_odpowiedz_to_blad(tmp_path, monkeypatch):
+    pusta = '<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"/>'
+    monkeypatch.setattr(granice, "_pobierz_gml_wojewodztw", lambda: pusta)
+    with pytest.raises(granice.BladGranic):
+        granice.granice_wojewodztw(str(tmp_path))
+    assert not os.listdir(tmp_path)  # pustego wyniku nie zapisujemy
+
+
+def test_tlo_wojewodztw_endpoint(client, monkeypatch):
+    monkeypatch.setattr(atlas_routes.granice, "granice_wojewodztw", lambda folder: {"type": "FeatureCollection", "features": []})
+    assert client.get("/atlas/tlo-wojewodztw").get_json()["type"] == "FeatureCollection"
+
+    def blad(folder):
+        raise granice.BladGranic("brak sieci")
+
+    monkeypatch.setattr(atlas_routes.granice, "granice_wojewodztw", blad)
+    odpowiedz = client.get("/atlas/tlo-wojewodztw")
+    assert odpowiedz.status_code == 502 and odpowiedz.get_json()["blad"] == "brak sieci"
+
+
 # ---------- endpointy ----------
 
 WOJ = [{"bdl_id": "011200000000", "nazwa": "małopolskie", "teryt": "12"}]

@@ -103,6 +103,16 @@ def granice_wojewodztwa(teryt_woj):
     return jsonify(kolekcja)
 
 
+@atlas_bp.route("/tlo-wojewodztw")
+def tlo_wojewodztw():
+    """Granice wszystkich województw — tło mapy zamiast kafelków OSM."""
+    try:
+        kolekcja = granice.granice_wojewodztw(os.path.join(folder_modulu(), "granice"))
+    except granice.BladGranic as e:
+        return jsonify({"blad": str(e)}), 502
+    return jsonify(kolekcja)
+
+
 @atlas_bp.route("/opis", methods=["POST"])
 def opis():
     """Opis przez Gemini. Liczby liczymy tu, na serwerze, z danych BDL —

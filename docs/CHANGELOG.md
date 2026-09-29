@@ -223,3 +223,11 @@
 ## ETAP 33 — 2026-09-29
 - Naprawiono 4 błędy z przeglądu ETAPów 28–32 (mianownik w atlasie,
   margines i liczby nieskończone w kalkulatorach, stare wyniki skali).
+
+## ETAP 34 — 2026-09-29
+- Atlas: białe tło mapy i szare województwa z PRG z nazwami zamiast
+  kafelków OSM („Access blocked”); endpoint `/atlas/tlo-wojewodztw`.
+- MPZP i Dostępność: kafelki OSM wysyłają nagłówek Referer (koniec
+  „Access blocked”), przełącznik podkładu: OSM / ortofotomapa GUGiK /
+  bez podkładu (wybór zapamiętywany w przeglądarce).
+- Dodano `DECISIONS.md` D-041 i 3 testy.

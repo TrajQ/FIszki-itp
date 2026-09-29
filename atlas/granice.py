@@ -6,6 +6,10 @@ województwa wystarczy, a plik jest wielokrotnie mniejszy) i zapisujemy
 jako GeoJSON w instance/atlas/granice/, żeby kolejne otwarcia nie
 pobierały tego samego.
 
+Druga warstwa — granice wszystkich województw — to tło mapy: wokół
+wybranego województwa widać sąsiednie zamiast kafelków OSM (ETAP 34).
+Upraszczamy ją mocniej (~1 km), bo służy tylko za tło w skali kraju.
+
 Świadomie osobny parser GML niż w mpzp/wfs.py — moduły są niezależne
 (CLAUDE.md: bez wspólnych abstrakcji dla dwóch modułów).
 """
@@ -22,9 +26,11 @@ from dane.siec import opis_bledu_sieci
 
 URL_PRG = "https://mapy.geoportal.gov.pl/wss/service/PZGIK/PRG/WFS/AdministrativeBoundaries"
 WARSTWA_GMIN = "ms:A03_Granice_gmin"
+WARSTWA_WOJEWODZTW = "ms:A01_Granice_wojewodztw"
 POLE_TERYT = "JPT_KOD_JE"
 POLE_NAZWA = "JPT_NAZWA_"
 TOLERANCJA_UPRASZCZANIA = 0.0005  # stopnie, ok. 35–55 m w Polsce
+TOLERANCJA_WOJEWODZTW = 0.01  # ok. 0,7–1,1 km — tło w skali kraju
 
 NS_GML = "{http://www.opengis.net/gml/3.2}"
 NS_WFS = "{http://www.opengis.net/wfs/2.0}"
@@ -51,6 +57,35 @@ def granice_gmin(teryt_wojewodztwa: str, folder_cache: str) -> dict:
     return kolekcja
 
 
+def granice_wojewodztw(folder_cache: str) -> dict:
+    """GeoJSON wszystkich 16 województw (tło mapy atlasu); z cache, jeśli jest."""
+    sciezka = os.path.join(folder_cache, "wojewodztwa.geojson")
+    if os.path.exists(sciezka):
+        with open(sciezka, encoding="utf-8") as plik:
+            return json.load(plik)
+
+    kolekcja = _sparsuj_gml(_pobierz_gml_wojewodztw(), "", TOLERANCJA_WOJEWODZTW)
+    if not kolekcja["features"]:
+        raise BladGranic("PRG nie zwrócił granic województw.")
+
+    os.makedirs(folder_cache, exist_ok=True)
+    with open(sciezka, "w", encoding="utf-8") as plik:
+        json.dump(kolekcja, plik)
+    return kolekcja
+
+
+def _pobierz_gml_wojewodztw() -> str:
+    return _zapytaj_prg(
+        {
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "GetFeature",
+            "typeNames": WARSTWA_WOJEWODZTW,
+            "srsName": "EPSG:4326",
+        }
+    )
+
+
 def _pobierz_gml(teryt_wojewodztwa: str) -> str:
     filtr = (
         '<fes:Filter xmlns:fes="http://www.opengis.net/fes/2.0">'
@@ -59,26 +94,29 @@ def _pobierz_gml(teryt_wojewodztwa: str) -> str:
         f"<fes:Literal>{teryt_wojewodztwa}*</fes:Literal>"
         "</fes:PropertyIsLike></fes:Filter>"
     )
+    return _zapytaj_prg(
+        {
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "GetFeature",
+            "typeNames": WARSTWA_GMIN,
+            "srsName": "EPSG:4326",
+            "filter": filtr,
+        }
+    )
+
+
+def _zapytaj_prg(parametry: dict) -> str:
     try:
-        odpowiedz = requests.get(
-            URL_PRG,
-            params={
-                "service": "WFS",
-                "version": "2.0.0",
-                "request": "GetFeature",
-                "typeNames": WARSTWA_GMIN,
-                "srsName": "EPSG:4326",
-                "filter": filtr,
-            },
-            timeout=180,
-        )
+        odpowiedz = requests.get(URL_PRG, params=parametry, timeout=180)
         odpowiedz.raise_for_status()
     except requests.RequestException as e:
         raise BladGranic(f"Błąd połączenia z PRG (geoportal.gov.pl): {opis_bledu_sieci(e)}.") from e
     return odpowiedz.text
 
 
-def _sparsuj_gml(tekst: str, teryt_wojewodztwa: str) -> dict:
+def _sparsuj_gml(tekst: str, teryt_wojewodztwa: str, tolerancja: float = TOLERANCJA_UPRASZCZANIA) -> dict:
+    """GML z PRG → GeoJSON. Pusty `teryt_wojewodztwa` = bez filtra (wszystko)."""
     try:
         root = ET.fromstring(tekst)
     except ET.ParseError as e:
@@ -101,7 +139,7 @@ def _sparsuj_gml(tekst: str, teryt_wojewodztwa: str) -> dict:
     cechy = []
     for teryt in sorted(geometrie):
         geometria = unary_union(geometrie[teryt]).simplify(
-            TOLERANCJA_UPRASZCZANIA, preserve_topology=True
+            tolerancja, preserve_topology=True
         )
         cechy.append(
             {

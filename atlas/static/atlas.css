@@ -137,6 +137,31 @@ button.przelacznik__opcja--aktywna:hover {
     border-radius: 0;
 }
 
+/* Tło mapy zamiast kafelków OSM: biała karta i szare województwa (ETAP 34).
+   Kolory w CSS, nie w stylu Leafleta — dzięki temu działa tryb ciemny. */
+#mapa-atlasu.leaflet-container {
+    background: var(--tlo-karty);
+}
+
+.wojewodztwo-tla {
+    fill: var(--linia-slaba);
+    fill-opacity: 1;
+    stroke: var(--linia);
+}
+
+.etykieta-wojewodztwa.leaflet-tooltip {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--tekst-drugi);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 3px var(--tlo-karty);
+    pointer-events: none;
+}
+
 .legenda {
     position: absolute;
     right: 16px;

@@ -38,10 +38,42 @@
     const urlPliku = URL_PLIK.replace("__PLIK__", encodeURIComponent(NAZWA_PLIKU));
 
     const mapa = L.map("mapa-dostepnosci", { zoomSnap: 0.25 }).setView([52.4064, 16.9252], 12);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap, siatka: H3",
-        maxZoom: 19,
-    }).addTo(mapa);
+    // Podkłady (ETAP 34). OSM wymaga nagłówka Referer — bez niego zwraca
+    // kafelki „Access blocked”, a nasz Referrer-Policy: same-origin go
+    // wycina. Dlatego kafelki OSM dostają własną, łagodniejszą politykę
+    // (wysyłany jest tylko adres http://127.0.0.1:port, bez ścieżki).
+    const PODKLADY = {
+        "Mapa (OpenStreetMap)": L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap, siatka: H3",
+            maxZoom: 19,
+            referrerPolicy: "strict-origin-when-cross-origin",
+        }),
+        "Ortofotomapa (GUGiK)": L.tileLayer.wms("https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution", {
+            layers: "Raster",
+            format: "image/jpeg",
+            version: "1.3.0",
+            attribution: "ortofotomapa: GUGiK",
+            maxZoom: 20,
+        }),
+        "Bez podkładu": L.layerGroup(),
+    };
+    const KLUCZ_PODKLADU = "dostepnosc.podklad";
+    let nazwaPodkladu = "Mapa (OpenStreetMap)";
+    try {
+        const zapisany = localStorage.getItem(KLUCZ_PODKLADU);
+        if (zapisany && PODKLADY[zapisany]) nazwaPodkladu = zapisany;
+    } catch (e) {
+        // brak dostępu do localStorage — zostaje domyślny podkład
+    }
+    PODKLADY[nazwaPodkladu].addTo(mapa);
+    mapa.on("baselayerchange", (e) => {
+        try {
+            localStorage.setItem(KLUCZ_PODKLADU, e.name);
+        } catch (err) {
+            // zapamiętanie wyboru to tylko wygoda
+        }
+    });
+    L.control.layers(PODKLADY, {}, { position: "topright" }).addTo(mapa);
 
     let warstwa = null;
     let pierwszeRysowanie = true;

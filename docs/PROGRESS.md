@@ -871,3 +871,19 @@ Przegląd wykazał 4 błędy — wszystkie naprawione:
 
 Testy: 222 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap33_20260929.zip
+
+## ETAP 34 — Mapy bez „Access blocked”
+Data: 2026-09-29
+Status: zamknięty
+
+- Atlas: zamiast kafelków OSM białe tło + szare województwa (PRG
+  A01, cache na dysku), nazwy sąsiednich województw; nazwa wybranego
+  chowa się pod kartogramem
+- MPZP, Dostępność: `referrerPolicy` na warstwie OSM + przełącznik
+  podkładów (OSM / ortofotomapa GUGiK / bez podkładu)
+- Sprawdzone w przeglądarce na danych testowych (jasny i ciemny motyw);
+  prawdziwe usługi niedostępne z kontenera
+- `DECISIONS.md`: D-041
+
+Testy: 225 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap34_20260929.zip

@@ -799,3 +799,32 @@ Data: 2026-09-29
 **Uzasadnienie:** `float()` w Pythonie przyjmuje „nan” i „inf”, a JSON
 nie ma takich wartości — przeglądarka nie odczytałaby odpowiedzi.
 Jedna funkcja zamiast osobnych warunków w każdym polu.
+
+## D-041 — Atlas bez kafelków OSM; podkłady w mpzp i dostępności
+Data: 2026-09-29
+
+**Decyzja:** Mapa atlasu nie ładuje kafelków OpenStreetMap. Tło jest
+białe (kolor karty), a pod kartogramem leżą szare województwa z PRG
+(`ms:A01_Granice_wojewodztw`, uproszczone do ~1 km, cache
+`instance/atlas/granice/wojewodztwa.geojson`) z nazwami sąsiadów.
+W mpzp i dostępności kafelki OSM zostają, ale z opcją Leafleta
+`referrerPolicy: "strict-origin-when-cross-origin"`, a obok nich
+przełącznik podkładów: OSM / ortofotomapa GUGiK (WMS) / bez podkładu.
+
+**Uzasadnienie:** Użytkownik widział wokół województwa kafelki
+„Access blocked”. OSM odrzuca kafelki pobierane bez nagłówka Referer,
+a nasz globalny `Referrer-Policy: same-origin` (ochrona.py) go
+wycina. Kartogram gmin nie potrzebuje ulic — szare województwa dają
+kontekst („gdzie jestem”) bez zależności od zewnętrznych kafelków.
+Polityka ustawiona tylko na warstwie kafelków: poza nią zostaje
+`same-origin`, a OSM dostaje wyłącznie adres `http://127.0.0.1:port`.
+
+**Odrzucone alternatywy:**
+- Zmiana globalnego `Referrer-Policy` — odrzucone: szersza zmiana niż
+  potrzeba.
+- Inny dostawca kafelków — odrzucone: wymaga klucza albo zgody.
+
+**Niezweryfikowane:** z kontenera, w którym powstał kod, sieć do OSM,
+geoportal.gov.pl i PRG jest zablokowana — działanie sprawdzone tylko na
+danych testowych. Jeśli PRG nie odpowie, mapa atlasu jest po prostu
+biała.
