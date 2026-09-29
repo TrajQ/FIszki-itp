@@ -1310,3 +1310,28 @@ wystawia serwera w sieci, tylko przyjmuje dane zebrane na telefonie.
 
 **Odrzucone alternatywy:**
 - Osobne aplikacje — odrzucone: podwójne uruchamianie i kopie danych.
+
+## D-063 — Moduł osiedle: Leaflet.draw lokalnie, rysunek jako jeden GeoJSON
+Data: 2026-09-29
+
+**Decyzja:** Nowa zależność frontendu: Leaflet.draw 1.0.4 (MIT), pliki
+`dist/` skopiowane bez zmian do `static/leaflet-draw/` (bez CDN, jak
+Leaflet). Wybór autora zamiast własnego rysowania. `showArea` wyłączone
+(pole liczy serwer; w 1.0.4 z nowym Leafletem ta opcja rzuca błąd).
+Koncepcja w bazie `instance/osiedle/osiedle.db`: nazwa + cały rysunek
+jako GeoJSON w jednej kolumnie + ustawienia (JSON). Po każdej zmianie
+rysunek zapisuje się w całości, a bilans liczy się od nowa na serwerze
+(`osiedle/bilans.py`): m² i % funkcji od obszaru opracowania (bez
+niego — od sumy), nakładanie się terenów, tereny poza obszarem, część
+obszaru bez funkcji. Przeliczenie stopni na metry — własna kopia w
+module (niezależność modułów).
+
+**Uzasadnienie:** Rysowanie i edycja wierzchołków to dużo kodu, który
+Leaflet.draw ma dopracowany (edycja, usuwanie, cofanie punktu). Rysunek
+w jednej kolumnie: kilkadziesiąt wieloboków, zapis w całości jest
+prosty i odporny na rozjazd między mapą a bazą.
+
+**Odrzucone alternatywy:**
+- Tabela terenów z wierszem na wielobok — odrzucone na teraz: więcej
+  kodu synchronizacji bez korzyści przy tej skali.
+- SpatiaLite — odrzucone: bilans liczy shapely, baza tylko przechowuje.

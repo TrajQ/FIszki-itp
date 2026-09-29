@@ -399,3 +399,12 @@
   podzielone na pliki tematyczne (`trasy_*.py`), wspólne `mpzp/liczby.py`,
   usunięte nieużywane importy w kodzie i testach, mapa kodu w README.
 - Dodano `DECISIONS.md` D-061.
+
+## ETAP 57 — 2026-09-29
+- Nowy moduł **Osiedle** (menu, karta na stronie głównej): koncepcje
+  osiedla rysowane na mapie — obszar opracowania i tereny MN, MW, U, ZP,
+  KD, KS, WS (wielobok, prostokąt, edycja, usuwanie, zmiana funkcji
+  kliknięciem), automatyczny zapis, bilans terenu z paskiem i kontrolami,
+  eksport GeoJSON, podkłady OSM/ortofotomapa.
+- Dodano Leaflet.draw 1.0.4 (`static/leaflet-draw/`), `DECISIONS.md`
+  D-063 i 9 testów.

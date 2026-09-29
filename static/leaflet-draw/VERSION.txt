@@ -1,0 +1,1 @@
+Leaflet.draw 1.0.4 (npm leaflet-draw, sha256 tgz b3ec161a931ad88b3f008283b824ceac5af98b5ec603877f294834d1edcc3aa6)

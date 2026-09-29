@@ -1,0 +1,5 @@
+Leaflet.draw 1.0.4 — licencja MIT (pole "license" w package.json pakietu
+npm leaflet-draw 1.0.4). Pełny tekst licencji wraz z autorami:
+https://github.com/Leaflet/Leaflet.draw/blob/v1.0.4/MIT-LICENSE.md
+Pliki w tym katalogu (leaflet.draw.js, leaflet.draw.css, images/spritesheet*)
+są niezmienione, skopiowane z dist/ tego pakietu.

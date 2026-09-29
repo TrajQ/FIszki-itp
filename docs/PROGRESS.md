@@ -1212,3 +1212,19 @@ Status: zamknięty
 
 Testy: 344 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap56_20260929.zip
+
+## ETAP 57 — Osiedle: moduł, rysowanie, bilans terenu
+Data: 2026-09-29
+Status: zamknięty
+
+- `osiedle/`: `bilans.py`, `baza.py`, `routes.py` (koncepcje: lista,
+  nowa, odczyt, zapis, usunięcie, GeoJSON), szablon, `osiedle.js`,
+  `osiedle.css`
+- Leaflet.draw po polsku; ikony narzędzi przywrócone mimo wspólnego
+  stylu przycisków mapy
+- Sprawdzone w przeglądarce: rysowanie prostokątów, zmiana funkcji,
+  zapis i odczyt po przeładowaniu (jasny i ciemny motyw)
+- `DECISIONS.md`: D-063
+
+Testy: 353 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap57_20260929.zip

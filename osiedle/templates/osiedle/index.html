@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block tytul %}Osiedle — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block klasa_body %}strona--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet-draw/leaflet.draw.css') }}">
+<link rel="stylesheet" href="{{ url_for('osiedle.static', filename='osiedle.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Koncepcja osiedla</h1>
+        <p>Narysuj obszar opracowania i tereny o różnych funkcjach — bilans terenu liczy się na bieżąco.</p>
+    </div>
+</div>
+
+<div class="uklad-osiedla">
+    <section class="karta karta-mapy-osiedla">
+        <div id="mapa-osiedla"></div>
+    </section>
+
+    <aside class="stos panel-osiedla">
+        <section class="karta stos">
+            <div class="rzad rzad--miedzy">
+                <h3>Koncepcja</h3>
+                <a id="link-geojson" class="przycisk przycisk--tekst" href="#" hidden>GeoJSON</a>
+            </div>
+            <select id="wybor-koncepcji" aria-label="Koncepcja"></select>
+            <form id="formularz-nowej" class="rzad">
+                <input id="nazwa-nowej" type="text" placeholder="Nowa: np. Jeżyce — wariant A" maxlength="80">
+                <button type="submit" class="przycisk--drugi">Utwórz</button>
+            </form>
+            <div id="akcje-koncepcji" class="rzad" hidden>
+                <button id="zmien-nazwe" type="button" class="przycisk--tekst">Zmień nazwę</button>
+                <button id="usun-koncepcje" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń koncepcję</button>
+            </div>
+            <p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+        </section>
+
+        <section id="sekcja-rysowania" class="karta stos" hidden>
+            <h3>Co rysujesz</h3>
+            <p class="wyciszony opis-panelu">Wybierz funkcję, potem narzędzie wieloboku albo prostokąta na mapie (lewy górny róg). Kliknij narysowany teren, żeby zmienić funkcję.</p>
+            <div id="funkcje" class="funkcje">
+                <label class="funkcja"><input type="radio" name="funkcja" value="{{ obszar }}" checked>
+                    <span class="funkcja__probka funkcja__probka--obszar"></span> obszar opracowania</label>
+                {% for kod, f in funkcje.items() %}
+                <label class="funkcja"><input type="radio" name="funkcja" value="{{ kod }}">
+                    <span class="funkcja__probka" style="background: {{ f.kolor }}"></span> <strong>{{ kod }}</strong> {{ f.nazwa }}</label>
+                {% endfor %}
+            </div>
+            <div id="wybrany-teren" class="wybrany-teren" hidden>
+                <h4>Zaznaczony teren</h4>
+                <select id="funkcja-terenu" aria-label="Funkcja zaznaczonego terenu">
+                    <option value="{{ obszar }}">obszar opracowania</option>
+                    {% for kod, f in funkcje.items() %}<option value="{{ kod }}">{{ kod }} — {{ f.nazwa }}</option>{% endfor %}
+                </select>
+                <div class="rzad">
+                    <button id="usun-teren" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń teren</button>
+                    <button id="odznacz-teren" type="button" class="przycisk--tekst">Gotowe</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="sekcja-bilansu" class="karta stos" hidden>
+            <div class="rzad rzad--miedzy">
+                <h3>Bilans terenu</h3>
+                <span id="stan-zapisu" class="wyciszony stan-zapisu"></span>
+            </div>
+            <div id="pasek-bilansu" class="pasek-bilansu"></div>
+            <table class="tabela tabela-bilansu">
+                <thead><tr><th>Funkcja</th><th class="liczba">m²</th><th class="liczba">%</th></tr></thead>
+                <tbody id="tabela-bilansu"></tbody>
+            </table>
+            <ul id="kontrole" class="kontrole"></ul>
+        </section>
+    </aside>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_KONCEPCJE = "{{ url_for('osiedle.lista_koncepcji') }}";
+    const OBSZAR = {{ obszar | tojson }};
+    const FUNKCJE = {{ funkcje | tojson }};
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='leaflet-draw/leaflet.draw.js') }}"></script>
+<script src="{{ url_for('osiedle.static', filename='osiedle.js') }}"></script>
+{% endblock %}

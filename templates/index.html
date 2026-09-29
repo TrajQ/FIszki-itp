@@ -47,6 +47,14 @@
         <p class="karta__opis">Dostępność piesza na siatce H3: miasto 15-minutowe, mieszkańcy, scenariusze.</p>
         {% if p.dostepnosc and p.dostepnosc.pliki %}<span class="karta__meta">Twoje pliki wyników: {{ p.dostepnosc.pliki }}</span>{% endif %}
     </a>
+    <a class="karta karta--link" href="{{ url_for('osiedle.index') }}">
+        <span class="ikona-modulu ikona-modulu--osiedle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l5-4 5 4v12"/><path d="M15 21v-8h4v8"/><path d="M9 21v-4h2v4"/></svg>
+        </span>
+        <h2>Osiedle</h2>
+        <p class="karta__opis">Koncepcja osiedla na mapie: bilans terenu, wskaźniki i zgodność z planem.</p>
+        {% if p.osiedle and p.osiedle.liczba %}<span class="karta__meta">Ostatnio: {{ p.osiedle.ostatnia }}</span>{% endif %}
+    </a>
 </section>
 
 <section class="karta dane-uzytkownika">

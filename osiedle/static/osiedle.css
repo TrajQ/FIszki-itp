@@ -1,0 +1,156 @@
+/* Moduł osiedle (ETAP 57) */
+.uklad-osiedla {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 24px;
+    align-items: start;
+}
+
+.karta-mapy-osiedla {
+    position: sticky;
+    top: 72px;
+    padding: 0;
+    overflow: hidden;
+}
+
+#mapa-osiedla {
+    height: calc(100vh - 230px);
+    min-height: 520px;
+}
+
+.panel-osiedla h3,
+.panel-osiedla h4 {
+    margin: 0;
+}
+
+.opis-panelu {
+    margin: 0;
+    font-size: 13px;
+}
+
+#formularz-nowej input {
+    flex: 1;
+    min-width: 0;
+}
+
+.funkcje {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.funkcja {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.funkcja:has(input:checked) {
+    background: var(--akcent-tlo);
+}
+
+.funkcja input {
+    accent-color: var(--akcent);
+}
+
+.funkcja__probka {
+    display: inline-block;
+    flex: none;
+    width: 16px;
+    height: 12px;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+.funkcja__probka--obszar {
+    border: 2px dashed var(--tekst);
+    background: transparent;
+}
+
+.wybrany-teren {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.stan-zapisu {
+    font-size: 12px;
+}
+
+.pasek-bilansu {
+    display: flex;
+    height: 14px;
+    overflow: hidden;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+}
+
+.pasek-bilansu__reszta {
+    background: repeating-linear-gradient(45deg, var(--linia), var(--linia) 3px, transparent 3px, transparent 6px);
+}
+
+.tabela-bilansu {
+    font-size: 13px;
+}
+
+.tabela-bilansu__razem td {
+    font-weight: 600;
+    border-top: 1px solid var(--linia);
+}
+
+.kontrole {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--ostrzezenie);
+    font-size: 13px;
+}
+
+.kontrole:empty {
+    display: none;
+}
+
+button.przycisk--niebezpieczny-tekst {
+    color: var(--blad);
+}
+
+@media (max-width: 1000px) {
+    .uklad-osiedla {
+        grid-template-columns: 1fr;
+    }
+
+    .karta-mapy-osiedla {
+        position: static;
+    }
+
+    #mapa-osiedla {
+        height: 60vh;
+    }
+}
+
+/* Ikony Leaflet.draw: wspólny styl przycisków mapy (static/style.css)
+   ustawia „background” skrótem i kasuje obrazki z leaflet.draw.css —
+   przywracamy je selektorem o wyższej szczegółowości. Tło zawsze jasne,
+   bo ikony w arkuszu są ciemne (także w trybie ciemnym). */
+.leaflet-container .leaflet-bar.leaflet-draw-toolbar a {
+    background-color: #ffffff;
+    background-image: url("../../static/leaflet-draw/images/spritesheet.svg");
+    background-repeat: no-repeat;
+    background-size: 300px 30px;
+    background-clip: padding-box;
+}
+
+.leaflet-container .leaflet-bar.leaflet-draw-toolbar a:hover {
+    background-color: #f0f0f3;
+}
+
+.leaflet-draw-actions a {
+    font-family: var(--czcionka);
+}
