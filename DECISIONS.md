@@ -652,3 +652,22 @@ student może na nich dalej pracować.
   zależności), a Shapefile ucina nazwy pól do 10 znaków.
 - Eksport w EPSG:2180 — odrzucone: RFC 7946 wymaga WGS84, a QGIS sam
   przelicza do układu projektu.
+
+## D-032 — Korelacja: statystyki z biblioteki standardowej, opis z progów
+Data: 2026-09-29
+
+**Decyzja:** r Pearsona i regresja liniowa z modułu `statistics`
+(Python 3.10+), rho Spearmana jako Pearson na rangach z uśrednianiem
+remisów, opis siły związku według stałych progów — bez modelu językowego
+i bez numpy/scipy. Nie liczymy istotności (p-value).
+
+**Uzasadnienie:** Wszystkie liczby pochodzą z kodu (zasada projektu), a
+biblioteka standardowa wystarcza dla setek gmin. Opis z progów jest
+powtarzalny i zgodny z podręcznikiem. P-value wymagałoby rozkładu t
+(scipy) i łatwo je nadinterpretować przy danych, które są całą
+populacją gmin województwa, a nie próbą.
+
+**Odrzucone alternatywy:**
+- numpy/scipy — odrzucone: ciężkie zależności dla trzech wzorów.
+- Opis wyniku przez Gemini — odrzucone: stałe progi dają ten sam opis
+  za każdym razem i nie ryzykują wymyślonych liczb.

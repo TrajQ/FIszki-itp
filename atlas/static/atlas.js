@@ -244,6 +244,8 @@
             await wczytajGranice(terytWoj, numer);
             if (numer !== numerZapytania) return;
             odswiezWidok();
+            // Dla innych skryptów strony (korelacja.js): nowe dane na mapie.
+            document.dispatchEvent(new CustomEvent("atlas:dane", { detail: dane }));
         } catch (err) {
             pokazKomunikat(err.message);
         } finally {

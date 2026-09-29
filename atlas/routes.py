@@ -190,6 +190,29 @@ def _policz_dane(zmienna_id: int, rok: int, woj_bdl_id: str, rok_bazowy: int | N
     return wynik
 
 
+@atlas_bp.route("/korelacja")
+def korelacja():
+    """Korelacja wskaźnika z mapy (zmienna) z drugim (zmienna2) w tym samym
+    roku i województwie. Liczby liczy atlas/statystyki.py."""
+    try:
+        parametry = _parametry_zapytania(request.args)
+        zmienna2 = int(request.args.get("zmienna2", ""))
+    except ValueError as e:
+        return jsonify({"blad": str(e) if "zmienna2" not in str(e) else "Wymagany parametr zmienna2."}), 400
+    if zmienna2 == parametry["zmienna_id"]:
+        return jsonify({"blad": "Wybierz inny wskaźnik niż ten na mapie."}), 400
+    try:
+        gminy_x = _wartosci(parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"])
+        gminy_y = _wartosci(zmienna2, parametry["rok"], parametry["woj_bdl_id"])
+        zmienna_x = z_cache(f"zmienna:{parametry['zmienna_id']}", lambda: asdict(bdl.pobierz_zmienna(parametry["zmienna_id"])))
+        zmienna_y = z_cache(f"zmienna:{zmienna2}", lambda: asdict(bdl.pobierz_zmienna(zmienna2)))
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    wynik = statystyki.korelacja(gminy_x, gminy_y)
+    wynik.update(zmienna_x=zmienna_x, zmienna_y=zmienna_y, rok=parametry["rok"])
+    return jsonify(wynik)
+
+
 @atlas_bp.route("/eksport.geojson")
 def eksport_geojson():
     """Kartogram do QGIS: granice gmin + wartości (i zmiana, jeśli porównanie)."""

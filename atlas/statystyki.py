@@ -161,5 +161,73 @@ def zmiana_w_szeregu(szereg: list[dict]) -> dict | None:
     }
 
 
+# ---------- Korelacja dwóch wskaźników (ETAP 25) ----------
+
+# Progi siły związku dla |r| — typowa skala z podręczników statystyki.
+PROGI_SILY = [(0.1, "brak związku"), (0.3, "słaba"), (0.5, "umiarkowana"), (0.7, "silna")]
+
+
+def _rangi(liczby: list[float]) -> list[float]:
+    """Rangi z uśrednianiem remisów (potrzebne do rho Spearmana)."""
+    kolejnosc = sorted(range(len(liczby)), key=lambda i: liczby[i])
+    rangi = [0.0] * len(liczby)
+    i = 0
+    while i < len(kolejnosc):
+        j = i
+        while j + 1 < len(kolejnosc) and liczby[kolejnosc[j + 1]] == liczby[kolejnosc[i]]:
+            j += 1
+        srednia = (i + j) / 2 + 1
+        for k in range(i, j + 1):
+            rangi[kolejnosc[k]] = srednia
+        i = j + 1
+    return rangi
+
+
+def _pearson(x: list[float], y: list[float]) -> float | None:
+    if len(set(x)) < 2 or len(set(y)) < 2:
+        return None  # stała wartość — korelacja nieokreślona
+    return statistics.correlation(x, y)
+
+
+def opis_sily(r: float | None) -> str:
+    if r is None:
+        return "nie da się policzyć (jeden ze wskaźników jest stały)"
+    for prog, opis in PROGI_SILY:
+        if abs(r) < prog:
+            return opis if opis == "brak związku" else f"{opis}, {'dodatnia' if r > 0 else 'ujemna'}"
+    return f"bardzo silna, {'dodatnia' if r > 0 else 'ujemna'}"
+
+
+def korelacja(gminy_x: list[dict], gminy_y: list[dict]) -> dict:
+    """Korelacja dwóch wskaźników na gminach obecnych w obu zestawach."""
+    y_po_teryt = {g["teryt"]: g["wartosc"] for g in gminy_y}
+    punkty = [
+        {"teryt": g["teryt"], "nazwa": g["nazwa"], "x": g["wartosc"], "y": y_po_teryt[g["teryt"]]}
+        for g in gminy_x
+        if g["teryt"] in y_po_teryt
+    ]
+    wynik = {"n": len(punkty), "punkty": punkty}
+    if len(punkty) < 3:
+        wynik.update(pearson=None, spearman=None, r2=None, regresja=None, opis="za mało gmin z obiema wartościami (min. 3)")
+        return wynik
+
+    x = [p["x"] for p in punkty]
+    y = [p["y"] for p in punkty]
+    r = _pearson(x, y)
+    rho = _pearson(_rangi(x), _rangi(y))
+    regresja = None
+    if len(set(x)) >= 2:
+        nachylenie, wyraz_wolny = statistics.linear_regression(x, y)
+        regresja = {"nachylenie": nachylenie, "wyraz_wolny": wyraz_wolny}
+    wynik.update(
+        pearson=r,
+        spearman=rho,
+        r2=None if r is None else r * r,
+        regresja=regresja,
+        opis=opis_sily(r),
+    )
+    return wynik
+
+
 def _para(w: dict) -> dict:
     return {"nazwa": w["nazwa"], "wartosc": w["wartosc"]}

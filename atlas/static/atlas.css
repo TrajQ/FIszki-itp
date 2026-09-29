@@ -447,3 +447,65 @@ button.przelacznik__opcja--aktywna:hover {
         display: none;
     }
 }
+
+/* ---------- Korelacja ---------- */
+
+.korelacja {
+    margin-bottom: 24px;
+}
+
+.korelacja h3 {
+    margin: 0;
+}
+
+.korelacja__opis {
+    margin: 2px 0 0;
+    font-size: 0.85rem;
+}
+
+.pole-korelacji {
+    max-width: 560px;
+}
+
+.wynik-korelacji {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.wykres-korelacji {
+    position: relative;
+}
+
+.wykres__rozrzut {
+    fill: var(--akcent);
+    fill-opacity: 0.7;
+    stroke: var(--tlo-karty);
+    stroke-width: 1.5;
+}
+
+.wykres__rozrzut--aktywny {
+    fill-opacity: 1;
+    stroke: var(--tekst);
+}
+
+.wykres__tytul-osi {
+    font-size: 11px;
+}
+
+.opis-korelacji {
+    margin: 0;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+    .wynik-korelacji {
+        grid-template-columns: 1fr;
+    }
+}
+
+.korelacja .przypis {
+    margin: 0;
+    font-size: 0.78rem;
+}

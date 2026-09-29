@@ -670,3 +670,29 @@ Zrobione:
 
 Testy: 181 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap24_20260929.zip
+
+## ETAP 25 — Atlas: korelacja dwóch wskaźników
+Data: 2026-09-29
+Status: zamknięty
+
+Analiza potrzeb: statystyka na 2. roku GP — zależności między zjawiskami
+w gminach (np. ludność a mieszkania oddane, bezrobocie a dochody).
+
+Zrobione:
+- `atlas/statystyki.py`: `korelacja` — łączenie gmin po TERYT, r
+  Pearsona, rho Spearmana (rangi z uśrednianiem remisów), R², prosta
+  regresji (`statistics.linear_regression`), opis siły wg stałych progów
+  |r| 0,1 / 0,3 / 0,5 / 0,7 z kierunkiem; przypadki brzegowe (< 3 gminy,
+  wskaźnik stały → brak wyniku z wyjaśnieniem)
+- `GET /atlas/korelacja?zmienna=&zmienna2=&rok=&woj=` (dane z cache BDL)
+- Karta „Korelacja z innym wskaźnikiem”: wyszukiwarka drugiego
+  wskaźnika, wykres rozrzutu SVG (punkty z większym polem trafienia,
+  dymek z nazwą gminy, przerywana linia regresji, opisane osie; oś nie
+  schodzi poniżej zera dla danych nieujemnych), liczby, opis słowny i
+  przypomnienie „korelacja ≠ przyczynowość”; `atlas.js` przekazuje dane
+  zdarzeniem `atlas:dane`, więc `korelacja.js` jest niezależnym plikiem
+- Testy: 10 nowych (m.in. wartość podręcznikowa r = 0,7746,
+  odporność Spearmana na wartość skrajną); `DECISIONS.md`: D-032
+
+Testy: 191 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap25_20260929.zip

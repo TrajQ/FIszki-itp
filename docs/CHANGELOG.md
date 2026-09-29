@@ -181,3 +181,8 @@
 ## ETAP 24 — 2026-09-29
 - Eksport GeoJSON do QGIS z atlasu, mpzp i dostępności.
 - Dodano `DECISIONS.md` D-031 i testy.
+
+## ETAP 25 — 2026-09-29
+- Atlas: korelacja dwóch wskaźników (r Pearsona, rho Spearmana, R²,
+  wykres rozrzutu z linią regresji) — `/atlas/korelacja`.
+- Dodano `DECISIONS.md` D-032 i testy.

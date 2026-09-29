@@ -88,6 +88,28 @@
         </aside>
     </div>
 
+    <section id="korelacja" class="karta stos korelacja">
+        <div class="rzad rzad--miedzy">
+            <div>
+                <h3>Korelacja z innym wskaźnikiem</h3>
+                <p class="wyciszony korelacja__opis">Czy gminy z wysoką wartością jednego wskaźnika mają też wysoką (albo niską) wartość drugiego?</p>
+            </div>
+        </div>
+        <label class="pole-wskaznika pole-korelacji">Drugi wskaźnik (oś Y)
+            <input id="pole-korelacja" type="search" placeholder="np. bezrobocie, dochody, mieszkania oddane…" autocomplete="off">
+            <ul id="podpowiedzi-korelacja" class="podpowiedzi" hidden></ul>
+        </label>
+        <p id="status-korelacji" class="wyciszony"></p>
+        <div id="wynik-korelacji" class="wynik-korelacji" hidden>
+            <div id="wykres-korelacji" class="wykres-korelacji"></div>
+            <div class="stos">
+                <div id="liczby-korelacji" class="profil__liczby"></div>
+                <p id="opis-korelacji" class="opis-korelacji"></p>
+                <p class="wyciszony przypis">Korelacja to nie przyczynowość — oba wskaźniki mogą zależeć od trzeciego czynnika (np. wielkości gminy). Rho Spearmana jest mniej wrażliwa na wartości skrajne.</p>
+            </div>
+        </div>
+    </section>
+
     <section class="karta ranking">
         <div class="rzad rzad--miedzy">
             <h3>Ranking gmin</h3>
@@ -107,9 +129,11 @@
     const URL_OPIS = "{{ url_for('atlas.opis') }}";
     const URL_EKSPORT = "{{ url_for('atlas.eksport_csv') }}";
     const URL_GEOJSON = "{{ url_for('atlas.eksport_geojson') }}";
+    const URL_KORELACJA = "{{ url_for('atlas.korelacja') }}";
     const URL_PROFIL = "{{ url_for('atlas.profil_gminy', gmina_bdl_id='000000000000') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('atlas.static', filename='wykres_gminy.js') }}"></script>
 <script src="{{ url_for('atlas.static', filename='atlas.js') }}"></script>
+<script src="{{ url_for('atlas.static', filename='korelacja.js') }}"></script>
 {% endblock %}

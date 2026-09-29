@@ -476,3 +476,56 @@ def test_eksport_geojson_atlasu(client, monkeypatch):
 
     monkeypatch.setattr(atlas_routes.granice, "granice_gmin", blad)
     assert client.get(f"/atlas/eksport.geojson?{ZAPYTANIE}").status_code == 502
+
+
+# ---------- ETAP 25: korelacja ----------
+
+
+def _g(wartosci):
+    return [{"teryt": str(i), "nazwa": f"G{i}", "wartosc": float(v)} for i, v in enumerate(wartosci)]
+
+
+def test_korelacja_wartosci_podrecznikowe():
+    k = statystyki.korelacja(_g([1, 2, 3, 4, 5]), _g([2, 4, 5, 4, 5]))
+    assert k["pearson"] == pytest.approx(0.7746, abs=1e-4)
+    assert k["r2"] == pytest.approx(0.6, abs=1e-4)
+    assert k["regresja"] == {"nachylenie": pytest.approx(0.6), "wyraz_wolny": pytest.approx(2.2)}
+    assert k["opis"] == "bardzo silna, dodatnia"
+
+
+def test_spearman_odporny_na_wartosc_skrajna():
+    # zależność monotoniczna, ale z jedną ogromną wartością
+    k = statystyki.korelacja(_g([1, 2, 3, 4, 5, 6]), _g([1, 2, 3, 4, 5, 1000]))
+    assert k["spearman"] == pytest.approx(1.0)
+    assert k["pearson"] < 0.8
+
+
+def test_rangi_z_remisami():
+    assert statystyki._rangi([3, 1, 2, 2]) == [4.0, 1.0, 2.5, 2.5]
+
+
+@pytest.mark.parametrize("r,opis", [(0.05, "brak związku"), (-0.2, "słaba, ujemna"), (0.45, "umiarkowana, dodatnia"), (-0.65, "silna, ujemna"), (None, "nie da się")])
+def test_opis_sily(r, opis):
+    assert statystyki.opis_sily(r).startswith(opis)
+
+
+def test_korelacja_przypadki_brzegowe():
+    assert statystyki.korelacja(_g([1, 2]), _g([3, 4]))["pearson"] is None  # za mało gmin
+    stala = statystyki.korelacja(_g([1, 2, 3]), _g([5, 5, 5]))
+    assert stala["pearson"] is None and "stały" in stala["opis"]
+    # łączenie po TERYT — gminy spoza drugiego zestawu pominięte
+    assert statystyki.korelacja(_g([1, 2, 3, 4]), _g([1, 2, 3]))["n"] == 3
+
+
+def test_endpoint_korelacji(client, monkeypatch):
+    def wartosci(zmienna_id, rok, woj):
+        baza = [("011212161011", "1261011", "Kraków"), ("011212106032", "1206032", "Wieliczka"), ("011212101011", "1201011", "Bochnia")]
+        v = [10, 20, 30] if zmienna_id == 72305 else [1, 3, 2]
+        return [bdl.Wartosc(b, t, n, float(x)) for (b, t, n), x in zip(baza, v)]
+
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", wartosci)
+    dane = client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=60559").get_json()
+    assert dane["n"] == 3 and dane["pearson"] == pytest.approx(0.5)
+    assert dane["zmienna_y"]["id"] == 60559
+    assert client.get(f"/atlas/korelacja?{ZAPYTANIE}").status_code == 400
+    assert client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=72305").status_code == 400
