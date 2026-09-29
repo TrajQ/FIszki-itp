@@ -432,3 +432,12 @@
   szkicami w jednej skali; linki „Raport” i „Porównaj warianty”.
 - Dodano `osiedle/rysunek_svg.py`, `osiedle/trasy_druk.py`,
   `DECISIONS.md` D-066 i 2 testy.
+
+## ETAP 61 — 2026-09-29
+- Nowy moduł **Przepisy** (menu, karta na stronie głównej): wgrywanie
+  aktów prawnych w PDF, podział na artykuły i paragrafy z rozdziałami,
+  strona aktu ze spisem (filtr „idź do”) i odnośnikiem do strony PDF,
+  wyszukiwarka pełnotekstowa bez polskich znaków i z odmianą, frazy w
+  cudzysłowie, „art. 15” / „§ 4”, podświetlone trafienia, zmiana nazwy
+  i usuwanie aktu.
+- Dodano zależność `pypdf`, `DECISIONS.md` D-067 i 6 testów.

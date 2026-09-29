@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block tytul %}{{ akt.nazwa | truncate(60) }} — Przepisy — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('przepisy.static', filename='przepisy.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('przepisy.index') }}">‹ Przepisy</a>
+        <h1 class="tytul-aktu" id="nazwa-aktu">{{ akt.nazwa }}</h1>
+        <p>{{ jednostki | length }} jednostek · {{ akt.liczba_stron }} stron PDF · dodano {{ akt.data_dodania[:10] }}</p>
+    </div>
+    <div class="rzad">
+        <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}" target="_blank" rel="noopener">Otwórz PDF</a>
+        <button id="zmien-nazwe" type="button" class="przycisk--tekst">Zmień nazwę</button>
+        <button id="usun-akt" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń</button>
+    </div>
+</div>
+<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+
+<div class="uklad-aktu">
+    <nav class="karta spis-aktu" aria-label="Spis jednostek">
+        <input id="filtr-spisu" type="search" placeholder="Idź do: 15a" aria-label="Filtruj spis">
+        <ol id="spis">
+            {% for j in jednostki %}
+            {% if j.naglowek and (loop.first or j.naglowek != jednostki[loop.index0 - 1].naglowek) %}<li class="spis-aktu__naglowek">{{ j.naglowek }}</li>{% endif %}
+            <li><a href="#j{{ j.id }}" data-oznaczenie="{{ j.oznaczenie }}">{{ j.oznaczenie }}</a></li>
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <article class="karta tekst-aktu">
+        {% for j in jednostki %}
+        {% if j.naglowek and (loop.first or j.naglowek != jednostki[loop.index0 - 1].naglowek) %}<h3 class="tekst-aktu__naglowek">{{ j.naglowek }}</h3>{% endif %}
+        <section class="jednostka" id="j{{ j.id }}">
+            <div class="jednostka__pasek">
+                <strong>{{ j.oznaczenie }}</strong>
+                <a class="wyciszony" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}#page={{ j.strona_od }}" target="_blank" rel="noopener">PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</a>
+            </div>
+            <p class="jednostka__tekst">{{ j.tekst }}</p>
+        </section>
+        {% endfor %}
+    </article>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_AKTU = "{{ url_for('przepisy.usun_akt', akt_id=akt.id) }}";
+    const URL_LISTY = "{{ url_for('przepisy.index') }}";
+</script>
+<script src="{{ url_for('przepisy.static', filename='akt.js') }}"></script>
+{% endblock %}

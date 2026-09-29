@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block tytul %}Przepisy — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('przepisy.static', filename='przepisy.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Przepisy</h1>
+        <p>Wgraj ustawy i rozporządzenia w PDF (np. tekst jednolity z ISAP) i szukaj w nich artykułów.</p>
+    </div>
+</div>
+
+{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+
+<section class="karta stos">
+    <form id="formularz-szukania" class="szukajka" role="search">
+        <input id="pole-szukania" type="search" placeholder="np. intensywność zabudowy, „działka budowlana”, art. 15" aria-label="Szukaj w przepisach" autocomplete="off" {{ 'disabled' if not akty }}>
+        <select id="filtr-aktu" aria-label="Szukaj w akcie" {{ 'disabled' if not akty }}>
+            <option value="">we wszystkich aktach</option>
+            {% for a in akty %}<option value="{{ a.id }}">{{ a.nazwa | truncate(70) }}</option>{% endfor %}
+        </select>
+    </form>
+    <p class="wyciszony opis-panelu">Polskie znaki i odmiana nie przeszkadzają („dzialki” znajdzie „działka”). Frazę dokładną wpisz w cudzysłowie. „art. 15” albo „§ 4” otwiera tę jednostkę.</p>
+    <p id="stan-szukania" class="wyciszony" hidden></p>
+    <ol id="wyniki" class="wyniki"></ol>
+</section>
+
+<section class="karta stos">
+    <h3>Twoje akty</h3>
+    {% if akty %}
+    <ul class="lista-aktow">
+        {% for a in akty %}
+        <li>
+            <a href="{{ url_for('przepisy.widok_aktu', akt_id=a.id) }}">{{ a.nazwa }}</a>
+            <span class="wyciszony">{{ a.liczba_jednostek }} jedn. · {{ a.liczba_stron }} s. · dodano {{ a.data_dodania[:10] }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="wyciszony">Jeszcze nic nie wgrano.</p>
+    {% endif %}
+    <form class="rzad" method="post" action="{{ url_for('przepisy.dodaj_akt') }}" enctype="multipart/form-data">
+        <input type="file" name="plik" accept="application/pdf,.pdf" required>
+        <button type="submit" class="przycisk--drugi">Wgraj PDF</button>
+    </form>
+    <p class="wyciszony opis-panelu">PDF musi mieć warstwę tekstową (skany bez OCR nie zadziałają). Tekst dzielony jest na artykuły („Art. 15.”) i paragrafy („§ 4.”).</p>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_SZUKAJ = "{{ url_for('przepisy.szukaj') }}";
+    const URL_AKT = "{{ url_for('przepisy.widok_aktu', akt_id=0) }}".replace(/0$/, "");
+</script>
+<script src="{{ url_for('przepisy.static', filename='przepisy.js') }}"></script>
+{% endblock %}

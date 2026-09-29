@@ -5,3 +5,4 @@ google-genai==2.25.0
 requests==2.34.2
 shapely==2.1.2
 h3==4.5.0
+pypdf==6.19.0

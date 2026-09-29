@@ -1266,3 +1266,16 @@ Status: zamknięty
   druku), porównanie dwóch wariantów
 - Moduł Osiedle ukończony (ETAPy 57–60)
 - `DECISIONS.md`: D-066
+
+## ETAP 61 — Przepisy: moduł, biblioteka aktów, wyszukiwarka
+Data: 2026-09-29
+Status: zamknięty
+
+- `przepisy/`: `tekst.py` (PDF → strony → jednostki), `baza.py` (akty,
+  jednostki, FTS5, wyszukiwanie, podgląd), `routes.py`, szablony
+  `index.html`, `akt.html`, `przepisy.js`, `akt.js`, `przepisy.css`
+- Test z prawdziwym PDF-em (minimalny PDF budowany w teście) i z
+  PDF-em ustawy wydrukowanym przez przeglądarkę
+- Sprawdzone w przeglądarce: wgranie PDF, spis i filtr, wyszukiwanie
+  „intensywnosc zabudowy dzialki”, „art. 2” → skok do artykułu
+- `DECISIONS.md`: D-067

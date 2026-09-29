@@ -1,6 +1,6 @@
 # Warsztat
 
-Lokalna aplikacja (Flask + vanilla JS) z czterema narzędziami do
+Lokalna aplikacja (Flask + vanilla JS) z sześcioma narzędziami do
 gospodarki przestrzennej. Działa wyłącznie na `127.0.0.1`.
 
 | Moduł | Co robi |
@@ -9,6 +9,7 @@ gospodarki przestrzennej. Działa wyłącznie na `127.0.0.1`.
 | **MPZP** | Działka (klik, obręb + numer z podpowiedziami) → przeznaczenie w planie, podział działki na przeznaczenia (m², %), raport do druku/PDF, kalkulator wskaźników zabudowy ze zgodnością z planem, kalkulator skali mapy (rysunek ↔ teren, dobór skali do arkusza), historia, GeoJSON, „Moje działki” z notatkami (CSV) i porównaniem działek obok siebie (szkice w jednej skali), słownik symboli planu z rozszyfrowywaniem, wymiary działki (boki na mapie, szerokość × głębokość, zwartość), obszar analizowany do decyzji WZ, współrzędne punktu w PL-1992/PL-2000, pomiar odległości i powierzchni na mapie, link do Geoportalu. Cała Polska przez krajową integrację planów GUGiK (KIMPZP) + nakładki planów i działek na mapie; dla Poznania dodatkowo podział działki z WFS gminy |
 | **Fiszki** | Fiszki z zaznaczenia albo z całej strony PDF (Gemini, cytat sprawdzany w tekście), kotwica w źródle, powtórki Leitnera (umiem / trudne / nie umiem, tryb wpisywania odpowiedzi, tryb „przed egzaminem”), prognoza powtórek na 7 dni, tematy fiszek (powtórka, quiz i druk z jednego tematu), egzaminy z postępem i planem dziennym, powtórka odwrócona, quiz ABCD, statystyki nauki, najtrudniejsze fiszki, wyszukiwarka, karty do druku, eksport i import CSV/Anki/Quizlet |
 | **Osiedle** | Koncepcja osiedla rysowana na mapie (Leaflet.draw): obszar opracowania i tereny o funkcjach MN, MW, U, ZP, KD, KS, WS, bilans terenu na bieżąco (m², %, pasek), kontrola nakładania się i terenów poza obszarem, wskaźniki zabudowy z parametrów terenów (zabudowa %, kondygnacje, PBC) — powierzchnia zabudowy i całkowita, intensywność, PBC — ze zgodnością z wpisanymi ustaleniami planu, program osiedla (mieszkania, mieszkańcy, gęstość, miejsca postojowe, przedszkola i szkoły, zieleń na mieszkańca) z jawnymi założeniami, raport do druku/PDF ze szkicem, porównanie wariantów obok siebie (szkice w jednej skali), eksport GeoJSON i SVG |
+| **Przepisy** | Ustawy i rozporządzenia z PDF (np. z ISAP) podzielone na artykuły i paragrafy, strona aktu ze spisem i odnośnikiem do strony PDF, wyszukiwarka pełnotekstowa odporna na brak polskich znaków i odmianę, frazy dokładne, skok do „art. 15” / „§ 4” |
 | **Dostępność** | Wyniki na siatce H3: klasy czasu dojścia, miasto 15-minutowe (wszystkie usługi naraz, najsłabsze ogniwo), udziały w mieszkańcach, porównanie scenariuszy przed/po, raport do druku (mapa A4 SVG/PDF + tabele), szybki model z punktów usług wstawionych na mapie albo wczytanych z CSV (nowy plik, obszary obsługi z mieszkańcami na placówkę), krzywa dostępności z własnym progiem, luki w dostępności, szczegóły komórki, eksport GeoJSON |
 
 Każda mapa ma eksport **GeoJSON do QGIS**. Kopia zapasowa wszystkich
@@ -34,6 +35,7 @@ są w osobnych plikach bez Flaska — łatwo je czytać i testować.
 | `mpzp/` | `routes.py` (działka, plan, raport, porównanie), `trasy_narzedzia.py` (kalkulatory, pomiar, obszar WZ, symbole), `trasy_zapisane.py` (Moje działki) | `wfs.py` (Poznań), `krajowe.py` (KIMPZP), `geometria.py`, `uklady.py`, `zabudowa.py`, `skala.py`, `symbole.py`, `liczby.py`, `baza.py` |
 | `fiszki/` | `routes.py` (pliki PDF, fiszki, szkice Gemini), `trasy_nauka.py` (powtórki, quiz, egzaminy), `trasy_wymiana.py` (druk, eksport, import, wyszukiwarka) | `powtorki.py`, `tematy.py`, `egzaminy.py`, `quiz.py`, `importer.py`, `statystyki_nauki.py`, `strona.py`, `baza.py` |
 | `osiedle/` | `routes.py` (koncepcje), `trasy_druk.py` (raport, szkic SVG, porównanie) | `bilans.py` (bilans terenu), `wskazniki.py` (wskaźniki zabudowy, zgodność z planem), `program.py` (mieszkańcy, parkingi, szkoły), `rysunek_svg.py` (szkic), `baza.py` (koncepcje) |
+| `przepisy/` | `routes.py` | `tekst.py` (PDF → artykuły), `baza.py` (akty, wyszukiwarka FTS5) |
 | `dostepnosc/` | `routes.py` | `wyniki.py` (CSV H3), `model.py` (szybki model), `druk.py` (raport) |
 
 Wspólne dla aplikacji: `app.py`, `ochrona.py` (tylko 127.0.0.1, ochrona

@@ -17,10 +17,12 @@ kogoś, kto wróci do niego za trzy miesiące.
 - osiedle     — koncepcja osiedla rysowana na mapie: bilans terenu,
                 wskaźniki zabudowy, zgodność z planem, program osiedla,
                 raport do druku i porównanie wariantów
+- przepisy    — akty prawne z PDF: artykuły, wyszukiwarka z kotwicą w
+                stronie PDF (w budowie: pytania z cytatami — ETAP 62)
 
 Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
-- przepisy    — nowy moduł: pytania do PDF-ów z przepisami, odpowiedź
-                zawsze z cytatem i kotwicą w źródle
+- przepisy    — pytania do PDF-ów z przepisami, odpowiedź zawsze z
+                cytatem i kotwicą w źródle (moduł działa od ETAPu 61)
 - atlas       — „Raport gminy”: uwarunkowania jednej gminy w jednym miejscu
 - mpzp        — „Kronika zmian”: ortofotomapy z różnych lat na suwaku
 - teren       — nowy moduł: inwentaryzacja w terenie (telefon zbiera dane
@@ -59,6 +61,6 @@ Zaplanowane rozszerzenia (zgoda autora, D-062), w tej kolejności:
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 60 (osiedle: warianty, raport i eksport — zamknięty; moduł osiedle ukończony)
-Ostatni ZIP: releases/warsztat_etap60_20260929.zip
-Testy: 366 passed / 0 failed
+ETAP: 61 (przepisy: moduł, biblioteka aktów, wyszukiwarka — zamknięty)
+Ostatni ZIP: releases/warsztat_etap61_20260929.zip
+Testy: 372 passed / 0 failed

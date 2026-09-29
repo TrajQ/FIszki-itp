@@ -7,6 +7,7 @@ from mpzp import mpzp_bp
 from fiszki import fiszki_bp
 from dostepnosc import dostepnosc_bp
 from osiedle import osiedle_bp
+from przepisy import przepisy_bp
 from config import Config
 from ochrona import dodaj_naglowki, sprawdz_zapytanie
 
@@ -24,21 +25,25 @@ def create_app(instance_path=None):
     app.register_blueprint(fiszki_bp, url_prefix="/fiszki")
     app.register_blueprint(dostepnosc_bp, url_prefix="/dostepnosc")
     app.register_blueprint(osiedle_bp, url_prefix="/osiedle")
+    app.register_blueprint(przepisy_bp, url_prefix="/przepisy")
 
     from fiszki.baza import init_db as init_db_fiszki, close_db as close_db_fiszki
     from atlas.baza import init_db as init_db_atlas, close_db as close_db_atlas
     from mpzp.baza import init_db as init_db_mpzp, close_db as close_db_mpzp
     from osiedle.baza import init_db as init_db_osiedle, close_db as close_db_osiedle
+    from przepisy.baza import init_db as init_db_przepisy, close_db as close_db_przepisy
 
     with app.app_context():
         init_db_fiszki()
         init_db_atlas()
         init_db_mpzp()
         init_db_osiedle()
+        init_db_przepisy()
     app.teardown_appcontext(close_db_fiszki)
     app.teardown_appcontext(close_db_atlas)
     app.teardown_appcontext(close_db_mpzp)
     app.teardown_appcontext(close_db_osiedle)
+    app.teardown_appcontext(close_db_przepisy)
 
     @app.route("/")
     def index():
@@ -49,6 +54,7 @@ def create_app(instance_path=None):
         from fiszki.routes import podsumowanie as podsumowanie_fiszek
         from mpzp.routes import podsumowanie as podsumowanie_mpzp
         from osiedle.routes import podsumowanie as podsumowanie_osiedla
+        from przepisy.routes import podsumowanie as podsumowanie_przepisow
 
         podsumowania = {}
         for modul, funkcja in [
@@ -57,6 +63,7 @@ def create_app(instance_path=None):
             ("fiszki", podsumowanie_fiszek),
             ("dostepnosc", podsumowanie_dostepnosci),
             ("osiedle", podsumowanie_osiedla),
+            ("przepisy", podsumowanie_przepisow),
         ]:
             try:
                 podsumowania[modul] = funkcja()

@@ -55,6 +55,14 @@
         <p class="karta__opis">Koncepcja osiedla na mapie: bilans terenu, wskaźniki i zgodność z planem.</p>
         {% if p.osiedle and p.osiedle.liczba %}<span class="karta__meta">Ostatnio: {{ p.osiedle.ostatnia }}</span>{% endif %}
     </a>
+    <a class="karta karta--link" href="{{ url_for('przepisy.index') }}">
+        <span class="ikona-modulu ikona-modulu--przepisy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg>
+        </span>
+        <h2>Przepisy</h2>
+        <p class="karta__opis">Ustawy i rozporządzenia z PDF-ów: wyszukiwarka artykułów z odnośnikiem do strony źródła.</p>
+        {% if p.przepisy and p.przepisy.liczba %}<span class="karta__meta">Akty: {{ p.przepisy.liczba }}, jednostki: {{ p.przepisy.jednostki }}</span>{% endif %}
+    </a>
 </section>
 
 <section class="karta dane-uzytkownika">

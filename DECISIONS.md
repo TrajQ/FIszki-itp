@@ -1407,3 +1407,34 @@ danych, a porównanie w jednej skali pokazuje różnice od razu.
   wartość.
 - Generowanie PDF na serwerze — odrzucone: druk z przeglądarki
   wystarcza (jak w innych raportach), bez nowej zależności.
+
+## D-067 — Moduł przepisy: pypdf na serwerze, FTS5, jednostka = artykuł
+Data: 2026-09-29
+
+**Decyzja:** Nowy moduł `przepisy` (baza `instance/przepisy/przepisy.db`,
+PDF-y w `instance/przepisy/pliki/`). Nowa zależność: **pypdf 6.19.0**
+(czysty Python, licencja BSD) — wyciąga tekst z PDF-a na serwerze.
+Tekst dzielimy na jednostki: artykuły („Art. 15.”) i paragrafy („§ 4.”)
+zaczynające się na początku wiersza; wycinamy nagłówki stron ISAP i
+Dziennika Ustaw, sklejamy przeniesienia wyrazów. Wyszukiwarka: SQLite
+FTS5 (wbudowane w sqlite3, bez nowej zależności) z tokenizerem
+`unicode61 remove_diacritics 2`; do indeksu i zapytań idzie tekst z
+„ł” zamienionym na „l” (tokenizer tego nie robi), odmianę zastępuje
+szukanie po początku słowa. Podgląd z podświetleniem liczy Python na
+oryginalnym tekście. „art. 15” / „§ 4” szuka po oznaczeniu. Kotwica w
+źródle: numer strony PDF-a i link `#page=N` (przeglądarka otwiera PDF
+na tej stronie).
+
+**Uzasadnienie:** Pytania do przepisów (ETAP 62) wymagają tekstu całego
+aktu na serwerze, żeby wybrać właściwe artykuły i sprawdzić cytaty.
+pdf.js w przeglądarce (jak w fiszkach) musiałby przesyłać cały tekst i
+wiązałby moduł z plikami innego modułu. Artykuł to naturalna jednostka
+cytowania przepisów.
+
+**Odrzucone alternatywy:**
+- pdfminer.six / PyMuPDF — cięższe (PyMuPDF: licencja AGPL); pypdf
+  wystarcza dla tekstowych PDF-ów z ISAP.
+- Polski stemmer (np. Morfologik) — duża zależność; szukanie po
+  początku słowa daje wystarczające wyniki.
+- Pobieranie aktów z API ISAP — odrzucone na teraz: użytkownik wgrywa
+  PDF, który i tak ma pod ręką; do rozważenia później.

@@ -1,0 +1,178 @@
+/* Moduł przepisy (ETAP 61) */
+.szukajka {
+    display: flex;
+    gap: 8px;
+}
+
+.szukajka input {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+}
+
+.szukajka select {
+    max-width: 38%;
+}
+
+.opis-panelu {
+    margin: 0;
+    font-size: 13px;
+}
+
+.wyniki {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.wynik {
+    padding: 10px 0;
+    border-top: 1px solid var(--linia);
+}
+
+.wynik__naglowek {
+    font-size: 14px;
+}
+
+.wynik__naglowek a {
+    font-weight: 600;
+}
+
+.wynik__podglad {
+    margin: 4px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.wynik__podglad mark,
+.jednostka:target {
+    background: var(--akcent-tlo);
+    color: inherit;
+}
+
+.lista-aktow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lista-aktow li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.lista-aktow .wyciszony {
+    font-size: 12px;
+}
+
+.tytul-aktu {
+    max-width: 900px;
+    font-size: 28px;
+}
+
+.uklad-aktu {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.spis-aktu {
+    position: sticky;
+    top: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: calc(100vh - 100px);
+    padding: 14px;
+}
+
+.spis-aktu ol {
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    font-size: 13px;
+}
+
+.spis-aktu li a {
+    display: block;
+    padding: 3px 6px;
+    border-radius: 6px;
+}
+
+.spis-aktu li a:hover {
+    background: var(--tlo-wyciszone);
+}
+
+.spis-aktu__naglowek {
+    margin-top: 10px;
+    padding: 0 6px;
+    color: var(--tekst-drugi);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tekst-aktu {
+    max-width: 860px;
+}
+
+.tekst-aktu__naglowek {
+    margin: 24px 0 4px;
+    font-size: 15px;
+    color: var(--tekst-drugi);
+}
+
+.jednostka {
+    padding: 10px 12px;
+    border-radius: var(--promien-maly);
+    scroll-margin-top: 80px;
+}
+
+.jednostka__pasek {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.jednostka__pasek a {
+    font-size: 12px;
+}
+
+.jednostka__tekst {
+    margin: 4px 0 0;
+    white-space: pre-line;
+    line-height: 1.6;
+}
+
+button.przycisk--niebezpieczny-tekst {
+    color: var(--blad);
+}
+
+@media (max-width: 800px) {
+    .uklad-aktu {
+        grid-template-columns: 1fr;
+    }
+
+    .spis-aktu {
+        position: static;
+        max-height: 240px;
+    }
+
+    .szukajka {
+        flex-direction: column;
+    }
+
+    .szukajka select {
+        max-width: none;
+    }
+}

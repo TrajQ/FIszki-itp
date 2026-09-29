@@ -545,6 +545,7 @@ input[type="file"]::file-selector-button {
 .ikona-modulu--fiszki { background: linear-gradient(135deg, #5e5ce6, #bf5af2); }
 .ikona-modulu--dostepnosc { background: linear-gradient(135deg, #0a84ff, #64d2ff); }
 .ikona-modulu--osiedle { background: linear-gradient(135deg, #ff375f, #ff9f0a); }
+.ikona-modulu--przepisy { background: linear-gradient(135deg, #8e8e93, #5e5ce6); }
 
 .dane-uzytkownika {
     display: flex;
