@@ -309,3 +309,31 @@ aktualizacji; to nie jest współdzielona logika modułów.
   wersji do pilnowania.
 - Odwołania atlasu do `mpzp.static` — odrzucone: ukryta zależność
   między niezależnymi modułami.
+
+## D-015 — Dostępność: CSV na siatce H3, biblioteka `h3`
+Data: 2026-09-29
+
+**Decyzja:** Moduł czyta gotowe wyniki jako CSV: kolumna `h3` + kolumny
+liczbowe. Nazwa kolumny decyduje o interpretacji: `*_min` / `czas*` to
+minuty (stałe klasy 5/10/15/20/30, udziały w zasięgu 5/10/15 min),
+reszta — klasy kwantylowe. Geometrię heksagonów liczy biblioteka `h3`
+(`h3==4.5.0`, oficjalne wiązanie Pythona do biblioteki Ubera). Pliki
+użytkownika w `instance/dostepnosc/wyniki/`, bez bazy danych. Dołączony
+plik przykładowy jest syntetyczny i tak opisany w nazwie i interfejsie.
+
+**Uzasadnienie:** CLAUDE.md: moduł „czyta gotowe wyniki” — więc liczy
+tylko statystyki opisowe, a nie samą dostępność. CSV z indeksem H3
+eksportuje każde narzędzie (QGIS, pandas, r5py, h3-py), jest mały (bez
+geometrii) i czytelny. Samodzielne liczenie wierzchołków heksagonu to
+nietrywialna geometria na dwudziestościanie — biblioteka referencyjna
+jest pewniejsza. Stałe progi minut odpowiadają koncepcji miasta
+15-minutowego i są porównywalne między plikami. Bez bazy, bo pliki są
+źródłem prawdy, a jedyny stan to ich lista.
+
+**Odrzucone alternatywy:**
+- GeoJSON z gotowymi wielokątami — odrzucone: pliki kilkanaście razy
+  większe, a indeks H3 i tak niesie geometrię.
+- `h3-js` w przeglądarce — odrzucone: to też zależność, a liczenie po
+  stronie serwera pozwala testować wyniki w pytest.
+- SpatiaLite — odrzucone: brak operacji przestrzennych, które by go
+  wymagały.

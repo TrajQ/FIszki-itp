@@ -1,9 +1,78 @@
 {% extends "base.html" %}
 
 {% block tytul %}Dostępność — Warsztat{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('dostepnosc.static', filename='dostepnosc.css') }}">{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block klasa_body %}strona--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('dostepnosc.static', filename='dostepnosc.css') }}">
+{% endblock %}
 
 {% block tresc %}
-<div class="naglowek-strony"><h1>Dostępność</h1></div>
-<div class="karta pusty-stan">Moduł w budowie.</div>
+<div class="naglowek-strony">
+    <div>
+        <h1>Dostępność piesza</h1>
+        <p>Gotowe wyniki na siatce heksagonalnej H3: czas dojścia do usług.</p>
+    </div>
+</div>
+
+{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+
+<div class="uklad-dostepnosci">
+    <aside class="stos panel-dostepnosci">
+        <section class="karta stos">
+            <h3>Wyniki</h3>
+            <ul class="lista-plikow">
+                {% for plik in pliki %}
+                <li>
+                    <a href="{{ url_for('dostepnosc.index', plik=plik.nazwa) }}"
+                       class="plik {{ 'plik--wybrany' if plik.nazwa == wybrany }}">
+                        <span class="plik__nazwa">{{ plik.nazwa }}</span>
+                        {% if plik.przyklad %}<span class="etykieta">przykład · dane syntetyczne</span>{% endif %}
+                    </a>
+                    {% if not plik.przyklad %}
+                    <form method="post" action="{{ url_for('dostepnosc.usun', nazwa=plik.nazwa) }}"
+                          onsubmit="return confirm('Usunąć plik {{ plik.nazwa }}?')">
+                        <button type="submit" class="przycisk--niebezpieczny" title="Usuń">✕</button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            <form class="stos" method="post" action="{{ url_for('dostepnosc.wgraj') }}" enctype="multipart/form-data">
+                <input type="file" name="plik" accept=".csv,text/csv" required>
+                <button type="submit" class="przycisk--drugi">Wgraj CSV</button>
+            </form>
+            <details class="format-pliku">
+                <summary>Format pliku</summary>
+                <p>CSV z kolumną <code>h3</code> (indeks komórki) i kolumnami liczbowymi. Kolumny kończące się na <code>_min</code> albo zaczynające od <code>czas</code> to czas dojścia w minutach.</p>
+                <pre>h3,czas_przystanek_min
+891e24aa52fffff,4.5</pre>
+            </details>
+        </section>
+
+        <section class="karta stos">
+            <label>Wskaźnik
+                <select id="pole-kolumna"></select>
+            </label>
+            <div id="kafelki" class="kafelki-dostepnosci"></div>
+            <p id="meta-pliku" class="wyciszony meta-pliku"></p>
+        </section>
+    </aside>
+
+    <section class="karta karta-mapy">
+        <div id="mapa-dostepnosci"></div>
+        <div id="legenda" class="legenda"></div>
+        <p id="komunikat" class="komunikat komunikat--blad komunikat-mapy" hidden></p>
+    </section>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const NAZWA_PLIKU = {{ wybrany | tojson }};
+    const URL_PLIK = "{{ url_for('dostepnosc.opis_pliku', nazwa='__PLIK__') }}";
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('dostepnosc.static', filename='dostepnosc.js') }}"></script>
 {% endblock %}

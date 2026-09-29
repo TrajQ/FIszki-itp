@@ -559,10 +559,15 @@ input[type="file"]::file-selector-button {
     box-shadow: var(--cien-mocny) !important;
 }
 
-.leaflet-bar a {
+/* Selektor z .leaflet-container, żeby wygrać z leaflet.css ładowanym później. */
+.leaflet-container .leaflet-bar a {
     background: var(--tlo-karty);
     color: var(--tekst);
     border-bottom-color: var(--linia-slaba);
+}
+
+.leaflet-container .leaflet-bar a:hover {
+    background: var(--tlo-wyciszone);
 }
 
 /* ---------- Wąskie ekrany ---------- */

@@ -75,3 +75,12 @@
 - Przeniesiono Leaflet do `static/leaflet/`.
 - Dodano `GUS_BDL_API_KEY` do `config.py`.
 - Dodano `DECISIONS.md` D-013, D-014 i testy atlasu.
+
+## ETAP 8 — 2026-09-29
+- Dodano moduł dostępność: wgrywanie gotowych wyników (CSV na siatce
+  H3), mapa heksagonów, klasy czasu dojścia, udziały i powierzchnie w
+  zasięgu 5/10/15 min.
+- Dodano syntetyczny plik przykładowy i skrypt, który go generuje.
+- Dodano zależność `h3` (`requirements.txt`).
+- Poprawiono kolor przycisków zoomu mapy w trybie ciemnym.
+- Dodano `DECISIONS.md` D-015 i testy modułu.

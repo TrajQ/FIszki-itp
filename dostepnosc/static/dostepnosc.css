@@ -1,1 +1,191 @@
-/* Style modułu dostepnosc — uzupełniane w kolejnych ETAPach. */
+/* Style modułu dostępność. Wspólne elementy w static/style.css. */
+
+/* Panel po lewej, mapa zajmuje resztę. */
+.uklad-dostepnosci {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.panel-dostepnosci h3 {
+    margin: 0;
+}
+
+.lista-plikow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lista-plikow li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.lista-plikow form {
+    margin: 0;
+}
+
+.plik {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: var(--tekst);
+    font-size: 0.88rem;
+}
+
+.plik:hover {
+    background: var(--tlo-wyciszone);
+    text-decoration: none;
+}
+
+.plik--wybrany {
+    background: var(--akcent-tlo);
+    color: var(--akcent);
+    font-weight: 600;
+}
+
+.plik__nazwa {
+    overflow-wrap: anywhere;
+}
+
+.plik .etykieta {
+    align-self: flex-start;
+    font-weight: 500;
+}
+
+.format-pliku {
+    color: var(--tekst-drugi);
+    font-size: 0.8rem;
+}
+
+.format-pliku summary {
+    cursor: pointer;
+}
+
+.format-pliku pre {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--tlo-wyciszone);
+    overflow-x: auto;
+}
+
+/* Kafelki statystyk: siatka dwóch kolumn. */
+.kafelki-dostepnosci {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.kafelek-maly {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--tlo-wyciszone);
+}
+
+.kafelek-maly__etykieta {
+    color: var(--tekst-drugi);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kafelek-maly__wartosc {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.kafelek-maly__dopisek {
+    color: var(--tekst-drugi);
+    font-size: 0.75rem;
+}
+
+.meta-pliku {
+    margin: 0;
+    font-size: 0.78rem;
+}
+
+.karta-mapy {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+}
+
+#mapa-dostepnosci {
+    height: calc(100vh - 230px);
+    min-height: 520px;
+    border-radius: 0;
+}
+
+.legenda {
+    position: absolute;
+    right: 16px;
+    bottom: 28px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--pasek-tlo);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--cien);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.legenda:empty {
+    display: none;
+}
+
+.legenda__tytul {
+    margin-bottom: 2px;
+    color: var(--tekst-drugi);
+    font-weight: 600;
+}
+
+.legenda__wiersz {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legenda__kolor {
+    width: 18px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.komunikat-mapy {
+    position: absolute;
+    top: 16px;
+    left: 60px;
+    right: 16px;
+    z-index: 500;
+}
+
+@media (max-width: 1000px) {
+    .uklad-dostepnosci {
+        grid-template-columns: 1fr;
+    }
+
+    #mapa-dostepnosci {
+        height: 60vh;
+    }
+}

@@ -232,3 +232,35 @@ powstawał ETAP, blokuje bdl.stat.gov.pl i geoportal.gov.pl):
 
 Testy: 79 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap7_20260929.zip
+
+## ETAP 8 — Dostępność (wyniki na siatce H3)
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `dostepnosc/wyniki.py`: wczytywanie CSV z kolumną `h3` i kolumnami
+  liczbowymi (separator `,` lub `;`, przecinek dziesiętny, BOM, puste =
+  brak wartości), walidacja indeksów H3 i jednej rozdzielczości, limit
+  100 000 komórek; kolumny czasu (`*_min`, `czas*`) → stałe klasy
+  5/10/15/20/30 min i udziały + powierzchnia w zasięgu 5/10/15 min
+  („miasto 15-minutowe”); pozostałe kolumny → klasy kwantylowe;
+  geometria heksagonów z biblioteki `h3`
+- Endpointy: `/dostepnosc/` (lista plików), `POST /dostepnosc/wgraj`
+  (walidacja przed zapisem), `/dostepnosc/plik/<nazwa>` (metadane),
+  `/dostepnosc/plik/<nazwa>/<kolumna>` (GeoJSON + klasy + statystyki),
+  `POST /dostepnosc/plik/<nazwa>/usun`; pliki w
+  `instance/dostepnosc/wyniki/`, ochrona przed `../` w nazwie
+- Plik przykładowy `dostepnosc/przyklad/przyklad_poznan_syntetyczny.csv`
+  (631 komórek, rozdzielczość 9) + skrypt, który go generuje —
+  wyraźnie opisany jako dane SYNTETYCZNE (zmyślone punkty, odległość w
+  linii prostej × 1,3)
+- Frontend: lista plików + wgrywanie, wybór wskaźnika, kafelki (udziały,
+  km², mediana, maksimum, liczba komórek), mapa heksagonów z legendą i
+  dymkami
+- Poprawka stylu: przyciski zoomu Leafleta w trybie ciemnym
+- Testy: 16 nowych (wczytywanie i błędy formatu, klasy, udziały,
+  powierzchnie, kolejność współrzędnych, endpointy, bezpieczeństwo nazw)
+- Nowa zależność `h3==4.5.0`; `DECISIONS.md`: D-015
+
+Testy: 95 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap8_20260929.zip
