@@ -1069,3 +1069,18 @@ Przegląd wykazał 2 problemy — oba naprawione:
 
 Testy: 302 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap46_20260929.zip
+
+## ETAP 47 — Dostępność: szybki model z punktów usług
+Data: 2026-09-29
+Status: zamknięty
+
+- `model.nazwa_kolumny`, `siatka_obszaru` (szacunek liczby komórek przed
+  liczeniem), `czasy_dojscia`, `obszary_obslugi`, `csv_wynikow`
+- `POST /dostepnosc/z-punktow`; plik `.punkty.json` usuwany razem z CSV;
+  `opis_pliku` zwraca punkty
+- Sprawdzone w przeglądarce: wstawianie, usuwanie punktu, zapis, analiza
+  nowej kolumny, obszary obsługi (jasny i ciemny motyw)
+- `DECISIONS.md`: D-052
+
+Testy: 314 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap47_20260929.zip

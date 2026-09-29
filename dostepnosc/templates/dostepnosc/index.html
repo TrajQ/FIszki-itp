@@ -12,7 +12,7 @@
 <div class="naglowek-strony">
     <div>
         <h1>Dostępność piesza</h1>
-        <p>Gotowe wyniki na siatce heksagonalnej H3: czas dojścia do usług.</p>
+        <p>Czas dojścia do usług na siatce heksagonalnej H3 — wgraj gotowe wyniki albo wstaw usługi na mapie i policz szybkim modelem.</p>
     </div>
 </div>
 
@@ -83,6 +83,15 @@
             <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
         </section>
 
+        <section id="obszary-obslugi" class="karta stos" hidden>
+            <h3>Obszary obsługi</h3>
+            <p id="obszary-opis" class="wyciszony model__opis"></p>
+            <table class="tabela tabela-obszarow">
+                <thead><tr><th>Punkt</th><th class="liczba">Mieszkańcy</th><th class="liczba">Czas śr. / maks.</th></tr></thead>
+                <tbody id="lista-obszarow"></tbody>
+            </table>
+        </section>
+
         <section class="karta stos">
             <h3>Porównaj scenariusze</h3>
             <p class="wyciszony porownanie__opis">Np. stan obecny i stan po budowie szkoły. Bieżący plik to „przed”, wybrany — „po”.</p>
@@ -94,6 +103,38 @@
             </select>
             <button id="przycisk-porownaj" type="button" class="przycisk--drugi" disabled>Porównaj</button>
         </section>
+
+        <section class="karta stos model">
+            <h3>Wstaw usługi — szybki model</h3>
+            <p class="wyciszony model__opis">Kliknij na mapie, gdzie są (albo mają być) np. szkoły. Aplikacja policzy czas dojścia z każdej komórki i zapisze nowy plik — z nim działają wszystkie analizy, także porównanie scenariuszy.</p>
+            <label>Usługa
+                <input id="model-usluga" type="text" placeholder="np. szkoła, przedszkole, przystanek" maxlength="40">
+            </label>
+            <label>Siatka
+                <select id="model-siatka">
+                    <option value="plik">komórki bieżącego pliku (z ludnością, jeśli jest)</option>
+                    <option value="mapa">nowa siatka dla widocznego obszaru mapy</option>
+                </select>
+            </label>
+            <details class="model__parametry">
+                <summary>Parametry modelu</summary>
+                <label>Prędkość marszu [km/h]
+                    <input id="model-predkosc" type="text" inputmode="decimal" value="4,8">
+                </label>
+                <label>Krętość sieci (droga / linia prosta)
+                    <input id="model-kretosc" type="text" inputmode="decimal" value="1,3">
+                </label>
+                <p class="przypis">Czas = odległość w linii prostej × krętość ÷ prędkość. Model nie zna rzek, torów ani ogrodzeń — do szybkiego porównania wariantów, nie zamiast analizy sieciowej.</p>
+            </details>
+            <div class="rzad">
+                <button id="model-wstawiaj" type="button" class="przycisk--drugi">Wstawiaj punkty</button>
+                <button id="model-wyczysc" type="button" class="przycisk--tekst" hidden>Wyczyść</button>
+            </div>
+            <p id="model-stan" class="wyciszony model__stan">Punkty: 0</p>
+            <button id="model-policz" type="button" disabled>Policz i zapisz jako nowy plik</button>
+            <p id="model-blad" class="komunikat komunikat--blad" hidden></p>
+        </section>
+
     </aside>
 
     <section class="karta karta-mapy">
@@ -110,6 +151,8 @@
     const URL_PLIK = "{{ url_for('dostepnosc.opis_pliku', nazwa='__PLIK__') }}";
     const URL_POROWNANIE = "{{ url_for('dostepnosc.porownanie') }}";
     const URL_GEOJSON = "{{ url_for('dostepnosc.eksport_geojson') }}";
+    const URL_Z_PUNKTOW = "{{ url_for('dostepnosc.z_punktow') }}";
+    const URL_INDEKS = "{{ url_for('dostepnosc.index') }}";
     const URL_KOMORKA = "{{ url_for('dostepnosc.komorka', nazwa='__PLIK__', indeks='__H3__') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>

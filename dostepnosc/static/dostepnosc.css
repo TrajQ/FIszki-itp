@@ -197,6 +197,15 @@
     overflow: hidden;
 }
 
+/* Panel po lewej jest długi — mapa zostaje w oknie przy przewijaniu,
+   żeby np. wstawiać punkty usług bez wracania na górę strony. */
+@media (min-width: 1001px) {
+    .uklad-dostepnosci .karta-mapy {
+        position: sticky;
+        top: 72px;
+    }
+}
+
 #mapa-dostepnosci {
     height: calc(100vh - 230px);
     min-height: 520px;
@@ -371,4 +380,67 @@
     padding: 2px 0;
     text-align: right;
     font-variant-numeric: tabular-nums;
+}
+
+/* Szybki model z punktów usług (ETAP 47) */
+.model label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.model__opis {
+    margin: 0;
+    font-size: 13px;
+}
+
+.model__parametry summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.model__parametry {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.model__stan {
+    margin: 0;
+    font-size: 13px;
+}
+
+button.model__wstawiaj--aktywny {
+    background: #ff9f0a;
+    color: #ffffff;
+}
+
+.mapa--wstawianie,
+.mapa--wstawianie .leaflet-interactive {
+    cursor: crosshair;
+}
+
+.punkt-uslugi {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    background: #5e5ce6;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    font: 700 12px/1 var(--czcionka);
+}
+
+.tabela-obszarow {
+    width: 100%;
+    font-size: 13px;
+}
+
+.tabela-obszarow td,
+.tabela-obszarow th {
+    padding: 6px 4px;
+    white-space: nowrap;
 }

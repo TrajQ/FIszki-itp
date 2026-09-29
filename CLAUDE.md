@@ -48,6 +48,6 @@ kogoś, kto wróci do niego za trzy miesiące.
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 46 (poprawki z przeglądu kodu ETAPów 43–45 — zamknięty)
-Ostatni ZIP: releases/warsztat_etap46_20260929.zip
-Testy: 302 passed / 0 failed
+ETAP: 47 (dostępność: szybki model z punktów usług — zamknięty)
+Ostatni ZIP: releases/warsztat_etap47_20260929.zip
+Testy: 314 passed / 0 failed

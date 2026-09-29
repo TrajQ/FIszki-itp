@@ -1072,3 +1072,33 @@ z rozporządzenia sugerowałoby pewność, której nie ma.
 - Symbole z rozporządzenia z 2021 r. o danych przestrzennych aktów
   planowania — odrzucone na teraz: bez weryfikacji pełnej listy w
   źródle nie dopisujemy (zasada „nie zgaduj”).
+
+## D-052 — Szybki model dostępności w aplikacji: linia prosta × krętość
+Data: 2026-09-29
+
+**Decyzja:** `dostepnosc/model.py` liczy czas dojścia z punktów usług
+wstawionych na mapie: odległość po kuli (haversine) ze środka komórki H3
+do najbliższego punktu × krętość (domyślnie 1,3) ÷ prędkość (domyślnie
+4,8 km/h). Siatka: komórki bieżącego pliku (z jego wskaźnikami i
+ludnością) albo nowa siatka H3 (rozdzielczość 9) dla widocznego obszaru
+mapy, do 20 000 komórek. Wynik to zwykły plik CSV w folderze wyników —
+działają na nim wszystkie dotychczasowe analizy — plus plik
+`<nazwa>.punkty.json` z punktami, parametrami i obszarami obsługi
+(komórki najbliżej danego punktu, mieszkańcy na placówkę). Istniejących
+plików nie nadpisujemy (`_2`, `_3`…).
+
+**Uzasadnienie:** Moduł z założenia czytał wyniki z zewnątrz (QGIS,
+r5py), ale student 2. roku zwykle nie ma do tego warsztatu, a na
+zajęciach często chodzi o szybkie porównanie wariantów lokalizacji
+usługi. Te same założenia mają pliki przykładowe, więc wyniki są
+spójne. Obszary obsługi (ludność na placówkę) to podstawowy wskaźnik
+przy planowaniu sieci szkół czy przedszkoli.
+
+**Ograniczenia (wprost w interfejsie):** model nie zna sieci ulic ani
+barier (rzeki, tory) — to nie zastępuje analizy sieciowej.
+
+**Odrzucone alternatywy:**
+- Analiza sieciowa na OSM (Overpass + graf ulic) — odrzucone na teraz:
+  nowe zależności (np. networkx/osmnx), duże pobrania, a z kontenera, w
+  którym powstaje kod, OSM jest niedostępny do sprawdzenia.
+- Liczenie w przeglądarce — odrzucone: liczby tylko z serwera.

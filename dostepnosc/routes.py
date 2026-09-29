@@ -14,6 +14,9 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
+import math
+
+from . import model
 from . import wyniki as wyniki_h3
 from .wyniki import BladWynikow
 
@@ -111,6 +114,102 @@ def wgraj():
     return redirect(url_for("dostepnosc.index", plik=nazwa))
 
 
+# ---------- Szybki model z punktów usług (ETAP 47) ----------
+
+ROZSZERZENIE_PUNKTOW = ".punkty.json"  # plik obok wyników: punkty i obszary obsługi
+
+
+def _sciezka_punktow(nazwa: str) -> str:
+    return os.path.join(_folder_wynikow(), nazwa + ROZSZERZENIE_PUNKTOW)
+
+
+def _punkty_pliku(nazwa: str) -> dict | None:
+    if nazwa in PLIKI_PRZYKLADOWE:
+        return None
+    sciezka = _sciezka_punktow(nazwa)
+    if not os.path.isfile(sciezka):
+        return None
+    with open(sciezka, encoding="utf-8") as plik:
+        return json.load(plik)
+
+
+def _wolna_nazwa(nazwa: str) -> str:
+    """Nie nadpisujemy istniejących plików: „x.csv” → „x_2.csv” itd."""
+    podstawa = nazwa[: -len(".csv")]
+    kandydat, numer = nazwa, 2
+    while kandydat in PLIKI_PRZYKLADOWE or os.path.exists(os.path.join(_folder_wynikow(), kandydat)):
+        kandydat = f"{podstawa}_{numer}.csv"
+        numer += 1
+    return kandydat
+
+
+def _liczba(wartosc, domyslna: float) -> float:
+    if wartosc in (None, ""):
+        return domyslna
+    liczba = float(str(wartosc).replace(",", "."))
+    if not math.isfinite(liczba):
+        raise ValueError("liczba nieskończona")
+    return liczba
+
+
+@dostepnosc_bp.route("/z-punktow", methods=["POST"])
+def z_punktow():
+    """Czas dojścia do punktów usług wstawionych na mapie → nowy plik wyników.
+
+    Siatka: komórki pliku bazowego (razem z jego wskaźnikami i ludnością)
+    albo nowa siatka H3 dla widocznego obszaru mapy.
+    """
+    dane = request.get_json(silent=True) or {}
+    try:
+        kolumna = model.nazwa_kolumny(str(dane.get("usluga") or ""))
+        predkosc = _liczba(dane.get("predkosc_kmh"), model.PREDKOSC_DOMYSLNA_KMH)
+        kretosc = _liczba(dane.get("kretosc"), model.KRETOSC_DOMYSLNA)
+        punkty = model.sprawdz_parametry(dane.get("punkty"), predkosc, kretosc)
+        baza = dane.get("baza")
+        if baza:
+            wyniki = _wczytaj(str(baza))
+            komorki = wyniki["komorki"]
+            kolumny = {k: v for k, v in wyniki["kolumny"].items() if k != kolumna}
+            ludnosc = wyniki.get("ludnosc")
+            rdzen = str(baza)[: -len(".csv")]
+        else:
+            obszar = dane.get("obszar") or []
+            if len(obszar) != 4:
+                raise model.BladModelu("Brak obszaru mapy (południe, zachód, północ, wschód).")
+            komorki = model.siatka_obszaru(*(float(v) for v in obszar))
+            kolumny, ludnosc, rdzen = {}, None, "nowa_siatka"
+    except (model.BladModelu, BladWynikow) as e:
+        return jsonify({"blad": str(e)}), 400
+    except (TypeError, ValueError):
+        return jsonify({"blad": "Prędkość, krętość i obszar muszą być liczbami."}), 400
+
+    czasy, najblizsze = model.czasy_dojscia(komorki, punkty, predkosc, kretosc)
+    kolumny[kolumna] = czasy
+    tekst = model.csv_wynikow(komorki, kolumny, ludnosc)
+    wyniki_h3.wczytaj_csv(tekst)  # ten sam format co wgrane pliki — sprawdzamy
+
+    nazwa = secure_filename(str(dane.get("nazwa_pliku") or f"{rdzen}_{kolumna[len('czas_'):-len('_min')]}"))
+    if not nazwa:
+        nazwa = "wyniki"
+    if not nazwa.lower().endswith(".csv"):
+        nazwa += ".csv"
+    nazwa = _wolna_nazwa(nazwa[: -len(".csv")] + ".csv")
+    with open(os.path.join(_folder_wynikow(), nazwa), "w", encoding="utf-8") as cel:
+        cel.write(tekst)
+
+    punkty_pliku = {
+        "usluga": str(dane.get("usluga")).strip(),
+        "kolumna": kolumna,
+        "predkosc_kmh": predkosc,
+        "kretosc": kretosc,
+        "baza": baza or None,
+        "obszary": model.obszary_obslugi(punkty, czasy, najblizsze, ludnosc),
+    }
+    with open(_sciezka_punktow(nazwa), "w", encoding="utf-8") as cel:
+        json.dump(punkty_pliku, cel, ensure_ascii=False)
+    return jsonify({"plik": nazwa, **punkty_pliku})
+
+
 @dostepnosc_bp.route("/plik/<nazwa>")
 def opis_pliku(nazwa):
     try:
@@ -129,6 +228,7 @@ def opis_pliku(nazwa):
             ],
             # Wskaźnik łączny ma sens dopiero przy co najmniej dwóch usługach.
             "laczny_dostepny": len(wyniki_h3.kolumny_minut(dane)) >= 2,
+            "punkty": _punkty_pliku(nazwa),
         }
     )
 
@@ -215,4 +315,6 @@ def usun(nazwa):
     if nazwa in PLIKI_PRZYKLADOWE:
         abort(400, "Pliku przykładowego nie można usunąć.")
     os.remove(_sciezka_pliku(nazwa))
+    if os.path.isfile(_sciezka_punktow(nazwa)):
+        os.remove(_sciezka_punktow(nazwa))
     return redirect(url_for("dostepnosc.index"))

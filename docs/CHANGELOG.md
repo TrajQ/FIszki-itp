@@ -324,3 +324,14 @@
 - Naprawiono 2 problemy z przeglądu ETAPów 43–45: usunięcie gwiazdki
   tuż po zmianie notatki mogło przywrócić działkę (spóźniony zapis),
   uszkodzona geometria w obszarze analizowanym dawała błąd 500.
+
+## ETAP 47 — 2026-09-29
+- Dostępność: „Wstaw usługi — szybki model” — punkty klikane na mapie
+  (klik w punkt usuwa), nazwa usługi, parametry (prędkość, krętość),
+  siatka z bieżącego pliku albo nowa dla widocznego obszaru; wynik
+  zapisywany jako nowy plik, gotowy do wszystkich analiz i porównania
+  scenariuszy.
+- Dostępność: „Obszary obsługi” — mieszkańcy i czas dojścia na placówkę,
+  numerowane punkty na mapie.
+- Mapa dostępności zostaje w oknie przy przewijaniu panelu.
+- Dodano `dostepnosc/model.py`, `DECISIONS.md` D-052 i 12 testów.
