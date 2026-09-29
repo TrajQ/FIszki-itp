@@ -10,6 +10,9 @@
 
     const panelWyniku = document.getElementById("panel-wyniku");
     const przyciskOdswiez = document.getElementById("przycisk-odswiez");
+    const formularzSzukaj = document.getElementById("szukaj-dzialki");
+    const poleIdDzialki = document.getElementById("pole-id-dzialki");
+    const listaHistorii = document.getElementById("historia");
 
     let warstwaDzialki = null;
     let warstwaWydzielenia = null;
@@ -25,85 +28,130 @@
         }
     }
 
+    function element(tag, klasa, tekst) {
+        const el = document.createElement(tag);
+        if (klasa) el.className = klasa;
+        if (tekst !== undefined) el.textContent = tekst;
+        return el;
+    }
+
     function pokazBlad(tresc, dzialka) {
         panelWyniku.replaceChildren();
         if (dzialka) panelWyniku.appendChild(sekcjaDzialki(dzialka));
-        const komunikat = document.createElement("p");
-        komunikat.className = "komunikat komunikat--blad";
-        komunikat.textContent = tresc;
-        panelWyniku.appendChild(komunikat);
+        panelWyniku.appendChild(element("p", "komunikat komunikat--blad", tresc));
     }
 
     function sekcjaDzialki(dzialka) {
-        const sekcja = document.createElement("div");
-        const tytul = document.createElement("h3");
-        tytul.textContent = "Działka";
-        const id = document.createElement("div");
-        id.className = "identyfikator wyciszony";
-        id.textContent = dzialka.id;
-        sekcja.append(tytul, id);
+        const sekcja = element("div");
+        sekcja.append(element("h3", "", "Działka"), element("div", "identyfikator wyciszony", dzialka.id));
         return sekcja;
+    }
+
+    // Opis symbolu ze słownika (np. MN/U → dwie pozycje).
+    function sekcjaOpisu(opisy) {
+        const lista = element("ul", "opis-symbolu");
+        for (const { symbol, opis } of opisy) {
+            const li = element("li");
+            li.append(element("span", "etykieta etykieta--sukces", symbol), element("span", opis ? "" : "wyciszony", opis || "brak w słowniku — sprawdź legendę planu"));
+            lista.appendChild(li);
+        }
+        return lista;
     }
 
     function pokazWynik(dzialka, wydzielenie) {
         panelWyniku.replaceChildren(sekcjaDzialki(dzialka));
 
-        const przeznaczenie = document.createElement("div");
-        przeznaczenie.className = "przeznaczenie";
-        const symbol = document.createElement("span");
-        symbol.className = "przeznaczenie__symbol";
-        symbol.textContent = wydzielenie.przeznaczenie || "?";
-        const opis = document.createElement("span");
-        opis.className = "wyciszony";
-        opis.textContent = "symbol przeznaczenia w planie";
-        przeznaczenie.append(symbol, opis);
+        const przeznaczenie = element("div", "przeznaczenie");
+        przeznaczenie.append(
+            element("span", "przeznaczenie__symbol", wydzielenie.przeznaczenie || "?"),
+            element("span", "wyciszony", "symbol przeznaczenia w planie")
+        );
         panelWyniku.appendChild(przeznaczenie);
 
-        const tytul = document.createElement("h3");
-        tytul.textContent = "Atrybuty wydzielenia";
-        panelWyniku.appendChild(tytul);
+        if (wydzielenie.opis_przeznaczenia && wydzielenie.opis_przeznaczenia.length) {
+            panelWyniku.appendChild(sekcjaOpisu(wydzielenie.opis_przeznaczenia));
+            panelWyniku.appendChild(
+                element("p", "przypis", "Opis orientacyjny wg rozporządzenia z 2003 r. Rozstrzyga tekst uchwały planu.")
+            );
+        }
 
-        const tabela = document.createElement("table");
-        tabela.className = "tabela";
+        panelWyniku.appendChild(element("h3", "", "Atrybuty wydzielenia"));
+        const tabela = element("table", "tabela");
         for (const [klucz, wartosc] of Object.entries(wydzielenie.atrybuty)) {
-            const wiersz = document.createElement("tr");
-            const naglowek = document.createElement("th");
-            naglowek.textContent = klucz;
-            const komorka = document.createElement("td");
-            komorka.textContent = wartosc;
-            wiersz.append(naglowek, komorka);
+            const wiersz = element("tr");
+            wiersz.append(element("th", "", klucz), element("td", "", wartosc));
             tabela.appendChild(wiersz);
         }
         panelWyniku.appendChild(tabela);
     }
 
-    mapa.on("click", function (zdarzenie) {
-        const lat = zdarzenie.latlng.lat;
-        const lon = zdarzenie.latlng.lng;
+    // Wspólna obsługa odpowiedzi z /sprawdz i /dzialka.
+    function obsluzOdpowiedz(dane, przyblizDoDzialki) {
+        if (dane.dzialka) {
+            warstwaDzialki = L.geoJSON(dane.dzialka.geometria, {
+                style: { color: "#0071e3", weight: 2, fillOpacity: 0.1 },
+            }).addTo(mapa);
+            if (przyblizDoDzialki) mapa.fitBounds(warstwaDzialki.getBounds(), { maxZoom: 18, padding: [40, 40] });
+        }
 
+        if (dane.wydzielenie) {
+            warstwaWydzielenia = L.geoJSON(dane.wydzielenie.geometria, {
+                style: { color: "#34c759", weight: 2, fillOpacity: 0.3 },
+            }).addTo(mapa);
+            if (warstwaDzialki) warstwaDzialki.bringToFront();
+            pokazWynik(dane.dzialka, dane.wydzielenie);
+        } else if (dane.blad) {
+            pokazBlad(dane.blad, dane.dzialka);
+        }
+        odswiezHistorie();
+    }
+
+    function zapytaj(url, przyblizDoDzialki) {
         wyczyscWarstwy();
         panelWyniku.innerHTML = "<p class=\"pusty-stan\">Sprawdzam…</p>";
-
-        fetch(`${URL_SPRAWDZ}?lat=${lat}&lon=${lon}`)
+        return fetch(url)
             .then((odpowiedz) => odpowiedz.json())
-            .then((dane) => {
-                if (dane.dzialka) {
-                    warstwaDzialki = L.geoJSON(dane.dzialka.geometria, {
-                        style: { color: "#0071e3", weight: 2, fillOpacity: 0.1 },
-                    }).addTo(mapa);
-                }
+            .then((dane) => obsluzOdpowiedz(dane, przyblizDoDzialki))
+            .catch(() => pokazBlad("Błąd połączenia z serwerem."));
+    }
 
-                if (dane.wydzielenie) {
-                    warstwaWydzielenia = L.geoJSON(dane.wydzielenie.geometria, {
-                        style: { color: "#34c759", weight: 2, fillOpacity: 0.3 },
-                    }).addTo(mapa);
-                    pokazWynik(dane.dzialka, dane.wydzielenie);
-                } else if (dane.blad) {
-                    pokazBlad(dane.blad, dane.dzialka);
+    function sprawdzPunkt(lat, lon, przyblizDoDzialki) {
+        return zapytaj(`${URL_SPRAWDZ}?lat=${lat}&lon=${lon}`, przyblizDoDzialki);
+    }
+
+    mapa.on("click", (zdarzenie) => sprawdzPunkt(zdarzenie.latlng.lat, zdarzenie.latlng.lng, false));
+
+    formularzSzukaj.addEventListener("submit", (zdarzenie) => {
+        zdarzenie.preventDefault();
+        const id = poleIdDzialki.value.trim();
+        if (id) zapytaj(`${URL_DZIALKA}?id=${encodeURIComponent(id)}`, true);
+    });
+
+    // ---------- historia ----------
+
+    function odswiezHistorie() {
+        fetch(URL_HISTORIA)
+            .then((odpowiedz) => odpowiedz.json())
+            .then((wpisy) => {
+                listaHistorii.replaceChildren();
+                if (wpisy.length === 0) {
+                    listaHistorii.appendChild(element("li", "wyciszony", "Jeszcze nic nie sprawdzono."));
+                }
+                for (const wpis of wpisy) {
+                    const li = element("li");
+                    const przycisk = element("button", "wpis-historii");
+                    przycisk.type = "button";
+                    przycisk.append(
+                        element("span", "identyfikator", wpis.dzialka_id),
+                        element("span", wpis.przeznaczenie ? "etykieta etykieta--sukces" : "etykieta", wpis.przeznaczenie || "bez planu")
+                    );
+                    przycisk.addEventListener("click", () => sprawdzPunkt(wpis.lat, wpis.lon, true));
+                    li.appendChild(przycisk);
+                    listaHistorii.appendChild(li);
                 }
             })
-            .catch(() => pokazBlad("Błąd połączenia z serwerem."));
-    });
+            .catch(() => {});
+    }
 
     przyciskOdswiez.addEventListener("click", function () {
         przyciskOdswiez.disabled = true;
@@ -122,4 +170,6 @@
                 przyciskOdswiez.textContent = "Odśwież dane gminy";
             });
     });
+
+    odswiezHistorie();
 })();

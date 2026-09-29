@@ -3,7 +3,10 @@ from shapely.geometry import Point, mapping
 
 from dane.uldk import BladULDK, Dzialka
 from dane.uldk import znajdz_dzialke as _znajdz_dzialke
+from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
+from .baza import historia, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
+from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
 from .wfs import znajdz_przeznaczenie as _znajdz_przeznaczenie
@@ -17,6 +20,7 @@ mpzp_bp = Blueprint(
 
 
 znajdz_dzialke = _znajdz_dzialke
+znajdz_dzialke_po_id = _znajdz_dzialke_po_id
 znajdz_przeznaczenie = _znajdz_przeznaczenie
 odswiez_warstwe = _odswiez
 
@@ -62,7 +66,35 @@ def sprawdz():
     if dzialka is None:
         return jsonify({"blad": "Brak działki w tym miejscu."}), 404
 
-    dane = {"dzialka": _dzialka_na_json(dzialka)}
+    return _wynik_dla_dzialki(dzialka, Point(lon, lat))
+
+
+@mpzp_bp.route("/dzialka")
+def dzialka_po_id():
+    """Wyszukanie działki po identyfikatorze ewidencyjnym zamiast kliknięcia."""
+    dzialka_id = request.args.get("id", "")
+    try:
+        dzialka = znajdz_dzialke_po_id(dzialka_id)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except BladULDK as e:
+        return jsonify({"blad": str(e)}), 502
+
+    if dzialka is None:
+        return jsonify({"blad": f"ULDK nie zna działki {dzialka_id.strip()}."}), 404
+
+    # Punkt na pewno wewnątrz działki (centroid bywa poza wielokątem w kształcie litery L).
+    return _wynik_dla_dzialki(dzialka, dzialka.geometria.representative_point())
+
+
+@mpzp_bp.route("/historia")
+def lista_historii():
+    return jsonify(historia())
+
+
+def _wynik_dla_dzialki(dzialka: Dzialka, punkt: Point):
+    """Wspólna ścieżka dla kliknięcia i wyszukania po identyfikatorze."""
+    dane = {"dzialka": _dzialka_na_json(dzialka), "punkt": {"lat": punkt.y, "lon": punkt.x}}
 
     gmina = znajdz_gmine(dzialka.teryt_gminy)
     if gmina is None:
@@ -71,7 +103,6 @@ def sprawdz():
         )
         return jsonify(dane), 200
 
-    punkt = Point(lon, lat)
     try:
         wydzielenie = znajdz_przeznaczenie(gmina, punkt)
     except BladWFS as e:
@@ -79,12 +110,17 @@ def sprawdz():
         return jsonify(dane), 502
 
     if wydzielenie is None:
+        zapisz_w_historii(dzialka.id, None, punkt.y, punkt.x)
         dane["blad"] = "Brak planu miejscowego dla tej działki."
         return jsonify(dane), 200
 
     dane["wydzielenie"] = _wydzielenie_na_json(wydzielenie)
-    # Symbol przeznaczenia wyciągnięty osobno, żeby panel mógł go wyróżnić.
-    dane["wydzielenie"]["przeznaczenie"] = wydzielenie.atrybuty.get(gmina.pole_przeznaczenia)
+    # Symbol przeznaczenia wyciągnięty osobno, żeby panel mógł go wyróżnić,
+    # plus orientacyjny opis ze słownika (mpzp/symbole.py).
+    przeznaczenie = wydzielenie.atrybuty.get(gmina.pole_przeznaczenia)
+    dane["wydzielenie"]["przeznaczenie"] = przeznaczenie
+    dane["wydzielenie"]["opis_przeznaczenia"] = opisz_symbol(przeznaczenie)
+    zapisz_w_historii(dzialka.id, przeznaczenie, punkt.y, punkt.x)
     return jsonify(dane), 200
 
 

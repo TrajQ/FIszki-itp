@@ -337,3 +337,29 @@ jest pewniejsza. Stałe progi minut odpowiadają koncepcji miasta
   stronie serwera pozwala testować wyniki w pytest.
 - SpatiaLite — odrzucone: brak operacji przestrzennych, które by go
   wymagały.
+
+## D-016 — MPZP: słownik symboli w kodzie, historia w SQLite
+Data: 2026-09-29
+
+**Decyzja:** Słownik oznaczeń przeznaczenia jako `dict` w
+`mpzp/symbole.py` (podstawa: rozporządzenie z 26.08.2003, Dz.U. nr 164
+poz. 1587), wyświetlany z przypisem „opis orientacyjny, rozstrzyga
+uchwała”, zawsze obok surowych atrybutów z WFS. Historia sprawdzonych
+działek w osobnej bazie modułu (`mpzp.db`), 20 ostatnich wpisów.
+Wyszukiwanie tylko po pełnym identyfikatorze działki (ULDK
+`GetParcelById`).
+
+**Uzasadnienie:** Symbole typu „KDL” są nieczytelne dla początkującego;
+słownik z rozporządzenia pokrywa większość planów. Nie da się jednak
+zagwarantować, że gmina nie użyła własnych oznaczeń — stąd przypis i
+nieukrywanie oryginalnych atrybutów. Opis ze słownika, a nie z Gemini:
+to stała wiedza, a nie tekst do generowania. Pełny identyfikator jest
+jednoznaczny; wyszukiwanie po samym numerze wymagałoby wyboru obrębu.
+
+**Odrzucone alternatywy:**
+- Opis symbolu przez Gemini — odrzucone: model mógłby „dopowiedzieć”
+  treść uchwały, której nie zna.
+- Wyszukiwanie po nazwie obrębu i numerze (ULDK `GetParcelByIdOrNr`) —
+  odłożone: niejednoznaczne wyniki wymagają osobnego interfejsu wyboru.
+- Historia w `localStorage` przeglądarki — odrzucone: znika po
+  wyczyszczeniu przeglądarki i nie da się jej testować w pytest.

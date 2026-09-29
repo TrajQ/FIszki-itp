@@ -18,12 +18,15 @@ def create_app(instance_path=None):
 
     from fiszki.baza import init_db as init_db_fiszki, close_db as close_db_fiszki
     from atlas.baza import init_db as init_db_atlas, close_db as close_db_atlas
+    from mpzp.baza import init_db as init_db_mpzp, close_db as close_db_mpzp
 
     with app.app_context():
         init_db_fiszki()
         init_db_atlas()
+        init_db_mpzp()
     app.teardown_appcontext(close_db_fiszki)
     app.teardown_appcontext(close_db_atlas)
+    app.teardown_appcontext(close_db_mpzp)
 
     @app.route("/")
     def index():

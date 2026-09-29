@@ -6,6 +6,7 @@ działki pod kliknięciem na mapie, zanim sprawdzimy jej przeznaczenie w WFS
 gminy.
 """
 
+import re
 from dataclasses import dataclass
 
 import requests
@@ -38,6 +39,41 @@ def znajdz_dzialke(lat: float, lon: float) -> Dzialka | None:
             params={
                 "request": "GetParcelByXY",
                 "xy": f"{lon},{lat},4326",
+                "result": "id,geom_wkt",
+                "srid": "4326",
+            },
+            timeout=10,
+        )
+        odpowiedz.raise_for_status()
+    except requests.RequestException as e:
+        raise BladULDK(f"Błąd połączenia z ULDK: {e}") from e
+
+    return _sparsuj_odpowiedz(odpowiedz.text)
+
+
+# Identyfikator działki ewidencyjnej: TERYT jednostki ewidencyjnej
+# (6 cyfr + „_” + cyfra rodzaju), obręb i numer, np. 306401_1.0051.AR_18.14
+WZOR_ID_DZIALKI = re.compile(r"^\d{6}_\d\.\d{4}\.\S+$")
+
+
+def znajdz_dzialke_po_id(dzialka_id: str) -> Dzialka | None:
+    """Zwraca działkę o podanym identyfikatorze albo None, gdy jej nie ma.
+
+    Podnosi ValueError dla identyfikatora w złym formacie i BladULDK przy
+    błędzie sieci albo nieoczekiwanej odpowiedzi.
+    """
+    dzialka_id = dzialka_id.strip()
+    if not WZOR_ID_DZIALKI.match(dzialka_id):
+        raise ValueError(
+            "Identyfikator działki ma postać np. 306401_1.0051.AR_18.14 "
+            "(TERYT jednostki ewidencyjnej, obręb, numer)."
+        )
+    try:
+        odpowiedz = requests.get(
+            URL_ULDK,
+            params={
+                "request": "GetParcelById",
+                "id": dzialka_id,
                 "result": "id,geom_wkt",
                 "srid": "4326",
             },

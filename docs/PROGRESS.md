@@ -267,3 +267,30 @@ Zrobione:
 
 Testy: 95 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap8_20260929.zip
+
+## ETAP 9 — MPZP: słownik symboli, wyszukiwanie po identyfikatorze, historia
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `mpzp/symbole.py`: słownik oznaczeń przeznaczenia (rozporządzenie z
+  2003 r. + kilka powszechnych), rozbiór symboli typu `1MN`, `12KDL`,
+  `MN/U`, `MW,U`; nieznany symbol → „brak w słowniku”; w panelu
+  przypis, że opis jest orientacyjny, a rozstrzyga uchwała
+- `dane/uldk.py`: `znajdz_dzialke_po_id` (ULDK `GetParcelById`) z
+  walidacją formatu identyfikatora przed zapytaniem
+- `GET /mpzp/dzialka?id=` — ta sama ścieżka co kliknięcie (wspólna
+  funkcja `_wynik_dla_dzialki`), punkt do sprawdzenia planu to
+  `representative_point()` działki (zawsze wewnątrz wielokąta)
+- `mpzp/baza.py` (`instance/mpzp/mpzp.db`): historia 20 ostatnio
+  sprawdzonych działek bez duplikatów, `GET /mpzp/historia`
+- `/mpzp/sprawdz` zwraca dodatkowo `punkt` i
+  `wydzielenie.opis_przeznaczenia`
+- Frontend: pole wyszukiwania działki, opis symbolu z etykietami, lista
+  „Ostatnio sprawdzane” (klik = ponowne sprawdzenie i przybliżenie)
+- Test wykrył błąd kolejności historii przy kilku sprawdzeniach w tej
+  samej sekundzie — poprawione (kolejność po `rowid`)
+- Testy: 13 nowych; `DECISIONS.md`: D-016
+
+Testy: 108 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap9_20260929.zip

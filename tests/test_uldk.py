@@ -59,3 +59,28 @@ def test_niepoprawna_odpowiedz_podnosi_blad_uldk(monkeypatch):
         assert False, "oczekiwano BladULDK"
     except uldk.BladULDK:
         pass
+
+
+def test_dzialka_po_id(monkeypatch):
+    zapytania = []
+    tekst = "0\n306401_1.0051.AR_18.14|SRID=4326;POLYGON((16.93 52.40,16.94 52.40,16.94 52.41,16.93 52.40))"
+
+    def falszywy_get(url, params, timeout):
+        zapytania.append(params)
+        return _FejkowaOdpowiedz(tekst)
+
+    monkeypatch.setattr(uldk.requests, "get", falszywy_get)
+    dzialka = uldk.znajdz_dzialke_po_id(" 306401_1.0051.AR_18.14 ")
+
+    assert dzialka.id == "306401_1.0051.AR_18.14"
+    assert zapytania[0]["request"] == "GetParcelById"
+    assert zapytania[0]["id"] == "306401_1.0051.AR_18.14"
+
+
+def test_dzialka_po_id_zly_format(monkeypatch):
+    import pytest
+
+    monkeypatch.setattr(uldk.requests, "get", lambda *a, **k: pytest.fail("nie powinno pytać ULDK"))
+    for zly in ["", "18/14", "Poznań 18/14", "30640_1.0051.1"]:
+        with pytest.raises(ValueError):
+            uldk.znajdz_dzialke_po_id(zly)

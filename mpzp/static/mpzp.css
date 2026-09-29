@@ -15,13 +15,86 @@
     overflow: hidden;
 }
 
-#panel-wyniku {
+/* Panel boczny: wyszukiwarka, wynik (rośnie) i historia. */
+.panel-boczny {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-height: calc(100vh - 230px);
+    height: calc(100vh - 230px);
     min-height: 480px;
+    min-width: 0;
+}
+
+.szukaj-dzialki {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+}
+
+#panel-wyniku {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
     overflow-y: auto;
+}
+
+.panel-boczny > section:last-child {
+    max-height: 30%;
+    overflow-y: auto;
+}
+
+.panel-boczny h3 {
+    margin: 0;
+}
+
+.opis-symbolu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.92rem;
+}
+
+.opis-symbolu li {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.przypis {
+    margin: -8px 0 0;
+    color: var(--tekst-drugi);
+    font-size: 0.75rem;
+}
+
+.historia {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+}
+
+button.wpis-historii {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--tekst);
+    font-weight: 400;
+    text-align: left;
+}
+
+button.wpis-historii:hover {
+    background: var(--tlo-wyciszone);
 }
 
 #panel-wyniku h3 {
@@ -59,14 +132,13 @@
         grid-template-columns: 1fr;
     }
 
-    #mapa,
-    #panel-wyniku {
+    #mapa {
         height: 60vh;
-        max-height: none;
         min-height: 0;
     }
 
-    #panel-wyniku {
+    .panel-boczny {
         height: auto;
+        min-height: 0;
     }
 }

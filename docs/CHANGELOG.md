@@ -86,3 +86,10 @@
 - `uruchom.sh` doinstalowuje zależności po aktualizacji; dodano
   `README.md`.
 - Dodano `DECISIONS.md` D-015 i testy modułu.
+
+## ETAP 9 — 2026-09-29
+- MPZP: opis symbolu przeznaczenia ze słownika (orientacyjny).
+- MPZP: wyszukiwanie działki po identyfikatorze (`/mpzp/dzialka`).
+- MPZP: historia ostatnio sprawdzonych działek (`/mpzp/historia`,
+  baza `instance/mpzp/mpzp.db`).
+- Dodano `DECISIONS.md` D-016 i testy.
