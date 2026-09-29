@@ -87,6 +87,12 @@ def dzialka_po_id():
     return _wynik_dla_dzialki(dzialka, dzialka.geometria.representative_point())
 
 
+def podsumowanie() -> dict:
+    """Ostatnio sprawdzona działka — na kartę modułu na stronie głównej."""
+    wpisy = historia()
+    return {"liczba": len(wpisy), "ostatnia": wpisy[0] if wpisy else None}
+
+
 @mpzp_bp.route("/historia")
 def lista_historii():
     return jsonify(historia())

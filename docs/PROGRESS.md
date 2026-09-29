@@ -392,3 +392,24 @@ Zrobione:
 
 Testy: 131 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap13_20260929.zip
+
+## ETAP 14 — Pulpit na stronie głównej, ikona aplikacji
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- Karty modułów na stronie głównej pokazują żywe podsumowania: fiszki
+  do powtórki dziś, ostatnio sprawdzona działka z symbolem planu,
+  liczba własnych plików dostępności, liczba zestawów danych atlasu w
+  cache
+- Każdy moduł ma własną funkcję podsumowania (`podsumowanie()` w
+  `fiszki/`, `mpzp/`, `dostepnosc/routes.py`,
+  `liczba_zapisanych_zestawow()` w `atlas/baza.py`); `app.py` tylko je
+  woła, a błąd jednego modułu nie blokuje strony głównej (log + karta
+  bez podsumowania)
+- Ikona aplikacji `static/favicon.svg` (+ przekierowanie `/favicon.ico`,
+  koniec błędów 404 w konsoli)
+- Testy: 3 nowe; `DECISIONS.md`: D-021
+
+Testy: 134 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap14_20260929.zip

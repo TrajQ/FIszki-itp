@@ -13,6 +13,7 @@
         </span>
         <h2>Atlas</h2>
         <p class="karta__opis">Wskaźniki GUS BDL dla gmin, kartogramy i opisy wyników.</p>
+        {% if p.atlas %}<span class="karta__meta">{{ p.atlas }} {{ 'zestaw' if p.atlas == 1 else 'zestawów' }} danych zapisanych lokalnie</span>{% endif %}
     </a>
     <a class="karta karta--link" href="{{ url_for('mpzp.index') }}">
         <span class="ikona-modulu ikona-modulu--mpzp">
@@ -20,6 +21,10 @@
         </span>
         <h2>MPZP</h2>
         <p class="karta__opis">Kliknij działkę na mapie i sprawdź jej przeznaczenie w planie miejscowym.</p>
+        {% if p.mpzp and p.mpzp.ostatnia %}
+        <span class="karta__meta">Ostatnio: <code>{{ p.mpzp.ostatnia.dzialka_id }}</code>
+            <span class="etykieta etykieta--sukces">{{ p.mpzp.ostatnia.przeznaczenie or 'bez planu' }}</span></span>
+        {% endif %}
     </a>
     <a class="karta karta--link" href="{{ url_for('fiszki.index') }}">
         <span class="ikona-modulu ikona-modulu--fiszki">
@@ -27,6 +32,12 @@
         </span>
         <h2>Fiszki</h2>
         <p class="karta__opis">Fiszki z PDF-ów z kotwicą w źródle i powtórkami.</p>
+        {% if p.fiszki and p.fiszki.fiszki %}
+        <span class="karta__meta">
+            {% if p.fiszki.do_powtorki %}<span class="etykieta etykieta--akcent">{{ p.fiszki.do_powtorki }} do powtórki dziś</span>
+            {% else %}Na dziś wszystko powtórzone{% endif %}
+        </span>
+        {% endif %}
     </a>
     <a class="karta karta--link" href="{{ url_for('dostepnosc.index') }}">
         <span class="ikona-modulu ikona-modulu--dostepnosc">
@@ -34,6 +45,7 @@
         </span>
         <h2>Dostępność</h2>
         <p class="karta__opis">Dostępność piesza na siatce heksagonalnej H3.</p>
+        {% if p.dostepnosc and p.dostepnosc.pliki %}<span class="karta__meta">Twoje pliki wyników: {{ p.dostepnosc.pliki }}</span>{% endif %}
     </a>
 </section>
 {% endblock %}

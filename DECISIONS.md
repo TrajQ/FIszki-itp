@@ -448,3 +448,21 @@ fałszowałoby wynik.
   przychodni, co przeczy idei wskaźnika.
 - Wagi usług ustawiane przez użytkownika — odłożone: wymagają
   uzasadnienia wag, a wynik przestaje być porównywalny.
+
+## D-021 — Podsumowania na stronie głównej: funkcje w modułach
+Data: 2026-09-29
+
+**Decyzja:** Każdy moduł udostępnia zwykłą funkcję zwracającą swoje
+liczby dla strony głównej; `app.py` woła je po kolei i łapie wyjątki,
+żeby błąd jednego modułu nie wyłączył całej strony.
+
+**Uzasadnienie:** Moduły zostają niezależne — strona główna nie zagląda
+do cudzych baz ani tabel, tylko pyta każdy moduł. Brak wspólnej klasy
+czy rejestru wtyczek (zasada: bez uniwersalnych abstrakcji), bo cztery
+wywołania czyta się łatwiej niż mechanizm.
+
+**Odrzucone alternatywy:**
+- Zapytania SQL do baz modułów bezpośrednio w `app.py` — odrzucone:
+  powłoka znałaby schematy baz wszystkich modułów.
+- Podsumowania ładowane przez JS z osobnych endpointów — odrzucone:
+  cztery dodatkowe zapytania i migotanie strony dla kilku liczb.

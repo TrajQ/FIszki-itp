@@ -69,3 +69,10 @@ def z_cache(klucz: str, pobierz):
     )
     db.commit()
     return dane
+
+
+def liczba_zapisanych_zestawow() -> int:
+    """Ile zestawów danych (wskaźnik × rok × województwo) jest w cache."""
+    return get_db().execute(
+        "SELECT COUNT(*) FROM cache_bdl WHERE klucz LIKE 'dane:%'"
+    ).fetchone()[0]

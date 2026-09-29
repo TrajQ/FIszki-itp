@@ -118,3 +118,8 @@
 - Dostępność: wskaźnik łączny (czas do wszystkich usług naraz) i
   „najsłabsze ogniwo” (`/dostepnosc/plik/<nazwa>/laczny`).
 - Dodano `DECISIONS.md` D-020 i testy.
+
+## ETAP 14 — 2026-09-29
+- Strona główna: podsumowania modułów na kartach.
+- Dodano ikonę aplikacji (`static/favicon.svg`).
+- Dodano `DECISIONS.md` D-021 i testy.

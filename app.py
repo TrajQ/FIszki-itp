@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, redirect, render_template, url_for
 
 from atlas import atlas_bp
 from mpzp import mpzp_bp
@@ -35,7 +35,31 @@ def create_app(instance_path=None):
 
     @app.route("/")
     def index():
-        return render_template("index.html")
+        # Każdy moduł sam liczy swoje podsumowanie; strona główna tylko je
+        # wyświetla. Błąd w jednym module nie może zablokować strony głównej.
+        from atlas.baza import liczba_zapisanych_zestawow
+        from dostepnosc.routes import podsumowanie as podsumowanie_dostepnosci
+        from fiszki.routes import podsumowanie as podsumowanie_fiszek
+        from mpzp.routes import podsumowanie as podsumowanie_mpzp
+
+        podsumowania = {}
+        for modul, funkcja in [
+            ("atlas", liczba_zapisanych_zestawow),
+            ("mpzp", podsumowanie_mpzp),
+            ("fiszki", podsumowanie_fiszek),
+            ("dostepnosc", podsumowanie_dostepnosci),
+        ]:
+            try:
+                podsumowania[modul] = funkcja()
+            except Exception:
+                app.logger.exception("Nie udało się policzyć podsumowania modułu %s", modul)
+                podsumowania[modul] = None
+        return render_template("index.html", p=podsumowania)
+
+    @app.route("/favicon.ico")
+    def favicon():
+        # Przeglądarki pytają o /favicon.ico także bez <link rel="icon">.
+        return redirect(url_for("static", filename="favicon.svg"))
 
     return app
 

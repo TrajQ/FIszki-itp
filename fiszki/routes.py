@@ -69,6 +69,22 @@ _WARUNEK_DO_POWTORKI = (
 )
 
 
+def podsumowanie() -> dict:
+    """Krótkie liczby na kartę modułu na stronie głównej."""
+    db = get_db()
+    dzis = powtorki.dzisiaj().isoformat()
+    wiersz = db.execute(
+        f"""SELECT COUNT(DISTINCT pdfy.id) AS pliki,
+                   COUNT(fiszki.id) AS fiszki,
+                   COALESCE(SUM({_WARUNEK_DO_POWTORKI}), 0) AS do_powtorki
+            FROM pdfy
+            LEFT JOIN fiszki ON fiszki.pdf_id = pdfy.id
+            LEFT JOIN powtorki ON powtorki.fiszka_id = fiszki.id""",
+        {"dzis": dzis},
+    ).fetchone()
+    return dict(wiersz)
+
+
 def _liczby_w_pudelkach() -> list[int]:
     """Ile fiszek jest w każdym pudełku (indeks 0 = pudełko 1)."""
     db = get_db()

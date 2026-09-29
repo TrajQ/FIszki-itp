@@ -65,6 +65,11 @@ def _lista_plikow() -> list[dict]:
     return pliki
 
 
+def podsumowanie() -> dict:
+    """Liczba własnych plików wyników — na kartę modułu na stronie głównej."""
+    return {"pliki": sum(1 for p in _lista_plikow() if not p["przyklad"])}
+
+
 @dostepnosc_bp.route("/")
 def index():
     return render_template(
