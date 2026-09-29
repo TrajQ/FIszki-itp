@@ -18,9 +18,14 @@
 
     <p id="blad-powtorki" class="komunikat komunikat--blad" hidden></p>
 
-    <label class="przelacznik-pisania">
-        <input id="tryb-pisania" type="checkbox"> Najpierw wpisuję odpowiedź
-    </label>
+    <div class="przelaczniki-powtorki">
+        <label class="przelacznik-pisania">
+            <input id="tryb-pisania" type="checkbox"> Najpierw wpisuję odpowiedź
+        </label>
+        <label class="przelacznik-pisania" title="Widzisz odpowiedź (np. definicję) i przypominasz sobie pojęcie">
+            <input id="tryb-odwrocony" type="checkbox"> Odwróć: odpowiedź → pytanie
+        </label>
+    </div>
 
     <section id="karta-powtorki" class="karta karta-powtorki" hidden>
         <div class="karta-powtorki__meta">
@@ -28,7 +33,7 @@
             <a id="zrodlo-fiszki" class="przycisk przycisk--tekst" target="_blank"></a>
         </div>
         <div class="karta-powtorki__tresc">
-            <p class="karta-powtorki__etykieta">Pytanie</p>
+            <p id="etykieta-przod" class="karta-powtorki__etykieta">Pytanie</p>
             <p id="pytanie-powtorki" class="karta-powtorki__pytanie"></p>
             <textarea id="pole-odpowiedzi" class="pole-odpowiedzi" rows="3" hidden
                       placeholder="Twoja odpowiedź… (Ctrl+Enter — sprawdź)"></textarea>
@@ -38,7 +43,7 @@
                     <p id="twoja-odpowiedz"></p>
                     <p id="trafienia" class="wyciszony twoja-odpowiedz__trafienia"></p>
                 </div>
-                <p class="karta-powtorki__etykieta">Odpowiedź</p>
+                <p id="etykieta-tyl" class="karta-powtorki__etykieta">Odpowiedź</p>
                 <p id="odpowiedz-powtorki" class="karta-powtorki__odpowiedz"></p>
                 <blockquote id="fragment-powtorki" class="karta-powtorki__fragment"></blockquote>
             </div>

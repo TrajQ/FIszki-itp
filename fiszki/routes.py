@@ -21,7 +21,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
+from . import egzaminy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
 from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
@@ -63,6 +63,9 @@ def index():
         nauka=statystyki_nauki.policz(db, powtorki.dzisiaj()),
         najtrudniejsze=quiz_fiszek.najtrudniejsze(db),
         tematy=tematy.wszystkie(db, _WARUNEK_DO_POWTORKI, dzis),
+        egzaminy=egzaminy.lista(db, powtorki.dzisiaj()),
+        utrwalone=egzaminy.utrwalone_w_plikach(db),
+        blad=request.args.get("blad"),
     )
 
 
@@ -559,3 +562,32 @@ def zapisz_powtorke(fiszka_id):
     return jsonify(
         {"fiszka_id": fiszka_id, "pudelko": nowe_pudelko, "nastepna_powtorka": nastepna.isoformat()}
     )
+
+
+# ---------- Egzaminy (ETAP 51) ----------
+
+
+@fiszki_bp.route("/egzaminy", methods=["POST"])
+def dodaj_egzamin():
+    """Formularz ze strony fiszek. Zakres: „wszystko”, „temat:…” albo „pdf:<id>”."""
+    zakres = request.form.get("zakres") or "wszystko"
+    temat, pdf_id = None, None
+    if zakres.startswith("temat:"):
+        temat = zakres[len("temat:"):].strip() or None
+    elif zakres.startswith("pdf:"):
+        try:
+            pdf_id = int(zakres[len("pdf:"):])
+        except ValueError:
+            return redirect(url_for("fiszki.index", blad="Nieznany zakres egzaminu."))
+        _pobierz_pdf_albo_404(pdf_id)
+    try:
+        egzaminy.dodaj(get_db(), request.form.get("nazwa", ""), request.form.get("data", ""), temat, pdf_id, powtorki.dzisiaj())
+    except egzaminy.BladEgzaminu as e:
+        return redirect(url_for("fiszki.index", blad=str(e)))
+    return redirect(url_for("fiszki.index"))
+
+
+@fiszki_bp.route("/egzaminy/<int:egzamin_id>/usun", methods=["POST"])
+def usun_egzamin(egzamin_id):
+    egzaminy.usun(get_db(), egzamin_id)
+    return redirect(url_for("fiszki.index"))

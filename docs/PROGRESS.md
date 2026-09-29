@@ -1129,3 +1129,19 @@ Status: zamknięty
 
 Testy: 324 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap50_20260929.zip
+
+## ETAP 51 — Fiszki: egzaminy, postęp, odwrócona powtórka
+Data: 2026-09-29
+Status: zamknięty
+
+- `egzaminy.dodaj/usun/lista/postep/utrwalone_w_plikach`, tabela
+  `egzaminy` (usunięcie PDF-a usuwa jego egzaminy)
+- `POST /fiszki/egzaminy`, `POST /fiszki/egzaminy/<id>/usun`; błędy
+  formularza wracają jako komunikat na stronie
+- Powtórka odwrócona: tylko prezentacja, ta sama fiszka i harmonogram
+- Sprawdzone w przeglądarce (dwa egzaminy, pasek przy pliku, odwrócenie
+  w trakcie sesji)
+- `DECISIONS.md`: D-056
+
+Testy: 331 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap51_20260929.zip

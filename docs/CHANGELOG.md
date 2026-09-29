@@ -357,3 +357,11 @@
 - Zapis nowej fiszki sprawdza odpowiedź serwera (wcześniej błąd zapisu
   zamykał formularz bez komunikatu).
 - Dodano `fiszki/tematy.py`, `DECISIONS.md` D-055 i 4 testy.
+
+## ETAP 51 — 2026-09-29
+- Fiszki: egzaminy — nazwa, data i zakres (temat, plik albo wszystko);
+  karta z liczbą dni, paskiem „utrwalone” i planem „ok. N dziennie”,
+  skróty do powtórki i trybu „przed egzaminem” z zakresu.
+- Fiszki: pasek „utrwalone %” przy każdym pliku.
+- Powtórka: przełącznik „Odwróć: odpowiedź → pytanie” (zapamiętany).
+- Dodano `fiszki/egzaminy.py`, `DECISIONS.md` D-056 i 7 testów.

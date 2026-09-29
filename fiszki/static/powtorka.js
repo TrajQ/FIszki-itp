@@ -27,6 +27,19 @@
     const twojaEl = document.getElementById("twoja-odpowiedz");
     const trafieniaEl = document.getElementById("trafienia");
     const KLUCZ_PISANIA = "fiszki.trybPisania";
+    // ETAP 51: odwrócona karta — przód to odpowiedź, a przypomnieć trzeba pytanie.
+    const trybOdwrocony = document.getElementById("tryb-odwrocony");
+    const etykietaPrzod = document.getElementById("etykieta-przod");
+    const etykietaTyl = document.getElementById("etykieta-tyl");
+    const KLUCZ_ODWROCENIA = "fiszki.trybOdwrocony";
+
+    function przod(fiszka) {
+        return trybOdwrocony.checked ? fiszka.odpowiedz : fiszka.pytanie;
+    }
+
+    function tyl(fiszka) {
+        return trybOdwrocony.checked ? fiszka.pytanie : fiszka.odpowiedz;
+    }
     const przyciskNieUmiem = document.getElementById("przycisk-nie-umiem");
     const postepTekst = document.getElementById("postep-tekst");
     const postepWypelnienie = document.getElementById("pasek-postepu-wypelnienie");
@@ -75,12 +88,14 @@
         przyciskPokaz.hidden = false;
         przyciskiOceny.hidden = true;
 
-        pytanieEl.textContent = fiszka.pytanie;
+        pytanieEl.textContent = przod(fiszka);
+        etykietaPrzod.textContent = trybOdwrocony.checked ? "Odpowiedź — jakie to pojęcie?" : "Pytanie";
+        etykietaTyl.textContent = trybOdwrocony.checked ? "Pytanie" : "Odpowiedź";
         poleOdpowiedzi.value = "";
         poleOdpowiedzi.hidden = !trybPisania.checked;
         twojaBlok.hidden = true;
         if (trybPisania.checked) poleOdpowiedzi.focus();
-        odpowiedzEl.textContent = fiszka.odpowiedz;
+        odpowiedzEl.textContent = tyl(fiszka);
         fragmentEl.textContent = fiszka.fragment_tekstu;
         pudelkoEl.textContent = `Pudełko ${fiszka.pudelko} z 5`;
         zrodloEl.textContent = `${fiszka.nazwa_oryginalna}, s. ${fiszka.strona} ↗`;
@@ -95,7 +110,7 @@
     function odslon() {
         if (odpowiedzWidoczna || kolejka.length === 0) return;
         odpowiedzWidoczna = true;
-        pokazPorownanie(kolejka[0].odpowiedz, poleOdpowiedzi.value);
+        pokazPorownanie(tyl(kolejka[0]), poleOdpowiedzi.value);
         poleOdpowiedzi.hidden = true;
         poleOdpowiedzi.blur(); // żeby działały skróty 1/2/3
         odpowiedzBlok.hidden = false;
@@ -195,6 +210,21 @@
     } catch (e) {
         // bez localStorage tryb pisania jest po prostu wyłączony
     }
+    try {
+        trybOdwrocony.checked = localStorage.getItem(KLUCZ_ODWROCENIA) === "1";
+    } catch (e) {
+        // bez localStorage — zwykły kierunek
+    }
+    trybOdwrocony.addEventListener("change", () => {
+        try {
+            localStorage.setItem(KLUCZ_ODWROCENIA, trybOdwrocony.checked ? "1" : "0");
+        } catch (e) {
+            // zapamiętanie to tylko wygoda
+        }
+        // Zmiana w trakcie: bieżąca karta od nowa, w nowym kierunku.
+        if (kolejka.length) pokazFiszke();
+    });
+
     trybPisania.addEventListener("change", () => {
         try {
             localStorage.setItem(KLUCZ_PISANIA, trybPisania.checked ? "1" : "0");

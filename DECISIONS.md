@@ -1157,3 +1157,27 @@ kolumny. Osobna tabela nie wymaga migracji starych baz.
 **Odrzucone alternatywy:**
 - Kolumna `temat` w `fiszki` — odrzucone: jeden temat na fiszkę i
   ALTER TABLE na istniejących bazach.
+
+## D-056 — Egzaminy: postęp z pudełek Leitnera, plan jako proste dzielenie
+Data: 2026-09-29
+
+**Decyzja:** Tabela `egzaminy (nazwa, data, temat | pdf_id | wszystko)`.
+Postęp: fiszka „utrwalona” = pudełko ≥ 3 (co najmniej dwa „umiem” z
+rzędu od ostatniego „nie umiem”). Plan: nieutrwalone ÷ dni do egzaminu
+(dziś liczy się jako dzień nauki), zaokrąglone w górę — opisane jako
+podpowiedź. Pasek „utrwalone %” także przy każdym pliku. W powtórce
+przełącznik „odwróć” (przód = odpowiedź); ocena trafia do tej samej
+fiszki i tego samego harmonogramu.
+
+**Uzasadnienie:** Student uczy się pod konkretne terminy; liczba dni i
+procent utrwalenia motywują i mówią, czy trzeba przyspieszyć. Pudełko 3
+to rozsądny, zrozumiały próg (pudełko 5 = „opanowane” pojawia się
+dopiero po tygodniach, więc byłoby zbyt surowe przed kolokwium).
+Odwrócona karta ćwiczy przypominanie pojęcia z definicji — osobny
+harmonogram dla kierunku podwoiłby liczbę powtórek.
+
+**Odrzucone alternatywy:**
+- Planowanie terminów powtórek pod datę egzaminu (zmiana odstępów
+  Leitnera) — odrzucone: komplikuje czytelny system pudełek; tryb
+  „przed egzaminem” już pozwala przejrzeć wszystko.
+- Osobne pudełka dla kierunku odwróconego — odrzucone (patrz wyżej).

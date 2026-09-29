@@ -11,6 +11,66 @@
     </div>
 </div>
 
+{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+
+{# Egzaminy (ETAP 51): ile dni zostało i jak idzie przygotowanie. #}
+<section class="karta stos egzaminy">
+    <div class="rzad rzad--miedzy">
+        <h3>Egzaminy</h3>
+    </div>
+    {% for e in egzaminy %}
+    <div class="egzamin {{ 'egzamin--minal' if e.minal }}">
+        <div class="egzamin__glowa">
+            <strong>{{ e.nazwa }}</strong>
+            <span class="wyciszony">
+                {{ e.data[8:10] }}.{{ e.data[5:7] }}.{{ e.data[:4] }} ·
+                {% if e.minal %}minął{% elif e.dni == 0 %}<strong>dziś</strong>{% elif e.dni == 1 %}<strong>jutro</strong>{% else %}za {{ e.dni }} dni{% endif %} ·
+                {% if e.temat %}temat „{{ e.temat }}”{% elif e.pdf_id %}{{ e.nazwa_oryginalna }}{% else %}wszystkie fiszki{% endif %}
+            </span>
+        </div>
+        {% if e.fiszki %}
+        <div class="egzamin__postep" title="Utrwalone = pudełko 3 lub wyższe">
+            <div class="egzamin__pasek"><span style="width: {{ e.procent }}%"></span></div>
+            <span class="egzamin__liczby">utrwalone {{ e.utrwalone }} z {{ e.fiszki }} ({{ e.procent }}%)</span>
+        </div>
+        {% if not e.minal and e.do_nauki %}
+        <p class="egzamin__plan">Do utrwalenia: <strong>{{ e.do_nauki }}</strong> — przerabiaj ok. <strong>{{ e.dziennie }}</strong> dziennie, żeby każdą zobaczyć przed egzaminem.</p>
+        {% elif not e.minal %}
+        <p class="egzamin__plan">Wszystko utrwalone — przed egzaminem wystarczy przegląd.</p>
+        {% endif %}
+        {% else %}
+        <p class="wyciszony egzamin__plan">W tym zakresie nie ma jeszcze fiszek.</p>
+        {% endif %}
+        <div class="egzamin__akcje">
+            {% if not e.minal and e.fiszki %}
+            <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.powtorka', temat=e.temat, pdf_id=e.pdf_id) }}">Powtórka</a>
+            <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.powtorka', temat=e.temat, pdf_id=e.pdf_id, wszystkie=1) }}">Przed egzaminem</a>
+            {% endif %}
+            <form method="post" action="{{ url_for('fiszki.usun_egzamin', egzamin_id=e.id) }}">
+                <button type="submit" class="przycisk--tekst" title="Usuń termin (fiszki zostają)">Usuń</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <p class="wyciszony egzamin__plan">Dodaj termin kolokwium albo egzaminu — zobaczysz, ile dni zostało i ile fiszek dziennie powtarzać.</p>
+    {% endfor %}
+    <details class="egzaminy__dodaj">
+        <summary>Dodaj egzamin</summary>
+        <form method="post" action="{{ url_for('fiszki.dodaj_egzamin') }}" class="egzaminy__formularz">
+            <label>Nazwa <input name="nazwa" required maxlength="80" placeholder="np. Kolokwium z planowania"></label>
+            <label>Data <input name="data" type="date" required></label>
+            <label>Zakres
+                <select name="zakres">
+                    <option value="wszystko">wszystkie fiszki</option>
+                    {% for t in tematy %}<option value="temat:{{ t.temat }}">temat: {{ t.temat }}</option>{% endfor %}
+                    {% for pdf in pdfy %}<option value="pdf:{{ pdf['id'] }}">plik: {{ pdf['nazwa_oryginalna'] }}</option>{% endfor %}
+                </select>
+            </label>
+            <button type="submit">Dodaj</button>
+        </form>
+    </details>
+</section>
+
 <div class="gora-fiszek">
 <section class="karta karta-powtorek">
     <div>
@@ -149,6 +209,13 @@ s. {{ f.strona }}</span>
         <h3>{{ pdf['nazwa_oryginalna'] }}</h3>
         {% set n = pdf['liczba_fiszek'] %}
         <p class="karta__opis">{{ n }} {% if n == 1 %}fiszka{% elif n % 10 in [2, 3, 4] and n % 100 not in [12, 13, 14] %}fiszki{% else %}fiszek{% endif %}</p>
+        {% if n %}
+        {% set ut = utrwalone.get(pdf['id'], 0) %}
+        <div class="egzamin__postep" title="Utrwalone = pudełko 3 lub wyższe">
+            <div class="egzamin__pasek"><span style="width: {{ (100 * ut / n) | round | int }}%"></span></div>
+            <span class="egzamin__liczby">utrwalone {{ (100 * ut / n) | round | int }}%</span>
+        </div>
+        {% endif %}
         <span class="karta__meta rzad">
             Dodano {{ pdf['data_dodania'][:10] }}
             {% if pdf['do_powtorki'] %}<span class="etykieta etykieta--akcent">{{ pdf['do_powtorki'] }} do powtórki</span>{% endif %}

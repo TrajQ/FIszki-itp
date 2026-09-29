@@ -46,6 +46,16 @@ CREATE TABLE IF NOT EXISTS tematy_fiszek (
     PRIMARY KEY (fiszka_id, temat)
 );
 
+-- ETAP 51: terminy egzaminów; zakres: temat albo plik albo (oba NULL) wszystko.
+-- Usunięcie PDF-a usuwa egzaminy przypisane do niego.
+CREATE TABLE IF NOT EXISTS egzaminy (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nazwa TEXT NOT NULL,
+    data TEXT NOT NULL,
+    temat TEXT,
+    pdf_id INTEGER REFERENCES pdfy(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,

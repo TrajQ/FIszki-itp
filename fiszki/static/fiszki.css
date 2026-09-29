@@ -826,6 +826,10 @@ button.przycisk--ocena-trudne:hover {
 
 /* ---------- ETAP 50: tematy ---------- */
 
+.tematy {
+    margin-bottom: 24px;
+}
+
 .lista-tematow {
     display: flex;
     flex-direction: column;
@@ -883,4 +887,96 @@ button.przycisk--ocena-trudne:hover {
     gap: 6px;
     font-size: 13px;
     color: var(--tekst-drugi);
+}
+
+/* ---------- ETAP 51: egzaminy i postęp ---------- */
+
+.egzaminy {
+    margin-bottom: 24px;
+}
+
+.egzamin {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.egzamin--minal {
+    opacity: 0.55;
+}
+
+.egzamin__glowa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+}
+
+.egzamin__postep {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.egzamin__pasek {
+    flex: 1;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 980px;
+    background: var(--linia-slaba);
+}
+
+.egzamin__pasek span {
+    display: block;
+    height: 100%;
+    border-radius: 980px;
+    background: var(--sukces);
+}
+
+.egzamin__liczby {
+    font-size: 12px;
+    color: var(--tekst-drugi);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.egzamin__plan {
+    margin: 0;
+    font-size: 14px;
+}
+
+.egzamin__akcje {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.egzaminy__dodaj summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.egzaminy__formularz {
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr auto;
+    align-items: end;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+@media (max-width: 800px) {
+    .egzaminy__formularz {
+        grid-template-columns: 1fr;
+    }
+}
+
+.przelaczniki-powtorki {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 24px;
 }
