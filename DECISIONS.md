@@ -576,3 +576,25 @@ i tak ma dobry eksport do PDF.
   której w tym zastosowaniu nie potrzeba.
 - Generowanie PDF po stronie serwera (np. WeasyPrint, ReportLab) —
   odrzucone: nowa zależność i drugi, osobny szablon wyglądu.
+
+## D-028 — Porównanie scenariuszy na wspólnych komórkach, ludność jako waga
+Data: 2026-09-29
+
+**Decyzja:** Porównanie dwóch plików wyników bierze tylko komórki H3
+obecne w obu plikach z wartością w obu i wymaga tej samej rozdzielczości.
+Zmiana = czas „po” − czas „przed”; stałe klasy ±1 i ±5 min (poniżej
+1 minuty traktujemy jako brak zmiany). Kolumna ludności nie jest
+wskaźnikiem do mapy, tylko wagą do udziałów i do liczby mieszkańców,
+którzy zyskali lub stracili dostęp w 15 minut.
+
+**Uzasadnienie:** Ocena wpływu inwestycji (szkoła, przystanek) to typowe
+zadanie planisty: „ilu mieszkańców zyska dostęp”. Udział powierzchni
+potrafi mylić — pusta łąka i blokowisko liczą się tak samo — dlatego z
+kolumną ludności główną liczbą jest odsetek mieszkańców. Próg ±1 min
+odcina szum obliczeń sieciowych.
+
+**Odrzucone alternatywy:**
+- Porównanie po współrzędnych zamiast po indeksie H3 — odrzucone: te
+  same indeksy gwarantują porównanie „komórka w komórkę”.
+- Uzupełnianie brakujących komórek zerem — odrzucone: fałszowałoby
+  zmianę dostępności.

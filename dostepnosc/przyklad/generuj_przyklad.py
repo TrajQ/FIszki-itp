@@ -1,9 +1,11 @@
-"""Generuje SYNTETYCZNY plik przykładowy dla modułu dostępność.
+"""Generuje SYNTETYCZNE pliki przykładowe dla modułu dostępność.
 
 To nie są prawdziwe wyniki — punkty docelowe są zmyślone, a czas dojścia
 to odległość w linii prostej × 1,3 (współczynnik krętości sieci) przez
-prędkość marszu 80 m/min. Plik służy tylko do pokazania, jak moduł
-wyświetla wyniki. Uruchomienie (z katalogu projektu):
+prędkość marszu 80 m/min. Ludność komórek też jest zmyślona (maleje od
+środka). Powstają dwa pliki: stan obecny i scenariusz z jedną nową
+szkołą — do pokazania porównania scenariuszy. Uruchomienie (z katalogu
+projektu):
 
     .venv/bin/python dostepnosc/przyklad/generuj_przyklad.py
 """
@@ -37,20 +39,35 @@ def odleglosc_m(a, b):
     return 2 * 6_371_000 * math.asin(math.sqrt(d))
 
 
-def main():
-    komorki = sorted(h3.grid_disk(h3.latlng_to_cell(*SRODEK, ROZDZIELCZOSC), PROMIEN_PIERSCIENI))
-    sciezka = os.path.join(os.path.dirname(__file__), "przyklad_poznan_syntetyczny.csv")
+# Scenariusz: jedna nowa szkoła w obszarze, gdzie dziś daleko do szkół.
+NOWA_SZKOLA = (52.3960, 16.9420)
+
+
+def ludnosc(srodek) -> int:
+    # Zmyślony rozkład: gęsto w centrum, rzadziej na obrzeżach.
+    return round(900 * math.exp(-odleglosc_m(srodek, SRODEK) / 1800))
+
+
+def zapisz(nazwa_pliku, punkty_wg_kolumny, komorki):
+    sciezka = os.path.join(os.path.dirname(__file__), nazwa_pliku)
     with open(sciezka, "w", newline="", encoding="utf-8") as plik:
         zapis = csv.writer(plik)
-        zapis.writerow(["h3", *PUNKTY])
+        zapis.writerow(["h3", *punkty_wg_kolumny, "ludnosc"])
         for komorka in komorki:
             srodek = h3.cell_to_latlng(komorka)
             czasy = [
                 round(min(odleglosc_m(srodek, p) for p in punkty) * KRETOSC / PREDKOSC_M_NA_MIN, 1)
-                for punkty in PUNKTY.values()
+                for punkty in punkty_wg_kolumny.values()
             ]
-            zapis.writerow([komorka, *czasy])
+            zapis.writerow([komorka, *czasy, ludnosc(srodek)])
     print(f"Zapisano {len(komorki)} komórek do {sciezka}")
+
+
+def main():
+    komorki = sorted(h3.grid_disk(h3.latlng_to_cell(*SRODEK, ROZDZIELCZOSC), PROMIEN_PIERSCIENI))
+    zapisz("przyklad_poznan_syntetyczny.csv", PUNKTY, komorki)
+    ze_szkola = {**PUNKTY, "czas_szkola_min": PUNKTY["czas_szkola_min"] + [NOWA_SZKOLA]}
+    zapisz("przyklad_poznan_nowa_szkola_syntetyczny.csv", ze_szkola, komorki)
 
 
 if __name__ == "__main__":

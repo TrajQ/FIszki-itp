@@ -55,6 +55,10 @@
             <label>Wskaźnik
                 <select id="pole-kolumna"></select>
             </label>
+            <div id="tryb-porownania" class="komunikat komunikat--sukces tryb-porownania" hidden>
+                <span id="opis-porownania"></span>
+                <button id="zakoncz-porownanie" type="button" class="przycisk--tekst">Zakończ</button>
+            </div>
             <div id="kafelki" class="kafelki-dostepnosci"></div>
             <div id="ogniwo" class="ogniwo" hidden>
                 <h4>Najsłabsze ogniwo</h4>
@@ -62,6 +66,18 @@
                 <ul id="lista-ogniw"></ul>
             </div>
             <p id="meta-pliku" class="wyciszony meta-pliku"></p>
+        </section>
+
+        <section class="karta stos">
+            <h3>Porównaj scenariusze</h3>
+            <p class="wyciszony porownanie__opis">Np. stan obecny i stan po budowie szkoły. Bieżący plik to „przed”, wybrany — „po”.</p>
+            <select id="pole-scenariusz" aria-label="Plik scenariusza po zmianie">
+                <option value="">— wybierz plik „po” —</option>
+                {% for plik in pliki if plik.nazwa != wybrany %}
+                <option value="{{ plik.nazwa }}">{{ plik.nazwa }}</option>
+                {% endfor %}
+            </select>
+            <button id="przycisk-porownaj" type="button" class="przycisk--drugi" disabled>Porównaj</button>
         </section>
     </aside>
 
@@ -77,6 +93,7 @@
 <script>
     const NAZWA_PLIKU = {{ wybrany | tojson }};
     const URL_PLIK = "{{ url_for('dostepnosc.opis_pliku', nazwa='__PLIK__') }}";
+    const URL_POROWNANIE = "{{ url_for('dostepnosc.porownanie') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('dostepnosc.static', filename='dostepnosc.js') }}"></script>

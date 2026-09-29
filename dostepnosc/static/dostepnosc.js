@@ -14,6 +14,14 @@
     const ogniwoEl = document.getElementById("ogniwo");
     const listaOgniw = document.getElementById("lista-ogniw");
     const WARTOSC_LACZNY = "__laczny__";
+    // Zmiana czasu (po − przed): szybciej = niebieski, wolniej = pomarańczowy, szary = bez zmian.
+    const KOLORY_ZMIANY = ["#1d4ed8", "#60a5fa", "#d1d1d6", "#fb923c", "#c2410c"];
+    const poleScenariusz = document.getElementById("pole-scenariusz");
+    const przyciskPorownaj = document.getElementById("przycisk-porownaj");
+    const trybPorownania = document.getElementById("tryb-porownania");
+    const opisPorownania = document.getElementById("opis-porownania");
+    const formatProcentu = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
+    const formatZmiany = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
     const legenda = document.getElementById("legenda");
     const komunikat = document.getElementById("komunikat");
 
@@ -75,9 +83,20 @@
         kafelki.replaceChildren();
         if (analiza.minuty) {
             for (const u of s.udzialy) {
-                kafelki.appendChild(
-                    kafelek(`Do ${u.prog} min`, `${formatLiczby.format(u.procent)}%`, `${formatLiczby.format(u.powierzchnia_km2)} km²`)
-                );
+                // Z kolumną ludności: główna liczba to % mieszkańców, obok % powierzchni.
+                if (u.procent_ludnosci !== undefined && u.procent_ludnosci !== null) {
+                    kafelki.appendChild(
+                        kafelek(
+                            `Do ${u.prog} min`,
+                            `${formatLiczby.format(u.procent_ludnosci)}% mieszk.`,
+                            `${formatLiczby.format(u.ludnosc)} os. · ${formatLiczby.format(u.procent)}% pow.`
+                        )
+                    );
+                } else {
+                    kafelki.appendChild(
+                        kafelek(`Do ${u.prog} min`, `${formatLiczby.format(u.procent)}%`, `${formatLiczby.format(u.powierzchnia_km2)} km²`)
+                    );
+                }
             }
         }
         kafelki.appendChild(kafelek("Mediana", formatLiczby.format(s.mediana) + jednostka));
@@ -173,7 +192,94 @@
         }
     }
 
-    poleKolumna.addEventListener("change", () => pokazKolumne(poleKolumna.value));
+    poleKolumna.addEventListener("change", () => {
+        if (!trybPorownania.hidden) porownaj();
+        else pokazKolumne(poleKolumna.value);
+    });
+
+    // ---------- porównanie scenariuszy ----------
+
+    poleScenariusz.addEventListener("change", () => {
+        przyciskPorownaj.disabled = !poleScenariusz.value;
+    });
+    przyciskPorownaj.addEventListener("click", porownaj);
+    document.getElementById("zakoncz-porownanie").addEventListener("click", () => {
+        trybPorownania.hidden = true;
+        pokazKolumne(poleKolumna.value);
+    });
+
+    async function porownaj() {
+        if (!poleScenariusz.value) return;
+        pokazBlad("");
+        const kolumna = poleKolumna.value === WARTOSC_LACZNY ? "laczny" : poleKolumna.value;
+        const parametry = new URLSearchParams({ przed: NAZWA_PLIKU, po: poleScenariusz.value, kolumna });
+        let wynik;
+        try {
+            wynik = await pobierzJson(`${URL_POROWNANIE}?${parametry}`);
+        } catch (e) {
+            pokazBlad(e.message);
+            return;
+        }
+        trybPorownania.hidden = false;
+        opisPorownania.textContent = `Porównanie: ${NAZWA_PLIKU} → ${poleScenariusz.value}`;
+        ogniwoEl.hidden = true;
+
+        if (warstwa) mapa.removeLayer(warstwa);
+        warstwa = L.geoJSON(wynik.geojson, {
+            style: (cecha) => ({
+                color: KOLORY_ZMIANY[cecha.properties.klasa],
+                weight: 0.5,
+                fillColor: KOLORY_ZMIANY[cecha.properties.klasa],
+                fillOpacity: 0.75,
+            }),
+            onEachFeature: (cecha, w) => {
+                const p = cecha.properties;
+                w.bindTooltip(
+                    `${formatLiczby.format(p.przed)} → ${formatLiczby.format(p.po)} min (${formatZmiany.format(p.zmiana)})`,
+                    { sticky: true }
+                );
+            },
+        }).addTo(mapa);
+
+        const s = wynik.statystyki;
+        kafelki.replaceChildren(
+            kafelek(
+                "W zasięgu 15 min",
+                `${formatProcentu.format(s.procent_15_przed)} → ${formatProcentu.format(s.procent_15_po)}%`,
+                `powierzchni; komórek +${s.komorki_weszly_15}` + (s.komorki_wypadly_15 ? `, −${s.komorki_wypadly_15}` : "")
+            ),
+            kafelek(
+                "Poprawa ≥ 1 min",
+                `${s.poprawa}`,
+                `z ${s.liczba_komorek} komórek; gorzej: ${s.pogorszenie}`
+            ),
+            kafelek("Mediana zmiany", `${formatZmiany.format(s.mediana_zmiany)} min`),
+            kafelek("Największa poprawa", `${formatZmiany.format(s.najwieksza_poprawa)} min`)
+        );
+        if (s.ludnosc_weszla_15 !== undefined) {
+            kafelki.appendChild(
+                kafelek("Mieszkańcy, którzy zyskali 15 min", `+${formatLiczby.format(s.ludnosc_weszla_15)}`,
+                    s.ludnosc_wypadla_15 ? `stracili: ${formatLiczby.format(s.ludnosc_wypadla_15)}` : "")
+            );
+        }
+        metaPliku.textContent = "Kolor = zmiana czasu dojścia po zmianie (niebieski: szybciej, pomarańczowy: wolniej).";
+
+        legenda.replaceChildren();
+        const tytul = document.createElement("div");
+        tytul.className = "legenda__tytul";
+        tytul.textContent = "zmiana czasu dojścia";
+        legenda.appendChild(tytul);
+        const opisy = ["szybciej o ≥ 5 min", "szybciej o 1–5 min", "bez zmian (±1 min)", "wolniej o 1–5 min", "wolniej o > 5 min"];
+        opisy.forEach((opis, i) => {
+            const wiersz = document.createElement("div");
+            wiersz.className = "legenda__wiersz";
+            const kolor = document.createElement("span");
+            kolor.className = "legenda__kolor";
+            kolor.style.background = KOLORY_ZMIANY[i];
+            wiersz.append(kolor, opis);
+            legenda.appendChild(wiersz);
+        });
+    }
 
     pobierzJson(urlPliku)
         .then((meta) => {

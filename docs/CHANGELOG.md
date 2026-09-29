@@ -158,3 +158,11 @@
 - MPZP: powierzchnia działki, podział na przeznaczenia (m², %),
   raport działki do wydruku (`/mpzp/raport`).
 - Dodano `DECISIONS.md` D-027 i testy.
+
+## ETAP 21 — 2026-09-29
+- Dostępność: udziały w zasięgu liczone w mieszkańcach (kolumna
+  `ludnosc`).
+- Dostępność: porównanie scenariuszy przed/po (`/dostepnosc/porownanie`),
+  mapa zmian czasu dojścia.
+- Drugi syntetyczny plik przykładowy (scenariusz „nowa szkoła”).
+- Dodano `DECISIONS.md` D-028 i testy.

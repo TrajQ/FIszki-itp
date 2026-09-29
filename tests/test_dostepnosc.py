@@ -220,3 +220,86 @@ def test_laczny_bez_zadnej_pelnej_komorki_to_czytelny_blad(client):
     odpowiedz = client.get("/dostepnosc/plik/dziury.csv/laczny")
     assert odpowiedz.status_code == 422
     assert "Żadna komórka" in odpowiedz.get_json()["blad"]
+
+
+# ---------- ETAP 21: ludność i porównanie scenariuszy ----------
+
+
+def csv_z_ludnoscia(czasy, ludnosc=None, kolumna="czas_szkola_min"):
+    naglowek = f"h3,{kolumna}" + (",ludnosc" if ludnosc else "")
+    wiersze = [naglowek]
+    for i, czas in enumerate(czasy):
+        pola = [SASIEDZI[i], "" if czas is None else str(czas)]
+        if ludnosc:
+            pola.append(str(ludnosc[i]))
+        wiersze.append(",".join(pola))
+    return "\n".join(wiersze)
+
+
+def test_ludnosc_to_waga_a_nie_wskaznik():
+    dane = wyniki.wczytaj_csv(csv_z_ludnoscia([3, 12, 20], [100, 300, 600]))
+    assert list(dane["kolumny"]) == ["czas_szkola_min"]
+    assert dane["ludnosc"] == [100, 300, 600]
+
+    udzialy = {u["prog"]: u for u in wyniki.analiza_kolumny(dane, "czas_szkola_min")["statystyki"]["udzialy"]}
+    assert udzialy[5]["ludnosc"] == 100
+    assert udzialy[15]["ludnosc"] == 400
+    assert udzialy[15]["procent_ludnosci"] == pytest.approx(40.0)
+    assert udzialy[15]["procent"] == pytest.approx(200 / 3)  # powierzchnia (komórki) inaczej niż ludność
+
+
+def test_bez_ludnosci_brak_pol_ludnosci():
+    udzialy = wyniki.analiza_kolumny(wyniki.wczytaj_csv(csv_z_ludnoscia([3, 12])), "czas_szkola_min")["statystyki"]["udzialy"]
+    assert "procent_ludnosci" not in udzialy[0]
+
+
+def test_ujemna_ludnosc_odrzucona():
+    with pytest.raises(BladWynikow, match="ujemne"):
+        wyniki.wczytaj_csv(csv_z_ludnoscia([3], [-5]))
+
+
+def test_porownanie_scenariuszy():
+    przed = wyniki.wczytaj_csv(csv_z_ludnoscia([20, 18, 7, 12, None], [100, 200, 300, 400, 500]))
+    po = wyniki.wczytaj_csv(csv_z_ludnoscia([9, 17.5, 7, 17, 3], [100, 200, 300, 400, 500]))
+    wynik = wyniki.porownaj_scenariusze(przed, po, "czas_szkola_min")
+    s = wynik["statystyki"]
+
+    assert s["liczba_komorek"] == 4  # piąta komórka bez wartości „przed”
+    assert (s["poprawa"], s["pogorszenie"], s["bez_zmian"]) == (1, 1, 2)
+    assert s["najwieksza_poprawa"] == -11
+    assert s["komorki_weszly_15"] == 1 and s["komorki_wypadly_15"] == 1
+    assert s["ludnosc_weszla_15"] == 100 and s["ludnosc_wypadla_15"] == 400
+    assert s["procent_15_przed"] == pytest.approx(50.0) and s["procent_15_po"] == pytest.approx(50.0)
+    klasy = [c["properties"]["klasa"] for c in wynik["geojson"]["features"]]
+    assert klasy == [0, 2, 2, 3]  # −11 → szybciej ≥5; −0,5 i 0 → bez zmian; +5 → wolniej 1–5
+
+
+def test_porownanie_wskaznika_lacznego_i_bledy():
+    k = SASIEDZI
+    przed = wyniki.wczytaj_csv(f"h3,czas_a_min,czas_b_min\n{k[0]},5,20\n{k[1]},4,6")
+    po = wyniki.wczytaj_csv(f"h3,czas_a_min,czas_b_min\n{k[0]},5,8\n{k[1]},4,6")
+    s = wyniki.porownaj_scenariusze(przed, po, wyniki.NAZWA_LACZNEGO)["statystyki"]
+    assert s["najwieksza_poprawa"] == -12  # łącznie 20 → 8
+
+    with pytest.raises(BladWynikow, match="czasu"):
+        wyniki.porownaj_scenariusze(wyniki.wczytaj_csv(csv_testowy()), wyniki.wczytaj_csv(csv_testowy()), "gestosc")
+    inna_rozdz = wyniki.wczytaj_csv(f"h3,czas_a_min\n{h3.cell_to_parent(k[0], 8)},5")
+    with pytest.raises(BladWynikow, match="rozdzielczości"):
+        wyniki.porownaj_scenariusze(przed, inna_rozdz, "czas_a_min")
+
+
+def test_endpoint_porownania_na_przykladach(client):
+    strona = client.get("/dostepnosc/").get_data(as_text=True)
+    assert "przyklad_poznan_nowa_szkola_syntetyczny.csv" in strona
+
+    adres = "/dostepnosc/porownanie?przed=przyklad_poznan_syntetyczny.csv&po=przyklad_poznan_nowa_szkola_syntetyczny.csv"
+    s = client.get(adres + "&kolumna=czas_szkola_min").get_json()["statystyki"]
+    assert s["poprawa"] > 0 and s["pogorszenie"] == 0
+    assert s["ludnosc_weszla_15"] > 0
+    assert client.get(adres + "&kolumna=laczny").status_code == 200
+    assert client.get(adres + "&kolumna=nie_ma_min").status_code == 422
+    assert client.get("/dostepnosc/porownanie?przed=a.csv&po=a.csv&kolumna=x").status_code == 400
+    assert client.post("/dostepnosc/plik/przyklad_poznan_nowa_szkola_syntetyczny.csv/usun").status_code == 400
+
+    meta = client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv").get_json()
+    assert meta["ma_ludnosc"] is True

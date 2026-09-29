@@ -24,6 +24,9 @@ dostepnosc_bp = Blueprint(
 
 FOLDER_PRZYKLADU = os.path.join(os.path.dirname(__file__), "przyklad")
 PLIK_PRZYKLADU = "przyklad_poznan_syntetyczny.csv"
+# Drugi przykład: ten sam obszar po „budowie” nowej szkoły — do porównania scenariuszy.
+PLIK_PRZYKLADU_SCENARIUSZ = "przyklad_poznan_nowa_szkola_syntetyczny.csv"
+PLIKI_PRZYKLADOWE = (PLIK_PRZYKLADU, PLIK_PRZYKLADU_SCENARIUSZ)
 
 # Wczytane pliki trzymamy w pamięci; klucz zawiera czas modyfikacji,
 # więc podmieniony plik zostanie wczytany od nowa.
@@ -38,7 +41,7 @@ def _folder_wynikow() -> str:
 
 def _sciezka_pliku(nazwa: str) -> str:
     """Ścieżka do pliku wyników albo 404. Chroni przed '../' w nazwie."""
-    if nazwa == PLIK_PRZYKLADU:
+    if nazwa in PLIKI_PRZYKLADOWE:
         return os.path.join(FOLDER_PRZYKLADU, nazwa)
     if nazwa != secure_filename(nazwa) or not nazwa.endswith(".csv"):
         abort(404)
@@ -58,7 +61,7 @@ def _wczytaj(nazwa: str) -> dict:
 
 
 def _lista_plikow() -> list[dict]:
-    pliki = [{"nazwa": PLIK_PRZYKLADU, "przyklad": True}]
+    pliki = [{"nazwa": n, "przyklad": True} for n in PLIKI_PRZYKLADOWE]
     for nazwa in sorted(os.listdir(_folder_wynikow())):
         if nazwa.endswith(".csv"):
             pliki.append({"nazwa": nazwa, "przyklad": False})
@@ -90,7 +93,7 @@ def wgraj():
         return redirect(url_for("dostepnosc.index", blad="Dozwolone są tylko pliki CSV."))
     # „Wyniki.CSV” → „Wyniki.csv”: lista plików i odczyt szukają małego „.csv”.
     nazwa = nazwa[: -len(".csv")] + ".csv"
-    if nazwa == PLIK_PRZYKLADU:
+    if nazwa in PLIKI_PRZYKLADOWE:
         nazwa = "wlasny_" + nazwa
 
     try:
@@ -115,7 +118,8 @@ def opis_pliku(nazwa):
     return jsonify(
         {
             "nazwa": nazwa,
-            "przyklad": nazwa == PLIK_PRZYKLADU,
+            "przyklad": nazwa in PLIKI_PRZYKLADOWE,
+            "ma_ludnosc": dane.get("ludnosc") is not None,
             "liczba_komorek": len(dane["komorki"]),
             "rozdzielczosc": dane["rozdzielczosc"],
             "kolumny": [
@@ -125,6 +129,25 @@ def opis_pliku(nazwa):
             "laczny_dostepny": len(wyniki_h3.kolumny_minut(dane)) >= 2,
         }
     )
+
+
+@dostepnosc_bp.route("/porownanie")
+def porownanie():
+    """Scenariusz „po” względem „przed” dla jednej kolumny czasu albo
+    wskaźnika łącznego (kolumna=laczny)."""
+    przed = request.args.get("przed", "")
+    po = request.args.get("po", "")
+    kolumna = request.args.get("kolumna", "")
+    if kolumna == "laczny":
+        kolumna = wyniki_h3.NAZWA_LACZNEGO
+    if not przed or not po or przed == po:
+        return jsonify({"blad": "Wybierz dwa różne pliki do porównania."}), 400
+    try:
+        return jsonify(wyniki_h3.porownaj_scenariusze(_wczytaj(przed), _wczytaj(po), kolumna))
+    except KeyError:
+        return jsonify({"blad": f"Oba pliki muszą mieć wskaźnik „{kolumna}”."}), 422
+    except BladWynikow as e:
+        return jsonify({"blad": str(e)}), 422
 
 
 @dostepnosc_bp.route("/plik/<nazwa>/laczny")
@@ -147,7 +170,7 @@ def analiza(nazwa, kolumna):
 
 @dostepnosc_bp.route("/plik/<nazwa>/usun", methods=["POST"])
 def usun(nazwa):
-    if nazwa == PLIK_PRZYKLADU:
+    if nazwa in PLIKI_PRZYKLADOWE:
         abort(400, "Pliku przykładowego nie można usunąć.")
     os.remove(_sciezka_pliku(nazwa))
     return redirect(url_for("dostepnosc.index"))

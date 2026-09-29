@@ -168,6 +168,24 @@
     text-align: right;
 }
 
+.tryb-porownania button {
+    flex-shrink: 0;
+}
+
+.tryb-porownania {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+}
+
+.porownanie__opis {
+    margin: 0;
+    font-size: 0.8rem;
+}
+
 .meta-pliku {
     margin: 0;
     font-size: 0.78rem;

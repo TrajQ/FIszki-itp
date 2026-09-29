@@ -572,3 +572,31 @@ Zrobione:
 
 Testy: 164 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap20_20260929.zip
+
+## ETAP 21 — Dostępność: ludność i porównanie scenariuszy
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- Kolumna `ludnosc` / `populacja` / `mieszkancy` w CSV jest wagą komórek,
+  a nie wskaźnikiem: udziały 5/10/15 min liczone także jako % i liczba
+  mieszkańców (kafelki: „25,3% mieszk. · 33 799 os. · 12,7% pow.”);
+  ujemna ludność odrzucana
+- `porownaj_scenariusze(przed, po, kolumna)`: zmiana czasu dojścia w
+  komórkach wspólnych dla obu plików (także dla wskaźnika łącznego):
+  poprawa / pogorszenie / bez zmian (±1 min), mediana i największa
+  poprawa, udział w zasięgu 15 min przed → po, komórki i mieszkańcy,
+  którzy weszli w zasięg 15 min albo z niego wypadli; klasy rozbieżne
+  −5 / −1 / +1 / +5 min
+- `GET /dostepnosc/porownanie?przed=&po=&kolumna=` (kolumna=laczny dla
+  wskaźnika łącznego)
+- Frontend: karta „Porównaj scenariusze”, mapa zmian (niebieski:
+  szybciej, pomarańczowy: wolniej), kafelki scenariusza, legenda,
+  „Zakończ”; zmiana wskaźnika w trybie porównania przelicza porównanie
+- Drugi plik przykładowy `przyklad_poznan_nowa_szkola_syntetyczny.csv`
+  (ten sam obszar + jedna nowa szkoła) i kolumna ludności w obu —
+  SYNTETYCZNE, generowane skryptem
+- Testy: 6 nowych; `DECISIONS.md`: D-028
+
+Testy: 170 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap21_20260929.zip
