@@ -79,6 +79,16 @@
                 <p id="opis-luk" class="wyciszony"></p>
                 <ol id="lista-luk" class="lista-luk"></ol>
             </div>
+            <div id="lokalizacja-blok" class="lokalizacja stos" hidden>
+                <h4>Gdzie nowa placówka?</h4>
+                <p class="wyciszony">Miejsca, w których jedna nowa placówka obejmie progiem z suwaka najwięcej mieszkańców dziś poza zasięgiem. Zasięg nowej placówki liczy szybki model (linia prosta × krętość, parametry niżej) — to wskazówka do porównania miejsc, nie projekt.</p>
+                <div class="rzad">
+                    <label class="lokalizacja__ile">Placówek <select id="ile-placowek">{% for n in range(1, 6) %}<option value="{{ n }}" {{ 'selected' if n == 3 }}>{{ n }}</option>{% endfor %}</select></label>
+                    <button id="szukaj-lokalizacji" type="button" class="przycisk--drugi">Szukaj miejsc</button>
+                </div>
+                <p id="wynik-lokalizacji" class="lokalizacja__wynik" hidden></p>
+                <ol id="lista-lokalizacji" class="lista-luk"></ol>
+            </div>
             <p id="meta-pliku" class="wyciszony meta-pliku"></p>
             <div class="rzad">
                 <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>

@@ -1469,3 +1469,13 @@ Status: zamknięty
 - Sprawdzone w przeglądarce na dwóch PDF-ach ustawy (usunięty art. 2,
   zmieniony art. 15, dodany art. 15b)
 - `DECISIONS.md`: D-084
+
+## ETAP 78 — Dostępność: gdzie nowa placówka
+Data: 2026-09-29
+Status: zamknięty
+
+- `dostepnosc/lokalizacja.py`, trasa `/dostepnosc/plik/<nazwa>/lokalizacja`,
+  blok w panelu wyników, znaczniki w `dostepnosc.js`
+- Sprawdzone w przeglądarce na pliku przykładowym (przystanki, 15 min:
+  48% → 62% mieszkańców z 3 placówkami)
+- `DECISIONS.md`: D-085

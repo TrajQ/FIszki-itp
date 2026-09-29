@@ -387,3 +387,40 @@ def test_endpoint_komorki(client):
     assert odpowiedz.status_code == 200
     assert odpowiedz.get_json()["wartosci"]["czas_przystanek_min"] == 27.1
     assert client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/komorka/zly").status_code == 404
+
+
+# ---------- ETAP 78: gdzie nowa placówka ----------
+
+import h3  # noqa: E402
+
+from dostepnosc import lokalizacja  # noqa: E402
+
+
+def test_najlepsze_lokalizacje_maksymalne_pokrycie():
+    srodek = h3.latlng_to_cell(52.40, 16.92, 9)
+    komorki = sorted(h3.grid_disk(srodek, 6))
+    # obecna usługa obsługuje tylko zachodnią połowę; wschód bez dojścia
+    czasy = [5.0 if h3.cell_to_latlng(k)[1] < 16.915 else 40.0 for k in komorki]
+    ludnosc = [100.0] * len(komorki)
+    w = lokalizacja.najlepsze_lokalizacje(komorki, czasy, ludnosc, prog_min=10, ile=2)
+    assert w["z_ludnoscia"] and len(w["propozycje"]) == 2
+    p1, p2 = w["propozycje"]
+    assert p1["lng"] > 16.915  # pierwsza propozycja po stronie bez usług
+    assert p1["obejmie"] >= p2["obejmie"] > 0  # zachłannie: najpierw największy zysk
+    assert w["w_zasiegu_po_proc"] == pytest.approx(w["w_zasiegu_przed_proc"] + p1["obejmie_proc"] + p2["obejmie_proc"], abs=0.2)
+    # wszystko w zasięgu — brak propozycji
+    assert lokalizacja.najlepsze_lokalizacje(komorki, [1.0] * len(komorki), ludnosc, 10)["propozycje"] == []
+    # bez ludności: każda komórka waży 1, brak czasu = poza zasięgiem
+    bez = lokalizacja.najlepsze_lokalizacje(komorki, [None] * len(komorki), None, 10)
+    assert bez["w_zasiegu_przed_proc"] == 0 and bez["propozycje"][0]["obejmie"] == bez["propozycje"][0]["komorki"]
+    for zle in ({"prog_min": 0}, {"prog_min": 10, "ile": 9}):
+        with pytest.raises(lokalizacja.BladLokalizacji):
+            lokalizacja.najlepsze_lokalizacje(komorki, czasy, ludnosc, **zle)
+
+
+def test_trasa_nowej_placowki(client):
+    url = "/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/lokalizacja"
+    w = client.get(url, query_string={"kolumna": "czas_przystanek_min", "prog": 15, "ile": 3}).get_json()
+    assert len(w["propozycje"]) == 3 and w["w_zasiegu_po_proc"] > w["w_zasiegu_przed_proc"]
+    assert client.get(url, query_string={"kolumna": "ludnosc"}).status_code == 400
+    assert client.get(url, query_string={"kolumna": "czas_szkola_min", "prog": 500}).status_code == 422

@@ -1812,3 +1812,25 @@ naprawdę się zmieniło, bez czytania całości.
 **Odrzucone alternatywy:**
 - Dopasowanie przenumerowanych artykułów po podobieństwie treści —
   zgadywanie; przenumerowanie pokazujemy uczciwie jako usunięcie i dodanie.
+
+## D-085 — Dostępność: „Gdzie nowa placówka?” — maksymalne pokrycie, zachłannie
+Data: 2026-09-29
+
+**Decyzja:** Dla wskaźnika czasu dojścia do jednej usługi kod proponuje
+1–5 miejsc nowej placówki (`dostepnosc/lokalizacja.py`): komórki z czasem
+powyżej progu (suwak krzywej dostępności) ważone mieszkańcami (bez
+ludności — liczbą komórek), kandydaci = komórki siatki z pliku, zasięg
+nowej placówki z szybkiego modelu (linia prosta × krętość / prędkość,
+parametry z panelu modelu), wybór zachłanny — każda kolejna placówka po
+uwzględnieniu poprzednich. Wynik: miejsca na mapie (numerowane
+znaczniki), liczba obejmowanych mieszkańców, udział w zasięgu przed i po.
+Sąsiedztwo liczone przez `h3.grid_disk` z promieniem z progu, potem
+sprawdzane odległością — 631 komórek w ok. 0,05 s.
+
+**Uzasadnienie:** Klasyczne zadanie planistyczne (MCLP) na danych, które
+moduł już ma; liczby liczy kod, a uproszczenia są jawnie opisane w panelu.
+
+**Odrzucone alternatywy:**
+- Dokładne rozwiązanie programowaniem całkowitoliczbowym — nowa
+  zależność (solver) i wolniej; zachłanny wynik jest zrozumiały krok po
+  kroku, a pierwsza propozycja jest optymalna.

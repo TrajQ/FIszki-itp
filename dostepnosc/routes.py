@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 import math
 
-from . import druk, model
+from . import druk, lokalizacja, model
 from . import wyniki as wyniki_h3
 from .wyniki import BladWynikow
 
@@ -333,6 +333,29 @@ def komorka(nazwa, indeks):
         return jsonify(wyniki_h3.komorka(_wczytaj(nazwa), indeks))
     except KeyError:
         return jsonify({"blad": "Plik nie ma takiej komórki."}), 404
+
+
+@dostepnosc_bp.route("/plik/<nazwa>/lokalizacja")
+def nowa_placowka(nazwa):
+    """Gdzie postawić nową placówkę, żeby objąć najwięcej mieszkańców poza
+    zasięgiem progu (ETAP 78, dostepnosc/lokalizacja.py)."""
+    kolumna = request.args.get("kolumna", "")
+    try:
+        dane = _wczytaj(nazwa)
+        if kolumna not in dane["kolumny"] or not wyniki_h3.czy_minuty(kolumna):
+            return jsonify({"blad": "Wybierz wskaźnik czasu dojścia (w minutach) jednej usługi."}), 400
+        wynik = lokalizacja.najlepsze_lokalizacje(
+            dane["komorki"],
+            dane["kolumny"][kolumna],
+            dane.get("ludnosc"),
+            request.args.get("prog", 15, type=float),
+            request.args.get("ile", 1, type=int),
+            request.args.get("predkosc", model.PREDKOSC_DOMYSLNA_KMH, type=float),
+            request.args.get("kretosc", model.KRETOSC_DOMYSLNA, type=float),
+        )
+    except (lokalizacja.BladLokalizacji, BladWynikow) as e:
+        return jsonify({"blad": str(e)}), 422
+    return jsonify(wynik)
 
 
 @dostepnosc_bp.route("/plik/<nazwa>/<kolumna>")

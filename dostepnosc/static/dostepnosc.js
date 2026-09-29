@@ -189,6 +189,10 @@
 
     async function pokazKolumne(kolumna) {
         pokazBlad("");
+        biezacaKolumna = kolumna;
+        warstwaLokalizacji.clearLayers();
+        document.getElementById("lista-lokalizacji").replaceChildren();
+        document.getElementById("wynik-lokalizacji").hidden = true;
         let analiza;
         try {
             const adres = kolumna === WARTOSC_LACZNY ? `${urlPliku}/laczny` : `${urlPliku}/${encodeURIComponent(kolumna)}`;
@@ -226,8 +230,64 @@
         pokazOgniwo(analiza);
         pokazKrzywa(analiza);
         pokazLuki(analiza);
+        // „Gdzie nowa placówka?” — tylko dla czasu dojścia do jednej usługi.
+        document.getElementById("lokalizacja-blok").hidden = !analiza.minuty || kolumna === WARTOSC_LACZNY;
         ustawLinkGeojson(null);
     }
+
+    // ---------- gdzie nowa placówka (ETAP 78) ----------
+    // Wybór miejsc liczy serwer (dostepnosc/lokalizacja.py); tu je pokazujemy.
+
+    let biezacaKolumna = null;
+    const warstwaLokalizacji = L.layerGroup().addTo(mapa);
+
+    function liczbaZPola(pole, domyslna) {
+        const liczba = Number(String(pole.value).replace(",", "."));
+        return Number.isFinite(liczba) ? liczba : domyslna;
+    }
+
+    document.getElementById("szukaj-lokalizacji").addEventListener("click", async (e) => {
+        const przycisk = e.target;
+        const wynikEl = document.getElementById("wynik-lokalizacji");
+        const lista = document.getElementById("lista-lokalizacji");
+        const prog = Number(suwakProgu.value) || 15;
+        const adres = new URL(`${urlPliku}/lokalizacja`, location.href);
+        adres.searchParams.set("kolumna", biezacaKolumna);
+        adres.searchParams.set("prog", String(prog));
+        adres.searchParams.set("ile", document.getElementById("ile-placowek").value);
+        adres.searchParams.set("predkosc", String(liczbaZPola(document.getElementById("model-predkosc"), 4.8)));
+        adres.searchParams.set("kretosc", String(liczbaZPola(document.getElementById("model-kretosc"), 1.3)));
+        przycisk.disabled = true;
+        try {
+            const w = await pobierzJson(adres);
+            warstwaLokalizacji.clearLayers();
+            lista.replaceChildren();
+            wynikEl.hidden = false;
+            if (!w.propozycje.length) {
+                wynikEl.textContent = `W progu ${prog} min wszystko jest w zasięgu — nowa placówka nic nie zmieni.`;
+                return;
+            }
+            const jednostka = w.z_ludnoscia ? "mieszk." : "komórek";
+            wynikEl.textContent = `W zasięgu ${prog} min: dziś ${formatProcentu.format(w.w_zasiegu_przed_proc)}%, z ${w.propozycje.length === 1 ? "nową placówką" : `${w.propozycje.length} nowymi placówkami`} ${formatProcentu.format(w.w_zasiegu_po_proc)}% ${w.z_ludnoscia ? "mieszkańców" : "powierzchni"}.`;
+            for (const p of w.propozycje) {
+                const ikona = L.divIcon({ className: "znacznik-lokalizacji", html: `<span>${p.nr}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+                L.marker([p.lat, p.lng], { icon: ikona, title: `Propozycja ${p.nr}` }).addTo(warstwaLokalizacji);
+                const li = document.createElement("li");
+                const przyciskPokaz = document.createElement("button");
+                przyciskPokaz.type = "button";
+                przyciskPokaz.className = "przycisk--tekst";
+                przyciskPokaz.textContent = `obejmie ${formatLiczby.format(p.obejmie)} ${jednostka} (${formatProcentu.format(p.obejmie_proc)}%)`;
+                przyciskPokaz.addEventListener("click", () => mapa.setView([p.lat, p.lng], Math.max(mapa.getZoom(), 15)));
+                li.append(przyciskPokaz);
+                lista.appendChild(li);
+            }
+        } catch (err) {
+            wynikEl.hidden = false;
+            wynikEl.textContent = err.message;
+        } finally {
+            przycisk.disabled = false;
+        }
+    });
 
     // ---------- krzywa dostępności i własny próg (ETAP 38) ----------
     // Punkty krzywej (udział w zasięgu t minut) liczy serwer; tu je rysujemy

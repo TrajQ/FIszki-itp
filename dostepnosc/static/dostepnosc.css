@@ -546,3 +546,41 @@ button.model__wstawiaj--aktywny {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* ETAP 78: gdzie nowa placówka */
+.lokalizacja h4 {
+    margin: 0;
+}
+
+.lokalizacja__ile {
+    flex: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.lokalizacja__wynik {
+    margin: 0;
+    font-size: 14px;
+}
+
+.znacznik-lokalizacji span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    background: #bf5af2;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.lokalizacja > p.wyciszony {
+    margin: 0;
+    font-size: 13px;
+}

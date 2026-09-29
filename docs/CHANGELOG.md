@@ -568,3 +568,9 @@
   zmienione (różnice słowo po słowie), liczby zmian, odnośniki do nowej
   wersji.
 - Dodano `przepisy/porownanie.py`, `DECISIONS.md` D-084 i 2 testy.
+
+## ETAP 78 — 2026-09-29
+- Dostępność: **„Gdzie nowa placówka?”** — 1–5 proponowanych miejsc,
+  które obejmą progiem najwięcej mieszkańców poza zasięgiem, znaczniki
+  na mapie, zasięg przed i po.
+- Dodano `dostepnosc/lokalizacja.py`, `DECISIONS.md` D-085 i 2 testy.
