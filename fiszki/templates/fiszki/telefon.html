@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1d1f">
+<title>Fiszki — {{ zakres }}</title>
+{#
+  Fiszki na telefon (ETAP 74). Jeden plik bez zależności — działa bez
+  internetu. Stan pudełek i wyniki powtórek trzyma w pamięci przeglądarki
+  telefonu (IndexedDB); wyniki eksportuje do pliku JSON, który importuje
+  się w Warsztacie (Fiszki → Fiszki na telefon → Importuj wyniki).
+  Zasady powtórek (odstępy pudełek) przychodzą z fiszki/powtorki.py.
+#}
+<style>
+    :root { --tlo: #f5f5f7; --karta: #fff; --tekst: #1d1d1f; --drugi: #6e6e73; --linia: #d2d2d7;
+            --akcent: #0071e3; --akcent-tlo: rgba(0,113,227,.12); --ok: #1d8a3a; --srednio: #b25000; --zle: #d70015; }
+    @media (prefers-color-scheme: dark) {
+        :root { --tlo: #000; --karta: #1c1c1e; --tekst: #f5f5f7; --drugi: #a1a1a6; --linia: #3a3a3c;
+                --akcent: #2997ff; --akcent-tlo: rgba(41,151,255,.18); --ok: #32d74b; --srednio: #ff9f0a; --zle: #ff6961; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px 12px 110px; background: var(--tlo); color: var(--tekst);
+           font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    h1 { margin: 4px 4px 0; font-size: 22px; }
+    .wyciszony { color: var(--drugi); font-size: 13px; }
+    .karta { margin: 12px 0; padding: 16px; border-radius: 16px; background: var(--karta); }
+    button { min-height: 48px; padding: 10px 16px; border: 0; border-radius: 12px; background: var(--akcent-tlo);
+             color: var(--akcent); font: inherit; font-weight: 600; cursor: pointer; }
+    button.glowny { width: 100%; background: var(--akcent); color: #fff; }
+    .liczby { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+    .liczby strong { display: block; font-size: 26px; }
+    .fiszka__pytanie { font-size: 20px; font-weight: 600; white-space: pre-line; }
+    .fiszka__odpowiedz { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--linia); white-space: pre-line; }
+    .fiszka__zrodlo { margin-top: 10px; }
+    .oceny { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+             padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--karta); border-top: 1px solid var(--linia); }
+    .oceny--jeden { grid-template-columns: 1fr; }
+    .oceny button { padding: 10px 6px; font-size: 16px; white-space: nowrap; }
+    .ocena--nie { color: var(--zle); } .ocena--trudne { color: var(--srednio); } .ocena--umiem { color: var(--ok); }
+    .rzad { display: flex; gap: 8px; flex-wrap: wrap; } .rzad > * { flex: 1; }
+    details summary { color: var(--akcent); font-size: 14px; cursor: pointer; margin-top: 10px; }
+    [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<h1>Fiszki: {{ zakres }}</h1>
+<p class="wyciszony" style="margin: 2px 4px">Działa bez internetu · wyniki zostają w telefonie, dopóki ich nie wyeksportujesz do Warsztatu.</p>
+
+<section id="start" class="karta">
+    <div class="liczby">
+        <div><strong id="do-powtorki">0</strong><span class="wyciszony">do powtórki dziś</span></div>
+        <div><strong id="zrobione">0</strong><span class="wyciszony">powtórzone dziś</span></div>
+        <div><strong id="do-eksportu">0</strong><span class="wyciszony">wyników do eksportu</span></div>
+    </div>
+    <p id="jutro" class="wyciszony" style="text-align: center"></p>
+</section>
+
+<section id="fiszka" class="karta" hidden>
+    <div class="wyciszony" id="postep"></div>
+    <div id="pytanie" class="fiszka__pytanie"></div>
+    <div id="odpowiedz" class="fiszka__odpowiedz" hidden></div>
+    <div id="zrodlo" class="fiszka__zrodlo wyciszony" hidden></div>
+</section>
+
+<section class="karta">
+    <div class="rzad">
+        <button id="eksport" type="button">⬇ Eksportuj wyniki</button>
+        <button id="udostepnij" type="button" hidden>↗ Udostępnij</button>
+    </div>
+    <p class="wyciszony">Plik przenieś na komputer i zaimportuj w Warsztacie: Fiszki → „Fiszki na telefon” → Importuj wyniki. Ponowny import tego samego pliku niczego nie dubluje.</p>
+    <details>
+        <summary>Po udanym imporcie: wyczyść wyniki z telefonu</summary>
+        <p class="wyciszony">Stan pudełek na telefonie zostaje — możesz uczyć się dalej. Po większych zmianach w fiszkach pobierz z Warsztatu nowy plik.</p>
+        <button id="wyczysc" type="button" style="color: var(--zle)">Usuń wyeksportowane wyniki</button>
+    </details>
+</section>
+
+<div id="oceny" class="oceny oceny--jeden">
+    <button id="zacznij" type="button" class="glowny">Zacznij powtórkę</button>
+    <button id="pokaz" type="button" class="glowny" hidden>Pokaż odpowiedź</button>
+    <button id="nie_umiem" type="button" class="ocena--nie" hidden>Nie umiem</button>
+    <button id="trudne" type="button" class="ocena--trudne" hidden>Trudne</button>
+    <button id="umiem" type="button" class="ocena--umiem" hidden>Umiem</button>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    const FISZKI = {{ fiszki | tojson }};
+    const ZASADY = {{ zasady | tojson }};
+    const INSTALACJA = {{ instalacja | tojson }};
+    const FORMAT = {{ format_pliku | tojson }};
+    const WYGENEROWANO_MS = {{ wygenerowano_ms | tojson }}; // chwila pobrania pliku z Warsztatu
+    const $ = (id) => document.getElementById(id);
+
+    let baza = null;
+    let stan = new Map(); // id fiszki → {pudelko, nastepna}
+    let kolejka = [];
+    let biezaca = null;
+    let zrobioneWSesji = 0;
+
+    // Data lokalna telefonu jako RRRR-MM-DD (nie UTC — powtórka o 23:30 to „dziś”).
+    function dzien(przesuniecie = 0) {
+        const d = new Date();
+        d.setDate(d.getDate() + przesuniecie);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    function dodajDni(iso, dni) {
+        const [r, m, d] = iso.split("-").map(Number);
+        const data = new Date(r, m - 1, d + dni);
+        return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+    }
+
+    // Te same zasady co powtorki.nastepny_stan w Warsztacie.
+    function nastepnyStan(pudelko, wynik, dzis) {
+        if (wynik === "nie_umiem") return { pudelko: ZASADY.pudelko_min, nastepna: dzis };
+        if (wynik === "trudne") return { pudelko, nastepna: dodajDni(dzis, ZASADY.odstep_trudne_dni) };
+        const nowe = Math.min(pudelko + 1, ZASADY.pudelko_max);
+        return { pudelko: nowe, nastepna: dodajDni(dzis, ZASADY.odstepy_dni[String(nowe)]) };
+    }
+
+    // ---------- pamięć telefonu ----------
+
+    function otworzBaze() {
+        return new Promise((ok, blad) => {
+            const z = indexedDB.open(`warsztat-fiszki-${INSTALACJA}`, 1);
+            z.onupgradeneeded = () => {
+                z.result.createObjectStore("stan", { keyPath: "id" });
+                z.result.createObjectStore("wyniki", { keyPath: "uid" });
+            };
+            z.onsuccess = () => ok(z.result);
+            z.onerror = () => blad(z.error);
+        });
+    }
+    function transakcja(magazyn, tryb, dzialanie) {
+        return new Promise((ok, blad) => {
+            const t = baza.transaction(magazyn, tryb);
+            const wynik = dzialanie(t.objectStore(magazyn));
+            t.oncomplete = () => ok(wynik && wynik.result);
+            t.onerror = () => blad(t.error);
+        });
+    }
+
+    // Stan z pliku, chyba że telefon ma nowszy: fiszkę powtórzono tutaj
+    // PO pobraniu tego pliku z Warsztatu. Starszy stan z telefonu (sprzed
+    // pobrania nowego pliku) przegrywa — Warsztat zna już nowsze pudełka.
+    async function wczytajStan() {
+        const zapisany = new Map((await transakcja("stan", "readonly", (s) => s.getAll())).map((x) => [x.id, x]));
+        stan = new Map(FISZKI.map((f) => {
+            const z = zapisany.get(f.id);
+            return [f.id, z && z.czas_ms > WYGENEROWANO_MS ? z : { id: f.id, pudelko: f.pudelko, nastepna: f.nastepna }];
+        }));
+    }
+
+    async function odswiezLiczby() {
+        const dzis = dzien();
+        const wyniki = await transakcja("wyniki", "readonly", (s) => s.getAll());
+        $("do-powtorki").textContent = FISZKI.filter((f) => stan.get(f.id).nastepna <= dzis).length;
+        $("zrobione").textContent = wyniki.filter((w) => w.data === dzis).length;
+        $("do-eksportu").textContent = wyniki.length;
+        const jutro = FISZKI.filter((f) => stan.get(f.id).nastepna === dodajDni(dzis, 1)).length;
+        $("jutro").textContent = jutro ? `Jutro: ${jutro}` : "";
+    }
+
+    // ---------- powtórka ----------
+
+    function pokazPrzyciski(...widoczne) {
+        for (const id of ["zacznij", "pokaz", "nie_umiem", "trudne", "umiem"]) $(id).hidden = !widoczne.includes(id);
+        $("oceny").classList.toggle("oceny--jeden", widoczne.length === 1);
+    }
+
+    function nastepna() {
+        biezaca = kolejka.shift() || null;
+        if (!biezaca) {
+            $("fiszka").hidden = true;
+            $("start").hidden = false;
+            pokazPrzyciski("zacznij");
+            $("zacznij").textContent = zrobioneWSesji ? "Gotowe na dziś ✓ — jeszcze raz?" : "Zacznij powtórkę";
+            odswiezLiczby();
+            return;
+        }
+        $("start").hidden = true;
+        $("fiszka").hidden = false;
+        $("postep").textContent = `pudełko ${stan.get(biezaca.id).pudelko} · zostało ${kolejka.length + 1}`;
+        $("pytanie").textContent = biezaca.pytanie;
+        $("odpowiedz").textContent = biezaca.odpowiedz;
+        $("zrodlo").textContent = biezaca.strona ? `${biezaca.zrodlo}, s. ${biezaca.strona}` : biezaca.zrodlo;
+        $("odpowiedz").hidden = $("zrodlo").hidden = true;
+        pokazPrzyciski("pokaz");
+    }
+
+    $("zacznij").addEventListener("click", () => {
+        const dzis = dzien();
+        // Najpierw słabiej znane (niższe pudełka) — jak w Warsztacie.
+        kolejka = FISZKI.filter((f) => stan.get(f.id).nastepna <= dzis).sort((a, b) => stan.get(a.id).pudelko - stan.get(b.id).pudelko || a.id - b.id);
+        if (!kolejka.length) {
+            $("zacznij").textContent = "Na dziś nic do powtórki ✓";
+            return;
+        }
+        nastepna();
+    });
+
+    $("pokaz").addEventListener("click", () => {
+        $("odpowiedz").hidden = $("zrodlo").hidden = false;
+        pokazPrzyciski("nie_umiem", "trudne", "umiem");
+    });
+
+    function nowyUid() {
+        const b = new Uint8Array(12);
+        crypto.getRandomValues(b);
+        return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function ocen(wynik) {
+        if (!biezaca) return;
+        const dzis = dzien();
+        const nowy = { id: biezaca.id, ...nastepnyStan(stan.get(biezaca.id).pudelko, wynik, dzis), czas_ms: Date.now() };
+        stan.set(biezaca.id, nowy);
+        await transakcja("stan", "readwrite", (s) => s.put(nowy));
+        await transakcja("wyniki", "readwrite", (s) => s.add({ uid: nowyUid(), fiszka_id: biezaca.id, wynik, data: dzis, czas: new Date().toISOString() }));
+        zrobioneWSesji += 1;
+        if (wynik === "nie_umiem") kolejka.push(biezaca); // wraca jeszcze w tej sesji
+        nastepna();
+    }
+    for (const w of ["nie_umiem", "trudne", "umiem"]) $(w).addEventListener("click", () => ocen(w));
+
+    // ---------- eksport ----------
+
+    async function plikWynikow() {
+        const wyniki = await transakcja("wyniki", "readonly", (s) => s.getAll());
+        const dane = { format: FORMAT, wersja: 1, instalacja: INSTALACJA, eksport: new Date().toISOString(), wyniki };
+        return new File([JSON.stringify(dane)], `powtorki_${dzien()}_${wyniki.length}.json`, { type: "application/json" });
+    }
+
+    $("eksport").addEventListener("click", async () => {
+        const plik = await plikWynikow();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(plik);
+        a.download = plik.name;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            URL.revokeObjectURL(a.href);
+            a.remove();
+        }, 1000);
+    });
+
+    if (navigator.canShare && navigator.canShare({ files: [new File(["{}"], "x.json", { type: "application/json" })] })) {
+        $("udostepnij").hidden = false;
+        $("udostepnij").addEventListener("click", async () => {
+            try {
+                await navigator.share({ files: [await plikWynikow()], title: "Powtórki fiszek" });
+            } catch (e) {
+                // anulowane
+            }
+        });
+    }
+
+    $("wyczysc").addEventListener("click", async () => {
+        if (!confirm("Usunąć wyeksportowane wyniki z telefonu? Zrób to dopiero po udanym imporcie w Warsztacie.")) return;
+        await transakcja("wyniki", "readwrite", (s) => s.clear());
+        odswiezLiczby();
+    });
+
+    otworzBaze()
+        .then(async (b) => {
+            baza = b;
+            if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+            await wczytajStan();
+            await odswiezLiczby();
+        })
+        .catch(() => {
+            $("jutro").textContent = "Ta przeglądarka nie pozwala zapisywać danych z pliku. Otwórz fiszki w Chrome albo Firefoksie.";
+        });
+})();
+</script>
+</body>
+</html>

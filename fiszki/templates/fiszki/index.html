@@ -151,6 +151,26 @@
 </section>
 {% endif %}
 
+{% if pdfy %}
+<section class="karta stos na-telefon">
+    <h3>Fiszki na telefon</h3>
+    <p class="wyciszony opis-sekcji">Powtórki bez internetu: pobierz plik, przenieś na telefon i otwórz w Chrome albo Firefoksie. Po nauce wyeksportuj wyniki z telefonu i zaimportuj je tutaj — pudełka się zaktualizują.</p>
+    <form class="rzad" method="get" action="{{ url_for('fiszki.fiszki_na_telefon') }}">
+        <select id="zakres-telefonu" aria-label="Które fiszki">
+            <option value="">wszystkie fiszki</option>
+            {% for t in tematy %}<option value="temat={{ t.temat | urlencode }}">temat: {{ t.temat }}</option>{% endfor %}
+            {% for pdf in pdfy %}<option value="pdf_id={{ pdf.id }}">plik: {{ pdf.nazwa_oryginalna | truncate(60) }}</option>{% endfor %}
+        </select>
+        <a id="pobierz-na-telefon" class="przycisk" href="{{ url_for('fiszki.fiszki_na_telefon') }}">📱 Pobierz plik</a>
+    </form>
+    <form id="import-z-telefonu" class="rzad">
+        <input id="plik-wynikow" type="file" accept=".json,application/json" required>
+        <button type="submit" class="przycisk--drugi">Importuj wyniki</button>
+    </form>
+    <p id="wynik-importu" class="komunikat" hidden></p>
+</section>
+{% endif %}
+
 {% if nauka.powtorki_30_dni %}
 <section class="karta nauka">
     <div class="nauka__liczby">
@@ -234,4 +254,35 @@
     const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
 </script>
 <script src="{{ url_for('fiszki.static', filename='szukaj.js') }}"></script>
+<script>
+    // Fiszki na telefon (ETAP 74): wybór zakresu i import wyników.
+    (function () {
+        const zakres = document.getElementById("zakres-telefonu");
+        if (!zakres) return;
+        const link = document.getElementById("pobierz-na-telefon");
+        const baza = link.getAttribute("href");
+        zakres.addEventListener("change", () => (link.href = zakres.value ? `${baza}?${zakres.value}` : baza));
+        document.getElementById("import-z-telefonu").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const wynik = document.getElementById("wynik-importu");
+            const dane = new FormData();
+            dane.append("plik", document.getElementById("plik-wynikow").files[0]);
+            const odpowiedz = await fetch("{{ url_for('fiszki.import_z_telefonu') }}", { method: "POST", body: dane });
+            const tresc = await odpowiedz.json().catch(() => ({}));
+            wynik.hidden = false;
+            if (!odpowiedz.ok) {
+                wynik.className = "komunikat komunikat--blad";
+                wynik.textContent = tresc.blad || `Błąd ${odpowiedz.status}`;
+                return;
+            }
+            wynik.className = "komunikat komunikat--sukces";
+            const czesci = [`Zapisane powtórki: ${tresc.zastosowane}`];
+            if (tresc.powtorzone) czesci.push(`już zaimportowane wcześniej: ${tresc.powtorzone}`);
+            if (tresc.tylko_statystyki) czesci.push(`tylko do statystyk (na komputerze była nowsza powtórka): ${tresc.tylko_statystyki}`);
+            if (tresc.bez_fiszki) czesci.push(`fiszki usunięte: ${tresc.bez_fiszki}`);
+            wynik.textContent = czesci.join(" · ") + ". Odśwież stronę, żeby zobaczyć nowe liczby.";
+            e.target.reset();
+        });
+    })();
+</script>
 {% endblock %}

@@ -311,4 +311,4 @@ def usun_pdf(pdf_id):
 
 # Pozostałe trasy modułu — w osobnych plikach, rejestrują się na fiszki_bp.
 # Import na końcu, bo tamte pliki importują fiszki_bp z tego modułu.
-from . import trasy_nauka, trasy_wymiana  # noqa: E402, F401
+from . import trasy_nauka, trasy_telefon, trasy_wymiana  # noqa: E402, F401

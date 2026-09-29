@@ -994,3 +994,15 @@ button.przycisk--ocena-trudne:hover {
     margin: 8px 0;
     font-size: 13px;
 }
+
+/* ETAP 74: fiszki na telefon */
+.na-telefon .opis-sekcji {
+    margin: 0;
+    font-size: 13px;
+}
+
+.na-telefon select,
+.na-telefon input[type="file"] {
+    flex: 1;
+    min-width: 0;
+}

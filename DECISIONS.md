@@ -1716,3 +1716,44 @@ kod rysowania granic już był w module.
 
 **Odrzucone alternatywy:**
 - Mapa na podkładzie kafelkowym — zależna od sieci przy druku.
+
+## D-080 — Fiszki na telefon: samodzielny plik HTML, wyniki wracają plikiem
+Data: 2026-09-29
+
+**Decyzja:** „Fiszki na telefon” (strona Fiszek) pobiera samodzielny plik
+HTML z fiszkami z wybranego zakresu (wszystkie, temat, plik PDF), ich
+stanem pudełek i zasadami Leitnera z `fiszki/powtorki.py` (jedno źródło
+odstępów). Telefon planuje powtórki sam (także przez kilka dni), stan i
+wyniki trzyma w IndexedDB; „nie umiem” wraca w tej samej sesji. Stan z
+telefonu wygrywa nad stanem z pliku tylko, gdy powstał po pobraniu pliku.
+Wyniki eksportuje do JSON (`warsztat-powtorki`, wersja 1, identyfikator
+instalacji). Import (`fiszki/telefon.py`) stosuje wyniki w kolejności
+czasu z datą z telefonu, pomija wyniki o znanym uid (tabela
+`powtorki_z_telefonu`) i fiszki usunięte; gdy fiszkę powtórzono na
+komputerze później — wynik z telefonu trafia tylko do dziennika
+(statystyk). Identyfikator instalacji (tabela `ustawienia`) chroni przed
+plikiem z innej instalacji.
+
+**Uzasadnienie:** Ten sam obieg co w module Teren (D-071): Warsztat działa
+tylko na 127.0.0.1. Nauka w drodze bez sieci, bez konta w usłudze.
+
+**Odrzucone alternatywy:**
+- Eksport do Anki (już jest, ETAP 54) — gubi stan pudełek Warsztatu i
+  wyniki nie wracają.
+- Pokazywanie na telefonie tylko fiszek „na dziś” — nauka przez kilka dni
+  bez nowego pliku byłaby niemożliwa.
+
+## D-081 — Zgoda autora: kolejne ETAPy wybierane samodzielnie
+Data: 2026-09-29
+
+**Decyzja:** Autor napisał: „rób i dodawaj kolejne rzeczy sam bez
+pytania”. Od ETAPu 75 kolejne usprawnienia wybieram sam, bez pytania o
+zgodę przed każdym (zmiana zasady 2 z CLAUDE.md na czas tej zgody).
+Reszta zasad bez zmian: jeden ETAP na raz, testy zielone przed następnym,
+dokumentacja, rekord w DECISIONS i ZIP po każdym, bez nowych zależności
+bez uzasadnienia, bez zmiany stosu, 127.0.0.1, liczby tylko z danych.
+Każdy ETAP ma być małym, sprawdzalnym usprawnieniem istniejących modułów,
+a nie wymyślaniem nowych.
+
+**Uzasadnienie:** Wyraźne polecenie autora; zapis tutaj, żeby kolejna
+sesja wiedziała, skąd zmiana trybu pracy.

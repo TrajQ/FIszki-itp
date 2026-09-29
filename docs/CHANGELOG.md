@@ -542,3 +542,12 @@
   wyróżniona gmina, podziałka, północ; przy błędzie PRG — podpis z
   przyczyną).
 - Dodano `DECISIONS.md` D-079 i 2 testy.
+
+## ETAP 74 — 2026-09-29
+- Fiszki: **fiszki na telefon bez internetu** — plik HTML z wybranymi
+  fiszkami (wszystkie, temat, plik), powtórki Leitnera na telefonie
+  (umiem / trudne / nie umiem), wyniki w pamięci telefonu, eksport pliku
+  wyników, import w Warsztacie (pudełka i statystyki z datami z telefonu,
+  bez dublowania, nowsza powtórka z komputera wygrywa).
+- Dodano `fiszki/telefon.py`, `fiszki/trasy_telefon.py`,
+  `DECISIONS.md` D-080, D-081 i 9 testów.

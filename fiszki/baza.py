@@ -63,6 +63,20 @@ CREATE TABLE IF NOT EXISTS pdf_skroty (
     sha256 TEXT NOT NULL UNIQUE
 );
 
+-- ETAP 74: powtórki z telefonu. Identyfikator instalacji (losowy, raz) —
+-- plik wyników z innej instalacji Warsztatu ma inne numery fiszek.
+-- Zastosowane wyniki (uid z telefonu) — ponowny import niczego nie dubluje.
+CREATE TABLE IF NOT EXISTS ustawienia (
+    klucz TEXT PRIMARY KEY,
+    wartosc TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS powtorki_z_telefonu (
+    uid TEXT PRIMARY KEY,
+    fiszka_id INTEGER NOT NULL,
+    data TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,

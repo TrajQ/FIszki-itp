@@ -1425,3 +1425,16 @@ Status: zamknięty
 - Sprawdzone w przeglądarce z podstawionymi granicami i z błędem PRG
 - Nie sprawdzone tutaj: prawdziwe granice PRG (sieć zablokowana)
 - `DECISIONS.md`: D-079
+
+## ETAP 74 — Fiszki na telefon bez internetu
+Data: 2026-09-29
+Status: zamknięty
+
+- `fiszki/telefon.py` (eksport, odczyt i zastosowanie wyników), tabele
+  `ustawienia`, `powtorki_z_telefonu`, szablon `telefon.html`, sekcja na
+  stronie Fiszek
+- Sprawdzone w przeglądarce cały obieg: pobranie (temat) → plik otwarty
+  lokalnie w emulacji telefonu → 4 oceny (fiszka „nie umiem” wraca w
+  sesji) → przeładowanie (stan zachowany) → eksport → import (4) →
+  ponowny import (0 nowych, 4 pominięte)
+- `DECISIONS.md`: D-080; D-081 — zgoda autora na samodzielny wybór ETAPów

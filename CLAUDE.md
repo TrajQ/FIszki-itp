@@ -14,7 +14,8 @@ kogoś, kto wróci do niego za trzy miesiące.
                 raport gminy
 - mpzp        — czytnik planów miejscowych, działka → przeznaczenie,
                 kronika zmian (ortofotomapy archiwalne)
-- fiszki      — generator fiszek z PDF z kotwicą w źródle
+- fiszki      — generator fiszek z PDF z kotwicą w źródle, powtórki także
+                na telefonie bez internetu
 - dostepnosc  — analiza dostępności pieszej, siatka H3 (czyta gotowe wyniki)
 - osiedle     — koncepcja osiedla rysowana na mapie: bilans terenu,
                 wskaźniki zabudowy, zgodność z planem, program osiedla,
@@ -59,6 +60,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 73 (atlas: mapa położenia w raporcie gminy — zamknięty)
-Ostatni ZIP: releases/warsztat_etap73_20260929.zip
-Testy: 418 passed / 0 failed
+ETAP: 74 (fiszki na telefon bez internetu — zamknięty)
+Ostatni ZIP: releases/warsztat_etap74_20260929.zip
+Testy: 427 passed / 0 failed
+Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).
