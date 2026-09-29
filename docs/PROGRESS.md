@@ -832,3 +832,21 @@ Zrobione:
 
 Testy: 216 passed / 0 failed
 Ostatni ZIP: releases/warsztat_etap31_20260929.zip
+
+## ETAP 32 — Kopia zapasowa danych
+Data: 2026-09-29
+Status: zamknięty
+
+Zrobione:
+- `kopia.py`: ZIP folderu `instance/` — bazy SQLite kopiowane przez
+  `sqlite3.backup()` (spójne nawet w trakcie zapisu), PDF-y, pliki
+  wyników; pomijane: cache granic PRG, pliki tymczasowe SQLite; w środku
+  `PRZYWRACANIE.txt` z instrukcją
+- `GET /kopia-zapasowa` (nazwa z datą i godziną); sekcja „Twoje dane”
+  na stronie głównej; instrukcja w `docs/URUCHOMIENIE.md`
+- `.env` (klucze API) nigdy nie trafia do kopii — nie leży w `instance/`
+- Test: 1 nowy (zawartość ZIP, poprawność bazy z kopii, brak cache);
+  `DECISIONS.md`: D-039
+
+Testy: 217 passed / 0 failed
+Ostatni ZIP: releases/warsztat_etap32_20260929.zip

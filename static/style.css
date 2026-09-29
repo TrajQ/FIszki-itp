@@ -545,6 +545,24 @@ input[type="file"]::file-selector-button {
 .ikona-modulu--fiszki { background: linear-gradient(135deg, #5e5ce6, #bf5af2); }
 .ikona-modulu--dostepnosc { background: linear-gradient(135deg, #0a84ff, #64d2ff); }
 
+.dane-uzytkownika {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.dane-uzytkownika h3,
+.dane-uzytkownika p {
+    margin: 0;
+}
+
+.dane-uzytkownika p {
+    max-width: 44rem;
+}
+
 /* ---------- Mapy Leaflet (wspólny wygląd kontrolek) ---------- */
 
 .leaflet-container {

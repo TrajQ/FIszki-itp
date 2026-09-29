@@ -48,3 +48,11 @@ zachowaniem `.venv`, `.env` i `instance/`). Przy następnym starcie
 - PDF się nie wyświetla → nad podglądem pojawia się czerwony komunikat z
   przyczyną; komunikaty serwera są w oknie terminala.
 - Testy: `.venv/bin/pip install pytest && .venv/bin/python -m pytest -q`.
+
+## Kopia zapasowa
+
+Strona główna → „Pobierz kopię zapasową (ZIP)”. W ZIP-ie jest folder
+`instance/` (fiszki, powtórki, historia działek, PDF-y, pliki wyników) i
+plik `PRZYWRACANIE.txt`. Przywracanie: zamknij aplikację, zmień nazwę
+obecnego `instance/` na `instance_stary/`, rozpakuj ZIP w katalogu
+projektu, uruchom aplikację.

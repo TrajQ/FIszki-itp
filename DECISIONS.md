@@ -770,3 +770,21 @@ kolejnością stron.
 **Odrzucone alternatywy:**
 - Strony „przody” i „tyły” do druku dwustronnego — odrzucone (patrz
   wyżej).
+
+## D-039 — Kopia zapasowa: pobieranie tak, przywracanie ręcznie
+Data: 2026-09-29
+
+**Decyzja:** Aplikacja tworzy ZIP z `instance/`, ale nie ma przycisku
+„przywróć” — przywraca się ręcznie, rozpakowując ZIP (instrukcja w
+środku i w `docs/URUCHOMIENIE.md`).
+
+**Uzasadnienie:** Automatyczne przywracanie nadpisuje wszystkie dane
+użytkownika; pomyłka (stara kopia, zły plik) byłaby nieodwracalna.
+Ręczne przywracanie z zachowaniem starego folderu jest bezpieczne, a
+robi się je rzadko. Bazy kopiowane przez `backup()`, bo zwykłe
+skopiowanie pliku w trakcie zapisu może dać uszkodzoną bazę.
+
+**Odrzucone alternatywy:**
+- Przycisk „przywróć z ZIP” — odrzucone (patrz wyżej).
+- Kopia z cache granic — odrzucone: duże pliki, które i tak pobiorą
+  się ponownie.

@@ -214,3 +214,8 @@
 ## ETAP 31 — 2026-09-29
 - Fiszki: karty do druku, wycięcia i złożenia (`/fiszki/druk`).
 - Dodano `DECISIONS.md` D-038 i test.
+
+## ETAP 32 — 2026-09-29
+- Kopia zapasowa danych użytkownika jako ZIP (`/kopia-zapasowa`) z
+  instrukcją przywracania.
+- Dodano `DECISIONS.md` D-039 i test.

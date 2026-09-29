@@ -1,4 +1,6 @@
-from flask import Flask, redirect, render_template, url_for
+from datetime import datetime
+
+from flask import Flask, Response, redirect, render_template, url_for
 
 from atlas import atlas_bp
 from mpzp import mpzp_bp
@@ -55,6 +57,17 @@ def create_app(instance_path=None):
                 app.logger.exception("Nie udało się policzyć podsumowania modułu %s", modul)
                 podsumowania[modul] = None
         return render_template("index.html", p=podsumowania)
+
+    @app.route("/kopia-zapasowa")
+    def kopia_zapasowa():
+        from kopia import utworz_kopie
+
+        nazwa = f"warsztat_kopia_{datetime.now():%Y%m%d_%H%M}.zip"
+        return Response(
+            utworz_kopie(app.instance_path),
+            mimetype="application/zip",
+            headers={"Content-Disposition": f"attachment; filename={nazwa}"},
+        )
 
     @app.route("/favicon.ico")
     def favicon():

@@ -48,4 +48,12 @@
         {% if p.dostepnosc and p.dostepnosc.pliki %}<span class="karta__meta">Twoje pliki wyników: {{ p.dostepnosc.pliki }}</span>{% endif %}
     </a>
 </section>
+
+<section class="karta dane-uzytkownika">
+    <div>
+        <h3>Twoje dane</h3>
+        <p class="karta__opis">Fiszki, historia nauki, wgrane PDF-y i pliki wyników są tylko na tym komputerze. Pobieraj kopię od czasu do czasu — np. przed reinstalacją systemu.</p>
+    </div>
+    <a class="przycisk przycisk--drugi" href="{{ url_for('kopia_zapasowa') }}">Pobierz kopię zapasową (ZIP)</a>
+</section>
 {% endblock %}
