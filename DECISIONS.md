@@ -1936,3 +1936,28 @@ zinwentaryzowano. Ortofotomapa GUGiK jest udostępniana bezpłatnie
   OSM zabraniają pobierania hurtowego.
 - Wiele poziomów przybliżenia (piramida kafelków) — wiele zapytań i duży
   plik; jeden obraz 1600 px wystarcza na obszar do 3 km.
+
+## D-091 — Atlas: wskaźnik złożony z zestawu wskaźników raportu
+Data: 2026-09-30
+
+**Decyzja:** Wskaźnik złożony (syntetyczny) liczony z wybranych wskaźników
+zestawu raportu gminy (tabela `raport_wskazniki`, bez osobnej listy).
+Każda składowa ma kierunek (stymulanta +1, destymulanta −1) i wagę > 0.
+Metody: unitaryzacja zerowana (domyślna, wynik 0–1) albo standaryzacja
+(odchylenie standardowe populacyjne — gminy województwa to cała
+populacja). Wynik = średnia ważona składowych, tylko dla gmin z danymi
+wszystkich składowych (pozostałe wypisane jako pominięte). Składowa stała
+we wszystkich gminach to błąd z komunikatem, nie dzielenie przez zero.
+Parametry w adresie (`s=id:kierunek:waga,…`), więc wynik, kartogram i CSV
+dają się otworzyć tym samym linkiem. Kartogram: klasy kwantylowe, te same
+kolory co mapa do druku.
+
+**Uzasadnienie:** Klasyczne narzędzie diagnozy (np. poziom rozwoju
+społeczno-gospodarczego gmin) z zajęć z analizy regionalnej. Wszystkie
+liczby liczy Python z danych GUS — nie model językowy.
+
+**Odrzucone alternatywy:**
+- Metoda Hellwiga (wzorzec rozwoju) — trudniejsza do wyjaśnienia; może
+  być kolejnym krokiem, gdy będzie potrzebna.
+- Dobór wag automatycznie (np. z korelacji) — wagi to decyzja badacza,
+  powinny być jawne.

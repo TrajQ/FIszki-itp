@@ -607,3 +607,11 @@
   zapisaniu punktu albo przy stojącym telefonie.
 - Dodano `teren/podklad.py`, `dane/ortofoto.obraz_ortofotomapy`,
   `DECISIONS.md` D-090 i 2 testy.
+
+## ETAP 84 — 2026-09-30
+- Atlas: **wskaźnik złożony** — składowe z zestawu raportu gminy, kierunek
+  (stymulanta / destymulanta) i waga, unitaryzacja zerowana albo
+  standaryzacja; ranking gmin województwa, kartogram SVG, CSV z wartościami
+  surowymi i po normalizacji.
+- Dodano `atlas/zlozony.py`, `atlas/trasy_zlozony.py`, `DECISIONS.md` D-091
+  i 3 testy.

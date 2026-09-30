@@ -489,4 +489,4 @@ def eksport_csv():
 
 # Mapa do druku i raport gminy — w osobnych plikach, rejestrują się na atlas_bp.
 # Import na końcu, bo tamten plik importuje atlas_bp z tego modułu.
-from . import trasy_druk, trasy_raport  # noqa: E402, F401
+from . import trasy_druk, trasy_raport, trasy_zlozony  # noqa: E402, F401

@@ -1070,3 +1070,82 @@ def test_raport_gminy_porownanie_i_csv(raport_client):
     assert wiersze[1].startswith("ludność ogółem;osoba;2023;800,0;-20,0;2013;2;2;")
     assert wiersze[2].startswith("bezrobotni na 1 000 (ludność ogółem);;2023;50,0;")
     assert len(c.get(f"/atlas/raport-gminy/{GMINA}.csv").get_data(as_text=True).splitlines()[0].split(";")) == 9
+
+
+# ---------- ETAP 84: wskaźnik złożony ----------
+
+
+def _skladowa(nazwa, kierunek, wartosci, waga=1):
+    return {"nazwa": nazwa, "kierunek": kierunek, "waga": waga,
+            "gminy": [{"teryt": t, "nazwa": t.upper(), "wartosc": w} for t, w in wartosci.items()]}
+
+
+def test_wskaznik_zlozony_unitaryzacja_i_kierunek():
+    from atlas import zlozony
+    mieszkania = _skladowa("mieszkania", 1, {"a": 10, "b": 20, "c": 30, "d": 5})
+    bezrobocie = _skladowa("bezrobocie", -1, {"a": 2, "b": 4, "c": 6}, waga=3)  # d bez danych
+    wynik = zlozony.wskaznik_zlozony([mieszkania, bezrobocie])
+    # a: (0 + 3·1)/4 = 0,75; b: (0,5 + 3·0,5)/4 = 0,5; c: (1 + 0)/4 = 0,25
+    assert [(g["teryt"], g["wartosc"], g["miejsce"]) for g in wynik["gminy"]] == [("a", 0.75, 1), ("b", 0.5, 2), ("c", 0.25, 3)]
+    assert wynik["gminy"][0]["surowe"] == [10, 2] and wynik["gminy"][0]["skladowe"] == [0.0, 1.0]
+    assert wynik["pominiete"] == ["D"]
+
+
+def test_wskaznik_zlozony_standaryzacja_i_bledy():
+    from atlas import zlozony
+    a = _skladowa("x", 1, {"a": 1, "b": 2, "c": 3})
+    b = _skladowa("y", 1, {"a": 3, "b": 2, "c": 1})
+    wynik = zlozony.wskaznik_zlozony([a, b], "standaryzacja")
+    assert all(g["wartosc"] == pytest.approx(0) for g in wynik["gminy"])  # przeciwne składowe znoszą się
+    assert wynik["gminy"][0]["skladowe"][0] == pytest.approx(-1.2247, abs=1e-4)  # (1 − 2) / 0,8165
+    with pytest.raises(zlozony.BladWskaznika, match="nic nie różnicuje"):
+        zlozony.wskaznik_zlozony([a, _skladowa("stała", 1, {"a": 5, "b": 5, "c": 5})])
+    with pytest.raises(zlozony.BladWskaznika, match="od 2"):
+        zlozony.wskaznik_zlozony([a])
+    with pytest.raises(zlozony.BladWskaznika, match="Za mało gmin"):
+        zlozony.wskaznik_zlozony([a, _skladowa("z", 1, {"a": 1, "b": 2})])
+    with pytest.raises(zlozony.BladWskaznika, match="waga"):
+        zlozony.wskaznik_zlozony([a, {**b, "waga": 0}])
+    with pytest.raises(zlozony.BladWskaznika, match="Metoda"):
+        zlozony.wskaznik_zlozony([a, b], "mediana")
+
+
+def test_wskaznik_zlozony_trasy(raport_client, monkeypatch):
+    c = raport_client
+    trzecia = "011212105044"
+    TERYTY = {GMINA: "1261011", "011212105033": "1212033", trzecia: "1212044"}
+    wartosci = {1: [(GMINA, 800.0), ("011212105033", 5000.0), (trzecia, 2000.0)],
+                2: [(GMINA, 40.0), ("011212105033", 50.0), (trzecia, 10.0)]}
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+        {"bdl_id": b, "teryt": TERYTY[b], "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
+    assert "co najmniej dwa" in c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)
+    w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2, "mianownik": 1, "mnoznik": 1000}).get_json()["id"]
+    html = c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)
+    assert f'data-id="{w2}"' in html and "bezrobotni na 1 000 (ludność ogółem)" in html
+
+    zapytanie = f"woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1,{w2}:-1:2"
+    wynik = c.get(f"/atlas/wskaznik-zlozony/wynik?{zapytanie}").get_json()
+    # ludność: Kraków 0, Alwernia 1, trzecia 0,286; bezrobotni na 1000: 50, 10, 5 → destymulanta: 0, 0,889, 1
+    assert [g["nazwa"] for g in wynik["gminy"]] == ["011212105033", trzecia, GMINA]
+    assert wynik["gminy"][0]["wartosc"] == pytest.approx((1 + 2 * 40 / 45) / 3, abs=1e-4)
+    assert wynik["wojewodztwo"]["nazwa"] == "małopolskie" and wynik["skladowe"][1]["kierunek"] == -1
+
+    assert c.get(f"/atlas/wskaznik-zlozony/wynik?woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1").status_code == 400
+    assert c.get(f"/atlas/wskaznik-zlozony/wynik?woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1,999:1:1").status_code == 400
+    assert c.get(f"/atlas/wskaznik-zlozony/wynik?woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1,{w1}:1:1").status_code == 400
+    assert c.get(f"/atlas/wskaznik-zlozony/wynik?woj={WOJ_RAPORTU}&rok=2023&s=x").status_code == 400
+
+    csv_tekst = c.get(f"/atlas/wskaznik-zlozony.csv?{zapytanie}").get_data(as_text=True)
+    assert csv_tekst.startswith("﻿miejsce;teryt;gmina;wskaźnik złożony;ludność ogółem;")
+    assert "\r\n1;1212033;011212105033;" in csv_tekst and "- 2;" not in csv_tekst and "- 2.0" not in csv_tekst
+
+    granica = {"type": "Polygon", "coordinates": [[[19.9, 50.0], [20.0, 50.0], [20.0, 50.1], [19.9, 50.0]]]}
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {
+        "type": "FeatureCollection",
+        "features": [{"type": "Feature", "properties": {"teryt": t, "nazwa": t}, "geometry": granica}
+                     for t in ("1261011", "1212033", "1212044", "1299999")]})
+    svg = c.get(f"/atlas/wskaznik-zlozony/mapa.svg?{zapytanie}&pobierz=1")
+    assert svg.mimetype == "image/svg+xml" and "attachment" in svg.headers["Content-Disposition"]
+    tekst = svg.get_data(as_text=True)
+    assert "Wskaźnik złożony" in tekst and "brak danych" in tekst and "unitaryzacja zerowana" in tekst

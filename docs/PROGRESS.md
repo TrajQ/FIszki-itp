@@ -1532,3 +1532,15 @@ Status: zamknięty
 - Znaleziony i naprawiony błąd GPS w formularzu (śledzenie po zapisie)
 - Nie sprawdzone tutaj: prawdziwy obraz GUGiK (sieć zablokowana)
 - `DECISIONS.md`: D-090
+
+## ETAP 84 — Atlas: wskaźnik złożony
+Data: 2026-09-30
+Status: zamknięty
+
+- `atlas/zlozony.py` (unitaryzacja zerowana, standaryzacja, średnia
+  ważona), `atlas/trasy_zlozony.py` (strona, wynik, kartogram SVG, CSV),
+  `zlozony.html`, `zlozony.js`
+- Sprawdzone w przeglądarce z podstawionym BDL (30 gmin, 3 składowe,
+  destymulanta, waga 2, 3 gminy pominięte): ranking, kartogram, szerokość
+  telefonu 390 px bez poziomego przewijania strony
+- `DECISIONS.md`: D-091

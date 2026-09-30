@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block tytul %}Wskaźnik złożony — Atlas — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
+        <h1>Wskaźnik złożony</h1>
+        <p>Kilka wskaźników GUS w jednej liczbie: normalizacja, kierunek i waga każdej składowej, ranking gmin województwa i kartogram.</p>
+    </div>
+</div>
+
+<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+
+{% if wskazniki | length < 2 %}
+<section class="karta stos">
+    <p>Składowe wybierasz z zestawu wskaźników raportu gminy — potrzebne są co najmniej dwa. Teraz w zestawie: {{ wskazniki | length }}.</p>
+    <p><a class="przycisk" href="{{ url_for('atlas.raport_gminy_wybor') }}">Ułóż zestaw wskaźników</a></p>
+</section>
+{% else %}
+<form id="formularz-zlozony" class="stos">
+    <section class="karta stos">
+        <h3>1. Obszar i metoda</h3>
+        <div class="rzad">
+            <label>Województwo <select id="pole-woj" required><option value="">Wczytywanie…</option></select></label>
+            <label>Rok <input id="pole-rok" type="number" min="1995" max="2100" value="2023" required></label>
+            <label>Metoda <select id="pole-metoda">{% for k, v in metody.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+        </div>
+        <p class="wyciszony opis-raportu">Unitaryzacja zerowana: każda składowa przeskalowana do 0–1 (1 = najlepsza gmina). Standaryzacja: odchylenie od średniej województwa w odchyleniach standardowych. Wynik to średnia ważona składowych; gminy bez danych którejś składowej są pomijane.</p>
+    </section>
+
+    <section class="karta stos">
+        <h3>2. Składowe</h3>
+        <p class="wyciszony opis-raportu">Stymulanta: więcej znaczy lepiej (np. mieszkania oddane na 1000 mieszkańców). Destymulanta: więcej znaczy gorzej (np. bezrobotni). Od 2 do {{ maks }} składowych.</p>
+        <div class="zlozony__przewijanie"><table class="tabela tabela-skladowych">
+            <thead><tr><th></th><th>Wskaźnik</th><th>Kierunek</th><th>Waga</th></tr></thead>
+            <tbody>
+            {% for w in wskazniki %}
+                <tr data-id="{{ w.id }}">
+                    <td><input type="checkbox" class="skladowa-wlaczona" aria-label="Składowa: {{ w.nazwa_pelna }}"></td>
+                    <td>{{ w.nazwa_pelna }}</td>
+                    <td><select class="skladowa-kierunek"><option value="1">+ stymulanta</option><option value="-1">− destymulanta</option></select></td>
+                    <td><input class="skladowa-waga" type="number" min="0.1" max="100" step="0.1" value="1"></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table></div>
+        <div class="rzad"><button type="submit" id="policz">Policz</button><span id="stan" class="wyciszony"></span></div>
+    </section>
+</form>
+
+<section id="wynik" class="karta stos" hidden>
+    <div class="rzad rzad--miedzy">
+        <h3>3. Wynik</h3>
+        <div class="rzad">
+            <a id="link-mapy" class="przycisk przycisk--drugi" target="_blank" rel="noopener">Kartogram SVG ↗</a>
+            <a id="link-csv" class="przycisk przycisk--drugi">CSV</a>
+        </div>
+    </div>
+    <p id="pominiete" class="wyciszony" hidden></p>
+    <figure class="zlozony__mapa"><img id="mapa" alt="Kartogram wskaźnika złożonego"><figcaption id="mapa-stan" class="wyciszony"></figcaption></figure>
+    <div class="zlozony__przewijanie zlozony__ranking"><table class="tabela" id="ranking"></table></div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
+    const URL_WYNIK = "{{ url_for('atlas.wskaznik_zlozony_wynik') }}";
+    const URL_MAPA = "{{ url_for('atlas.wskaznik_zlozony_mapa') }}";
+    const URL_CSV = "{{ url_for('atlas.wskaznik_zlozony_csv') }}";
+</script>
+<script src="{{ url_for('atlas.static', filename='zlozony.js') }}"></script>
+{% endblock %}

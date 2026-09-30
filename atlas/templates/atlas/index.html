@@ -14,7 +14,10 @@
         <h1>Atlas gmin</h1>
         <p>Wskaźniki z Banku Danych Lokalnych GUS. Kartogram, ranking i opis dla wybranego województwa.</p>
     </div>
-    <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.raport_gminy_wybor') }}">Raport gminy</a>
+    <div class="rzad">
+        <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.raport_gminy_wybor') }}">Raport gminy</a>
+        <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.wskaznik_zlozony') }}">Wskaźnik złożony</a>
+    </div>
 </div>
 
 <form id="formularz-atlasu" class="karta panel-wyboru">

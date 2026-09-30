@@ -1049,3 +1049,53 @@ button.przelacznik__opcja--aktywna:hover {
         print-color-adjust: exact;
     }
 }
+
+/* ---------- wskaźnik złożony (ETAP 84) ---------- */
+
+.tabela-skladowych td:first-child {
+    width: 32px;
+}
+
+.tabela-skladowych .skladowa-waga {
+    width: 80px;
+}
+
+.tabela-skladowych tr.wylaczona td:nth-child(n + 2) {
+    opacity: 0.45;
+}
+
+.zlozony__mapa {
+    margin: 0;
+}
+
+.zlozony__mapa img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--linia, #d2d2d7);
+    border-radius: 8px;
+}
+
+.zlozony__mapa img:not([src]) {
+    display: none;
+}
+
+.zlozony__przewijanie {
+    overflow-x: auto;
+}
+
+.zlozony__ranking th.liczba {
+    text-align: right;
+}
+
+.zlozony__ranking td.liczba {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.tabela-skladowych select {
+    min-width: 9.5em;
+}
+
+.zlozony__ranking td:nth-child(2) {
+    white-space: nowrap;
+}
