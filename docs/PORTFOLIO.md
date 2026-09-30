@@ -44,7 +44,7 @@ do egzaminów.
 ## Jak powstał
 
 Projekt powstał w dialogu z asystentem AI do programowania (Claude Code)
-w 86 małych etapach. Moja rola: pomysły i wymagania z perspektywy
+w 97 małych etapach. Moja rola: pomysły i wymagania z perspektywy
 gospodarki przestrzennej, zasady projektu (np. „liczby tylko z
 danych”), akceptacja planów etapów, testowanie na prawdziwych danych i
 decyzje o kierunku. Od etapu 75 asystent za moją zgodą sam proponował i
@@ -55,10 +55,10 @@ Każda decyzja projektowa ma uzasadnienie i odrzucone alternatywy w
 [DECISIONS.md](../DECISIONS.md), a przebieg prac jest w
 [PROGRESS.md](PROGRESS.md).
 
-## Liczby (stan: ETAP 86)
+## Liczby (stan: ETAP 97)
 
-- 7 modułów, 86 etapów, 94 zapisane decyzje projektowe
-- ok. 11 800 wierszy Pythona, 6 500 JavaScriptu, 448 testów automatycznych
+- 7 modułów, 97 etapów, 105 zapisanych decyzji projektowych
+- ok. 12 600 wierszy Pythona, 6 800 JavaScriptu, 465 testów automatycznych
 - technologie: Python, Flask, SQLite, vanilla JavaScript, Leaflet,
   shapely, H3, pypdf, Gemini API; bez frameworków frontendowych i buildu
 
@@ -98,5 +98,5 @@ compliance, legal acts with LLM answers whose quotes are verified
 against the source text, an offline smartphone field survey form, and
 spaced-repetition flashcards. Numbers always come from data; the
 language model only describes. Built with Python/Flask, SQLite, vanilla
-JavaScript and Leaflet, 448 automated tests, developed iteratively with
+JavaScript and Leaflet, 465 automated tests, developed iteratively with
 an AI coding assistant, with every design decision documented.
