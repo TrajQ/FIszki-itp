@@ -510,3 +510,56 @@ def mapa_svg(lokale: list[dict], obszary: list[dict], progi: list[float], kolory
     czesci.append(f'<path d="M{x},{margines - 12} L{x + 6},{margines + 4} L{x},{margines} L{x - 6},{margines + 4} Z" fill="#1d1d1f"/><text x="{x}" y="{margines + 18}" text-anchor="middle" fill="#1d1d1f">N</text>')
     czesci.append("</svg>")
     return "".join(czesci)
+
+
+# ---------- podobne transakcje — wycena porównawcza (ETAP 107) ----------
+
+PROMIENIE_M = (250, 500, 1000, 2000, 5000)
+TOLERANCJE = (0.1, 0.2, 0.3, 0.5)
+MIN_PODOBNYCH = 5
+MAKS_NA_LISCIE = 30
+
+
+def odleglosc_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Odległość w metrach (równoodległościowe przybliżenie — w skali
+    kilku km błąd poniżej promila)."""
+    r = 6_371_000
+    dx = math.radians(lng2 - lng1) * math.cos(math.radians((lat1 + lat2) / 2))
+    dy = math.radians(lat2 - lat1)
+    return r * math.hypot(dx, dy)
+
+
+def podobne(rekordy: list[dict], lat: float, lng: float, promien_m: float, pow_m2: float, tolerancja: float) -> dict:
+    """Transakcje w promieniu od punktu o powierzchni pow_m2 ± tolerancja.
+
+    Szacunek to mediana ceny za m² podobnych transakcji razy powierzchnia —
+    orientacja z danych, nie operat szacunkowy (bez korekt na stan, piętro,
+    datę)."""
+    kandydaci = []
+    for r in rekordy:
+        if r["lat"] is None or abs(r["pow_m2"] - pow_m2) > tolerancja * pow_m2:
+            continue
+        odl = odleglosc_m(lat, lng, r["lat"], r["lng"])
+        if odl <= promien_m:
+            kandydaci.append({**r, "odleglosc_m": round(odl)})
+    kandydaci.sort(key=lambda r: (r["odleglosc_m"], r["data"]))
+    wynik = {"liczba": len(kandydaci), "wystarczy": len(kandydaci) >= MIN_PODOBNYCH, "min_podobnych": MIN_PODOBNYCH,
+             "pow_m2": pow_m2, "promien_m": promien_m, "tolerancja": tolerancja}
+    if not kandydaci:
+        return {**wynik, "transakcje": []}
+    q1, mediana, q3 = _kwartyle(sorted(r["cena_m2"] for r in kandydaci))
+    return {
+        **wynik,
+        "mediana_m2": mediana,
+        "q1_m2": q1,
+        "q3_m2": q3,
+        "szacunek": mediana * pow_m2,
+        "szacunek_od": q1 * pow_m2,
+        "szacunek_do": q3 * pow_m2,
+        "od": min(r["data"] for r in kandydaci),
+        "do": max(r["data"] for r in kandydaci),
+        "transakcje": [
+            {k: r.get(k) for k in ("data", "rynek", "pow_m2", "cena", "cena_m2", "izby", "przeznaczenie", "lat", "lng", "odleglosc_m")}
+            for r in kandydaci[:MAKS_NA_LISCIE]
+        ],
+    }

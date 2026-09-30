@@ -2436,3 +2436,24 @@ transakcji wielu działek przez powierzchnię jednej zawyżałoby cenę m².
 - Osobna strona dla działek — powieliłaby mapę, wykresy, obszary i raport.
 - Stały filtr „tylko niezabudowane” — wartości słownika `nier_rodzaj` nie
   są potwierdzone na prawdziwym pliku; filtr z listy wartości w pliku.
+
+## D-115 — Wycena porównawcza: mediana podobnych transakcji, bez korekt
+Data: 2026-09-30
+
+**Decyzja:** „Podobne transakcje” to transakcje z zaimportowanego pliku RCN
+w wybranym promieniu od klikniętego miejsca, o powierzchni w zadanej
+tolerancji, przy filtrach strony. Wynik: liczba, mediana ceny za m² z
+kwartylami i cena orientacyjna = mediana × powierzchnia. Bez korekt na
+cechy (stan, piętro, data) i bez modelu — opisane wprost na stronie jako
+orientacja z danych, nie operat szacunkowy. Poniżej 5 transakcji
+ostrzeżenie. Odległość liczona przybliżeniem równoodległościowym.
+
+**Uzasadnienie:** Liczby mają pochodzić z danych, a korekty w podejściu
+porównawczym wymagają wiedzy rzeczoznawcy i cech, których RCN często nie
+ma. Mediana z przedziałem uczciwie pokazuje rozrzut cen.
+
+**Odrzucone alternatywy:**
+- Regresja (hedoniczna) ceny — liczby z modelu, trudne do sprawdzenia i
+  wytłumaczenia na pierwszym roku; może później jako osobny ETAP.
+- Korekta o trend cen w czasie — przy kilkunastu transakcjach niestabilna.
+- Wzór haversine — w promieniu do 5 km różnica pomijalna, prostszy kod.

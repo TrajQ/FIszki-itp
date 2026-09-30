@@ -1882,3 +1882,22 @@ Status: zamknięty
 - Nazwy tabeli i kolumn działek z kodu dwóch otwartych projektów; jednostki
   `dzi_pow_ewid` się w nich różnią — dlatego powierzchnia z geometrii
 - `DECISIONS.md`: D-114
+
+## ETAP 107 — Ceny: podobne transakcje — wycena porównawcza
+Data: 2026-09-30
+Status: zamknięty
+
+- `ceny/rcn.py`: `odleglosc_m` (przybliżenie równoodległościowe),
+  `podobne` — transakcje w promieniu o powierzchni ± tolerancja, od
+  najbliższych; mediana za m² z kwartylami, orientacyjna cena = mediana ×
+  powierzchnia (i przedział z kwartyli), ostrzeżenie poniżej 5 transakcji,
+  lista 30 najbliższych
+- Trasa `/ceny/transakcje/<id>/podobne`: filtry strony (co, rynek, lata,
+  izby / przeznaczenie, nieruchomość) + miejsce, powierzchnia, promień
+  (250 m – 5 km), tolerancja (±10–50%); walidacja miejsca w Polsce
+- Strona: karta „Podobne transakcje”, miejsce kliknięciem na mapie
+  (znacznik, okrąg promienia, zaznaczone transakcje), przeliczenie po
+  zmianie filtrów; klik kończący rysowanie obszaru nie przestawia miejsca
+  (poprawione po sprawdzeniu w przeglądarce)
+- Działa dla mieszkań i działek
+- `DECISIONS.md`: D-115

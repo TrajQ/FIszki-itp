@@ -18,6 +18,8 @@ from flask import Response, abort, jsonify, redirect, render_template, request, 
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
 
+from mpzp.uklady import w_polsce
+
 from . import baza, rcn
 from .routes import ceny_bp
 
@@ -62,6 +64,8 @@ def transakcje():
         blad=request.args.get("blad"),
         rynki=RYNKI,
         maks_obszarow=rcn.MAKS_OBSZAROW,
+        promienie=rcn.PROMIENIE_M,
+        tolerancje=rcn.TOLERANCJE,
     )
 
 
@@ -210,6 +214,33 @@ def raport_transakcji(plik_id):
         kolory=rcn.KOLORY_KLAS,
         dzis=date.today().isoformat(),
     )
+
+
+# ---------- podobne transakcje (ETAP 107) ----------
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/podobne")
+def podobne_transakcje(plik_id):
+    """Filtry strony (rynek, lata, izby, przeznaczenie…) + miejsce i powierzchnia."""
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    lat = request.args.get("lat", type=float)
+    lng = request.args.get("lng", type=float)
+    pow_m2 = request.args.get("pow", type=float)
+    promien = request.args.get("promien", type=int)
+    tolerancja = request.args.get("tolerancja", type=float)
+    try:
+        co = _co()
+        filtry = _filtry(co)
+        if lat is None or lng is None or not w_polsce(lat, lng):
+            raise ValueError("Wskaż miejsce na mapie (kliknij).")
+        if pow_m2 is None or not 1 <= pow_m2 <= 2_000_000:
+            raise ValueError("Podaj powierzchnię w m².")
+        if promien not in rcn.PROMIENIE_M or tolerancja not in rcn.TOLERANCJE:
+            raise ValueError("Niepoprawny promień albo tolerancja.")
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify(rcn.podobne(_rekordy(plik_id, co, filtry), lat, lng, promien, pow_m2, tolerancja))
 
 
 @ceny_bp.route("/transakcje/<int:plik_id>.csv")

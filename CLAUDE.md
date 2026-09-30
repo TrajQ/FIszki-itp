@@ -64,7 +64,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 106 (ceny: transakcje działek z RCN — zamknięty)
-Ostatni ZIP: releases/warsztat_etap106_20260930.zip
-Testy: 488 passed / 0 failed
+ETAP: 107 (ceny: podobne transakcje — zamknięty)
+Ostatni ZIP: releases/warsztat_etap107_20260930.zip
+Testy: 490 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

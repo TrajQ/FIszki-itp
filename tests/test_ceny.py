@@ -385,3 +385,43 @@ def test_migracja_starej_bazy(tmp_path):
     assert stary["liczba_dzialek"] == 0 and stary["odrzucone_dzialki"] == {}
     with app.test_client() as c:
         assert "W tym imporcie nie ma działek" in c.get("/ceny/transakcje?plik=1&co=dzialki").get_data(as_text=True)
+
+
+# ---------- ETAP 107: podobne transakcje ----------
+
+
+def test_podobne():
+    assert rcn.odleglosc_m(50.0, 19.9, 50.009, 19.9) == pytest.approx(1000.8, abs=1)  # 0,009° szerokości ≈ 1 km
+    assert rcn.odleglosc_m(50.0, 19.9, 50.0, 20.0) == pytest.approx(7147, rel=0.002)  # 0,1° długości na 50° N
+    rekordy = [{"data": f"2024-0{i}-01", "rynek": "wtórny", "pow_m2": p, "cena": c * p, "cena_m2": float(c), "izby": 2,
+                "lat": 50.0 + d / 111_195, "lng": 19.9} for i, (p, c, d) in enumerate(
+                    [(50, 10000, 100), (52, 12000, 300), (45, 11000, 600), (80, 20000, 200), (48, 30000, 1500)], start=1)]
+    rekordy.append({**rekordy[0], "lat": None, "lng": None})
+    w = rcn.podobne(rekordy, 50.0, 19.9, 1000, 50, 0.2)
+    assert w["liczba"] == 3 and not w["wystarczy"]  # 80 m² poza tolerancją, 1,5 km poza promieniem, bez położenia pominięty
+    assert [t["odleglosc_m"] for t in w["transakcje"]] == [100, 300, 600]
+    assert w["mediana_m2"] == 11000 and w["szacunek"] == 11000 * 50 and (w["q1_m2"], w["q3_m2"]) == (10500, 11500)
+    pusto = rcn.podobne(rekordy, 52.2, 21.0, 1000, 50, 0.2)  # Warszawa — nic w promieniu
+    assert pusto["liczba"] == 0 and pusto["transakcje"] == [] and "mediana_m2" not in pusto
+
+
+def test_trasa_podobnych(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_pow_uzyt=50 + i, lok_liczba_izb=2 + i % 2, lok_cena_brutto=(50 + i) * 10000,
+                             geom=geometria_gpkg(50.06 + i / 10000, 19.94)) for i in range(1, 11)])
+    dodaj_dzialki(sciezka, [dzialka(f"T{i}", i, dzi_cena_brutto=100000) for i in range(1, 4)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    url = "/ceny/transakcje/1/podobne?lat=50.06&lng=19.94&pow=55&promien=500&tolerancja=0.2"
+    w = client.get(url).get_json()
+    assert w["liczba"] == 10 and w["wystarczy"] and w["mediana_m2"] == 10000
+    assert client.get(url + "&izby=3").get_json()["liczba"] == 5  # filtry strony obowiązują
+    assert client.get(url.replace("promien=500", "promien=333")).status_code == 400
+    assert client.get(url.replace("lat=50.06", "lat=40")).status_code == 400
+    assert client.get(url.replace("pow=55", "pow=")).status_code == 400
+    assert client.get("/ceny/transakcje/9/podobne").status_code == 404
+    dz = client.get("/ceny/transakcje/1/podobne?co=dzialki&lat=50.002&lng=19.9&pow=900&promien=1000&tolerancja=0.3").get_json()
+    assert dz["liczba"] == 3 and dz["transakcje"][0]["przeznaczenie"] == "budownictwo mieszkaniowe jednorodzinne"
+    assert "Podobne transakcje" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)

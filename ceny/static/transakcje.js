@@ -2,6 +2,7 @@
 // Statystyki i progi kolorów liczy serwer (ceny/rcn.py); tu filtry, wykresy i mapa.
 // ETAP 105: obszary rysowane na mapie (Leaflet.draw) i ich porównanie.
 // ETAP 106: ta sama strona dla działek (CO === "dzialki") — inne filtry i tabela grup.
+// ETAP 107: podobne transakcje wokół klikniętego miejsca (wycena porównawcza).
 (function () {
     "use strict";
 
@@ -272,9 +273,97 @@
         }
     }
 
+    // ---------- podobne transakcje (ETAP 107) ----------
+
+    const formPodobnych = document.getElementById("podobne-form");
+    const wynikPodobnych = document.getElementById("podobne-wynik");
+    const warstwaPodobnych = L.featureGroup().addTo(mapa);
+    let miejsce = null;
+    let znacznik = null;
+    let rysuje = false; // klik podczas rysowania obszaru nie przestawia miejsca
+    mapa.on(L.Draw.Event.DRAWSTART, () => { rysuje = true; });
+    // „click” mapy przychodzi zaraz po zakończeniu rysowania — flaga gaśnie chwilę później
+    mapa.on(L.Draw.Event.DRAWSTOP, () => setTimeout(() => { rysuje = false; }, 300));
+
+    mapa.on("click", (e) => {
+        if (rysuje) return;
+        miejsce = e.latlng;
+        if (znacznik) znacznik.setLatLng(miejsce);
+        else znacznik = L.marker(miejsce, { title: "Miejsce do wyceny porównawczej" }).addTo(mapa);
+        document.getElementById("podobne-miejsce").textContent = `Miejsce: ${miejsce.lat.toFixed(5)}, ${miejsce.lng.toFixed(5)}.`;
+        szukajPodobnych();
+    });
+
+    function parametryFiltrow() {
+        return new URLSearchParams([...new FormData(filtry)].filter(([, v]) => v));
+    }
+
+    async function szukajPodobnych() {
+        warstwaPodobnych.clearLayers();
+        if (!miejsce) {
+            wynikPodobnych.replaceChildren(el("p", "komunikat", "Najpierw kliknij na mapie miejsce."));
+            return;
+        }
+        if (!formPodobnych.reportValidity()) return;
+        const parametry = parametryFiltrow();
+        for (const [k, v] of new FormData(formPodobnych)) parametry.set(k, v);
+        parametry.set("lat", miejsce.lat.toFixed(6));
+        parametry.set("lng", miejsce.lng.toFixed(6));
+        try {
+            const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/podobne?${parametry}`);
+            const w = await odp.json();
+            if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+            pokazPodobne(w);
+        } catch (e) {
+            wynikPodobnych.replaceChildren(el("p", "komunikat komunikat--blad", e.message));
+        }
+    }
+
+    function pokazPodobne(w) {
+        L.circle(miejsce, { radius: w.promien_m, color: "#0071e3", weight: 1.5, fill: false, dashArray: "6 5", interactive: false }).addTo(warstwaPodobnych);
+        if (!w.liczba) {
+            wynikPodobnych.replaceChildren(el("p", "komunikat", "Brak podobnych transakcji w tym promieniu — zwiększ promień albo tolerancję powierzchni, albo poluzuj filtry."));
+            return;
+        }
+        const elementy = [];
+        if (!w.wystarczy) {
+            elementy.push(el("p", "komunikat", `Podobnych transakcji: ${w.liczba}, mniej niż ${w.min_podobnych} — mediana jest niepewna. Zwiększ promień albo tolerancję.`));
+        }
+        const kafelki = el("div", "kafelki-rcn");
+        kafelki.append(
+            kafelek("Podobnych transakcji", liczba.format(w.liczba), `${w.od} – ${w.do}`),
+            kafelek("Mediana ceny za m²", `${liczba.format(w.mediana_m2)} zł`, `połowa: ${liczba.format(w.q1_m2)}–${liczba.format(w.q3_m2)} zł`),
+            kafelek(`Orientacyjnie za ${liczba.format(w.pow_m2)} m²`, `${liczba.format(w.szacunek)} zł`, `połowa: ${liczba.format(w.szacunek_od)}–${liczba.format(w.szacunek_do)} zł`),
+        );
+        elementy.push(kafelki);
+        const tabela = el("table", "tabela");
+        const glowa = el("tr");
+        glowa.append(el("th", "liczba", "Odległość"), el("th", "", "Data"), el("th", "liczba", "Powierzchnia"),
+            el("th", "", DZIALKI ? "Przeznaczenie" : "Izby"), el("th", "liczba", "Cena"), el("th", "liczba", "Za m²"));
+        tabela.appendChild(glowa);
+        for (const t of w.transakcje) {
+            const tr = el("tr");
+            tr.append(el("td", "liczba", `${liczba.format(t.odleglosc_m)} m`), el("td", "", t.data), el("td", "liczba", `${liczba.format(t.pow_m2)} m²`),
+                el("td", "", String((DZIALKI ? t.przeznaczenie : t.izby) || "—")), el("td", "liczba", `${liczba.format(t.cena)} zł`), el("td", "liczba", `${liczba.format(t.cena_m2)} zł`));
+            tabela.appendChild(tr);
+            L.circleMarker([t.lat, t.lng], { radius: 8, color: "#0071e3", weight: 2.5, fill: false })
+                .bindTooltip(`${liczba.format(t.cena_m2)} zł/m² · ${liczba.format(t.pow_m2)} m² · ${t.data}`).addTo(warstwaPodobnych);
+        }
+        const przewijanie = el("div", "przewijanie-cen");
+        przewijanie.appendChild(tabela);
+        elementy.push(przewijanie);
+        if (w.liczba > w.transakcje.length) elementy.push(el("p", "wyciszony opis-cen", `Lista: ${w.transakcje.length} najbliższych z ${w.liczba}; mediana ze wszystkich.`));
+        wynikPodobnych.replaceChildren(...elementy);
+    }
+
+    formPodobnych.addEventListener("submit", (e) => {
+        e.preventDefault();
+        szukajPodobnych();
+    });
+
     async function wczytaj() {
         const moj = ++numer;
-        const parametry = new URLSearchParams([...new FormData(filtry)].filter(([, v]) => v));
+        const parametry = parametryFiltrow();
         document.getElementById("link-csv-rcn").href = `${URL_TRANSAKCJE}/${PLIK_ID}.csv?${parametry}`;
         document.getElementById("link-raport-rcn").href = `${URL_TRANSAKCJE}/${PLIK_ID}/raport?${parametry}`;
         try {
@@ -286,6 +375,7 @@
             uzupelnijListy(d);
             pokaz(d);
             pokazObszary(d);
+            if (miejsce) szukajPodobnych(); // te same filtry co reszta strony
         } catch (e) {
             komunikat.textContent = e.message;
             komunikat.hidden = false;

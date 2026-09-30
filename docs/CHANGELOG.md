@@ -748,3 +748,8 @@
   „Mieszkania | Działki”), cena za m² gruntu, filtry przeznaczenia w planie
   i rodzaju nieruchomości, tabela według przeznaczenia, CSV i raport
 - Pomoc: opis cen działek
+
+## ETAP 107 — 2026-09-30
+- Ceny → Transakcje: podobne transakcje wokół wskazanego miejsca —
+  mediana ceny za m² i orientacyjna cena mieszkania lub działki
+- Pomoc: opis wyceny porównawczej
