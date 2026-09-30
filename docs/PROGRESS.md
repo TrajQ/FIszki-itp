@@ -1744,3 +1744,14 @@ Status: zamknięty
 - test pilnujący, że Pomoc wymienia te funkcje (etykiety jak w
   interfejsie)
 - `DECISIONS.md`: D-106
+
+## ETAP 99 — Teren: paski wykresu w zestawieniu raportu
+Data: 2026-09-30
+Status: zamknięty
+
+- `raport.zestawienie`: kolor paska dla każdej wartości (skala: od
+  zielonego do czerwonego, inaczej jeden kolor); w raporcie kolumna z
+  paskiem długości procentu, drukowana w kolorze
+- poprawki po sprawdzeniu w przeglądarce: bez kreski przy 0%, szersze
+  kolumny zestawienia (etykiety się nie łamią)
+- `DECISIONS.md`: D-107

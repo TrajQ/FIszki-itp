@@ -26,6 +26,9 @@ def _tekst(w) -> str:
     return "tak" if w is True else "nie" if w is False else str(w)
 
 
+KOLOR_PASKA = "#0071e3"
+
+
 def zestawienie(pola: list[dict], punkty: list[dict]) -> list[dict]:
     """Dla każdego pola: rozkład wartości (wybór, tak/nie), statystyki
     (liczba) albo liczba wypełnionych (tekst)."""
@@ -55,6 +58,11 @@ def zestawienie(pola: list[dict], punkty: list[dict]) -> list[dict]:
                 "mediana": statistics.median(wartosci),
                 "suma": math.fsum(wartosci),
             }
+        if "rozklad" in pozycja:
+            # ETAP 99: kolor paska wykresu — skala od zielonego do czerwonego, inaczej jeden kolor
+            n = len(pozycja["rozklad"])
+            for i, r in enumerate(pozycja["rozklad"]):
+                r["kolor"] = kolor_skali(i, n) if pole.get("skala") else KOLOR_PASKA
         wynik.append(pozycja)
     return wynik
 

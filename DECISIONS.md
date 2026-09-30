@@ -2268,3 +2268,19 @@ gdzie co jest (D-094); nieaktualna jest gorsza niż żadna.
 **Odrzucone alternatywy:**
 - Generowanie Pomocy z opisów w kodzie — więcej mechaniki niż treści;
   jedna strona HTML jest prostsza w utrzymaniu.
+
+## D-107 — Teren: wykresy jako paski CSS w tabeli zestawienia
+Data: 2026-09-30
+
+**Decyzja:** Rozkład odpowiedzi pokazujemy paskiem w dodatkowej kolumnie
+tabeli (szerokość = procent), kolorem skali dla pól „skala” (ten sam wzór
+co kolory punktów, ETAP 70). Druk z zachowaniem kolorów
+(`print-color-adjust: exact`).
+
+**Uzasadnienie:** Wyniki ankiety czyta się z wykresu szybciej niż z
+liczb, a tabela zostaje obok — liczby zawsze widać.
+
+**Odrzucone alternatywy:**
+- Osobne wykresy SVG — więcej kodu dla tego samego efektu przy
+  wykresach słupkowych jednej zmiennej.
+- Biblioteka wykresów — nowa zależność i CDN (sprzeczne z zasadami).

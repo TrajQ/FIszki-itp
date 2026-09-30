@@ -281,7 +281,7 @@ button.przycisk--niebezpieczny-tekst {
 
 .raport-terenu__zestawienie {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px 28px;
 }
 
@@ -357,10 +357,23 @@ button.przycisk--niebezpieczny-tekst {
         break-after: page;
     }
 
-    .raport-terenu__nr {
+    .raport-terenu__nr,
+    .raport-terenu__pasek {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
+}
+
+/* ETAP 99: paski wykresu w zestawieniu raportu */
+.raport-terenu__wykres {
+    width: 35%;
+    min-width: 70px;
+}
+
+.raport-terenu__pasek {
+    display: block;
+    height: 10px;
+    border-radius: 3px;
 }
 
 /* ETAP 70: pole-skala w edytorze */

@@ -700,3 +700,8 @@
 ## ETAP 98 — 2026-09-30
 - Pomoc: opisy funkcji dodanych w ETAPach 88–97.
 - Dodano `DECISIONS.md` D-106 i 1 test.
+
+## ETAP 99 — 2026-09-30
+- Teren: **paski wykresu** w zestawieniu raportu (wyniki ankiety,
+  rozkład wartości pól), w kolorach skali dla pól „od najlepszej”.
+- Dodano `DECISIONS.md` D-107 i 1 test.

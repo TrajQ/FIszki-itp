@@ -360,3 +360,16 @@ def test_ankieta_obieg(client):
     assert client.post("/teren/projekty/1/rodzaj", data={"rodzaj": "inwentaryzacja"}).status_code == 302
     assert "Nowy punkt" in client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
     assert client.post("/teren/projekty/1/rodzaj", data={"rodzaj": "x"}).status_code == 400
+
+
+# ---------- ETAP 99: paski wykresu w zestawieniu ----------
+
+
+def test_zestawienie_ma_kolory_paskow():
+    from teren.raport import KOLOR_PASKA, kolor_skali, zestawienie
+
+    pola = sprawdz_pola([{"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "średni", "zły"], "skala": True},
+                         {"nazwa": "obiekt", "typ": "wybor", "opcje": ["drzewo", "krzew"]}])
+    z = zestawienie(pola, [{"wartosci": {"stan": "zły", "obiekt": "drzewo"}}])
+    assert [r["kolor"] for r in z[0]["rozklad"]] == [kolor_skali(i, 3) for i in range(3)]
+    assert {r["kolor"] for r in z[1]["rozklad"]} == {KOLOR_PASKA}
