@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block tytul %}Raport działki {{ dzialka.id }} — Warsztat{% endblock %}
+{% block tytul %}Karta działki {{ dzialka.id }} — Warsztat{% endblock %}
 {% block klasa_body %}strona-raportu{% endblock %}
 {% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
 
@@ -8,11 +8,15 @@
 <div class="raport">
     <div class="raport__akcje">
         <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa</a>
-        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        <div class="rzad">
+            <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.kronika', id=dzialka.id) }}">Kronika zmian</a>
+            <a class="przycisk przycisk--drugi" href="{{ url_for('mpzp.kalkulator', dzialka=dzialka.id, powierzchnia=powierzchnia | round | int) }}">Kalkulator zabudowy</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>
     </div>
 
     <header class="raport__naglowek">
-        <p class="raport__nadtytul">Raport działki ewidencyjnej</p>
+        <p class="raport__nadtytul">Karta działki ewidencyjnej</p>
         <h1 class="identyfikator">{{ dzialka.id }}</h1>
         <p class="wyciszony">Wygenerowano {{ data }} · aplikacja Warsztat</p>
     </header>
@@ -26,6 +30,13 @@
                 <tr><th>Numer</th><td>{{ numer }}</td></tr>
                 {% if zapis and zapis.notatka %}<tr><th>Notatka</th><td>{{ zapis.notatka }}</td></tr>{% endif %}
                 <tr><th>Powierzchnia (z geometrii)</th><td class="liczba">{{ '{:,.0f}'.format(powierzchnia).replace(',', ' ') }} m² ({{ ('%.4f' % (powierzchnia / 10000)).replace('.', ',') }} ha)</td></tr>
+                {% if wymiary %}
+                <tr><th>Szerokość × głębokość</th><td class="liczba">{{ ('%.1f' % wymiary.szerokosc_m).replace('.', ',') }} × {{ ('%.1f' % wymiary.glebokosc_m).replace('.', ',') }} m</td></tr>
+                <tr><th>Obwód</th><td class="liczba">{{ ('%.1f' % wymiary.obwod_m).replace('.', ',') }} m</td></tr>
+                {% if wymiary.zwartosc is not none %}<tr><th>Zwartość kształtu <span class="wyciszony">(1 = koło, 0,785 = kwadrat)</span></th><td class="liczba">{{ ('%.3f' % wymiary.zwartosc).replace('.', ',') }}</td></tr>{% endif %}
+                {% endif %}
+                <tr><th>Środek (WGS84)</th><td class="liczba">{{ '%.6f' % polozenie.lat }} N, {{ '%.6f' % polozenie.lon }} E</td></tr>
+                {% for u in polozenie.uklady %}<tr><th>{{ u.uklad }} <span class="wyciszony">(EPSG:{{ u.epsg }})</span></th><td class="liczba">x = {{ '%.2f' % u.x }}, y = {{ '%.2f' % u.y }}</td></tr>{% endfor %}
             </table>
         </div>
 
@@ -39,6 +50,22 @@
             </svg>
             <p class="wyciszony raport__przypis">Czarny obrys — działka.{% if not plan_krajowy %} Kolory — wydzielenia planu (legenda obok).{% endif %} Północ u góry.</p>
         </div>
+    </section>
+
+    <section class="karta stos karta-orto">
+        <h3>Ortofotomapa</h3>
+        <div class="karta-orto__obrazy">
+            {% for rodzaj, podpis in [('obecna', 'aktualna ortofotomapa'), ('archiwalna', 'najstarsza dostępna ortofotomapa archiwalna')] %}
+            <figure class="karta-orto__obraz" id="orto-{{ rodzaj }}" {{ 'hidden' if rodzaj == 'archiwalna' }}>
+                <div class="karta-orto__ramka">
+                    <img {% if rodzaj == 'obecna' %}src="{{ orto.obecna }}"{% endif %} alt="{{ podpis }}" width="{{ orto.szerokosc }}" height="{{ orto.wysokosc }}" loading="lazy">
+                    <svg viewBox="0 0 {{ orto.szerokosc }} {{ orto.wysokosc }}" aria-hidden="true"><path d="{{ orto.obrys }}" fill="none" stroke="#ffd60a" stroke-width="3"/></svg>
+                </div>
+                <figcaption class="wyciszony">{{ podpis }}<span class="karta-orto__rok"></span> · GUGiK</figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+        <p class="wyciszony raport__przypis">Żółty obrys — obecna granica działki z ULDK (na starszym zdjęciu granice mogły przebiegać inaczej). Więcej lat: „Kronika zmian”.</p>
     </section>
 
     <section class="karta">
@@ -80,7 +107,7 @@
     </section>
 
     <footer class="raport__stopka wyciszony">
-        Źródła: ULDK (GUGiK) — geometria działki; WFS planów miejscowych gminy albo krajowa integracja planów
+        Źródła: ULDK (GUGiK) — geometria działki; ortofotomapa — GUGiK; WFS planów miejscowych gminy albo krajowa integracja planów
         (KIMPZP, GUGiK) — przeznaczenie.
         Powierzchnia liczona z geometrii w przybliżeniu (błąd poniżej 0,1%) i może różnić się od
         powierzchni w ewidencji gruntów. Opisy symboli wg rozporządzenia z 2003 r. mają charakter
@@ -88,4 +115,34 @@
         wiążący jest tekst i rysunek uchwały.
     </footer>
 </div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    // Najstarsza dostępna ortofotomapa archiwalna (ETAP 80): lata z opisu
+    // usługi (ten sam, zapamiętany opis co w Kronice zmian). Bez usługi —
+    // obrazek zostaje ukryty.
+    (async function () {
+        const figura = document.getElementById("orto-archiwalna");
+        try {
+            const odpowiedz = await fetch("{{ url_for('mpzp.kronika_lata') }}");
+            if (!odpowiedz.ok) return;
+            const usluga = await odpowiedz.json();
+            const r = usluga.lata[0];
+            const aktualny = document.querySelector("#orto-obecna img");
+            const adres = new URL(usluga.url);
+            const parametry = new URL(aktualny.src).searchParams;
+            parametry.set("LAYERS", r.warstwa);
+            parametry.set("VERSION", usluga.wersja);
+            if (usluga.wersja === "1.1.1") parametry.set("SRS", parametry.get("CRS"));
+            if (r.time) parametry.set("TIME", r.time);
+            adres.search = parametry.toString();
+            figura.querySelector("img").src = adres.toString();
+            figura.querySelector(".karta-orto__rok").textContent = ` (${r.rok})`;
+            figura.hidden = false;
+        } catch (e) {
+            // brak usługi archiwalnej — karta działa bez tego obrazu
+        }
+    })();
+</script>
 {% endblock %}

@@ -581,3 +581,9 @@
   suwak lat w kronice zmian zawija się, tabela symboli i tabela punktów
   raportu z terenu przewijają się w poziomie.
 - Dodano `DECISIONS.md` D-086.
+
+## ETAP 80 — 2026-09-30
+- MPZP: **karta działki** (dawny raport do druku) — wymiary, współrzędne
+  środka w WGS84, PL-1992 i PL-2000, ortofotomapa obecna i najstarsza
+  archiwalna z obrysem granicy, linki do kroniki zmian i kalkulatora.
+- Dodano `mpzp/karta.py`, `DECISIONS.md` D-087 i 2 testy.

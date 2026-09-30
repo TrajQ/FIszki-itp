@@ -12,7 +12,7 @@ from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisana, zapisane, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
-from . import krajowe, uklady
+from . import karta, krajowe, uklady
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
@@ -398,8 +398,19 @@ def raport():
             blad = "Brak planu miejscowego dla tej działki."
 
     czesci_id = dzialka.id.split(".")
+    # Karta działki (ETAP 80): wymiary, położenie, ortofotomapa z obrysem.
+    bbox = karta.prostokat(dzialka.geometria)
     return render_template(
         "mpzp/raport.html",
+        wymiary=wymiary(dzialka.geometria),
+        polozenie=karta.polozenie(dzialka.geometria),
+        orto={
+            "obecna": karta.adres_obrazu(karta.URL_ORTO, "Raster", bbox),
+            "bbox": [round(v, 2) for v in bbox],
+            "obrys": karta.obrys_svg(dzialka.geometria, bbox),
+            "szerokosc": karta.SZEROKOSC_PX,
+            "wysokosc": karta.WYSOKOSC_PX,
+        },
         dzialka=dzialka,
         jednostka=czesci_id[0],
         obreb=czesci_id[1] if len(czesci_id) > 1 else "",

@@ -1850,3 +1850,24 @@ tabeli w poziomie; wydruk bez zmian).
 
 **Uzasadnienie:** Co kilka ETAPów przegląd całości — poprzedni (D-072)
 znalazł błąd utraty danych, którego testy jednostkowe nie łapały.
+
+## D-087 — MPZP: karta działki zamiast osobnego raportu
+Data: 2026-09-30
+
+**Decyzja:** Raport działki (`/mpzp/raport`) rozbudowany do karty
+działki: wymiary (szerokość × głębokość, obwód, zwartość — z istniejącej
+`geometria.wymiary`), środek działki w WGS84, PL-1992 i PL-2000,
+ortofotomapa obecna i najstarsza archiwalna z żółtym obrysem granicy
+(`mpzp/karta.py`), linki do kroniki zmian i kalkulatora zabudowy.
+Obrazy WMS pobiera przeglądarka: GetMap 1.3.0, CRS=EPSG:3857, BBOX w
+metrach x,y — ten sam układ co mapy Leaflet w aplikacji; obrys liczony
+tymi samymi wzorami Web Mercator, więc pasuje do obrazu. Najstarszy
+rocznik dobiera skrypt strony z zapamiętanego opisu usługi archiwalnej
+(D-070) — wolna usługa nie blokuje otwarcia karty.
+
+**Uzasadnienie:** Wszystko, co moduł wie o działce, na jednej stronie do
+wydruku; bez nowej strony obok istniejącego raportu.
+
+**Odrzucone alternatywy:**
+- Układ PL-1992 (EPSG:2180) w zapytaniu WMS — kolejność osi w WMS 1.3.0
+  dla tego układu łatwo pomylić, a nie da się jej tu sprawdzić na żywo.

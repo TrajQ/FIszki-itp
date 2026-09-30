@@ -938,3 +938,50 @@ button.wpis-zapisany {
         order: -1; /* suwak na pełną szerokość, przyciski pod nim */
     }
 }
+
+/* ETAP 80: karta działki — ortofotomapa z obrysem */
+.karta-orto h3 {
+    margin: 0;
+}
+
+.karta-orto__obrazy {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.karta-orto__obraz {
+    margin: 0;
+}
+
+.karta-orto__obraz[hidden] {
+    display: none;
+}
+
+.karta-orto__ramka {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+}
+
+.karta-orto__ramka img,
+.karta-orto__ramka svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.karta-orto__obraz figcaption {
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+@media print {
+    .karta-orto__ramka {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

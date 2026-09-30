@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from shapely.geometry import Polygon
 
@@ -444,7 +446,7 @@ def test_raport_dzialki(client, monkeypatch):
         lambda g, geom: [(w, w.geometria.intersection(geom)) for w in wydzielenia if w.geometria.intersects(geom)],
     )
     strona = client.get("/mpzp/raport?id=306401_1.0051.AR_18.14").get_data(as_text=True)
-    assert "Raport działki ewidencyjnej" in strona
+    assert "Karta działki ewidencyjnej" in strona
     assert "0051" in strona and "AR_18.14" in strona
     assert "1MN" in strona and "2KDD" in strona
     assert "nie jest wypisem" in strona
@@ -762,3 +764,38 @@ def test_porownanie_dzialek(client, monkeypatch):
     assert "20 × 40 m" in html and "30 × 30 m" in html
     assert "ULDK nie zna tej działki." in html  # trzecia — błąd w kolumnie, reszta działa
     assert "<strong>MN</strong>" in html and "60 m" in html and "90 m" in html  # obszar WZ: 3 × szerokość
+
+
+
+# ---------- ETAP 80: karta działki ----------
+
+
+def test_karta_dzialki_wymiary_polozenie_orto(client, monkeypatch):
+    from urllib.parse import parse_qs, urlsplit
+
+    from mpzp import karta
+
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_kwadrat())
+    monkeypatch.setattr(mpzp_routes, "znajdz_wydzielenia_dzialki", lambda g, geom: [])
+    strona = client.get("/mpzp/raport?id=306401_1.0051.AR_18.14").get_data(as_text=True)
+    assert "Szerokość × głębokość" in strona and "PL-1992" in strona and "PL-2000 strefa" in strona
+    adres = re.search(r'<img src="([^"]+)"', strona).group(1).replace("&amp;", "&")
+    q = parse_qs(urlsplit(adres).query)
+    assert q["CRS"] == ["EPSG:3857"] and q["LAYERS"] == ["Raster"] and q["WIDTH"] == ["640"]
+    minx, miny, maxx, maxy = map(float, q["BBOX"][0].split(","))
+    assert (maxx - minx) / (maxy - miny) == pytest.approx(640 / 480, rel=1e-3)
+    assert "/mpzp/kronika?id=" in strona and "/mpzp/kronika/lata" in strona
+
+
+def test_karta_obrys_w_srodku_obrazu():
+    from shapely.geometry import box as prostokat
+
+    from mpzp import karta
+
+    dzialka = prostokat(16.9, 52.4, 16.901, 52.4006)
+    bbox = karta.prostokat(dzialka)
+    liczby = [float(v) for v in re.findall(r"-?\d+\.\d", karta.obrys_svg(dzialka, bbox))]
+    xs, ys = liczby[0::2], liczby[1::2]
+    assert 0 < min(xs) < max(xs) < 640 and 0 < min(ys) < max(ys) < 480  # obrys mieści się w obrazie z marginesem
+    x, y = karta.web_mercator(0, 0)
+    assert (round(x, 6), round(y, 6)) == (0, 0)

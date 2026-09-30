@@ -165,7 +165,7 @@
     function sekcjaDzialki(dzialka) {
         const sekcja = element("div", "stos");
         const naglowek = element("div", "rzad rzad--miedzy");
-        const raport = element("a", "przycisk przycisk--tekst", "Raport do druku ↗");
+        const raport = element("a", "przycisk przycisk--tekst", "Karta działki ↗");
         raport.href = `${URL_RAPORT}?id=${encodeURIComponent(dzialka.id)}`;
         raport.target = "_blank";
         const kalkulator = element("a", "przycisk przycisk--tekst", "Kalkulator zabudowy");

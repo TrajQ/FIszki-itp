@@ -1487,3 +1487,14 @@ Status: zamknięty
 - 24 strony × 3 szerokości okna w przeglądarce: bez błędów JS, bez
   poziomego przewijania po poprawkach
 - `DECISIONS.md`: D-086
+
+## ETAP 80 — MPZP: karta działki
+Data: 2026-09-30
+Status: zamknięty
+
+- `mpzp/karta.py` (położenie, prostokąt EPSG:3857, adres GetMap, obrys),
+  rozbudowany szablon `raport.html`, link „Karta działki” w panelu
+- Sprawdzone w przeglądarce z atrapami WMS (obecna i archiwalna 1997)
+- Nie sprawdzone tutaj: prawdziwe obrazy GUGiK i dopasowanie obrysu na
+  prawdziwym zdjęciu (sieć zablokowana)
+- `DECISIONS.md`: D-087
