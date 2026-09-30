@@ -9,10 +9,12 @@ Bazy kopiujemy przez sqlite3 `backup()`, a nie przez zwykłe skopiowanie
 pliku — kopia jest spójna nawet wtedy, gdy aplikacja akurat zapisuje.
 """
 
+import glob
 import io
 import os
 import sqlite3
 import tempfile
+import time
 import zipfile
 from datetime import datetime
 
@@ -68,3 +70,40 @@ def _spojna_kopia_bazy(sciezka: str) -> bytes:
             zrodlo.close()
         with open(cel_sciezka, "rb") as plik:
             return plik.read()
+
+
+# ---------- kopia automatyczna przy starcie (ETAP 97) ----------
+
+WZOR_AUTO = "warsztat_auto_*.zip"
+
+
+def ostatnia_kopia_automatyczna(folder_kopii: str) -> dict | None:
+    """{"sciezka", "data"} najnowszej kopii automatycznej albo None."""
+    pliki = glob.glob(os.path.join(folder_kopii, WZOR_AUTO))
+    if not pliki:
+        return None
+    najnowszy = max(pliki, key=os.path.getmtime)
+    return {"sciezka": najnowszy, "data": datetime.fromtimestamp(os.path.getmtime(najnowszy))}
+
+
+def kopia_automatyczna(folder_instance: str, folder_kopii: str, co_ile_dni: int = 7, zostaw: int = 5, teraz: float | None = None) -> str | None:
+    """Robi kopię, jeśli od ostatniej minęło co_ile_dni (0 = wyłączone).
+    Zostawia `zostaw` najnowszych kopii automatycznych, starsze usuwa (kopii
+    zrobionych ręcznie z przeglądarki nie rusza). Zwraca ścieżkę nowej kopii
+    albo None, gdy nie było potrzeby."""
+    teraz = time.time() if teraz is None else teraz
+    if co_ile_dni <= 0 or not os.path.isdir(folder_instance) or not any(os.scandir(folder_instance)):
+        return None
+    ostatnia = ostatnia_kopia_automatyczna(folder_kopii)
+    if ostatnia and teraz - os.path.getmtime(ostatnia["sciezka"]) < co_ile_dni * 86400:
+        return None
+    os.makedirs(folder_kopii, exist_ok=True)
+    sciezka = os.path.join(folder_kopii, f"warsztat_auto_{datetime.fromtimestamp(teraz):%Y%m%d_%H%M%S}.zip")
+    tymczasowa = sciezka + ".tmp"  # przerwana kopia nie udaje pełnej
+    with open(tymczasowa, "wb") as plik:
+        plik.write(utworz_kopie(folder_instance))
+    os.replace(tymczasowa, sciezka)
+    os.utime(sciezka, (teraz, teraz))
+    for stara in sorted(glob.glob(os.path.join(folder_kopii, WZOR_AUTO)), key=os.path.getmtime)[:-zostaw]:
+        os.remove(stara)
+    return sciezka

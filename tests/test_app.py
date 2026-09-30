@@ -135,3 +135,45 @@ def test_pomoc_ma_wszystkie_moduly_i_dzialajace_linki(czysty_client):
     assert len(linki) >= 8
     for link in linki:
         assert c.get(link).status_code == 200, link
+
+
+# ---------- ETAP 97: kopia automatyczna przy starcie ----------
+
+
+def test_kopia_automatyczna_co_tydzien_i_5_najnowszych(tmp_path):
+    import os
+    import zipfile
+
+    from kopia import kopia_automatyczna, ostatnia_kopia_automatyczna
+
+    instance, kopie = tmp_path / "instance", tmp_path / "kopie"
+    assert kopia_automatyczna(str(instance), str(kopie)) is None  # brak danych — nic do kopiowania
+    (instance / "fiszki").mkdir(parents=True)
+    (instance / "fiszki" / "notatka.txt").write_text("dane")
+    dzien = 86400
+    start = 1_790_000_000
+    pierwsza = kopia_automatyczna(str(instance), str(kopie), teraz=start)
+    assert pierwsza and zipfile.ZipFile(pierwsza).read("instance/fiszki/notatka.txt") == b"dane"
+    assert kopia_automatyczna(str(instance), str(kopie), teraz=start + 6 * dzien) is None  # za wcześnie
+    for tydzien in range(1, 8):
+        assert kopia_automatyczna(str(instance), str(kopie), teraz=start + tydzien * 7 * dzien)
+    pliki = sorted(os.listdir(kopie))
+    assert len(pliki) == 5 and not any(p.endswith(".tmp") for p in pliki)
+    assert ostatnia_kopia_automatyczna(str(kopie))["sciezka"].endswith(pliki[-1])
+    (kopie / "warsztat_kopia_reczna.zip").write_bytes(b"x")  # kopia z przeglądarki zostaje nietknięta
+    kopia_automatyczna(str(instance), str(kopie), teraz=start + 70 * dzien)
+    assert "warsztat_kopia_reczna.zip" in os.listdir(kopie)
+    assert kopia_automatyczna(str(instance), str(kopie), co_ile_dni=0, teraz=start + 200 * dzien) is None  # wyłączona
+
+
+def test_strona_glowna_pokazuje_kopie_automatyczna(czysty_client, tmp_path):
+    from kopia import kopia_automatyczna
+
+    c = czysty_client
+    c.application.config["AUTO_KOPIA_FOLDER"] = str(tmp_path / "kopie")
+    assert "jeszcze nie zrobiona" in c.get("/").get_data(as_text=True)
+    c.get("/fiszki/")  # tworzy bazę w instance/
+    kopia_automatyczna(c.application.instance_path, str(tmp_path / "kopie"))
+    assert "warsztat_auto_" in c.get("/").get_data(as_text=True)
+    c.application.config["AUTO_KOPIA_DNI"] = 0
+    assert "wyłączona" in c.get("/").get_data(as_text=True)

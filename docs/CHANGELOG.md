@@ -690,3 +690,9 @@
 - Przyspieszono „Gdzie nowa placówka” (Dostępność) o ok. 30–35% przy tym
   samym wyniku.
 - Dodano `DECISIONS.md` D-104.
+
+## ETAP 97 — 2026-09-30
+- **Automatyczna kopia zapasowa** danych przy uruchomieniu — co 7 dni do
+  `~/warsztat_kopie`, zostaje 5 najnowszych; data ostatniej kopii na
+  stronie głównej.
+- Dodano `DECISIONS.md` D-105 i 2 testy.

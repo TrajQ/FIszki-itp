@@ -91,7 +91,13 @@ def create_app(instance_path=None):
             except Exception:
                 app.logger.exception("Nie udało się odczytać terminów modułu %s", modul)
         terminy.sort(key=lambda t: (t["data"], t["rodzaj"], t["nazwa"]))
-        return render_template("index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW)
+        from kopia import ostatnia_kopia_automatyczna
+
+        return render_template(
+            "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
+            kopia_auto=ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
+            auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
+        )
 
     @app.route("/pomoc")
     def pomoc():
@@ -117,7 +123,25 @@ def create_app(instance_path=None):
     return app
 
 
+def kopia_przy_starcie(app):
+    """Kopia automatyczna w tle (ETAP 97) — start aplikacji nie czeka na ZIP."""
+    import threading
+
+    from kopia import kopia_automatyczna
+
+    def zrob():
+        try:
+            sciezka = kopia_automatyczna(app.instance_path, Config.AUTO_KOPIA_FOLDER, Config.AUTO_KOPIA_DNI)
+            if sciezka:
+                print(f"Kopia automatyczna danych: {sciezka}")
+        except OSError as e:
+            print(f"Nie udało się zrobić kopii automatycznej: {e}")
+
+    threading.Thread(target=zrob, daemon=True).start()
+
+
 if __name__ == "__main__":
     app = create_app()
+    kopia_przy_starcie(app)
     # Host zablokowany na stałe na 127.0.0.1 — aplikacja jest wyłącznie lokalna.
     app.run(host="127.0.0.1", port=Config.PORT, debug=Config.DEBUG)

@@ -60,7 +60,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 96 (przegląd kodu 79–95 i wydajność — zamknięty)
-Ostatni ZIP: releases/warsztat_etap96_20260930.zip
-Testy: 463 passed / 0 failed
+ETAP: 97 (automatyczna kopia zapasowa — zamknięty)
+Ostatni ZIP: releases/warsztat_etap97_20260930.zip
+Testy: 465 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

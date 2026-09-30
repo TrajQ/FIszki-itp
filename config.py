@@ -17,6 +17,10 @@ class Config:
     GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
     GUS_BDL_API_KEY = os.environ.get("GUS_BDL_API_KEY", "")
 
+    # ETAP 97: kopia automatyczna danych przy starcie aplikacji.
+    AUTO_KOPIA_DNI = int(os.environ.get("AUTO_KOPIA_DNI", 7))  # 0 = wyłączona
+    AUTO_KOPIA_FOLDER = os.environ.get("AUTO_KOPIA_FOLDER", os.path.join(os.path.expanduser("~"), "warsztat_kopie"))
+
     # ETAP 64: usługa WMS z archiwalnymi ortofotomapami (Kronika zmian w MPZP).
     # Lata Warsztat odczytuje z GetCapabilities tej usługi — adres można
     # zmienić tutaj, jeśli GUGiK go przeniesie.

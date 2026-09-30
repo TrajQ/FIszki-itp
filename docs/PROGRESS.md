@@ -1718,3 +1718,17 @@ Status: zamknięty
   zestawach). Resztę czasu zajmuje przejście po ok. 1,8 mln par
   sąsiadów — dalsze przyspieszenie wymagałoby wektoryzacji (numpy)
 - `DECISIONS.md`: D-104
+
+## ETAP 97 — Automatyczna kopia zapasowa przy starcie
+Data: 2026-09-30
+Status: zamknięty
+
+- `kopia.kopia_automatyczna` (co N dni, domyślnie 7; 5 najnowszych
+  `warsztat_auto_*.zip`; zapis przez plik `.tmp`; kopii ręcznych nie
+  rusza) i `ostatnia_kopia_automatyczna`; wywołanie w tle przy
+  `python app.py`; ustawienia `AUTO_KOPIA_DNI`, `AUTO_KOPIA_FOLDER`
+  (`.env.example`)
+- strona główna: data i ścieżka ostatniej kopii automatycznej; Pomoc
+- Sprawdzone: prawdziwe uruchomienie `python app.py` zrobiło kopię w
+  podanym folderze
+- `DECISIONS.md`: D-105

@@ -14,7 +14,7 @@ gospodarki przestrzennej. Działa wyłącznie na `127.0.0.1`.
 | **Dostępność** | Wyniki na siatce H3: klasy czasu dojścia, miasto 15-minutowe (wszystkie usługi naraz, najsłabsze ogniwo), udziały w mieszkańcach, porównanie scenariuszy przed/po, raport do druku (mapa A4 SVG/PDF + tabele), szybki model z punktów usług wstawionych na mapie albo wczytanych z CSV (nowy plik, obszary obsługi z mieszkańcami na placówkę), krzywa dostępności z własnym progiem, luki w dostępności, gdzie postawić nową placówkę (maksymalne pokrycie mieszkańców), zasięg z klikniętego punktu (okręgi 5/10/15 min, mieszkańcy w zasięgu i ilu z nich ma dziś dalej), szczegóły komórki, eksport GeoJSON |
 
 Każda mapa ma eksport **GeoJSON do QGIS**. Kopia zapasowa wszystkich
-danych jednym kliknięciem na stronie głównej; tam też kalendarz
+danych jednym kliknięciem na stronie głównej, a co 7 dni także automatycznie przy starcie; tam też kalendarz
 najbliższych terminów (egzaminy z Fiszek, wyjścia w teren). Menu →
 **Pomoc**: krótkie przepisy „jak zrobić…” dla każdego modułu. Liczby zawsze liczy kod —
 model językowy tylko opisuje i proponuje treść do zatwierdzenia.

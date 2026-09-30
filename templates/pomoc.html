@@ -31,7 +31,7 @@
         </ol>
     </details>
     <details><summary>Gdzie są moje dane i jak zrobić kopię?</summary>
-        <p>Wszystko leży w katalogu <code>instance/</code> Warsztatu (osobna baza dla każdego modułu, wgrane PDF-y, zdjęcia z terenu). Kopię całości pobierzesz przyciskiem <a href="{{ url_for('index') }}#kopia">Pobierz kopię zapasową (ZIP)</a> na stronie głównej.</p>
+        <p>Wszystko leży w katalogu <code>instance/</code> Warsztatu (osobna baza dla każdego modułu, wgrane PDF-y, zdjęcia z terenu). Kopię całości pobierzesz przyciskiem <a href="{{ url_for('index') }}#kopia">Pobierz kopię zapasową (ZIP)</a> na stronie głównej. Poza tym co 7 dni przy uruchomieniu Warsztat sam robi kopię do <code>~/warsztat_kopie</code> (zostaje 5 najnowszych; zmienisz to w <code>.env</code>: <code>AUTO_KOPIA_DNI</code>, <code>AUTO_KOPIA_FOLDER</code>). Kopia na tym samym dysku nie chroni przed awarią dysku — czasem przenieś ją na pendrive albo do chmury.</p>
     </details>
     <details><summary>Klucze: Gemini i GUS</summary>
         <p>Wpisz je w pliku <code>.env</code> w katalogu Warsztatu: <code>GEMINI_API_KEY=…</code> (opisy, szkice fiszek, pytania do przepisów) i opcjonalnie <code>GUS_BDL_API_KEY=…</code> (wyższy limit zapytań do Banku Danych Lokalnych). Po zmianie uruchom Warsztat ponownie. Bez klucza Gemini wszystko inne działa — model językowy tylko opisuje i tłumaczy, liczby zawsze pochodzą z danych.</p>

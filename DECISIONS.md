@@ -2230,3 +2230,26 @@ jest ważniejsza niż szybkość.
 - Wektoryzacja w numpy — możliwa (numpy przychodzi z shapely), ale
   przepisałaby czytelny algorytm; do rozważenia, gdy pliki z wynikami
   będą regularnie tak duże.
+
+## D-105 — Kopia automatyczna przy starcie, w tle, z rotacją
+Data: 2026-09-30
+
+**Decyzja:** Przy uruchomieniu (`python app.py`, czyli z ikony) Warsztat
+w osobnym wątku sprawdza, czy od ostatniej kopii automatycznej minęło
+`AUTO_KOPIA_DNI` dni (domyślnie 7, 0 = wyłączone), i jeśli tak — zapisuje
+ten sam ZIP co przycisk na stronie głównej (`kopia.utworz_kopie`, bazy
+przez `sqlite3.backup`) do `AUTO_KOPIA_FOLDER` (domyślnie
+`~/warsztat_kopie`, obok kopii sprzed aktualizacji). Zostaje 5 najnowszych
+kopii `warsztat_auto_*.zip`. Zapis przez plik tymczasowy, potem zmiana
+nazwy.
+
+**Uzasadnienie:** Kopia „od czasu do czasu” z przycisku łatwo wypada z
+głowy, a dane (fiszki, zdjęcia z terenu, koncepcje) są tylko na jednym
+komputerze.
+
+**Odrzucone alternatywy:**
+- Harmonogram systemowy (cron) — wymaga konfiguracji poza aplikacją.
+- Kopia do chmury — wymagałaby konta i klucza; decyzja o miejscu kopii
+  należy do autora (Pomoc podpowiada pendrive albo chmurę).
+- Kopia przy każdym starcie — przy dużych PDF-ach i zdjęciach
+  niepotrzebnie zapełniałaby dysk.

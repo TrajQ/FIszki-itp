@@ -100,6 +100,12 @@
     <div>
         <h3>Twoje dane</h3>
         <p class="karta__opis">Fiszki, koncepcje osiedli, akty prawne, punkty i zdjęcia z terenu, wgrane PDF-y i pliki wyników są tylko na tym komputerze. Pobieraj kopię od czasu do czasu — np. przed reinstalacją systemu.</p>
+        <p class="karta__opis wyciszony">
+            {% if auto_kopia_dni > 0 %}Kopia automatyczna co {{ auto_kopia_dni }} dni przy uruchomieniu:
+            {% if kopia_auto %}ostatnia {{ kopia_auto.data.strftime('%d.%m.%Y') }} — <code>{{ kopia_auto.sciezka }}</code>{% else %}jeszcze nie zrobiona{% endif %}.
+            Na innym dysku albo w chmurze jest bezpieczniejsza — skopiuj ją tam czasem.
+            {% else %}Kopia automatyczna wyłączona (AUTO_KOPIA_DNI=0 w .env).{% endif %}
+        </p>
     </div>
     <a class="przycisk przycisk--drugi" href="{{ url_for('kopia_zapasowa') }}">Pobierz kopię zapasową (ZIP)</a>
 </section>
