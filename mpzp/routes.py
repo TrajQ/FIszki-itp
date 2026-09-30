@@ -12,7 +12,7 @@ from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisana, zapisane, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
-from . import karta, krajowe, uklady
+from . import karta, krajowe, uklady, uslugi
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
@@ -275,6 +275,33 @@ def warstwy_krajowe():
             "dzialki": {"url": krajowe.URL_KIEG, "warstwy": krajowe.WARSTWY_KIEG},
         }
     )
+
+
+@mpzp_bp.route("/usluga/<klucz>/warstwa")
+def warstwa_uslugi(klucz):
+    """Warstwa WMS innej usługi GUGiK (plan ogólny, ceny) do mapy — z GetCapabilities."""
+    if klucz not in uslugi.USLUGI:
+        abort(404)
+    warstwa = uslugi.warstwa_mapy(klucz)
+    if warstwa is None:
+        return jsonify({"blad": f"{uslugi.USLUGI[klucz]['nazwa']}: usługa GUGiK nie odpowiada."}), 502
+    return jsonify({**warstwa, "nazwa": uslugi.USLUGI[klucz]["nazwa"]})
+
+
+@mpzp_bp.route("/usluga/<klucz>/punkt")
+def usluga_w_punkcie(klucz):
+    """Obiekty usługi (np. strefa planu ogólnego) w punkcie — atrybuty jak z usługi."""
+    if klucz not in uslugi.USLUGI:
+        abort(404)
+    lat = request.args.get("lat", type=float)
+    lon = request.args.get("lon", type=float)
+    if lat is None or lon is None or not uklady.w_polsce(lat, lon):
+        return jsonify({"blad": "Wymagane lat i lon punktu w Polsce."}), 400
+    try:
+        obiekty = uslugi.w_punkcie(klucz, lat, lon)
+    except uslugi.BladUslugi as e:
+        return jsonify({"blad": str(e)}), 502
+    return jsonify({"nazwa": uslugi.USLUGI[klucz]["nazwa"], "obiekty": obiekty, "linki": uslugi.linki(obiekty)})
 
 
 @mpzp_bp.route("/eksport.geojson")

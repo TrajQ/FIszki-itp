@@ -985,3 +985,20 @@ button.wpis-zapisany {
         print-color-adjust: exact;
     }
 }
+
+/* ---------- informacje innych usług GUGiK w punkcie (ETAP 89) ---------- */
+
+.usluga-w-punkcie {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--linia-slaba);
+}
+
+.usluga-w-punkcie summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.usluga-w-punkcie > .stos {
+    margin-top: 8px;
+}

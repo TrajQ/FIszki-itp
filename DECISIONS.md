@@ -2059,3 +2059,27 @@ publiczne, bez klucza — zgodne z zasadą „wyłącznie API i usługi”.
 - Automatyczne szukanie najnowszego tekstu jednolitego (powiązania
   aktów) — format powiązań w API nie jest jednoznacznie opisany; wybór
   zostawiamy użytkownikowi.
+
+## D-097 — MPZP: plany ogólne gmin z usługi GUGiK, wszystko z GetCapabilities
+Data: 2026-09-30
+
+**Decyzja:** Plany ogólne gmin z usługi WMS GUGiK
+(`mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin`). Nowy plik
+`mpzp/uslugi.py` obsługuje „inne usługi GUGiK” w module MPZP: nazwy
+warstw, obsługę EPSG:3857 i formaty GetFeatureInfo czyta z
+GetCapabilities (pamięć na dobę), a atrybuty w punkcie odczytuje z GML
+(parsery z `krajowe.py`), tekstu albo tabel HTML. Bez odpowiedzi usługi
+nakładki po prostu nie ma. Sekcja w panelu działki ładuje się dopiero po
+rozwinięciu.
+
+**Uzasadnienie:** Plan ogólny to nowy dokument planistyczny gminy, który
+wyznacza strefy dla przyszłych planów miejscowych. Adres usługi jest
+podany przez GUGiK, ale nazw warstw i formatów nie znam z pewności —
+dlatego nie są wpisane w kod (NIE ZGADUJ).
+
+**Odrzucone alternatywy:**
+- Rozszerzenie `krajowe.py` — to moduł jednej usługi (KIMPZP) z własnymi
+  regułami (rozpoznawanie symbolu przeznaczenia); nowy plik korzysta z
+  jego parserów zamiast go przebudowywać.
+- Opis symboli stref (SW, SJ…) w aplikacji — pokazujemy atrybuty z
+  usługi, bez własnej interpretacji.

@@ -640,3 +640,9 @@
   baza co ISAP) — wyszukiwanie po tytule, oznaczone teksty jednolite,
   pobranie jednym kliknięciem zamiast ręcznego ściągania PDF-a.
 - Dodano `dane/sejm.py`, `przepisy/static/sejm.js`, `DECISIONS.md` D-096 i 1 test.
+
+## ETAP 89 — 2026-09-30
+- MPZP: **plan ogólny gminy** — nakładka stref planistycznych na mapie i
+  atrybuty planu ogólnego w miejscu działki (usługa GUGiK, na razie gminy,
+  które już uchwaliły plan ogólny). Nakładka także w Osiedlu.
+- Dodano `mpzp/uslugi.py`, `DECISIONS.md` D-097 i 2 testy.

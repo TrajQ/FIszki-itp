@@ -101,29 +101,38 @@
         }
     }
 
+    // Nakładki GUGiK; włączone zapamiętujemy w przeglądarce.
+    const nakladki = {};
+    const wlaczoneNakladki = zapamietaneNakladki();
+
+    function dodajNakladke(nazwa, warstwa) {
+        nakladki[nazwa] = warstwa;
+        kontrolkaWarstw.addOverlay(warstwa, nazwa);
+        if (wlaczoneNakladki.includes(nazwa)) warstwa.addTo(mapa);
+    }
+
+    mapa.on("overlayadd overlayremove", () => {
+        const teraz = Object.entries(nakladki).filter(([, w]) => mapa.hasLayer(w)).map(([n]) => n);
+        try {
+            localStorage.setItem("osiedle.nakladki", JSON.stringify(teraz));
+        } catch (e) {
+            // tylko wygoda
+        }
+    });
+
     fetch(URL_WARSTWY_KRAJOWE)
         .then((odpowiedz) => odpowiedz.json())
         .then((dane) => {
-            const nakladki = {
-                "Plan miejscowy (GUGiK)": nakladkaWms(dane.plany, 0.55),
-                "Działki ewidencyjne (GUGiK)": nakladkaWms(dane.dzialki, 1),
-            };
-            const wlaczone = zapamietaneNakladki();
-            for (const [nazwa, warstwa] of Object.entries(nakladki)) {
-                kontrolkaWarstw.addOverlay(warstwa, nazwa);
-                if (wlaczone.includes(nazwa)) warstwa.addTo(mapa);
-            }
-            const zapamietaj = () => {
-                const teraz = Object.entries(nakladki).filter(([, w]) => mapa.hasLayer(w)).map(([n]) => n);
-                try {
-                    localStorage.setItem("osiedle.nakladki", JSON.stringify(teraz));
-                } catch (e) {
-                    // tylko wygoda
-                }
-            };
-            mapa.on("overlayadd overlayremove", zapamietaj);
+            dodajNakladke("Plan miejscowy (GUGiK)", nakladkaWms(dane.plany, 0.55));
+            dodajNakladke("Działki ewidencyjne (GUGiK)", nakladkaWms(dane.dzialki, 1));
         })
         .catch(() => {}); // bez nakładek rysowanie działa jak dotąd
+
+    // ETAP 89: plan ogólny gminy — tylko gdy usługa odpowie.
+    fetch(URL_PLAN_OGOLNY)
+        .then((odpowiedz) => (odpowiedz.ok ? odpowiedz.json() : Promise.reject()))
+        .then((opis) => dodajNakladke("Plan ogólny gminy (GUGiK)", nakladkaWms(opis, 0.55)))
+        .catch(() => {});
 
     // ---------- rysowanie (Leaflet.draw) ----------
 

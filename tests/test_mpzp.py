@@ -799,3 +799,79 @@ def test_karta_obrys_w_srodku_obrazu():
     assert 0 < min(xs) < max(xs) < 640 and 0 < min(ys) < max(ys) < 480  # obrys mieści się w obrazie z marginesem
     x, y = karta.web_mercator(0, 0)
     assert (round(x, 6), round(y, 6)) == (0, 0)
+
+
+# ---------- ETAP 89: plan ogólny gminy (inne usługi GUGiK) ----------
+
+import requests  # noqa: E402
+
+from mpzp import uslugi  # noqa: E402
+
+CAPABILITIES_POG = """<?xml version="1.0"?>
+<WMS_Capabilities version="1.3.0" xmlns="http://www.opengis.net/wms">
+<Capability>
+ <Request>
+  <GetFeatureInfo><Format>text/html</Format><Format>application/vnd.ogc.gml</Format></GetFeatureInfo>
+ </Request>
+ <Layer><Title>Plany ogólne</Title><CRS>EPSG:3857</CRS>
+  <Layer queryable="1"><Name>StrefyPlanistyczne</Name><Title>Strefy planistyczne</Title></Layer>
+  <Layer queryable="0"><Name>AktPlanowania</Name><Title>Akt</Title></Layer>
+ </Layer>
+</Capability></WMS_Capabilities>"""
+
+GML_POG = """<?xml version="1.0"?>
+<msGMLOutput xmlns:gml="http://www.opengis.net/gml">
+ <StrefyPlanistyczne_layer><StrefyPlanistyczne_feature>
+  <gml:boundedBy/><symbol>SW</symbol><nazwa>strefa wielofunkcyjna z zabudową mieszkaniową wielorodzinną</nazwa>
+  <uchwala>https://bip.example.pl/uchwala.pdf</uchwala>
+ </StrefyPlanistyczne_feature></StrefyPlanistyczne_layer>
+</msGMLOutput>"""
+
+
+class _OdpUslugi:
+    def __init__(self, tekst, status=200):
+        self.text, self.status_code = tekst, status
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(response=self)
+
+
+def test_plan_ogolny_warstwa_i_punkt(client, monkeypatch):
+    uslugi._cache.clear()
+    zapytania = []
+
+    def get(url, params=None, **k):
+        zapytania.append(params)
+        return _OdpUslugi(CAPABILITIES_POG if params["request"] == "GetCapabilities" else GML_POG)
+
+    monkeypatch.setattr(uslugi.requests, "get", get)
+    w = client.get("/mpzp/usluga/plany_ogolne/warstwa").get_json()
+    assert w["warstwy"] == "StrefyPlanistyczne,AktPlanowania" and w["mercator"] and w["nazwa"] == "Plan ogólny gminy"
+    odp = client.get("/mpzp/usluga/plany_ogolne/punkt?lat=52.4&lon=16.9").get_json()
+    assert odp["obiekty"][0]["atrybuty"]["symbol"] == "SW" and odp["linki"] == ["https://bip.example.pl/uchwala.pdf"]
+    ostatnie = zapytania[-1]
+    # tylko warstwa zapytywalna, format z GetCapabilities (GML przed HTML), okno wokół punktu
+    assert ostatnie["query_layers"] == "StrefyPlanistyczne" and ostatnie["info_format"] == "application/vnd.ogc.gml"
+    assert ostatnie["bbox"] == "16.8995,52.3995,16.9005,52.4005"
+    assert sum(1 for z in zapytania if z["request"] == "GetCapabilities") == 1  # opis z pamięci
+    assert client.get("/mpzp/usluga/nieznana/warstwa").status_code == 404
+    assert client.get("/mpzp/usluga/plany_ogolne/punkt?lat=10&lon=10").status_code == 400
+
+    uslugi._cache.clear()
+
+    def blad(*a, **k):
+        raise requests.ConnectionError("x")
+
+    monkeypatch.setattr(uslugi.requests, "get", blad)
+    assert client.get("/mpzp/usluga/plany_ogolne/warstwa").status_code == 502
+    assert "brak połączenia" in client.get("/mpzp/usluga/plany_ogolne/punkt?lat=52.4&lon=16.9").get_json()["blad"]
+
+
+def test_getfeatureinfo_w_html():
+    dwie_kolumny = "<table><tr><th>symbol</th><td>SJ</td></tr><tr><th>opis</th><td> strefa  jednorodzinna </td></tr></table>"
+    assert uslugi.sparsuj_html(dwie_kolumny) == [{"warstwa": "", "atrybuty": {"symbol": "SJ", "opis": "strefa jednorodzinna"}}]
+    naglowek = "<table><tr><th>cena</th><th>data</th><th>rodzaj</th></tr><tr><td>350000</td><td>2025-03-01</td><td>działka</td></tr><tr><td>1</td><td></td><td>x</td></tr></table>"
+    wynik = uslugi.sparsuj_html(naglowek)
+    assert wynik[0]["atrybuty"] == {"cena": "350000", "data": "2025-03-01", "rodzaj": "działka"} and wynik[1]["atrybuty"] == {"cena": "1", "rodzaj": "x"}
+    assert uslugi.sparsuj_html("<p>brak danych</p>") == []

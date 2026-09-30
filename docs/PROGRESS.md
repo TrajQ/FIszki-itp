@@ -1594,3 +1594,19 @@ Status: zamknięty
   3 wyniki, oznaczony tekst jednolity, pobranie → strona aktu z artykułami
 - Nie sprawdzone tutaj: prawdziwe API Sejmu
 - `DECISIONS.md`: D-096
+
+## ETAP 89 — MPZP: plan ogólny gminy
+Data: 2026-09-30
+Status: zamknięty
+
+- `mpzp/uslugi.py` (inne usługi WMS GUGiK: warstwy i formaty z
+  GetCapabilities, GetFeatureInfo w GML, tekście albo HTML), trasy
+  `/mpzp/usluga/<klucz>/warstwa` i `/punkt`
+- MPZP: nakładka „Plany ogólne gmin (strefy)” i rozwijana sekcja „Plan
+  ogólny gminy” w panelu działki; Osiedle: nakładka „Plan ogólny gminy”
+  (przebudowane zapamiętywanie nakładek)
+- Adres usługi potwierdzony w komunikatach GUGiK; nazw warstw nie
+  wpisujemy — przychodzą z GetCapabilities
+- Sprawdzone w przeglądarce z podstawioną usługą; prawdziwa usługa
+  niedostępna z tego środowiska
+- `DECISIONS.md`: D-097

@@ -162,6 +162,7 @@
     const FUNKCJE = {{ funkcje | tojson }};
     const DOMYSLNE = {{ domyslne | tojson }};
     const URL_WARSTWY_KRAJOWE = "{{ url_for('mpzp.warstwy_krajowe') }}";
+    const URL_PLAN_OGOLNY = "{{ url_for('mpzp.warstwa_uslugi', klucz='plany_ogolne') }}";
     const URL_TEREN_PROJEKTY = "{{ url_for('teren.lista_projektow') }}";
     const URL_TEREN_PUNKTY = "{{ url_for('teren.lista_punktow', projekt_id=0) }}";
 </script>

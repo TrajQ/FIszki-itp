@@ -67,6 +67,14 @@
         })
         .catch(() => {}); // bez nakładek mapa działa jak dotąd
 
+    // Inne usługi GUGiK (ETAP 89–90): nakładka w przełączniku warstw, jeśli usługa odpowie.
+    for (const [klucz, nazwa, przezroczystosc] of [["plany_ogolne", "Plany ogólne gmin (strefy)", 0.6]]) {
+        fetch(`${URL_USLUGA}${klucz}/warstwa`)
+            .then((odpowiedz) => (odpowiedz.ok ? odpowiedz.json() : Promise.reject()))
+            .then((opis) => kontrolkaWarstw.addOverlay(nakladkaWms(opis, przezroczystosc), nazwa))
+            .catch(() => {});
+    }
+
     const panelWyniku = document.getElementById("panel-wyniku");
     const przyciskOdswiez = document.getElementById("przycisk-odswiez");
     const formularzSzukaj = document.getElementById("szukaj-dzialki");
@@ -555,6 +563,57 @@
         );
     }
 
+    // Informacje innej usługi GUGiK w punkcie działki (ETAP 89–90).
+    // Pobierane dopiero po rozwinięciu — nie spowalniają sprawdzania działki.
+    function sekcjaUslugi(klucz, tytul, przypis, punkt) {
+        const szczegoly = element("details", "usluga-w-punkcie");
+        szczegoly.appendChild(element("summary", "", tytul));
+        const tresc = element("div", "stos");
+        szczegoly.appendChild(tresc);
+        let pobrane = false;
+        szczegoly.addEventListener("toggle", async () => {
+            if (!szczegoly.open || pobrane) return;
+            pobrane = true;
+            tresc.replaceChildren(element("p", "wyciszony", "Sprawdzam w usłudze GUGiK…"));
+            try {
+                const odpowiedz = await fetch(`${URL_USLUGA}${klucz}/punkt?lat=${punkt.lat}&lon=${punkt.lon}`);
+                const dane = await odpowiedz.json();
+                if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
+                tresc.replaceChildren();
+                if (!dane.obiekty.length) {
+                    tresc.appendChild(element("p", "wyciszony", "Usługa nie ma tu żadnych obiektów."));
+                }
+                for (const obiekt of dane.obiekty) {
+                    const tabela = element("table", "tabela");
+                    for (const [k, v] of Object.entries(obiekt.atrybuty)) {
+                        const wiersz = element("tr");
+                        wiersz.append(element("th", "", k), element("td", "", v));
+                        tabela.appendChild(wiersz);
+                    }
+                    tresc.appendChild(tabela);
+                }
+                dane.linki.forEach((adres, i) => {
+                    const a = element("a", "przycisk przycisk--tekst", dane.linki.length > 1 ? `Dokument ${i + 1} ↗` : "Dokument ↗");
+                    a.href = adres;
+                    a.target = "_blank";
+                    a.rel = "noopener noreferrer";
+                    tresc.appendChild(a);
+                });
+            } catch (e) {
+                pobrane = false; // przy następnym rozwinięciu spróbuj jeszcze raz
+                tresc.replaceChildren(element("p", "komunikat komunikat--blad", e.message));
+            }
+            tresc.appendChild(element("p", "przypis", przypis));
+        });
+        return szczegoly;
+    }
+
+    function sekcjeUslug(punkt) {
+        return [
+            sekcjaUslugi("plany_ogolne", "Plan ogólny gminy", "Źródło: plany ogólne gmin w usłudze GUGiK — na razie tylko gminy, które już uchwaliły plan ogólny. Atrybuty jak w usłudze; rozstrzyga uchwała.", punkt),
+        ];
+    }
+
     // Wspólna obsługa odpowiedzi z /sprawdz i /dzialka.
     function obsluzOdpowiedz(dane, przyblizDoDzialki) {
         wyczyscWarstwy();
@@ -579,6 +638,7 @@
         } else if (dane.blad) {
             pokazBlad(dane.blad, dane.dzialka);
         }
+        if (dane.dzialka && dane.punkt) panelWyniku.append(...sekcjeUslug(dane.punkt));
         odswiezHistorie();
     }
 
