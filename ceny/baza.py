@@ -46,6 +46,14 @@ CREATE TABLE IF NOT EXISTS rcn_lokale (
 );
 CREATE INDEX IF NOT EXISTS rcn_lokale_plik ON rcn_lokale (plik_id);
 
+-- ETAP 105: obszary narysowane na mapie transakcji (dzielnice, osiedla) do porównania
+CREATE TABLE IF NOT EXISTS rcn_obszary (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plik_id INTEGER NOT NULL REFERENCES rcn_pliki(id) ON DELETE CASCADE,
+    nazwa TEXT NOT NULL,
+    geojson TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS cache_bdl (
     klucz TEXT PRIMARY KEY,
     dane_json TEXT NOT NULL,
@@ -166,5 +174,38 @@ def rodzaje_transakcji(plik_id: int) -> list[dict]:
 def usun_plik_rcn(plik_id: int) -> bool:
     db = get_db()
     usuniete = db.execute("DELETE FROM rcn_pliki WHERE id = ?", (plik_id,)).rowcount
+    db.commit()
+    return bool(usuniete)
+
+
+# ---------- obszary do porównania (ETAP 105) ----------
+
+
+def obszary_rcn(plik_id: int) -> list[dict]:
+    return [
+        {"id": w["id"], "nazwa": w["nazwa"], "geometria": json.loads(w["geojson"])}
+        for w in get_db().execute("SELECT * FROM rcn_obszary WHERE plik_id = ? ORDER BY id", (plik_id,))
+    ]
+
+
+def dodaj_obszar_rcn(plik_id: int, nazwa: str, geometria: dict) -> int:
+    db = get_db()
+    obszar_id = db.execute(
+        "INSERT INTO rcn_obszary (plik_id, nazwa, geojson) VALUES (?, ?, ?)", (plik_id, nazwa, json.dumps(geometria))
+    ).lastrowid
+    db.commit()
+    return obszar_id
+
+
+def zmien_nazwe_obszaru(obszar_id: int, nazwa: str) -> bool:
+    db = get_db()
+    zmienione = db.execute("UPDATE rcn_obszary SET nazwa = ? WHERE id = ?", (nazwa, obszar_id)).rowcount
+    db.commit()
+    return bool(zmienione)
+
+
+def usun_obszar_rcn(obszar_id: int) -> bool:
+    db = get_db()
+    usuniete = db.execute("DELETE FROM rcn_obszary WHERE id = ?", (obszar_id,)).rowcount
     db.commit()
     return bool(usuniete)

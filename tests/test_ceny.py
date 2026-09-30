@@ -190,3 +190,78 @@ def test_trasy_transakcji(client, tmp_path, monkeypatch):
     assert "plik=2" in odp.headers["Location"]
     assert client.post("/ceny/transakcje/2/usun").status_code == 302 and client.get("/ceny/transakcje/2/dane").status_code == 404
     assert "Transakcje (RCN)" in client.get("/ceny/").get_data(as_text=True)
+
+
+# ---------- ETAP 105: obszary do porównania i raport ----------
+
+
+def prostokat(lng1, lat1, lng2, lat2):
+    return {"type": "Polygon", "coordinates": [[[lng1, lat1], [lng2, lat1], [lng2, lat2], [lng1, lat2], [lng1, lat1]]]}
+
+
+def test_obszary_rcn():
+    with pytest.raises(rcn.BladPliku):
+        rcn.sprawdz_obszar({"type": "Point", "coordinates": [19.9, 50.0]})
+    with pytest.raises(rcn.BladPliku):
+        rcn.sprawdz_obszar(prostokat(2.0, 48.0, 2.1, 48.1))  # Paryż
+    with pytest.raises(rcn.BladPliku):
+        rcn.sprawdz_obszar("nie geometria")
+    # „kokarda” (samoprzecięcie) zostaje naprawiona, a nie odrzucona
+    kokarda = {"type": "Polygon", "coordinates": [[[19.9, 50.0], [20.0, 50.1], [20.0, 50.0], [19.9, 50.1], [19.9, 50.0]]]}
+    assert rcn.sprawdz_obszar(kokarda)["type"] in ("Polygon", "MultiPolygon")
+
+    lokale = [{"rok": r, "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": lat, "lng": 19.95}
+              for r, c, lat in [(2023, 10000, 50.01), (2024, 12000, 50.02), (2024, 14000, 50.03),
+                                (2023, 20000, 50.11), (2024, 22000, 50.12), (2024, 9000, None)]]
+    poludnie = {"id": 1, "nazwa": "Południe", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}
+    polnoc = {"id": 2, "nazwa": "Północ", "geometria": prostokat(19.9, 50.1, 20.0, 50.15)}
+    puste = {"id": 3, "nazwa": "Puste", "geometria": prostokat(21.0, 52.0, 21.1, 52.1)}
+    assert len(rcn.w_obszarze(lokale, poludnie["geometria"])) == 3  # lokal bez położenia pominięty
+    p = rcn.porownanie(lokale, [poludnie, polnoc, puste])
+    assert p["calosc"]["liczba"] == 6 and p["calosc"]["mediana_m2"] == 13000
+    a, b, c = p["obszary"]
+    assert (a["liczba"], a["mediana_m2"], a["lata"]) == (3, 12000, {2023: 10000, 2024: 13000})
+    assert a["wobec_calosci_proc"] == pytest.approx(100 * (12000 / 13000 - 1))
+    assert (b["liczba"], b["mediana_m2"]) == (2, 21000) and b["kolor"] != a["kolor"]
+    assert c["liczba"] == 0 and "wobec_calosci_proc" not in c
+    assert p["lata"] == [2023, 2024]
+
+    svg = rcn.mapa_svg(lokale, [poludnie, polnoc], [11000, 13000, 15000, 21000], rcn.KOLORY_KLAS)
+    assert svg.startswith("<svg") and svg.count("<circle") == 5 + 2 and svg.count("<path") >= 2 + 1
+    assert "Południe" not in svg  # nazwy tylko w legendzie
+    assert "brak transakcji" in rcn.mapa_svg([], [], [], rcn.KOLORY_KLAS)
+
+
+def test_trasy_obszarow_i_raport(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    plik_rcn(str(pobrane / "rcn.gpkg"), [lokal(i, lok_cena_brutto=500000 + 10000 * i,
+                                              geom=geometria_gpkg(50.01 + (0.1 if i > 5 else 0), 19.95)) for i in range(1, 11)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / "rcn.gpkg")})
+    url = "/ceny/transakcje/1/obszary"
+    assert client.post(url, json={"nazwa": "Stare Miasto", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}).status_code == 201
+    assert client.post(url, json={"nazwa": "  ", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}).status_code == 400
+    assert client.post(url, json={"nazwa": "X", "geometria": prostokat(2.0, 48.0, 2.1, 48.1)}).status_code == 400
+    assert client.post("/ceny/transakcje/99/obszary", json={"nazwa": "X", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}).status_code == 404
+    d = client.get("/ceny/transakcje/1/dane").get_json()
+    assert [o["nazwa"] for o in d["obszary"]] == ["Stare Miasto"] and d["porownanie"]["obszary"][0]["liczba"] == 5
+    obszar_id = d["obszary"][0]["id"]
+    assert client.put(f"/ceny/transakcje/obszary/{obszar_id}", json={"nazwa": "Kazimierz"}).status_code == 200
+    assert client.put("/ceny/transakcje/obszary/999", json={"nazwa": "X"}).status_code == 404
+    for i in range(rcn.MAKS_OBSZAROW - 1):
+        client.post(url, json={"nazwa": f"O{i}", "geometria": prostokat(19.9, 50.1, 20.0, 50.15)})
+    odp = client.post(url, json={"nazwa": "za dużo", "geometria": prostokat(19.9, 50.1, 20.0, 50.15)})
+    assert odp.status_code == 400 and "Najwyżej" in odp.get_json()["blad"]
+
+    raport = client.get("/ceny/transakcje/1/raport?rynek=wtórny").get_data(as_text=True)
+    assert "Porównanie obszarów" in raport and "Kazimierz" in raport and "<svg" in raport and "rynek wtórny" in raport
+    assert client.get("/ceny/transakcje/1/raport?izby=9").status_code == 400
+    assert client.get("/ceny/transakcje/99/raport").status_code == 404
+
+    assert client.delete(f"/ceny/transakcje/obszary/{obszar_id}").status_code == 200
+    assert client.delete(f"/ceny/transakcje/obszary/{obszar_id}").status_code == 404
+    client.post("/ceny/transakcje/1/usun")  # obszary znikają razem z plikiem (ON DELETE CASCADE)
+    from ceny import baza
+    with client.application.app_context():
+        assert baza.obszary_rcn(1) == []

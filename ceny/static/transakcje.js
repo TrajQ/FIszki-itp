@@ -1,5 +1,6 @@
 // Ceny: transakcje z Rejestru Cen Nieruchomości (ETAP 104).
 // Statystyki i progi kolorów liczy serwer (ceny/rcn.py); tu filtry, wykresy i mapa.
+// ETAP 105: obszary rysowane na mapie (Leaflet.draw) i ich porównanie.
 (function () {
     "use strict";
 
@@ -37,6 +38,7 @@
         referrerPolicy: "strict-origin-when-cross-origin", // OSM wymaga nagłówka Referer (jak w module dostępność)
     }).addTo(mapa);
     const warstwa = L.featureGroup().addTo(mapa);
+    const warstwaObszarow = L.featureGroup().addTo(mapa);
 
     function klasa(cena, progi) {
         let i = 0;
@@ -149,6 +151,112 @@
         rysujMape(d.mapa);
     }
 
+    // ---------- obszary do porównania (ETAP 105) ----------
+
+    Object.assign(L.drawLocal.draw.toolbar.buttons, { polygon: "Rysuj obszar (wielobok)", rectangle: "Rysuj obszar (prostokąt)" });
+    Object.assign(L.drawLocal.draw.toolbar.actions, { title: "Przerwij rysowanie", text: "Anuluj" });
+    Object.assign(L.drawLocal.draw.toolbar.finish, { title: "Zakończ rysowanie", text: "Zakończ" });
+    Object.assign(L.drawLocal.draw.toolbar.undo, { title: "Usuń ostatni punkt", text: "Cofnij punkt" });
+    L.drawLocal.draw.handlers.polygon.tooltip = {
+        start: "Kliknij, żeby zacząć obszar.",
+        cont: "Klikaj kolejne wierzchołki.",
+        end: "Kliknij pierwszy punkt, żeby zamknąć.",
+    };
+    L.drawLocal.draw.handlers.rectangle.tooltip.start = "Kliknij i przeciągnij, żeby narysować prostokąt.";
+    L.drawLocal.draw.handlers.simpleshape.tooltip.end = "Puść przycisk, żeby zakończyć.";
+    mapa.addControl(new L.Control.Draw({
+        position: "topleft",
+        draw: {
+            polygon: { allowIntersection: false, showArea: false, shapeOptions: { color: "#0071e3" } },
+            rectangle: { showArea: false, shapeOptions: { color: "#0071e3" } },
+            polyline: false, circle: false, circlemarker: false, marker: false,
+        },
+    }));
+
+    async function zapytanie(url, metoda, dane) {
+        const odp = await fetch(url, { method: metoda, headers: { "Content-Type": "application/json" }, body: dane ? JSON.stringify(dane) : undefined });
+        const wynik = await odp.json().catch(() => ({}));
+        if (!odp.ok) throw new Error(wynik.blad || `Błąd ${odp.status}`);
+        return wynik;
+    }
+
+    async function zmiana(obietnica) {
+        try {
+            await obietnica;
+            await wczytaj();
+        } catch (e) {
+            komunikat.textContent = e.message;
+            komunikat.hidden = false;
+        }
+    }
+
+    mapa.on(L.Draw.Event.CREATED, (e) => {
+        const nazwa = prompt("Nazwa obszaru (np. dzielnica, osiedle):", `Obszar ${warstwaObszarow.getLayers().length + 1}`);
+        if (nazwa === null) return;
+        zmiana(zapytanie(`${URL_TRANSAKCJE}/${PLIK_ID}/obszary`, "POST", { nazwa, geometria: e.layer.toGeoJSON().geometry }));
+    });
+
+    function numerObszaru(nr, kolor) {
+        const znak = el("span", "obszar-rcn__nr", String(nr));
+        znak.style.color = kolor;
+        return znak;
+    }
+
+    function pokazObszary(d) {
+        const kolory = Object.fromEntries(d.porownanie.obszary.map((o) => [o.id, o.kolor]));
+        warstwaObszarow.clearLayers();
+        const lista = document.getElementById("obszary-rcn");
+        lista.replaceChildren();
+        d.obszary.forEach((o, i) => {
+            const kolor = kolory[o.id];
+            L.geoJSON(o.geometria, { style: { color: kolor, weight: 2.5, fillOpacity: 0.05 } })
+                .bindTooltip(`${i + 1}. ${o.nazwa}`).addTo(warstwaObszarow);
+            const li = el("li", "obszar-rcn");
+            const zmien = el("button", "przycisk--tekst", "Zmień nazwę");
+            zmien.type = "button";
+            zmien.addEventListener("click", () => {
+                const nazwa = prompt("Nowa nazwa obszaru:", o.nazwa);
+                if (nazwa !== null) zmiana(zapytanie(`${URL_TRANSAKCJE}/obszary/${o.id}`, "PUT", { nazwa }));
+            });
+            const usun = el("button", "przycisk--tekst przycisk--niebezpieczny-tekst", "Usuń");
+            usun.type = "button";
+            usun.addEventListener("click", () => {
+                if (confirm(`Usunąć obszar „${o.nazwa}”?`)) zmiana(zapytanie(`${URL_TRANSAKCJE}/obszary/${o.id}`, "DELETE"));
+            });
+            li.append(numerObszaru(i + 1, kolor), el("span", "obszar-rcn__nazwa", o.nazwa), zmien, usun);
+            lista.appendChild(li);
+        });
+        if (!d.obszary.length) lista.appendChild(el("li", "wyciszony", "Jeszcze żadnego obszaru."));
+
+        const tabela = document.getElementById("porownanie-rcn");
+        tabela.replaceChildren();
+        if (!d.obszary.length) return;
+        const glowa = el("tr");
+        glowa.append(el("th", "", "Obszar"), el("th", "liczba", "Transakcji"), el("th", "liczba", "Mediana za m²"),
+            el("th", "liczba", "Połowa transakcji"), el("th", "liczba", "Wobec całości"), el("th", "liczba", "Mediana powierzchni"));
+        tabela.appendChild(glowa);
+        const procent = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, minimumFractionDigits: 1, signDisplay: "exceptZero" });
+        const wiersze = d.porownanie.obszary.map((o, i) => [o, numerObszaru(i + 1, o.kolor)]);
+        if (d.porownanie.calosc.liczba) wiersze.push([d.porownanie.calosc, null]);
+        for (const [o, znak] of wiersze) {
+            const tr = el("tr", znak ? "" : "raport-cen__calosc");
+            const nazwa = el("td", "obszar-rcn");
+            if (znak) nazwa.appendChild(znak);
+            nazwa.append(o.nazwa);
+            tr.append(nazwa, el("td", "liczba", liczba.format(o.liczba)));
+            if (o.liczba) {
+                tr.append(el("td", "liczba", `${liczba.format(o.mediana_m2)} zł`), el("td", "liczba", `${liczba.format(o.q1_m2)}–${liczba.format(o.q3_m2)}`),
+                    el("td", "liczba", o.wobec_calosci_proc === undefined ? "" : `${procent.format(o.wobec_calosci_proc)}%`),
+                    el("td", "liczba", `${liczba.format(o.mediana_pow)} m²`));
+            } else {
+                const brak = el("td", "wyciszony", "brak transakcji w obszarze");
+                brak.colSpan = 4;
+                tr.appendChild(brak);
+            }
+            tabela.appendChild(tr);
+        }
+    }
+
     function uzupelnijListy(d) {
         for (const nazwa of ["od", "do"]) {
             const pole = filtry.elements[nazwa];
@@ -165,6 +273,7 @@
         const moj = ++numer;
         const parametry = new URLSearchParams([...new FormData(filtry)].filter(([, v]) => v));
         document.getElementById("link-csv-rcn").href = `${URL_TRANSAKCJE}/${PLIK_ID}.csv?${parametry}`;
+        document.getElementById("link-raport-rcn").href = `${URL_TRANSAKCJE}/${PLIK_ID}/raport?${parametry}`;
         try {
             const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/dane?${parametry}`);
             const d = await odp.json();
@@ -173,6 +282,7 @@
             komunikat.hidden = true;
             uzupelnijListy(d);
             pokaz(d);
+            pokazObszary(d);
         } catch (e) {
             komunikat.textContent = e.message;
             komunikat.hidden = false;

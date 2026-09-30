@@ -1835,3 +1835,25 @@ Status: zamknięty
 - Nie sprawdzone: prawdziwy plik z Geoportalu (nazwy kolumn i wartości
   rynku trzeba potwierdzić na pierwszym imporcie)
 - `DECISIONS.md`: D-112
+
+## ETAP 105 — Ceny: porównanie obszarów z mapy i raport do druku
+Data: 2026-09-30
+Status: zamknięty
+
+- `ceny/rcn.py`: `sprawdz_obszar` (wielobok GeoJSON, naprawa samoprzecięć
+  `make_valid`, tylko w Polsce), `w_obszarze`, `porownanie` (cały plik +
+  obszary: liczba, mediana za m² z kwartylami, mediana powierzchni i ceny,
+  różnica wobec całości w %, mediany w latach), `mapa_svg` (punkty w klasach
+  ceny, obrysy obszarów z numerami, podziałka, strzałka północy)
+- `ceny/baza.py`: tabela `rcn_obszary` (kasowana razem z plikiem)
+- `ceny/trasy_rcn.py`: obszary POST/PUT/DELETE (limit 8), `dane` zwraca
+  obszary i porównanie, `/ceny/transakcje/<id>/raport` z filtrami
+- Strona transakcji: rysowanie Leaflet.draw (wielobok, prostokąt), lista
+  obszarów ze zmianą nazwy i usuwaniem, tabela porównania, link „Raport do
+  druku”; raport: dwie strony A4 (`@media print`)
+- Sprawdzone w przeglądarce: rysowanie prostokąta myszą, tabela, raport
+  1300 i 390 px, PDF A4; poprawione: ikony Leaflet.draw (jak w osiedlu),
+  szerokość raportu na telefonie
+- Testy: walidacja obszaru, porównanie na znanych liczbach, trasy obszarów
+  i raportu (limit, 404, kaskada)
+- `DECISIONS.md`: D-113

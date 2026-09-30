@@ -736,3 +736,9 @@
   trend co kwartał, rozkład cen, izby, mapa transakcji, filtry i CSV.
 - Przeliczenie współrzędnych PL-1992 → WGS84.
 - Dodano `ceny/rcn.py`, `ceny/trasy_rcn.py`, `DECISIONS.md` D-112 i 4 testy.
+
+## ETAP 105 — 2026-09-30
+- Ceny → Transakcje: obszary rysowane na mapie (do 8), porównanie median
+  między obszarami i wobec całego pliku
+- Raport cen transakcyjnych do druku / PDF z mapą schematyczną SVG
+- Pomoc: opis porównania dzielnic

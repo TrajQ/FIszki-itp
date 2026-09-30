@@ -2388,3 +2388,28 @@ powiatu z ogranicznikami liczby obiektów.
 - Wgrywanie tylko przez przeglądarkę — pliki dużych miast przekraczają
   limit 50 MB; wskazanie z Pobranych jest bezpieczne (tylko pliki z
   listy).
+
+## D-113 — Ceny: obszary porównania rysowane przez użytkownika, liczone na serwerze
+Data: 2026-09-30
+
+**Decyzja:** Dzielnice do porównania użytkownik rysuje sam na mapie
+transakcji (Leaflet.draw, jak w module osiedle); obszary zapisujemy w
+bazie modułu przy pliku RCN (`rcn_obszary`, najwyżej 8). Przynależność
+transakcji do obszaru i wszystkie statystyki liczy serwer (shapely,
+`prep` + `contains`), z tymi samymi filtrami co reszta strony. Raport do
+druku to strona HTML z mapą schematyczną SVG generowaną w Pythonie (bez
+podkładu kafelkowego), drukowana przez przeglądarkę.
+
+**Uzasadnienie:** Granice dzielnic nie są dostępne jednolicie dla całej
+Polski przez usługę, na którą mamy zgodę — a student często porównuje
+własne obszary (osiedle, okolica stacji), nie urzędowe dzielnice. SVG
+z Pythona drukuje się zawsze tak samo i nie zależy od sieci.
+
+**Odrzucone alternatywy:**
+- Granice dzielnic z PRG/WFS — tylko jednostki administracyjne (gminy),
+  dzielnice miast nie są tam jednolicie; do dodania później, gdy będzie
+  potwierdzona usługa.
+- Liczenie w przeglądarce — dwa miejsca z tą samą statystyką (raport i
+  strona) rozjechałyby się.
+- Zrzut mapy Leaflet do PDF — kafelki OSM w druku zależą od sieci i
+  licencji wydruku; schemat SVG wystarcza do porównania.

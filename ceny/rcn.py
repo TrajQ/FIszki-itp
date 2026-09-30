@@ -23,12 +23,16 @@ Geometria: nagłówek GeoPackage + WKB, układ PL-1992 (EPSG:2180; x w pliku
 przeliczamy go na WGS84 (mpzp/uklady.py).
 """
 
+import math
 import sqlite3
 import statistics
 import struct
 from datetime import date
 
 from shapely import wkb
+from shapely.geometry import Point, mapping, shape
+from shapely.prepared import prep
+from shapely.validation import make_valid
 
 from mpzp.uklady import w_polsce, wgs84_z_pl1992
 
@@ -240,3 +244,116 @@ def punkty_mapy(lokale: list[dict]) -> dict:
         "progi": progi,
         "wszystkich_z_polozeniem": len(z_polozeniem),
     }
+
+
+# ---------- obszary do porównania i raport (ETAP 105) ----------
+
+MAKS_OBSZAROW = 8
+# kwintyle ceny za m² — te same kolory co na mapie (ceny/static/transakcje.js)
+KOLORY_KLAS = ["#ffe8a3", "#ffc55c", "#ff9f0a", "#e2630b", "#a33a00"]
+KOLORY_OBSZAROW = ["#0071e3", "#34c759", "#5e5ce6", "#ff375f", "#30b0c7", "#8e6e4e", "#bf5af2", "#1d1d1f"]
+
+
+def sprawdz_obszar(geometria) -> dict:
+    """GeoJSON wieloboku z mapy → poprawiona geometria (WGS84) albo BladPliku."""
+    try:
+        g = shape(geometria)
+    except Exception as e:
+        raise BladPliku("Obszar musi być wielobokiem GeoJSON.") from e
+    if g.geom_type not in ("Polygon", "MultiPolygon"):
+        raise BladPliku("Obszar musi być wielobokiem.")
+    if not g.is_valid:
+        g = make_valid(g)
+    minx, miny, maxx, maxy = g.bounds
+    if not (w_polsce(miny, minx) and w_polsce(maxy, maxx)) or g.area <= 0:
+        raise BladPliku("Obszar musi leżeć w Polsce i mieć niezerowe pole.")
+    return mapping(g)
+
+
+def w_obszarze(lokale: list[dict], geometria: dict) -> list[dict]:
+    obszar = prep(shape(geometria))
+    return [l for l in lokale if l["lat"] is not None and obszar.contains(Point(l["lng"], l["lat"]))]
+
+
+def _mediany_lat(lokale: list[dict]) -> dict[int, float]:
+    po_roku: dict = {}
+    for l in lokale:
+        po_roku.setdefault(l["rok"], []).append(l["cena_m2"])
+    return {r: statistics.median(v) for r, v in sorted(po_roku.items())}
+
+
+def porownanie(lokale: list[dict], obszary: list[dict]) -> dict:
+    """Wiersz „cały plik” i po jednym dla każdego obszaru: liczba, mediana za m²
+    z kwartylami, mediana powierzchni i ceny, różnica mediany wobec całości,
+    mediany w latach."""
+    def wiersz(nazwa, zbior, kolor=None, obszar_id=None):
+        if not zbior:
+            return {"id": obszar_id, "nazwa": nazwa, "kolor": kolor, "liczba": 0}
+        ceny = sorted(l["cena_m2"] for l in zbior)
+        q1, med, q3 = _kwartyle(ceny)
+        return {
+            "id": obszar_id, "nazwa": nazwa, "kolor": kolor, "liczba": len(zbior),
+            "mediana_m2": med, "q1_m2": q1, "q3_m2": q3,
+            "mediana_pow": statistics.median(l["pow_m2"] for l in zbior),
+            "mediana_ceny": statistics.median(l["cena"] for l in zbior),
+            "lata": _mediany_lat(zbior),
+        }
+
+    calosc = wiersz("cały plik", lokale)
+    wiersze = []
+    for i, o in enumerate(obszary):
+        w = wiersz(o["nazwa"], w_obszarze(lokale, o["geometria"]), KOLORY_OBSZAROW[i % len(KOLORY_OBSZAROW)], o["id"])
+        if w["liczba"] and calosc["liczba"]:
+            w["wobec_calosci_proc"] = 100 * (w["mediana_m2"] / calosc["mediana_m2"] - 1)
+        wiersze.append(w)
+    lata = sorted({r for w in [calosc, *wiersze] for r in w.get("lata", {})})
+    return {"calosc": calosc, "obszary": wiersze, "lata": lata}
+
+
+def mapa_svg(lokale: list[dict], obszary: list[dict], progi: list[float], kolory: list[str],
+             szerokosc: int = 1000, wysokosc: int = 620) -> str:
+    """Schematyczna mapa do raportu: punkty transakcji w klasach ceny i
+    obrysy obszarów z numerami, podziałka i strzałka północy. Tylko liczby i
+    kolory z kodu (nazwy obszarów są w legendzie raportu, nie w SVG)."""
+    punkty = [(l["lng"], l["lat"], l["cena_m2"]) for l in lokale if l["lat"] is not None]
+    ksztalty = [shape(o["geometria"]) for o in obszary]
+    xs = [p[0] for p in punkty] + [b for k in ksztalty for b in (k.bounds[0], k.bounds[2])]
+    ys = [p[1] for p in punkty] + [b for k in ksztalty for b in (k.bounds[1], k.bounds[3])]
+    otwarcie = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc} {wysokosc}" width="{szerokosc}" height="{wysokosc}" font-family="sans-serif" font-size="12"><rect width="100%" height="100%" fill="#ffffff"/>'
+    if not xs:
+        return otwarcie + f'<text x="{szerokosc / 2}" y="{wysokosc / 2}" text-anchor="middle" fill="#6e6e73">brak transakcji z położeniem</text></svg>'
+    kx = math.cos(math.radians((min(ys) + max(ys)) / 2))  # metry na stopień długości / szerokości
+    margines = 30
+    skala = min((szerokosc - 2 * margines) / (((max(xs) - min(xs)) * kx) or 1e-9), (wysokosc - 2 * margines - 20) / ((max(ys) - min(ys)) or 1e-9))
+
+    def px(lng, lat):
+        return margines + (lng - min(xs)) * kx * skala, margines + (max(ys) - lat) * skala
+
+    czesci = [otwarcie]
+    for lng, lat, cena in sorted(punkty, key=lambda p: p[2]):
+        i = 0
+        while i < len(progi) and cena > progi[i]:
+            i += 1
+        x, y = px(lng, lat)
+        czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3" fill="{kolory[i]}" stroke="#3a2a1a" stroke-width="0.3"/>')
+    for nr, (k, o) in enumerate(zip(ksztalty, obszary), start=1):
+        kolor = KOLORY_OBSZAROW[(nr - 1) % len(KOLORY_OBSZAROW)]
+        for w in getattr(k, "geoms", [k]):
+            d = "M" + " L".join(f"{a:.1f},{b:.1f}" for a, b in (px(*p) for p in w.exterior.coords)) + " Z"
+            czesci.append(f'<path d="{d}" fill="{kolor}" fill-opacity="0.06" stroke="{kolor}" stroke-width="2.5"/>')
+        x, y = px(*k.representative_point().coords[0])
+        czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="11" fill="#ffffff" stroke="{kolor}" stroke-width="2"/><text x="{x:.1f}" y="{y + 4:.1f}" text-anchor="middle" font-weight="700" fill="{kolor}">{nr}</text>')
+    # podziałka: okrągła długość do ok. 1/4 szerokości
+    m_na_px = 111_320 / skala
+    dlugosc_m = max((k for k in (100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000) if k / m_na_px <= szerokosc / 4), default=100)
+    dl = dlugosc_m / m_na_px
+    y0 = wysokosc - 14
+    czesci.append(
+        f'<g stroke="#1d1d1f" stroke-width="2"><line x1="{margines}" y1="{y0}" x2="{margines + dl:.1f}" y2="{y0}"/>'
+        f'<line x1="{margines}" y1="{y0 - 5}" x2="{margines}" y2="{y0 + 1}"/><line x1="{margines + dl:.1f}" y1="{y0 - 5}" x2="{margines + dl:.1f}" y2="{y0 + 1}"/></g>'
+        f'<text x="{margines + dl + 6:.1f}" y="{y0 + 4}" fill="#1d1d1f">{dlugosc_m if dlugosc_m < 1000 else dlugosc_m // 1000} {"m" if dlugosc_m < 1000 else "km"}</text>'
+    )
+    x = szerokosc - margines
+    czesci.append(f'<path d="M{x},{margines - 12} L{x + 6},{margines + 4} L{x},{margines} L{x - 6},{margines + 4} Z" fill="#1d1d1f"/><text x="{x}" y="{margines + 18}" text-anchor="middle" fill="#1d1d1f">N</text>')
+    czesci.append("</svg>")
+    return "".join(czesci)

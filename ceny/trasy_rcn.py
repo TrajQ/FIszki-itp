@@ -12,8 +12,10 @@ import glob
 import io
 import os
 import tempfile
+from datetime import date
 
 from flask import Response, abort, jsonify, redirect, render_template, request, url_for
+from markupsafe import Markup
 from werkzeug.utils import secure_filename
 
 from . import baza, rcn
@@ -57,6 +59,7 @@ def transakcje():
         wybrany=request.args.get("plik", type=int),
         blad=request.args.get("blad"),
         rynki=RYNKI,
+        maks_obszarow=rcn.MAKS_OBSZAROW,
     )
 
 
@@ -102,13 +105,86 @@ def dane_transakcji(plik_id):
         return jsonify({"blad": str(e)}), 400
     lokale = baza.lokale_rcn(plik_id, **filtry)
     wszystkie = baza.lokale_rcn(plik_id)
+    obszary = baza.obszary_rcn(plik_id)
     return jsonify({
         "plik": plik,
         "lata": sorted({l["rok"] for l in wszystkie}),
         "rodzaje": baza.rodzaje_transakcji(plik_id),
         "statystyki": rcn.statystyki(lokale),
         "mapa": rcn.punkty_mapy(lokale),
+        "obszary": obszary,
+        "porownanie": rcn.porownanie(lokale, obszary),
     })
+
+
+# ---------- obszary do porównania (ETAP 105) ----------
+
+
+def _nazwa_obszaru(tekst) -> str:
+    nazwa = " ".join(str(tekst or "").split())[:60]
+    if not nazwa:
+        raise rcn.BladPliku("Podaj nazwę obszaru.")
+    return nazwa
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/obszary", methods=["POST"])
+def dodaj_obszar(plik_id):
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    dane = request.get_json(silent=True) or {}
+    try:
+        if len(baza.obszary_rcn(plik_id)) >= rcn.MAKS_OBSZAROW:
+            raise rcn.BladPliku(f"Najwyżej {rcn.MAKS_OBSZAROW} obszarów — usuń któryś.")
+        obszar_id = baza.dodaj_obszar_rcn(plik_id, _nazwa_obszaru(dane.get("nazwa")), rcn.sprawdz_obszar(dane.get("geometria")))
+    except rcn.BladPliku as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify({"id": obszar_id}), 201
+
+
+@ceny_bp.route("/transakcje/obszary/<int:obszar_id>", methods=["PUT"])
+def zmien_obszar(obszar_id):
+    try:
+        nazwa = _nazwa_obszaru((request.get_json(silent=True) or {}).get("nazwa"))
+    except rcn.BladPliku as e:
+        return jsonify({"blad": str(e)}), 400
+    if not baza.zmien_nazwe_obszaru(obszar_id, nazwa):
+        abort(404)
+    return jsonify({"ok": True})
+
+
+@ceny_bp.route("/transakcje/obszary/<int:obszar_id>", methods=["DELETE"])
+def usun_obszar(obszar_id):
+    if not baza.usun_obszar_rcn(obszar_id):
+        abort(404)
+    return jsonify({"ok": True})
+
+
+# ---------- raport do druku (ETAP 105) ----------
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/raport")
+def raport_transakcji(plik_id):
+    plik = baza.plik_rcn(plik_id)
+    if plik is None:
+        abort(404)
+    try:
+        filtry = _filtry()
+    except ValueError:
+        abort(400)
+    lokale = baza.lokale_rcn(plik_id, **filtry)
+    obszary = baza.obszary_rcn(plik_id)
+    mapa = rcn.punkty_mapy(lokale)
+    return render_template(
+        "ceny/raport.html",
+        plik=plik,
+        filtry=filtry,
+        statystyki=rcn.statystyki(lokale),
+        porownanie=rcn.porownanie(lokale, obszary),
+        mapa=Markup(rcn.mapa_svg(lokale, obszary, mapa["progi"], rcn.KOLORY_KLAS)),  # tylko liczby i kolory z kodu
+        progi=mapa["progi"],
+        kolory=rcn.KOLORY_KLAS,
+        dzis=date.today().isoformat(),
+    )
 
 
 @ceny_bp.route("/transakcje/<int:plik_id>.csv")

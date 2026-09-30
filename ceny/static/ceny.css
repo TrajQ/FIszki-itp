@@ -299,3 +299,129 @@
         height: 340px;
     }
 }
+
+/* ---------- raport cen transakcyjnych i obszary (ETAP 105) ---------- */
+
+.raport-cen {
+    display: grid;
+    gap: 16px;
+    max-width: 1060px;
+    margin: 0 auto;
+}
+
+.raport-cen__akcje {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.raport-cen__strona {
+    display: grid;
+    gap: 12px;
+    padding: 28px;
+    border-radius: 16px;
+    background: var(--tlo-karty);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.raport-cen > *,
+.raport-cen__strona > * {
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .raport-cen__strona {
+        padding: 16px;
+    }
+}
+
+.raport-cen__strona h1,
+.raport-cen__strona h2,
+.raport-cen__strona h3 {
+    margin: 0;
+}
+
+.raport-cen__mapa svg {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--linia);
+    border-radius: 8px;
+}
+
+.raport-cen__calosc td {
+    font-weight: 600;
+}
+
+.obszary-rcn {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+}
+
+.obszar-rcn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.obszar-rcn__nr {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border: 2px solid;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.obszar-rcn__nazwa {
+    flex: 1;
+    min-width: 0;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+
+    .strona-raportu-cen .pasek-nawigacji,
+    .raport-cen__akcje {
+        display: none;
+    }
+
+    .raport-cen__strona {
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .raport-cen__strona:first-of-type {
+        break-after: page;
+    }
+
+    .raport-cen .kafelek-rcn,
+    .raport-cen .legenda-rcn__probka {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* Ikony Leaflet.draw (jak w module osiedle): styl przycisków mapy ze
+   static/style.css kasuje obrazki z leaflet.draw.css — przywracamy je. */
+.leaflet-container .leaflet-bar.leaflet-draw-toolbar a {
+    background-color: #ffffff;
+    background-image: url("../../static/leaflet-draw/images/spritesheet.svg");
+    background-repeat: no-repeat;
+    background-size: 300px 30px;
+    background-clip: padding-box;
+}
+
+.leaflet-container .leaflet-bar.leaflet-draw-toolbar a:hover {
+    background-color: #f0f0f3;
+}

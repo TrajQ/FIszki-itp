@@ -4,6 +4,7 @@
 {% block klasa_main %}tresc tresc--szeroka{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet-draw/leaflet.draw.css') }}">
 <link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">
 {% endblock %}
 
@@ -82,6 +83,7 @@
                 <label>Izby <select name="izby"><option value="">wszystkie</option>{% for i in ['1', '2', '3', '4+'] %}<option value="{{ i }}">{{ i }}</option>{% endfor %}</select></label>
                 <label>Rodzaj transakcji <select name="rodzaj"><option value="">wszystkie</option></select></label>
                 <a id="link-csv-rcn" class="przycisk przycisk--drugi" href="#">CSV</a>
+                <a id="link-raport-rcn" class="przycisk przycisk--drugi" href="#" target="_blank" rel="noopener">Raport do druku ↗</a>
             </form>
             <div id="kafelki-rcn" class="kafelki-rcn"></div>
             <p id="odrzucone-rcn" class="wyciszony opis-cen"></p>
@@ -91,6 +93,13 @@
             <h3>Mapa transakcji</h3>
             <div id="mapa-rcn" class="mapa-rcn"></div>
             <div id="legenda-rcn" class="legenda-rcn"></div>
+        </section>
+
+        <section class="karta stos">
+            <h3>Obszary do porównania</h3>
+            <p class="wyciszony opis-cen">Narysuj na mapie dzielnicę, osiedle albo okolicę (wielobok lub prostokąt w lewym górnym rogu mapy) — do {{ maks_obszarow }} obszarów. Porównanie liczy się z tych samych filtrów co reszta strony.</p>
+            <ul id="obszary-rcn" class="obszary-rcn"></ul>
+            <div class="przewijanie-cen"><table class="tabela" id="porownanie-rcn"></table></div>
         </section>
 
         <div class="kolumny-rcn">
@@ -119,5 +128,6 @@
     const PLIK_ID = {{ (wybrany or (pliki[0].id if pliki else none)) | tojson }};
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='leaflet-draw/leaflet.draw.js') }}"></script>
 <script src="{{ url_for('ceny.static', filename='transakcje.js') }}"></script>
 {% endblock %}

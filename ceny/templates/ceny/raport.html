@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% macro z(x, miejsca=0) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
+
+{% block tytul %}Raport cen transakcyjnych — {{ plik.nazwa }} — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-cen{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">{% endblock %}
+
+{% block tresc %}
+{% set opis_filtrow = [] %}
+{% if filtry.rynek %}{% set _ = opis_filtrow.append('rynek ' ~ filtry.rynek) %}{% endif %}
+{% if filtry.od_roku or filtry.do_roku %}{% set _ = opis_filtrow.append('lata ' ~ (filtry.od_roku or '…') ~ '–' ~ (filtry.do_roku or '…')) %}{% endif %}
+{% if filtry.izby %}{% set _ = opis_filtrow.append('izby: ' ~ filtry.izby) %}{% endif %}
+{% if filtry.rodzaj %}{% set _ = opis_filtrow.append('transakcje: ' ~ filtry.rodzaj) %}{% endif %}
+<div class="raport-cen">
+    <div class="raport-cen__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('ceny.transakcje', plik=plik.id) }}">‹ Transakcje</a>
+        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+    </div>
+
+    <section class="raport-cen__strona">
+        <h1>Ceny transakcyjne mieszkań</h1>
+        <p class="wyciszony">Plik {{ plik.nazwa }} · {{ opis_filtrow | join(', ') if opis_filtrow else 'wszystkie transakcje lokali mieszkalnych' }}{% if statystyki %} · {{ statystyki.od }} – {{ statystyki.do }}{% endif %}</p>
+        {% if statystyki %}
+        <div class="kafelki-rcn">
+            <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Mediana ceny za m²</span><span class="kafelek-rcn__wartosc">{{ z(statystyki.mediana_m2) }} zł</span><span class="wyciszony kafelek-rcn__dopisek">połowa transakcji: {{ z(statystyki.q1_m2) }}–{{ z(statystyki.q3_m2) }} zł</span></div>
+            <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Transakcji</span><span class="kafelek-rcn__wartosc">{{ z(statystyki.liczba) }}</span></div>
+            <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Mediana ceny lokalu</span><span class="kafelek-rcn__wartosc">{{ z(statystyki.mediana_ceny) }} zł</span></div>
+            <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Mediana powierzchni</span><span class="kafelek-rcn__wartosc">{{ z(statystyki.mediana_pow, 1) }} m²</span></div>
+        </div>
+        {% endif %}
+        <div class="raport-cen__mapa">{{ mapa }}</div>
+        <ul class="legenda-rcn">
+            {% set granice = [none] + progi + [none] %}
+            {% if progi %}{% for kolor in kolory %}
+            <li class="legenda-rcn__pozycja"><span class="legenda-rcn__probka" style="background: {{ kolor }}"></span>
+                {% if granice[loop.index0] is none %}do {{ z(granice[loop.index]) }}{% elif granice[loop.index] is none %}ponad {{ z(granice[loop.index0]) }}{% else %}{{ z(granice[loop.index0]) }}–{{ z(granice[loop.index]) }}{% endif %} zł/m²</li>
+            {% endfor %}{% endif %}
+            {% for o in porownanie.obszary %}<li class="legenda-rcn__pozycja"><strong style="color: {{ o.kolor }}">{{ loop.index }}</strong> {{ o.nazwa }}</li>{% endfor %}
+        </ul>
+        <p class="wyciszony opis-cen">Mapa schematyczna: punkty transakcji w pięciu równolicznych klasach ceny za m² (najwyżej 4000 najnowszych), numery — obszary porównania.</p>
+    </section>
+
+    <section class="raport-cen__strona">
+        {% if porownanie.obszary %}
+        <h2>Porównanie obszarów</h2>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Obszar</th><th class="liczba">Transakcji</th><th class="liczba">Mediana za m²</th><th class="liczba">Połowa transakcji</th><th class="liczba">Wobec całości</th><th class="liczba">Mediana powierzchni</th><th class="liczba">Mediana ceny</th></tr>
+            {% for o in porownanie.obszary %}
+            <tr><td><strong style="color: {{ o.kolor }}">{{ loop.index }}</strong> {{ o.nazwa }}</td><td class="liczba">{{ o.liczba }}</td>
+                {% if o.liczba %}<td class="liczba">{{ z(o.mediana_m2) }} zł</td><td class="liczba">{{ z(o.q1_m2) }}–{{ z(o.q3_m2) }}</td><td class="liczba">{{ ('%+.1f' % o.wobec_calosci_proc) | replace('.', ',') }}%</td><td class="liczba">{{ z(o.mediana_pow, 1) }} m²</td><td class="liczba">{{ z(o.mediana_ceny) }} zł</td>
+                {% else %}<td colspan="5" class="wyciszony">brak transakcji w obszarze</td>{% endif %}</tr>
+            {% endfor %}
+            {% set c = porownanie.calosc %}
+            {% if c.liczba %}<tr class="raport-cen__calosc"><td>cały plik</td><td class="liczba">{{ c.liczba }}</td><td class="liczba">{{ z(c.mediana_m2) }} zł</td><td class="liczba">{{ z(c.q1_m2) }}–{{ z(c.q3_m2) }}</td><td></td><td class="liczba">{{ z(c.mediana_pow, 1) }} m²</td><td class="liczba">{{ z(c.mediana_ceny) }} zł</td></tr>{% endif %}
+        </table>
+        </div>
+        {% if porownanie.lata %}
+        <h3>Mediana ceny za m² w latach [zł]</h3>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Obszar</th>{% for r in porownanie.lata %}<th class="liczba">{{ r }}</th>{% endfor %}</tr>
+            {% for o in porownanie.obszary %}<tr><td><strong style="color: {{ o.kolor }}">{{ loop.index }}</strong> {{ o.nazwa }}</td>{% for r in porownanie.lata %}<td class="liczba">{{ z((o.lata or {}).get(r)) }}</td>{% endfor %}</tr>{% endfor %}
+            <tr class="raport-cen__calosc"><td>cały plik</td>{% for r in porownanie.lata %}<td class="liczba">{{ z((porownanie.calosc.lata or {}).get(r)) }}</td>{% endfor %}</tr>
+        </table>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% if statystyki %}
+        <h2>Według liczby izb</h2>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Izby</th><th class="liczba">Transakcji</th><th class="liczba">Mediana za m²</th><th class="liczba">Mediana powierzchni</th></tr>
+            {% for i in statystyki.izby %}<tr><td>{{ i.izby }}</td><td class="liczba">{{ i.liczba }}</td><td class="liczba">{{ z(i.mediana_m2) }} zł</td><td class="liczba">{{ z(i.mediana_pow, 1) }} m²</td></tr>{% endfor %}
+        </table>
+        </div>
+        {% endif %}
+        <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK) — ceny brutto z aktów notarialnych, lokale mieszkalne; pominięte przy imporcie: {% for k, v in plik.odrzucone.items() %}{{ k }} ({{ v }}){{ ', ' if not loop.last }}{% else %}nic{% endfor %}. Statystyki: Warsztat, {{ dzis }}. Mediana i kwartyle — połowa transakcji mieści się w podanym przedziale.</p>
+    </section>
+</div>
+{% endblock %}
