@@ -1610,3 +1610,15 @@ Status: zamknięty
 - Sprawdzone w przeglądarce z podstawioną usługą; prawdziwa usługa
   niedostępna z tego środowiska
 - `DECISIONS.md`: D-097
+
+## ETAP 90 — MPZP: ceny transakcyjne z Rejestru Cen Nieruchomości
+Data: 2026-09-30
+Status: zamknięty
+
+- usługa „ceny” w `mpzp/uslugi.py` (WMS RCN GUGiK), nakładka „Ceny
+  transakcyjne (RCN)” i sekcja w panelu działki
+- Naprawiony błąd znaleziony testem: tabela HTML z nagłówkiem i dwiema
+  kolumnami była czytana jak pary „nazwa | wartość”
+- Sprawdzone w przeglądarce z podstawioną usługą; prawdziwa usługa
+  niedostępna z tego środowiska
+- `DECISIONS.md`: D-098

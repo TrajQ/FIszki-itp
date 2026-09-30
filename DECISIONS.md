@@ -2083,3 +2083,23 @@ dlatego nie są wpisane w kod (NIE ZGADUJ).
   jego parserów zamiast go przebudowywać.
 - Opis symboli stref (SW, SJ…) w aplikacji — pokazujemy atrybuty z
   usługi, bez własnej interpretacji.
+
+## D-098 — MPZP: Rejestr Cen Nieruchomości przez WMS, bez własnych analiz cen
+Data: 2026-09-30
+
+**Decyzja:** Usługa RCN GUGiK (`mapy.geoportal.gov.pl/wss/service/rcn`)
+obsługiwana tak samo jak plan ogólny (D-097): nakładka z warstwami z
+GetCapabilities i atrybuty transakcji w punkcie działki, pokazane tak, jak
+podała je usługa. Transakcje w okolicy — na mapie (warstwa), bez
+zestawień.
+
+**Uzasadnienie:** Od 2026 r. dane RCN są bezpłatne. Ceny transakcyjne są
+potrzebne przy ocenie działki i w analizach rynku, a nakładka z
+atrybutami nie wymaga znajomości schematu danych.
+
+**Odrzucone alternatywy:**
+- Zestawienie cen w promieniu (średnia cena za m²) przez WFS — wymaga
+  schematu obiektów RCN, którego nie potwierdziłem; może być następnym
+  krokiem po sprawdzeniu usługi na żywo.
+- Pobieranie paczek GeoPackage/GeoParquet z RCN — duże pliki, a
+  potrzebny jest podgląd dla jednej działki.

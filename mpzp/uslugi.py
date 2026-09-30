@@ -31,6 +31,11 @@ USLUGI = {
         "url": "https://mapy.geoportal.gov.pl/wss/ext/PlanyOgolneGmin",
         "nazwa": "Plan ogólny gminy",
     },
+    # ETAP 90: ceny transakcyjne — dane RCN są bezpłatne od lutego 2026 r.
+    "ceny": {
+        "url": "https://mapy.geoportal.gov.pl/wss/service/rcn",
+        "nazwa": "Rejestr Cen Nieruchomości",
+    },
 }
 
 WAZNOSC_S = 24 * 3600
@@ -147,11 +152,11 @@ def sparsuj(tekst: str, format_: str, nazwa: str = "usługa") -> list[dict]:
 
 
 class _Tabele(HTMLParser):
-    """Tabele HTML → wiersze komórek (tekst), osobno dla każdej tabeli."""
+    """Tabele HTML → wiersze komórek (tekst, czy nagłówek <th>), osobno dla każdej tabeli."""
 
     def __init__(self):
         super().__init__()
-        self.tabele, self._wiersz, self._komorka = [], None, None
+        self.tabele, self._wiersz, self._komorka, self._th = [], None, None, False
 
     def handle_starttag(self, tag, attrs):
         if tag == "table":
@@ -159,14 +164,14 @@ class _Tabele(HTMLParser):
         elif tag == "tr" and self.tabele:
             self._wiersz = []
         elif tag in ("td", "th") and self._wiersz is not None:
-            self._komorka = []
+            self._komorka, self._th = [], tag == "th"
 
     def handle_endtag(self, tag):
         if tag in ("td", "th") and self._komorka is not None:
-            self._wiersz.append(" ".join("".join(self._komorka).split()))
+            self._wiersz.append((" ".join("".join(self._komorka).split()), self._th))
             self._komorka = None
         elif tag == "tr" and self._wiersz is not None:
-            if any(self._wiersz):
+            if any(tekst for tekst, _ in self._wiersz):
                 self.tabele[-1].append(self._wiersz)
             self._wiersz = None
 
@@ -177,14 +182,17 @@ class _Tabele(HTMLParser):
 
 def sparsuj_html(tekst: str) -> list[dict]:
     """Odpowiedź GetFeatureInfo w HTML. Dwa typowe układy tabel:
-    wiersze „nazwa | wartość” albo nagłówek z nazwami pól i wiersze obiektów."""
+    nagłówek z nazwami pól (pierwszy wiersz z samych <th>) i wiersze
+    obiektów albo wiersze „nazwa | wartość”."""
     parser = _Tabele()
     parser.feed(tekst)
     wynik = []
     for tabela in parser.tabele:
         if not tabela:
             continue
-        if all(len(w) == 2 for w in tabela):
+        z_naglowkiem = len(tabela) > 1 and all(th for _, th in tabela[0]) and not all(w[0][1] for w in tabela[1:])
+        tabela = [[t for t, _ in w] for w in tabela]
+        if not z_naglowkiem and all(len(w) == 2 for w in tabela):
             atrybuty = {k: v for k, v in tabela if k and v}
             if atrybuty:
                 wynik.append({"warstwa": "", "atrybuty": atrybuty})

@@ -875,3 +875,23 @@ def test_getfeatureinfo_w_html():
     wynik = uslugi.sparsuj_html(naglowek)
     assert wynik[0]["atrybuty"] == {"cena": "350000", "data": "2025-03-01", "rodzaj": "działka"} and wynik[1]["atrybuty"] == {"cena": "1", "rodzaj": "x"}
     assert uslugi.sparsuj_html("<p>brak danych</p>") == []
+
+
+# ---------- ETAP 90: ceny transakcyjne (RCN) ----------
+
+
+def test_ceny_transakcyjne_w_punkcie(client, monkeypatch):
+    uslugi._cache.clear()
+    capabilities = CAPABILITIES_POG.replace("<Format>application/vnd.ogc.gml</Format>", "").replace("StrefyPlanistyczne", "dzialki")
+    html = "<table><tr><th>cena_transakcji</th><th>data_transakcji</th></tr><tr><td>420000</td><td>2025-06-11</td></tr></table>"
+    adresy = []
+
+    def get(url, params=None, **k):
+        adresy.append(url)
+        return _OdpUslugi(capabilities if params["request"] == "GetCapabilities" else html)
+
+    monkeypatch.setattr(uslugi.requests, "get", get)
+    odp = client.get("/mpzp/usluga/ceny/punkt?lat=52.4&lon=16.9").get_json()
+    assert odp["nazwa"] == "Rejestr Cen Nieruchomości"
+    assert odp["obiekty"] == [{"warstwa": "", "atrybuty": {"cena_transakcji": "420000", "data_transakcji": "2025-06-11"}}]
+    assert set(adresy) == {"https://mapy.geoportal.gov.pl/wss/service/rcn"}

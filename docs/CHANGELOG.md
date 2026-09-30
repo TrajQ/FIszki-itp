@@ -646,3 +646,10 @@
   atrybuty planu ogólnego w miejscu działki (usługa GUGiK, na razie gminy,
   które już uchwaliły plan ogólny). Nakładka także w Osiedlu.
 - Dodano `mpzp/uslugi.py`, `DECISIONS.md` D-097 i 2 testy.
+
+## ETAP 90 — 2026-09-30
+- MPZP: **ceny transakcyjne** z Rejestru Cen Nieruchomości (bezpłatny od
+  2026 r.) — warstwa transakcji na mapie i transakcje obejmujące miejsce
+  działki w panelu.
+- Naprawiono odczyt tabel HTML z odpowiedzi usług (nagłówek + 2 kolumny).
+- Dodano `DECISIONS.md` D-098 i 1 test.

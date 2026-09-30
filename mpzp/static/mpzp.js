@@ -68,7 +68,7 @@
         .catch(() => {}); // bez nakładek mapa działa jak dotąd
 
     // Inne usługi GUGiK (ETAP 89–90): nakładka w przełączniku warstw, jeśli usługa odpowie.
-    for (const [klucz, nazwa, przezroczystosc] of [["plany_ogolne", "Plany ogólne gmin (strefy)", 0.6]]) {
+    for (const [klucz, nazwa, przezroczystosc] of [["plany_ogolne", "Plany ogólne gmin (strefy)", 0.6], ["ceny", "Ceny transakcyjne (RCN)", 1]]) {
         fetch(`${URL_USLUGA}${klucz}/warstwa`)
             .then((odpowiedz) => (odpowiedz.ok ? odpowiedz.json() : Promise.reject()))
             .then((opis) => kontrolkaWarstw.addOverlay(nakladkaWms(opis, przezroczystosc), nazwa))
@@ -611,6 +611,7 @@
     function sekcjeUslug(punkt) {
         return [
             sekcjaUslugi("plany_ogolne", "Plan ogólny gminy", "Źródło: plany ogólne gmin w usłudze GUGiK — na razie tylko gminy, które już uchwaliły plan ogólny. Atrybuty jak w usłudze; rozstrzyga uchwała.", punkt),
+            sekcjaUslugi("ceny", "Ceny transakcyjne (RCN)", "Źródło: Rejestr Cen Nieruchomości (GUGiK) — transakcje obejmujące to miejsce, atrybuty jak w usłudze. Transakcje w okolicy zobaczysz, włączając warstwę „Ceny transakcyjne (RCN)” na mapie.", punkt),
         ];
     }
 
