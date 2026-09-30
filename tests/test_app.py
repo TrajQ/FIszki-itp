@@ -177,3 +177,10 @@ def test_strona_glowna_pokazuje_kopie_automatyczna(czysty_client, tmp_path):
     assert "warsztat_auto_" in c.get("/").get_data(as_text=True)
     c.application.config["AUTO_KOPIA_DNI"] = 0
     assert "wyłączona" in c.get("/").get_data(as_text=True)
+
+
+def test_pomoc_opisuje_funkcje_z_etapow_88_97(czysty_client):
+    html = czysty_client.get("/pomoc").get_data(as_text=True)
+    for fraza in ("Pobierz z Dziennika Ustaw", "Plan ogólny gminy", "Ceny transakcyjne (RCN)", "metodę Hellwiga",
+                  "trend niestabilny", "Ankieta: przestrzeń publiczna", "wielokrotny wybór", "Odległości i cień", "AUTO_KOPIA_DNI"):
+        assert fraza in html, fraza

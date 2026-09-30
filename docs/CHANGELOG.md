@@ -696,3 +696,7 @@
   `~/warsztat_kopie`, zostaje 5 najnowszych; data ostatniej kopii na
   stronie głównej.
 - Dodano `DECISIONS.md` D-105 i 2 testy.
+
+## ETAP 98 — 2026-09-30
+- Pomoc: opisy funkcji dodanych w ETAPach 88–97.
+- Dodano `DECISIONS.md` D-106 i 1 test.

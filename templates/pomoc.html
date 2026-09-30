@@ -48,9 +48,10 @@
     </details>
     <details><summary>Jak przygotować raport jednej gminy?</summary>
         <p><a href="{{ url_for('atlas.raport_gminy_wybor') }}">Raport gminy</a>: najpierw raz ułóż zestaw wskaźników (wspólny dla wszystkich gmin), potem wybierz województwo i gminę. Raport ma wartość, zmianę w 10 lat, miejsce w województwie, mapę położenia, porównanie z drugą gminą, CSV i druk.</p>
+        <p>Pod wykresem trendu jest „→ rok: ~wartość” — przedłużenie trendu z ostatnich 10 lat o 5 lat naprzód. To nie prognoza demograficzna GUS: pokazuje tylko, co będzie, jeśli dotychczasowa zmiana się utrzyma. Dopisek „trend niestabilny” znaczy, że wartości skakały i takie przedłużenie mało mówi.</p>
     </details>
     <details><summary>Jak policzyć wskaźnik złożony (np. poziom rozwoju gmin)?</summary>
-        <p><a href="{{ url_for('atlas.wskaznik_zlozony') }}">Wskaźnik złożony</a> bierze składowe z zestawu raportu gminy. Zaznacz co najmniej dwie, dla każdej wybierz stymulantę (więcej = lepiej) albo destymulantę (więcej = gorzej) i wagę, potem metodę: unitaryzację zerowaną (wynik 0–1) albo standaryzację. Wynik: ranking gmin, kartogram SVG i CSV z wartościami surowymi i po normalizacji.</p>
+        <p><a href="{{ url_for('atlas.wskaznik_zlozony') }}">Wskaźnik złożony</a> bierze składowe z zestawu raportu gminy. Zaznacz co najmniej dwie, dla każdej wybierz stymulantę (więcej = lepiej) albo destymulantę (więcej = gorzej) i wagę, potem metodę: unitaryzację zerowaną (wynik 0–1), standaryzację albo metodę Hellwiga (odległość gminy od „wzorca” — najlepszych wartości wszystkich składowych; bliżej 1 = bliżej wzorca). Wynik: ranking gmin, kartogram SVG i CSV z wartościami surowymi i po normalizacji.</p>
     </details>
 </section>
 
@@ -58,6 +59,9 @@
     <h2>MPZP</h2>
     <details><summary>Jak sprawdzić przeznaczenie działki?</summary>
         <p>Kliknij punkt na mapie albo wpisz obręb i numer działki (np. „Jeżyce 18/14”) i wybierz z podpowiedzi. Panel pokaże działkę z ULDK i plan miejscowy (w całej Polsce z krajowej integracji GUGiK; dla Poznania także podział działki na przeznaczenia).</p>
+    </details>
+    <details><summary>Plan ogólny gminy i ceny transakcyjne</summary>
+        <p>Pod danymi działki są dwie rozwijane sekcje: „Plan ogólny gminy” (strefa planistyczna w tym miejscu — na razie tylko gminy, które już uchwaliły plan ogólny) i „Ceny transakcyjne (RCN)” (transakcje z Rejestru Cen Nieruchomości obejmujące to miejsce). Transakcje w okolicy zobaczysz, włączając warstwę „Ceny transakcyjne (RCN)” w przełączniku warstw; tam jest też warstwa „Plany ogólne gmin (strefy)”. Atrybuty pokazujemy tak, jak podała je usługa GUGiK.</p>
     </details>
     <details><summary>Jak wydrukować kartę działki?</summary>
         <p>Po sprawdzeniu działki kliknij „Karta działki ↗”: identyfikator, powierzchnia, przeznaczenie, szkic, ortofotomapa obecna i archiwalna. Drukuj z przeglądarki (Ctrl+P → Zapisz jako PDF).</p>
@@ -113,6 +117,9 @@
     <details><summary>Jak sprawdzić zgodność z planem?</summary>
         <p>Wpisz ustalenia planu (wskaźnik zabudowy, intensywność, powierzchnia biologicznie czynna, liczba kondygnacji) — każdy wskaźnik dostanie ocenę zgodności. Plan miejscowy i działki pod rysunkiem włączysz w przełączniku warstw (prawy górny róg mapy).</p>
     </details>
+    <details><summary>Odległości od granicy i cień</summary>
+        <p>Karta „Odległości i cień” → wybierz dzień (równonoc albo przesilenie) → „Pokaż”. Na mapie pojawi się strefa, na którą może padać cień terenów zabudowy (wysokość = kondygnacje × 3 m, godziny 9–15), a w tabeli: wysokość, długość cienia w południe i odległość terenu od granicy obszaru. Klik w teren w tabeli zaznacza go na mapie. To najgorszy przypadek (budynki przy samej krawędzi terenu) — do porównania wariantów, nie zamiast analizy nasłonecznienia budynków.</p>
+    </details>
     <details><summary>Raport i warianty</summary>
         <p>Raport do druku z rysunkiem i tabelami; <a href="{{ url_for('osiedle.porownanie') }}">Porównaj warianty</a> zestawia kilka koncepcji obok siebie.</p>
     </details>
@@ -121,7 +128,7 @@
 <section id="przepisy" class="karta stos">
     <h2>Przepisy</h2>
     <details><summary>Jak dodać ustawę i szukać w niej?</summary>
-        <p>Wgraj PDF (najlepiej tekst jednolity z ISAP). Warsztat podzieli go na artykuły i paragrafy; wyszukiwarka nie zwraca uwagi na polskie znaki i odmianę końcówek.</p>
+        <p>Najprościej: „Pobierz z Dziennika Ustaw” — wpisz słowa z tytułu (np. „planowaniu i zagospodarowaniu”) i kliknij „Pobierz” przy najnowszym obwieszczeniu z oznaczeniem „tekst jednolity”. Możesz też wgrać własny PDF. Warsztat podzieli tekst na artykuły i paragrafy; wyszukiwarka nie zwraca uwagi na polskie znaki i odmianę końcówek.</p>
     </details>
     <details><summary>Jak zadać pytanie do przepisów?</summary>
         <p>Gemini dostaje tylko artykuły najlepiej pasujące do pytania i musi odpowiadać dosłownymi cytatami. Warsztat sprawdza każdy cytat w tekście artykułu (wymyślone odrzuca, a odpowiedzi bez prawdziwego cytatu nie pokazuje) i każdą liczbę. Cytat prowadzi do strony w PDF-ie.</p>
@@ -143,6 +150,9 @@
             <li>„Pobierz formularz na telefon”, przenieś plik HTML na telefon, otwórz w Chrome albo Firefoksie. Działa bez internetu: GPS, pola, zdjęcie, uwagi.</li>
             <li>Po pracy „Eksportuj plik” na telefonie i zaimportuj JSON na stronie projektu.</li>
         </ol>
+    </details>
+    <details><summary>Jak zrobić ankietę z mieszkańcami?</summary>
+        <p>Załóż projekt ze wzoru „Ankieta: przestrzeń publiczna” (albo w istniejącym projekcie zmień „Rodzaj projektu” na ankietę) i dopasuj pytania. Pytanie „wielokrotny wybór” pozwala zaznaczyć kilka odpowiedzi. Formularz na telefon zaczyna wtedy od pytań, a miejsce i zdjęcie są opcjonalne. Raport pokazuje „Wyniki ankiety” — przy wielokrotnym wyborze procenty nie sumują się do 100.</p>
     </details>
     <details><summary>Jak poprawić punkt?</summary>
         <p>Kliknij punkt na mapie projektu albo w tabeli i wybierz „Popraw” — zmienisz wartości pól i uwagi, a „✥ Przesuń na mapie” poprawi położenie, gdy GPS się pomylił.</p>

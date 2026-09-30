@@ -1732,3 +1732,15 @@ Status: zamknięty
 - Sprawdzone: prawdziwe uruchomienie `python app.py` zrobiło kopię w
   podanym folderze
 - `DECISIONS.md`: D-105
+
+## ETAP 98 — Pomoc: uzupełnienie o funkcje z ETAPów 88–97
+Data: 2026-09-30
+Status: zamknięty
+
+- strona Pomoc: Dziennik Ustaw w Przepisach, plan ogólny i ceny RCN w
+  MPZP, metoda Hellwiga i przedłużenie trendu w Atlasie, ankieta i
+  wielokrotny wybór w Terenie, odległości i cień w Osiedlu (kopia
+  automatyczna była już dopisana w ETAPie 97)
+- test pilnujący, że Pomoc wymienia te funkcje (etykiety jak w
+  interfejsie)
+- `DECISIONS.md`: D-106

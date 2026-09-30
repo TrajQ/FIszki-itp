@@ -2253,3 +2253,18 @@ komputerze.
   należy do autora (Pomoc podpowiada pendrive albo chmurę).
 - Kopia przy każdym starcie — przy dużych PDF-ach i zdjęciach
   niepotrzebnie zapełniałaby dysk.
+
+## D-106 — Pomoc aktualizowana razem z funkcjami, pilnowana testem
+Data: 2026-09-30
+
+**Decyzja:** Po serii ETAPów 88–97 Pomoc nie wspominała żadnej nowej
+funkcji. Uzupełniamy ją i dodajemy test sprawdzający, że wymienia kluczowe
+etykiety z interfejsu. Kolejne ETAPy z nową funkcją dopisują akapit w
+Pomocy w tym samym ETAPie.
+
+**Uzasadnienie:** Pomoc powstała po to, żeby autor po przerwie wiedział,
+gdzie co jest (D-094); nieaktualna jest gorsza niż żadna.
+
+**Odrzucone alternatywy:**
+- Generowanie Pomocy z opisów w kodzie — więcej mechaniki niż treści;
+  jedna strona HTML jest prostsza w utrzymaniu.
