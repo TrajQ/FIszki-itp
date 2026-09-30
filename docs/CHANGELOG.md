@@ -621,3 +621,11 @@
   i 15 minut marszu (szybki model), mieszkańcy w zasięgu i ilu z nich ma
   dziś do wybranej usługi dalej niż próg.
 - Dodano `dostepnosc/zasieg.py`, `DECISIONS.md` D-092 i 2 testy.
+
+## ETAP 86 — 2026-09-30
+- Strona główna: **kalendarz „Najbliższe terminy”** — egzaminy z Fiszek (z
+  postępem nauki) i wyjścia w teren z projektów Terenu.
+- Teren: termin wyjścia w teren na stronie projektu.
+- Dodano stronę **Pomoc** (menu → Pomoc): krótkie przepisy „jak zrobić…”
+  dla każdego modułu, aktualizacja, kopia zapasowa, klucze.
+- Dodano `templates/pomoc.html`, `DECISIONS.md` D-093, D-094 i 3 testy.

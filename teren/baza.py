@@ -51,6 +51,8 @@ KOLUMNY_DODANE = {
     "projekty": {
         # ETAP 83: obszar prac [południe, zachód, północ, wschód] — podkład mapy w formularzu
         "obszar": "TEXT",
+        # ETAP 86: planowany termin wyjścia w teren (RRRR-MM-DD) — w kalendarzu na stronie głównej
+        "termin": "TEXT",
     },
 }
 
@@ -101,6 +103,12 @@ def _projekt(wiersz) -> dict:
 def ustaw_obszar(projekt_id: int, obszar: list[float] | None):
     db = get_db()
     db.execute("UPDATE projekty SET obszar = ? WHERE id = ?", (json.dumps(obszar) if obszar else None, projekt_id))
+    db.commit()
+
+
+def ustaw_termin(projekt_id: int, termin: str | None):
+    db = get_db()
+    db.execute("UPDATE projekty SET termin = ? WHERE id = ?", (termin, projekt_id))
     db.commit()
 
 

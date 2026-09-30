@@ -108,3 +108,30 @@ def test_kopia_zapasowa_zawiera_dane_i_pomija_cache(czysty_client, tmp_path):
     db.close()
 
     assert "Pobierz kopię zapasową" in c.get("/").get_data(as_text=True)
+
+
+# ---------- ETAP 86: kalendarz i pomoc ----------
+
+
+def test_kalendarz_dziala_mimo_bledu_modulu(czysty_client, monkeypatch):
+    import teren.routes
+
+    def zepsute():
+        raise RuntimeError("symulowany błąd")
+
+    monkeypatch.setattr(teren.routes, "terminy", zepsute)
+    assert czysty_client.get("/").status_code == 200
+
+
+def test_pomoc_ma_wszystkie_moduly_i_dzialajace_linki(czysty_client):
+    import re
+
+    c = czysty_client
+    html = c.get("/pomoc").get_data(as_text=True)
+    for kotwica in ("start", "atlas", "mpzp", "fiszki", "dostepnosc", "osiedle", "przepisy", "teren"):
+        assert f'id="{kotwica}"' in html and f'href="#{kotwica}"' in html
+    assert 'href="/pomoc"' in c.get("/").get_data(as_text=True)  # w menu
+    linki = set(re.findall(r'href="(/[^"#]*)', html)) - {"/static/style.css", "/static/favicon.svg"}
+    assert len(linki) >= 8
+    for link in linki:
+        assert c.get(link).status_code == 200, link

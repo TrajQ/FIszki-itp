@@ -1982,3 +1982,38 @@ i zależności. Okrąg uczciwie pokazuje, czym jest model.
   sieciowych, a szybki model ma być natychmiastowy.
 - Progi ustawiane suwakiem — 5/10/15 min to standard „miasta
   15-minutowego”; suwak progu jest już w krzywej dostępności.
+
+## D-093 — Kalendarz na stronie głównej z terminów modułów
+Data: 2026-09-30
+
+**Decyzja:** Fiszki i Teren mają po jednej funkcji `terminy()` (w swoich
+`routes.py`), zwracającej nadchodzące terminy jako słowniki
+{data, dni, rodzaj, nazwa, opis, url}. Strona główna je łączy, sortuje od
+najbliższego i pokazuje 6 pierwszych; błąd jednego modułu nie blokuje
+strony (tak samo jak podsumowania modułów na stronie głównej). Teren dostał kolumnę `projekty.termin`
+(dopisywaną do starych baz). Minione terminy nie są pokazywane.
+
+**Uzasadnienie:** Egzaminy i wyjścia w teren to dwa rodzaje terminów,
+które student planuje równolegle; strona główna to pierwsze, co widzi.
+
+**Odrzucone alternatywy:**
+- Wspólna tabela terminów / moduł „kalendarz” — dwa źródła nie
+  uzasadniają nowej abstrakcji (CLAUDE.md), każdy moduł zostaje właścicielem
+  swoich danych.
+- Eksport do kalendarza Google (ICS) — nie było prośby; można dodać później.
+
+## D-094 — Pomoc jako jedna statyczna strona
+Data: 2026-09-30
+
+**Decyzja:** `/pomoc`: jeden szablon z przepisami „jak zrobić…” w
+rozwijanych sekcjach (details) — na start i dla każdego modułu, z
+linkami do stron. Opisy odwołują się do etykiet przycisków z kodu; test
+sprawdza, że wszystkie linki ze strony pomocy działają.
+
+**Uzasadnienie:** Autor wraca do projektu po przerwie — pomoc ma
+przypomnieć, gdzie co jest, bez czytania README.
+
+**Odrzucone alternatywy:**
+- Podpowiedzi na każdej stronie modułu — opisy już tam są; brakowało
+  jednego miejsca z przeglądem.
+- Pomoc generowana przez Gemini — treść ma być stała i sprawdzona.

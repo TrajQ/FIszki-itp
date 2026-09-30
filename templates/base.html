@@ -20,6 +20,7 @@
                        class="{{ 'aktywny' if request.blueprint == modul }}">{{ nazwa }}</a>
                 </li>
                 {% endfor %}
+                <li><a href="{{ url_for('pomoc') }}" class="{{ 'aktywny' if request.endpoint == 'pomoc' }}" title="Jak zrobić…">Pomoc</a></li>
             </ul>
         </nav>
     </header>

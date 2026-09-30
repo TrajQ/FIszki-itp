@@ -1555,3 +1555,16 @@ Status: zamknięty
   okręgi i nie otwiera okienka komórki, zwykły klik — jak dawniej;
   390 px bez poziomego przewijania (poprawiona szerokość tabeli)
 - `DECISIONS.md`: D-092
+
+## ETAP 86 — Strona główna: kalendarz nauki i pomoc
+Data: 2026-09-30
+Status: zamknięty
+
+- `fiszki.routes.terminy`, `teren.routes.terminy`, kolumna
+  `projekty.termin` z trasą `/teren/projekty/<id>/termin` i kartą „Termin
+  w terenie”; sekcja „Najbliższe terminy” na stronie głównej
+- strona `/pomoc` („jak zrobić…” dla każdego modułu) i link w menu;
+  opisy sprawdzone z etykietami w kodzie
+- Sprawdzone w przeglądarce: kalendarz z 4 terminami (dziś, za 2, 12 i 30
+  dni), 390 px bez poziomego przewijania (wpis układa się w pionie)
+- `DECISIONS.md`: D-093, D-094

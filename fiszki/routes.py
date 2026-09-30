@@ -97,6 +97,30 @@ def podsumowanie() -> dict:
     return dict(wiersz)
 
 
+def terminy() -> list[dict]:
+    """Nadchodzące egzaminy — do kalendarza na stronie głównej (ETAP 86)."""
+    wynik = []
+    for e in egzaminy.lista(get_db(), powtorki.dzisiaj()):
+        if e["minal"]:
+            continue
+        zakres = e["temat"] or e["nazwa_oryginalna"] or "wszystkie fiszki"
+        if not e["fiszki"]:
+            opis = f"{zakres}: brak fiszek w zakresie"
+        elif e["do_nauki"]:
+            opis = f"{zakres}: utrwalone {e['procent']}%, ok. {e['dziennie']} fiszek dziennie"
+        else:
+            opis = f"{zakres}: wszystko utrwalone"
+        wynik.append({
+            "data": e["data"],
+            "dni": e["dni"],
+            "rodzaj": "egzamin",
+            "nazwa": e["nazwa"],
+            "opis": opis,
+            "url": url_for("fiszki.index") + "#egzaminy",
+        })
+    return wynik
+
+
 def _liczby_w_pudelkach() -> list[int]:
     """Ile fiszek jest w każdym pudełku (indeks 0 = pudełko 1)."""
     db = get_db()

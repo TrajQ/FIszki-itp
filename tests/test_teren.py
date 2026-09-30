@@ -283,3 +283,31 @@ def test_obraz_ortofotomapy_odrzuca_nie_jpeg(monkeypatch):
     monkeypatch.setattr(ortofoto.requests, "get", lambda *a, **k: Odp())
     with pytest.raises(ortofoto.BladOrtofoto, match="JPEG"):
         ortofoto.obraz_ortofotomapy((0, 0, 1, 1), 10, 10)
+
+
+# ---------- ETAP 86: kalendarz na stronie głównej ----------
+
+
+def test_kalendarz_egzaminy_i_teren(client):
+    from datetime import date, timedelta
+
+    dzien = lambda n: (date.today() + timedelta(days=n)).isoformat()  # noqa: E731
+    assert "Najbliższe terminy" not in client.get("/").get_data(as_text=True)
+
+    client.post("/teren/projekty", data={"nazwa": "Zieleń — Park Wilsona", "wzor": "zielen"})
+    client.post("/teren/projekty", data={"nazwa": "Stary termin", "wzor": "zielen"})
+    assert client.post("/teren/projekty/1/termin", data={"termin": dzien(1)}).status_code == 302
+    client.post("/teren/projekty/2/termin", data={"termin": dzien(-3)})  # minął — nie w kalendarzu
+    assert client.post("/teren/projekty/1/termin", data={"termin": "jutro"}).status_code == 400
+    assert client.post("/teren/projekty/99/termin", data={"termin": dzien(1)}).status_code == 404
+    assert f'value="{dzien(1)}"' in client.get("/teren/projekty/1").get_data(as_text=True)
+    client.post("/fiszki/egzaminy", data={"nazwa": "Kolokwium z planowania", "data": dzien(10)})
+
+    html = client.get("/").get_data(as_text=True)
+    kalendarz = html[html.index("Najbliższe terminy"):html.index('class="siatka-kart"')]
+    assert "jutro" in kalendarz and "za 10 dni" in kalendarz and "Stary termin" not in kalendarz
+    assert kalendarz.index("Park Wilsona") < kalendarz.index("Kolokwium z planowania")  # od najbliższego
+    assert "wszystkie fiszki: brak fiszek w zakresie" in kalendarz and "bez obszaru prac" in kalendarz
+
+    client.post("/teren/projekty/1/termin", data={"termin": dzien(1), "usun": "1"})
+    assert "Park Wilsona" not in client.get("/").get_data(as_text=True).split('class="siatka-kart"')[0]

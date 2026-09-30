@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block tytul %}Pomoc — Warsztat{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Pomoc</h1>
+        <p>Krótkie przepisy „jak zrobić…” dla każdego modułu. Szczegóły są też w opisach na stronach modułów.</p>
+    </div>
+</div>
+
+<nav class="karta pomoc__spis" aria-label="Spis treści">
+    {% for kotwica, nazwa in [('start', 'Na start'), ('atlas', 'Atlas'), ('mpzp', 'MPZP'), ('fiszki', 'Fiszki'), ('dostepnosc', 'Dostępność'), ('osiedle', 'Osiedle'), ('przepisy', 'Przepisy'), ('teren', 'Teren')] %}
+    <a href="#{{ kotwica }}">{{ nazwa }}</a>
+    {% endfor %}
+</nav>
+
+<div class="pomoc stos">
+<section id="start" class="karta stos">
+    <h2>Na start</h2>
+    <details><summary>Jak uruchomić i zamknąć Warsztat?</summary>
+        <p>Ikoną z pulpitu. Otwiera się okno terminala i przeglądarka z adresem <code>http://127.0.0.1:{{ config.PORT }}</code>. Zamknięcie okna terminala zamyka aplikację. Warsztat działa tylko na tym komputerze — nikt z sieci się z nim nie połączy.</p>
+    </details>
+    <details><summary>Jak zaktualizować do nowej wersji?</summary>
+        <ol>
+            <li>Pobierz nowy plik <code>warsztat_etap…zip</code> do katalogu Pobrane.</li>
+            <li>Zamknij Warsztat (okno terminala).</li>
+            <li>W terminalu w katalogu Warsztatu: <code>./aktualizuj.sh</code>. Skrypt robi kopię zapasową w <code>~/warsztat_kopie</code>, podmienia pliki programu i doinstalowuje zależności. Twoje dane (<code>instance/</code>) i klucze (<code>.env</code>) zostają.</li>
+            <li>Uruchom Warsztat ikoną i odśwież stronę przez Ctrl+Shift+R.</li>
+        </ol>
+    </details>
+    <details><summary>Gdzie są moje dane i jak zrobić kopię?</summary>
+        <p>Wszystko leży w katalogu <code>instance/</code> Warsztatu (osobna baza dla każdego modułu, wgrane PDF-y, zdjęcia z terenu). Kopię całości pobierzesz przyciskiem <a href="{{ url_for('index') }}#kopia">Pobierz kopię zapasową (ZIP)</a> na stronie głównej.</p>
+    </details>
+    <details><summary>Klucze: Gemini i GUS</summary>
+        <p>Wpisz je w pliku <code>.env</code> w katalogu Warsztatu: <code>GEMINI_API_KEY=…</code> (opisy, szkice fiszek, pytania do przepisów) i opcjonalnie <code>GUS_BDL_API_KEY=…</code> (wyższy limit zapytań do Banku Danych Lokalnych). Po zmianie uruchom Warsztat ponownie. Bez klucza Gemini wszystko inne działa — model językowy tylko opisuje i tłumaczy, liczby zawsze pochodzą z danych.</p>
+    </details>
+    <details><summary>Kalendarz na stronie głównej</summary>
+        <p>Pokazuje najbliższe egzaminy z Fiszek (z postępem nauki) i terminy wyjść w teren z projektów Terenu. Egzamin dodasz w Fiszkach, termin — na stronie projektu w Terenie („Termin w terenie”).</p>
+    </details>
+</section>
+
+<section id="atlas" class="karta stos">
+    <h2>Atlas</h2>
+    <details><summary>Jak zrobić kartogram wskaźnika dla gmin województwa?</summary>
+        <p>Wpisz nazwę wskaźnika (np. „bezrobotni”), wybierz go z podpowiedzi, potem województwo i rok. Mapa, ranking i statystyki pojawią się same. Wskaźnik „na 1000 mieszkańców” ustawisz przez mianownik. Kartogram z legendą, podziałką i źródłem (SVG albo PDF) — „Mapa do druku ↗”.</p>
+    </details>
+    <details><summary>Jak przygotować raport jednej gminy?</summary>
+        <p><a href="{{ url_for('atlas.raport_gminy_wybor') }}">Raport gminy</a>: najpierw raz ułóż zestaw wskaźników (wspólny dla wszystkich gmin), potem wybierz województwo i gminę. Raport ma wartość, zmianę w 10 lat, miejsce w województwie, mapę położenia, porównanie z drugą gminą, CSV i druk.</p>
+    </details>
+    <details><summary>Jak policzyć wskaźnik złożony (np. poziom rozwoju gmin)?</summary>
+        <p><a href="{{ url_for('atlas.wskaznik_zlozony') }}">Wskaźnik złożony</a> bierze składowe z zestawu raportu gminy. Zaznacz co najmniej dwie, dla każdej wybierz stymulantę (więcej = lepiej) albo destymulantę (więcej = gorzej) i wagę, potem metodę: unitaryzację zerowaną (wynik 0–1) albo standaryzację. Wynik: ranking gmin, kartogram SVG i CSV z wartościami surowymi i po normalizacji.</p>
+    </details>
+</section>
+
+<section id="mpzp" class="karta stos">
+    <h2>MPZP</h2>
+    <details><summary>Jak sprawdzić przeznaczenie działki?</summary>
+        <p>Kliknij punkt na mapie albo wpisz obręb i numer działki (np. „Jeżyce 18/14”) i wybierz z podpowiedzi. Panel pokaże działkę z ULDK i plan miejscowy (w całej Polsce z krajowej integracji GUGiK; dla Poznania także podział działki na przeznaczenia).</p>
+    </details>
+    <details><summary>Jak wydrukować kartę działki?</summary>
+        <p>Po sprawdzeniu działki kliknij „Karta działki ↗”: identyfikator, powierzchnia, przeznaczenie, szkic, ortofotomapa obecna i archiwalna. Drukuj z przeglądarki (Ctrl+P → Zapisz jako PDF).</p>
+    </details>
+    <details><summary>Jak zobaczyć, co się zmieniało na działce przez lata?</summary>
+        <p><a href="{{ url_for('mpzp.kronika') }}">Kronika zmian</a>: archiwalne ortofotomapy GUGiK tego samego miejsca z kolejnych lat, z obrysem obecnej działki.</p>
+    </details>
+    <details><summary>Kalkulatory</summary>
+        <p><a href="{{ url_for('mpzp.kalkulator') }}">Kalkulator zabudowy</a> (wskaźniki działki, zgodność z ustaleniami planu, ile jeszcze można zabudować), <a href="{{ url_for('mpzp.skala_strona') }}">Skala mapy</a> i <a href="{{ url_for('mpzp.symbole') }}">Symbole planu</a>.</p>
+    </details>
+</section>
+
+<section id="fiszki" class="karta stos">
+    <h2>Fiszki</h2>
+    <details><summary>Jak zrobić fiszkę z PDF-a?</summary>
+        <p>Wgraj PDF, otwórz go i zaznacz fragment tekstu. Gemini proponuje szkic pytania i odpowiedzi — popraw i zapisz. Fiszka pamięta stronę i fragment, więc zawsze wrócisz do źródła.</p>
+    </details>
+    <details><summary>Jak się uczyć?</summary>
+        <p>Powtórki metodą pudełek (Leitnera): dobrze — fiszka idzie do wyższego pudełka i wraca później; źle — wraca na początek. Jest też quiz ABCD i tryb „przed egzaminem” (wszystkie fiszki bez zapisu ocen).</p>
+    </details>
+    <details><summary>Jak ustawić egzamin?</summary>
+        <p>W sekcji egzaminów na stronie Fiszek: nazwa, data i zakres (wszystko, temat albo jeden PDF). Zobaczysz, ile fiszek jest utrwalonych i ile dziennie trzeba powtarzać. Egzamin pojawi się też w kalendarzu na stronie głównej.</p>
+    </details>
+    <details><summary>Jak powtarzać na telefonie bez internetu?</summary>
+        <p>„Fiszki na telefon”: pobierz plik HTML, przenieś na telefon, otwórz w Chrome albo Firefoksie. Po nauce wyeksportuj wyniki na telefonie i zaimportuj je w Warsztacie — pudełka się zaktualizują.</p>
+    </details>
+</section>
+
+<section id="dostepnosc" class="karta stos">
+    <h2>Dostępność</h2>
+    <details><summary>Skąd wziąć dane?</summary>
+        <p>Moduł czyta gotowe wyniki na siatce H3 (CSV z kolumną <code>h3</code> i czasami dojścia w minutach, np. z QGIS albo r5py) — „Wgraj CSV”. Na próbę są dwa pliki przykładowe. Bez własnych wyników użyj szybkiego modelu: wstaw punkty usług na mapie albo wczytaj je z CSV.</p>
+    </details>
+    <details><summary>Gdzie postawić nową placówkę?</summary>
+        <p>Wybierz czas dojścia do jednej usługi, ustaw próg suwakiem krzywej dostępności i kliknij „Szukaj miejsc” — moduł wskaże miejsca, które obejmą najwięcej mieszkańców dziś poza zasięgiem.</p>
+    </details>
+    <details><summary>Ilu mieszkańców dojdzie z wybranego miejsca?</summary>
+        <p>„Zasięg z punktu” → „Wskaż punkt” → kliknij na mapie. Okręgi 5, 10 i 15 minut marszu (szybki model) i liczba mieszkańców w każdym; przy czasie dojścia do usługi — także ilu z nich ma ją dziś dalej.</p>
+    </details>
+    <details><summary>Jak porównać stan przed i po?</summary>
+        <p>„Porównaj scenariusze”: bieżący plik to „przed”, wybrany — „po”. Mapa pokaże, gdzie czas dojścia się skrócił.</p>
+    </details>
+</section>
+
+<section id="osiedle" class="karta stos">
+    <h2>Osiedle</h2>
+    <details><summary>Jak narysować koncepcję?</summary>
+        <p>Utwórz koncepcję, najpierw narysuj obszar opracowania (albo ustaw go z działek ewidencyjnych — identyfikatory z modułu MPZP), potem wybieraj funkcje i rysuj tereny narzędziem wieloboku lub prostokąta. Bilans terenu, wskaźniki zabudowy i program osiedla liczą się na bieżąco.</p>
+    </details>
+    <details><summary>Jak sprawdzić zgodność z planem?</summary>
+        <p>Wpisz ustalenia planu (wskaźnik zabudowy, intensywność, powierzchnia biologicznie czynna, liczba kondygnacji) — każdy wskaźnik dostanie ocenę zgodności. Plan miejscowy i działki pod rysunkiem włączysz w przełączniku warstw (prawy górny róg mapy).</p>
+    </details>
+    <details><summary>Raport i warianty</summary>
+        <p>Raport do druku z rysunkiem i tabelami; <a href="{{ url_for('osiedle.porownanie') }}">Porównaj warianty</a> zestawia kilka koncepcji obok siebie.</p>
+    </details>
+</section>
+
+<section id="przepisy" class="karta stos">
+    <h2>Przepisy</h2>
+    <details><summary>Jak dodać ustawę i szukać w niej?</summary>
+        <p>Wgraj PDF (najlepiej tekst jednolity z ISAP). Warsztat podzieli go na artykuły i paragrafy; wyszukiwarka nie zwraca uwagi na polskie znaki i odmianę końcówek.</p>
+    </details>
+    <details><summary>Jak zadać pytanie do przepisów?</summary>
+        <p>Gemini dostaje tylko artykuły najlepiej pasujące do pytania i musi odpowiadać dosłownymi cytatami. Warsztat sprawdza każdy cytat w tekście artykułu (wymyślone odrzuca, a odpowiedzi bez prawdziwego cytatu nie pokazuje) i każdą liczbę. Cytat prowadzi do strony w PDF-ie.</p>
+    </details>
+    <details><summary>Jak zrobić fiszki z przepisów?</summary>
+        <p>„+ Fiszka” przy cytacie w odpowiedzi zapisuje fiszkę z kotwicą w PDF-ie aktu. „✦ Fiszki” przy artykule prosi Gemini o kilka propozycji z tego artykułu — zostają tylko te z cytatem w tekście; wybrane trafiają do modułu Fiszki.</p>
+    </details>
+    <details><summary>Co się zmieniło w nowelizacji?</summary>
+        <p><a href="{{ url_for('przepisy.porownanie_wersji') }}">Porównaj wersje aktu</a>: dwa teksty jednolite tej samej ustawy — artykuły dodane, usunięte i zmienione, słowo po słowie.</p>
+    </details>
+</section>
+
+<section id="teren" class="karta stos">
+    <h2>Teren</h2>
+    <details><summary>Jak zinwentaryzować teren telefonem?</summary>
+        <ol>
+            <li>Załóż projekt (gotowy wzór albo własne pola).</li>
+            <li>Opcjonalnie ustaw „Obszar prac” z widoku mapy — formularz dostanie mapę offline z ortofotomapą.</li>
+            <li>„Pobierz formularz na telefon”, przenieś plik HTML na telefon, otwórz w Chrome albo Firefoksie. Działa bez internetu: GPS, pola, zdjęcie, uwagi.</li>
+            <li>Po pracy „Eksportuj plik” na telefonie i zaimportuj JSON na stronie projektu.</li>
+        </ol>
+    </details>
+    <details><summary>Jak poprawić punkt?</summary>
+        <p>Kliknij punkt na mapie projektu albo w tabeli i wybierz „Popraw” — zmienisz wartości pól i uwagi, a „✥ Przesuń na mapie” poprawi położenie, gdy GPS się pomylił.</p>
+    </details>
+    <details><summary>Raport i eksport</summary>
+        <p>Raport do druku (mapa, tabela, zdjęcia), GeoJSON do QGIS i CSV — przyciski na stronie projektu. Punkty projektu możesz też pokazać na mapie w module Osiedle.</p>
+    </details>
+</section>
+</div>
+{% endblock %}

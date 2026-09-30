@@ -580,6 +580,108 @@ input[type="file"]::file-selector-button {
     max-width: 44rem;
 }
 
+/* ---------- Kalendarz na stronie głównej (ETAP 86) ---------- */
+
+.kalendarz {
+    margin-bottom: 24px;
+}
+
+.kalendarz h3 {
+    margin: 0;
+}
+
+.kalendarz__lista {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kalendarz__termin {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.kalendarz__termin:hover {
+    background: var(--linia-slaba);
+}
+
+.kalendarz__kiedy {
+    flex: none;
+    width: 6.5em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.kalendarz__kiedy--blisko {
+    color: var(--akcent);
+}
+
+.kalendarz__co {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    min-width: 0;
+}
+
+.kalendarz__co .wyciszony {
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .kalendarz__termin {
+        flex-direction: column;
+        gap: 2px;
+    }
+}
+
+/* ---------- Pomoc (ETAP 86) ---------- */
+
+.pomoc__spis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-bottom: 16px;
+    padding: 14px 20px;
+}
+
+.pomoc section {
+    scroll-margin-top: 72px;
+}
+
+.pomoc h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.pomoc details {
+    border-top: 1px solid var(--linia-slaba);
+    padding-top: 10px;
+}
+
+.pomoc summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.pomoc details p,
+.pomoc details ol {
+    margin: 8px 0 4px;
+    max-width: 48rem;
+    line-height: 1.55;
+}
+
+.pomoc details li + li {
+    margin-top: 4px;
+}
+
 /* ---------- Mapy Leaflet (wspólny wygląd kontrolek) ---------- */
 
 .leaflet-container {

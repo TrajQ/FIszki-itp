@@ -6,6 +6,29 @@
     <p>Siedem niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
 </section>
 
+{% if terminy %}
+<section class="karta stos kalendarz">
+    <h3>Najbliższe terminy</h3>
+    <ol class="kalendarz__lista">
+        {% for t in terminy %}
+        <li>
+            <a class="kalendarz__termin" href="{{ t.url }}">
+                <span class="kalendarz__kiedy{{ ' kalendarz__kiedy--blisko' if t.dni <= 3 }}">
+                    {%- if t.dni == 0 %}dziś{% elif t.dni == 1 %}jutro{% else %}za {{ t.dni }} dni{% endif -%}
+                </span>
+                <span class="kalendarz__co">
+                    <span class="etykieta {{ 'etykieta--akcent' if t.rodzaj == 'egzamin' else 'etykieta--sukces' }}">{{ 'egzamin' if t.rodzaj == 'egzamin' else 'teren' }}</span>
+                    <strong>{{ t.nazwa }}</strong>
+                    <span class="wyciszony">{{ t.data }} · {{ t.opis }}</span>
+                </span>
+            </a>
+        </li>
+        {% endfor %}
+    </ol>
+    {% if wiecej_terminow %}<p class="wyciszony">Dalsze terminy: w Fiszkach (egzaminy) i w projektach Terenu.</p>{% endif %}
+</section>
+{% endif %}
+
 <section class="siatka-kart">
     <a class="karta karta--link" href="{{ url_for('atlas.index') }}">
         <span class="ikona-modulu ikona-modulu--atlas">
@@ -73,7 +96,7 @@
     </a>
 </section>
 
-<section class="karta dane-uzytkownika">
+<section id="kopia" class="karta dane-uzytkownika">
     <div>
         <h3>Twoje dane</h3>
         <p class="karta__opis">Fiszki, koncepcje osiedli, akty prawne, punkty i zdjęcia z terenu, wgrane PDF-y i pliki wyników są tylko na tym komputerze. Pobieraj kopię od czasu do czasu — np. przed reinstalacją systemu.</p>

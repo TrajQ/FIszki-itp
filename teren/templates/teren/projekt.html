@@ -48,6 +48,16 @@
             <p class="wyciszony opis">Formularz na telefon dostanie wtedy mapę offline z ortofotomapą tego obszaru (do 3 km boku) — pobierz go po ustawieniu obszaru.</p>
         </section>
 
+        <section class="karta stos">
+            <h3>Termin w terenie</h3>
+            <form class="rzad" method="post" action="{{ url_for('teren.ustaw_termin', projekt_id=projekt.id) }}">
+                <input name="termin" type="date" value="{{ projekt.termin or '' }}" aria-label="Termin wyjścia w teren">
+                <button type="submit" class="przycisk--drugi">Zapisz</button>
+                {% if projekt.termin %}<button type="submit" name="usun" value="1" class="przycisk--tekst">Usuń</button>{% endif %}
+            </form>
+            <p class="wyciszony opis">Pokaże się w kalendarzu na stronie głównej, obok egzaminów z Fiszek.</p>
+        </section>
+
         <section id="panel-poprawki" class="karta stos panel-poprawki" hidden>
             <div class="rzad rzad--miedzy">
                 <h3>Popraw punkt</h3>

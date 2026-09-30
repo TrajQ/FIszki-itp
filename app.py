@@ -12,6 +12,8 @@ from teren import teren_bp
 from config import Config
 from ochrona import dodaj_naglowki, sprawdz_zapytanie
 
+MAKS_TERMINOW = 6  # kalendarz na stronie głównej: tyle najbliższych terminów
+
 
 def create_app(instance_path=None):
     app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
@@ -77,7 +79,24 @@ def create_app(instance_path=None):
             except Exception:
                 app.logger.exception("Nie udało się policzyć podsumowania modułu %s", modul)
                 podsumowania[modul] = None
-        return render_template("index.html", p=podsumowania)
+
+        # Kalendarz (ETAP 86): egzaminy z Fiszek i wyjścia w teren, od najbliższego.
+        from fiszki.routes import terminy as terminy_fiszek
+        from teren.routes import terminy as terminy_terenu
+
+        terminy = []
+        for modul, funkcja in [("fiszki", terminy_fiszek), ("teren", terminy_terenu)]:
+            try:
+                terminy += funkcja()
+            except Exception:
+                app.logger.exception("Nie udało się odczytać terminów modułu %s", modul)
+        terminy.sort(key=lambda t: (t["data"], t["rodzaj"], t["nazwa"]))
+        return render_template("index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW)
+
+    @app.route("/pomoc")
+    def pomoc():
+        """Krótkie przepisy „jak zrobić…” dla każdego modułu (ETAP 87)."""
+        return render_template("pomoc.html")
 
     @app.route("/kopia-zapasowa")
     def kopia_zapasowa():

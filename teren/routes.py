@@ -11,6 +11,7 @@ import io
 import json
 import re
 import unicodedata
+from datetime import date
 
 from flask import Blueprint, Response, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 
@@ -47,6 +48,26 @@ def podsumowanie() -> dict:
     """Liczba projektów i punktów — na kartę modułu na stronie głównej."""
     lista = baza.projekty()
     return {"projekty": len(lista), "punkty": sum(p["liczba_punktow"] for p in lista)}
+
+
+def terminy() -> list[dict]:
+    """Nadchodzące wyjścia w teren — do kalendarza na stronie głównej (ETAP 86)."""
+    dzis = date.today()
+    wynik = []
+    for p in baza.projekty():
+        if not p.get("termin"):
+            continue
+        dni = (date.fromisoformat(p["termin"]) - dzis).days
+        if dni >= 0:
+            wynik.append({
+                "data": p["termin"],
+                "dni": dni,
+                "rodzaj": "teren",
+                "nazwa": p["nazwa"],
+                "opis": f"punkty: {p['liczba_punktow']}" + ("" if p["obszar"] else ", bez obszaru prac (mapa offline)"),
+                "url": url_for("teren.widok_projektu", projekt_id=p["id"]),
+            })
+    return wynik
 
 
 @teren_bp.route("/")
@@ -87,6 +108,20 @@ def zmien_projekt(projekt_id):
         return jsonify({"blad": str(e)}), 400
     baza.zmien_projekt(projekt_id, nazwa, pola)
     return jsonify(baza.projekt(projekt_id))
+
+
+@teren_bp.route("/projekty/<int:projekt_id>/termin", methods=["POST"])
+def ustaw_termin(projekt_id):
+    """Planowany termin wyjścia w teren (ETAP 86); pusty — usuwa termin."""
+    _projekt_albo_404(projekt_id)
+    tekst = "" if request.form.get("usun") else (request.form.get("termin") or "").strip()
+    if tekst:
+        try:
+            tekst = date.fromisoformat(tekst).isoformat()
+        except ValueError:
+            abort(400)
+    baza.ustaw_termin(projekt_id, tekst or None)
+    return redirect(url_for("teren.widok_projektu", projekt_id=projekt_id))
 
 
 @teren_bp.route("/projekty/<int:projekt_id>/obszar", methods=["PUT"])
