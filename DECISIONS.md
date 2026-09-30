@@ -2017,3 +2017,22 @@ przypomnieć, gdzie co jest, bez czytania README.
 - Podpowiedzi na każdej stronie modułu — opisy już tam są; brakowało
   jednego miejsca z przeglądem.
 - Pomoc generowana przez Gemini — treść ma być stała i sprawdzona.
+
+## D-095 — Portfolio: opis w repo, zrzuty tylko z prawdziwych danych
+Data: 2026-09-30
+
+**Decyzja:** Opis projektu do portfolio jest w `docs/PORTFOLIO.md` (po
+polsku — pierwsi odbiorcy to polskie biura planistyczne i urzędy — ze
+streszczeniem po angielsku). Zrzuty ekranu robi autor na prawdziwych
+danych i zapisuje w `docs/portfolio/`; opis zawiera listę 10 zrzutów z
+instrukcją. Sekcja „Jak powstał” mówi wprost o pracy z asystentem AI.
+
+**Uzasadnienie:** Portfolio ma pokazać umiejętności z gospodarki
+przestrzennej. Zrzuty z testów mają zmyślone liczby (np. gmina z ponad
+milionem mieszkańców) i byłyby mylące. Uczciwy opis roli AI jest
+bezpieczniejszy niż pytanie bez przygotowanej odpowiedzi na rozmowie.
+
+**Odrzucone alternatywy:**
+- Zrzuty z danych testowych — mylące.
+- Osobna strona internetowa portfolio — wymaga hostingu; na razie
+  wystarczy plik w repo i PDF-y z raportów.

@@ -629,3 +629,8 @@
 - Dodano stronę **Pomoc** (menu → Pomoc): krótkie przepisy „jak zrobić…”
   dla każdego modułu, aktualizacja, kopia zapasowa, klucze.
 - Dodano `templates/pomoc.html`, `DECISIONS.md` D-093, D-094 i 3 testy.
+
+## ETAP 87 — 2026-09-30
+- Dodano `docs/PORTFOLIO.md` — opis Warsztatu do portfolio (po polsku, ze
+  streszczeniem po angielsku) i listę zrzutów ekranu do zrobienia.
+- Dodano `DECISIONS.md` D-095.

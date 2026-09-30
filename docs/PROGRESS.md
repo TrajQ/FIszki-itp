@@ -1568,3 +1568,13 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: kalendarz z 4 terminami (dziś, za 2, 12 i 30
   dni), 390 px bez poziomego przewijania (wpis układa się w pionie)
 - `DECISIONS.md`: D-093, D-094
+
+## ETAP 87 — Opis projektu do portfolio
+Data: 2026-09-30
+Status: zamknięty
+
+- `docs/PORTFOLIO.md`: moduły i umiejętności, zasady projektu, jak
+  powstał, liczby, lista zrzutów do zrobienia na prawdziwych danych,
+  streszczenie po angielsku; katalog `docs/portfolio/` na zrzuty
+- Bez zmian w kodzie; testy bez zmian (448)
+- `DECISIONS.md`: D-095
