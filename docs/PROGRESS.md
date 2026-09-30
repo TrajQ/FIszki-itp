@@ -1633,3 +1633,16 @@ Status: zamknięty
 - Test zgodny z obliczeniem ręcznym (m = 0,24; 0,62; 1) i test wpływu wag
 - Sprawdzone w przeglądarce (wybór metody, ranking, kartogram)
 - `DECISIONS.md`: D-099
+
+## ETAP 92 — Atlas: ekstrapolacja trendu w raporcie gminy
+Data: 2026-09-30
+Status: zamknięty
+
+- `raport.prognoza_trendu` (trend liniowy MNK z ostatnich 10 lat, min.
+  5 punktów, R², wartość za 5 lat) w podsumowaniu każdego wskaźnika;
+  podpis pod wykresem trendu, przypis z objaśnieniem
+- Poprawka po sprawdzeniu w przeglądarce: wartość zaokrąglona do 3 cyfr
+  znaczących (było „~1 109 923,91”)
+- Ekstrapolacja nie trafia do faktów dla Gemini (model nie dostaje
+  prognoz do opisu)
+- `DECISIONS.md`: D-100

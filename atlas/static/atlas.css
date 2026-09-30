@@ -1099,3 +1099,15 @@ button.przelacznik__opcja--aktywna:hover {
 .zlozony__ranking td:nth-child(2) {
     white-space: nowrap;
 }
+
+/* ---------- ekstrapolacja trendu w raporcie gminy (ETAP 92) ---------- */
+
+.raport-gminy__prognoza {
+    font-size: 11px;
+    color: var(--tekst-drugi);
+    white-space: nowrap;
+}
+
+.raport-gminy__prognoza--niestabilny {
+    font-style: italic;
+}

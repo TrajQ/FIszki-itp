@@ -1181,3 +1181,22 @@ def test_wskaznik_zlozony_hellwig_na_stronie(raport_client, monkeypatch):
     assert "metoda Hellwiga" in c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)
     wynik = c.get(f"/atlas/wskaznik-zlozony/wynik?woj={WOJ_RAPORTU}&rok=2023&metoda=hellwig&s={w1}:1:1,{w2}:-1:1").get_json()
     assert wynik["metoda"] == "hellwig" and wynik["gminy"][0]["wartosc"] <= 1
+
+
+# ---------- ETAP 92: ekstrapolacja trendu w raporcie gminy ----------
+
+
+def test_prognoza_trendu():
+    from atlas import raport
+    rosnacy = [{"rok": r, "wartosc": 1000 + 20 * (r - 2013)} for r in range(2013, 2024)]
+    p = raport.prognoza_trendu(rosnacy)
+    assert (p["od"], p["do"], p["rok"]) == (2013, 2023, 2028)
+    assert p["wartosc"] == pytest.approx(1300) and p["zmiana_roczna"] == pytest.approx(20) and p["r2"] == pytest.approx(1) and p["stabilny"]
+    # tylko ostatnie 10 lat, a nie cały szereg
+    assert raport.prognoza_trendu([{"rok": 1995, "wartosc": 99999}] + rosnacy)["od"] == 2013
+    skaczacy = [{"rok": r, "wartosc": 100 + (15 if r % 2 else -15)} for r in range(2016, 2024)]
+    assert not raport.prognoza_trendu(skaczacy)["stabilny"]
+    assert raport.prognoza_trendu(rosnacy[:4]) is None  # za krótki szereg
+    stala = [{"rok": r, "wartosc": 5} for r in range(2015, 2024)]
+    assert raport.prognoza_trendu(stala)["r2"] == 1.0
+    assert raport.podsumuj(rosnacy, [], GMINA)["prognoza"]["rok"] == 2028

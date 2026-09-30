@@ -658,3 +658,9 @@
 - Atlas: **metoda Hellwiga** we wskaźniku złożonym — miara rozwoju jako
   odległość od wzorca (najlepszych wartości składowych), z wagami.
 - Dodano `DECISIONS.md` D-099 i 2 testy.
+
+## ETAP 92 — 2026-09-30
+- Atlas: **ekstrapolacja trendu** w raporcie gminy — „→ 2028: ~wartość”
+  pod wykresem każdego wskaźnika (np. ludności), z oznaczeniem trendu
+  niestabilnego (R² < 0,7).
+- Dodano `DECISIONS.md` D-100 i 1 test.

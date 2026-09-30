@@ -2122,3 +2122,26 @@ liniowego w analizie regionalnej; była odrzuconą alternatywą w D-091
 - Wzorzec z maksimum wartości surowych bez standaryzacji — składowe
   w różnych jednostkach nie dałyby się porównać.
 - Odchylenie z próby (n − 1) — gminy województwa to cała populacja.
+
+## D-100 — Atlas: ekstrapolacja trendu liniowego, nie „prognoza ludności”
+Data: 2026-09-30
+
+**Decyzja:** Dla każdego wskaźnika raportu gminy kod liczy trend liniowy
+(metoda najmniejszych kwadratów) z ostatnich 10 lat (min. 5 lat danych) i
+wartość za 5 lat, z R². Wynik jest nazwany wprost: ekstrapolacja „jeśli
+dotychczasowa zmiana się utrzyma”, zaokrąglona do 3 cyfr znaczących,
+z dopiskiem „trend niestabilny” przy R² < 0,7. Nie trafia do faktów dla
+modelu językowego.
+
+**Uzasadnienie:** Proste przedłużenie trendu przydaje się w diagnozie
+gminy, ale nie jest prognozą demograficzną. Prawdziwą prognozę ludności
+dla powiatów publikuje GUS (metoda kohortowa: urodzenia, zgony,
+migracje). Uczciwa nazwa i R² chronią przed nadinterpretacją.
+
+**Odrzucone alternatywy:**
+- Własna prognoza kohortowa — wymaga struktury wieku, płodności i
+  umieralności; to materiał na osobny, duży etap.
+- Trend wykładniczy — przy krótkich szeregach gminnych zawyża skrajne
+  wartości; liniowy jest prostszy do wyjaśnienia.
+- Przekazanie ekstrapolacji do opisu Gemini — model mógłby ją przedstawić
+  jak pewną prognozę.

@@ -73,6 +73,15 @@
         pole("pozycja").textContent = s.pozycja ? `${s.pozycja} / ${s.liczba_gmin}` : "—";
         pole("mediana").textContent = s.mediana_wojewodztwa === null ? "—" : liczba.format(s.mediana_wojewodztwa);
         pole("trend").replaceChildren(trend(s.szereg));
+        // ETAP 92: ekstrapolacja trendu — liczy serwer, tu tylko podpis.
+        if (s.prognoza) {
+            const p = s.prognoza;
+            const podpis = element("div", "raport-gminy__prognoza" + (p.stabilny ? "" : " raport-gminy__prognoza--niestabilny"),
+                // 3 cyfry znaczące — ekstrapolacja na 5 lat nie ma dokładności do jedności
+                `→ ${p.rok}: ~${liczba.format(Number(p.wartosc.toPrecision(3)))}${p.stabilny ? "" : " (trend niestabilny)"}`);
+            podpis.title = `Trend liniowy ${p.od}–${p.do}: ${procent.format(p.zmiana_roczna)} rocznie, R² = ${liczba.format(Math.round(p.r2 * 100) / 100)}. Ekstrapolacja „gdyby zmiana się utrzymała”, nie prognoza GUS.`;
+            pole("trend").appendChild(podpis);
+        }
     }
 
     async function pobierzPodsumowanie(url) {
