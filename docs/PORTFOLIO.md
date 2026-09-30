@@ -1,7 +1,7 @@
 # Warsztat — narzędzia do gospodarki przestrzennej
 
 *Projekt studencki (gospodarka przestrzenna, I rok). Lokalna aplikacja
-webowa: 7 modułów, dane publiczne GUS i GUGiK, praca w terenie bez
+webowa: 8 modułów, dane publiczne GUS i GUGiK, praca w terenie bez
 internetu. English summary at the end.*
 
 ## W jednym zdaniu
@@ -22,6 +22,7 @@ do egzaminów.
 | **Osiedle** | Koncepcja rysowana na mapie: bilans terenu, wskaźniki zabudowy, zgodność z ustaleniami planu, program osiedla (mieszkańcy, parkingi, przedszkola, szkoły), porównanie wariantów, raport do druku | wskaźniki urbanistyczne, programowanie osiedla |
 | **Przepisy** | Ustawy z PDF podzielone na artykuły, wyszukiwarka, pytania do modelu językowego z cytatami sprawdzanymi w tekście, porównanie wersji aktu po nowelizacji | praca z prawem planistycznym, kontrola wiarygodności AI |
 | **Teren** | Formularz na telefon działający bez internetu (GPS, zdjęcia, mapa offline z ortofotomapą), import, poprawki punktów, raport i eksport do QGIS | inwentaryzacja urbanistyczna, zbieranie danych w terenie |
+| **Ceny** | Ceny mieszkań w miastach i powiatach z GUS: szeregi w czasie, zmiany (także średnie roczne tempo), porównanie miast, ranking w województwie | rynek nieruchomości, statystyka publiczna |
 | **Fiszki** | Fiszki z PDF-ów z kotwicą w źródle, powtórki metodą pudełek, egzaminy z postępem, nauka na telefonie offline | — (narzędzie do nauki) |
 
 ## Zasady, które wyróżniają projekt
@@ -57,7 +58,7 @@ Każda decyzja projektowa ma uzasadnienie i odrzucone alternatywy w
 
 ## Liczby (stan: ETAP 97)
 
-- 7 modułów, 97 etapów, 105 zapisanych decyzji projektowych
+- 8 modułów, 97 etapów, 105 zapisanych decyzji projektowych
 - ok. 12 600 wierszy Pythona, 6 800 JavaScriptu, 465 testów automatycznych
 - technologie: Python, Flask, SQLite, vanilla JavaScript, Leaflet,
   shapely, H3, pypdf, Gemini API; bez frameworków frontendowych i buildu
@@ -88,7 +89,7 @@ raport inwentaryzacji) — pokazują efekt, a nie tylko interfejs.
 ## English summary
 
 **Warsztat** ("Workshop") is a local web application built during my
-first year of Spatial Planning studies. It brings together seven tools
+first year of Spatial Planning studies. It brings together eight tools
 used in planning practice: municipal indicators from Statistics Poland
 (choropleths, composite indices, spatial autocorrelation), local zoning
 plan and cadastral parcel lookup with archival orthophotos, walking

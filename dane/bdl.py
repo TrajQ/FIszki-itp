@@ -28,6 +28,7 @@ from dane.siec import opis_bledu_sieci
 URL_BDL = "https://bdl.stat.gov.pl/api/v1"
 ROZMIAR_STRONY = 100
 POZIOM_WOJEWODZTWO = 2
+POZIOM_POWIAT = 5  # ETAP 103: ceny mieszkań GUS publikuje dla powiatów
 POZIOM_GMINA = 6
 RODZAJE_GMIN = {"1", "2", "3"}  # 4 i 5 to części gmin miejsko-wiejskich
 
@@ -71,10 +72,17 @@ def teryt_z_id_bdl(bdl_id: str) -> str:
     return woj + bdl_id[7:9] + bdl_id[9:11] + bdl_id[11]
 
 
-def szukaj_zmiennych(fraza: str) -> list[Zmienna]:
-    """Zmienne BDL, których nazwa zawiera frazę, dostępne na poziomie gmin."""
+def teryt_powiatu(bdl_id: str) -> str:
+    """4-znakowy TERYT powiatu (woj + powiat) z identyfikatora BDL powiatu albo gminy."""
+    teryt_z_id_bdl(bdl_id)  # walidacja formatu
+    return bdl_id[2:4] + bdl_id[7:9]
+
+
+def szukaj_zmiennych(fraza: str, poziom: int = POZIOM_GMINA) -> list[Zmienna]:
+    """Zmienne BDL, których nazwa zawiera frazę, dostępne na danym poziomie
+    (domyślnie gmin; moduł ceny pyta o powiaty)."""
     dane = _pobierz(
-        "/variables/search", {"name": fraza, "level": POZIOM_GMINA, "page-size": 50}
+        "/variables/search", {"name": fraza, "level": poziom, "page-size": 50}
     )
     return [_zmienna_z_json(z) for z in dane.get("results", [])]
 
@@ -110,6 +118,49 @@ def gminy_wojewodztwa(wojewodztwo_bdl_id: str) -> list[Jednostka]:
         if strona * ROZMIAR_STRONY >= dane.get("totalRecords", 0) or not dane.get("results"):
             break
     return sorted(wyniki, key=lambda j: j.nazwa)
+
+
+def powiaty_wojewodztwa(wojewodztwo_bdl_id: str) -> list[Jednostka]:
+    """Powiaty województwa, także miasta na prawach powiatu (ETAP 103).
+    Jednostka.teryt ma tu 4 znaki (woj + powiat)."""
+    wyniki = []
+    strona = 0
+    while True:
+        dane = _pobierz(
+            "/units",
+            {"parent-id": wojewodztwo_bdl_id, "level": POZIOM_POWIAT, "page-size": ROZMIAR_STRONY, "page": strona},
+        )
+        for j in dane.get("results", []):
+            wyniki.append(Jednostka(bdl_id=j["id"], nazwa=j["name"], teryt=teryt_powiatu(j["id"])))
+        strona += 1
+        if strona * ROZMIAR_STRONY >= dane.get("totalRecords", 0) or not dane.get("results"):
+            break
+    return sorted(wyniki, key=lambda j: j.nazwa)
+
+
+def wartosci_dla_powiatow(zmienna_id: int, rok: int, wojewodztwo_bdl_id: str) -> list[Wartosc]:
+    """Wartości zmiennej w danym roku dla powiatów województwa (ETAP 103)."""
+    wyniki = []
+    strona = 0
+    while True:
+        dane = _pobierz(
+            f"/data/by-variable/{zmienna_id}",
+            {
+                "unit-level": POZIOM_POWIAT,
+                "unit-parent-id": wojewodztwo_bdl_id,
+                "year": rok,
+                "page-size": ROZMIAR_STRONY,
+                "page": strona,
+            },
+        )
+        for jednostka in dane.get("results", []):
+            wartosc = _wartosc_z_roku(jednostka.get("values", []), rok)
+            if wartosc is not None:
+                wyniki.append(Wartosc(bdl_id=jednostka["id"], teryt=teryt_powiatu(jednostka["id"]), nazwa=jednostka["name"], wartosc=wartosc))
+        strona += 1
+        if strona * ROZMIAR_STRONY >= dane.get("totalRecords", 0) or not dane.get("results"):
+            break
+    return wyniki
 
 
 def wojewodztwo_gminy(gmina_bdl_id: str) -> str:
@@ -183,7 +234,8 @@ def wartosci_dla_wojewodztw(zmienna_id: int, rok: int) -> list[Wartosc]:
 
 
 def szereg_gminy(zmienna_id: int, gmina_bdl_id: str) -> list[dict]:
-    """Wartości zmiennej dla jednej gminy we wszystkich dostępnych latach:
+    """Wartości zmiennej dla jednej jednostki (gminy, a od ETAPu 103 też
+    powiatu) we wszystkich dostępnych latach:
     [{"rok": 2010, "wartosc": 123.0}, ...] rosnąco po roku (braki pominięte)."""
     teryt_z_id_bdl(gmina_bdl_id)  # walidacja formatu identyfikatora
     dane = _pobierz(f"/data/by-unit/{gmina_bdl_id}", {"var-id": zmienna_id})

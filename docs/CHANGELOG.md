@@ -722,3 +722,10 @@
   teren do Kalendarza Google, Thunderbirda albo telefonu.
 - Naprawiono niezamknięty iterator katalogu w kopii automatycznej.
 - Dodano `kalendarz.py`, `DECISIONS.md` D-110 i 2 testy.
+
+## ETAP 103 — 2026-09-30
+- **Nowy moduł Ceny**: ceny mieszkań w miastach na prawach powiatu i
+  powiatach z GUS BDL — wykres w czasie dla kilku miast, zmiany (rok do
+  roku, w 5 lat, od początku, średnio rocznie), ranking w województwie, CSV.
+- Klient BDL obsługuje poziom powiatu.
+- Dodano `ceny/`, `DECISIONS.md` D-111 i 3 testy.

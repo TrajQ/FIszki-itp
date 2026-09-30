@@ -26,7 +26,7 @@ INSTRUKCJA = """Kopia zapasowa aplikacji Warsztat — {data}
 Zawartość: folder instance/ — bazy wszystkich modułów (fiszki i
 powtórki, historia i zapisane działki, cache i zestaw raportu atlasu,
 koncepcje osiedli, akty prawne i historia pytań, projekty i punkty
-terenowe), wgrane PDF-y (fiszki, przepisy), zdjęcia z terenu i pliki
+terenowe, wybrany wskaźnik cen), wgrane PDF-y (fiszki, przepisy), zdjęcia z terenu i pliki
 wyników dostępności.
 
 Przywracanie:

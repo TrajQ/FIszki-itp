@@ -1,0 +1,179 @@
+/* Moduł ceny (ETAP 103) */
+
+.opis-cen {
+    margin: 0;
+    font-size: 13px;
+}
+
+.szybki-wybor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.szybki-wybor__fraza {
+    padding: 4px 10px;
+    font-size: 13px;
+    background: var(--linia-slaba);
+    color: inherit;
+}
+
+.wybor-zmiennej summary {
+    cursor: pointer;
+    color: var(--akcent);
+}
+
+.wyniki-zmiennych {
+    display: grid;
+    gap: 4px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.wynik-zmiennej {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: left;
+}
+
+.wynik-zmiennej:hover {
+    background: var(--linia-slaba);
+}
+
+.lista-powiatow {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 2px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+}
+
+.powiat label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.powiat--miasto label {
+    font-weight: 600;
+}
+
+.naglowek-rankingu label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.wybrane {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.wybrany {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px 2px 10px;
+    border: 2px solid;
+    border-radius: 999px;
+    font-size: 13px;
+}
+
+.wykres-cen svg {
+    width: 100%;
+    height: auto;
+}
+
+.wykres-cen__siatka {
+    stroke: var(--linia-slaba);
+}
+
+.wykres-cen__opis {
+    fill: var(--tekst-drugi);
+    font-size: 12px;
+}
+
+.przewijanie-cen {
+    overflow-x: auto;
+}
+
+.przewijanie-cen td.liczba {
+    white-space: nowrap;
+}
+
+.probka-cen {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-radius: 50%;
+}
+
+.ranking-cen {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+}
+
+.pozycja-cen {
+    display: grid;
+    grid-template-columns: 2.5em minmax(8em, 14em) 1fr 5.5em;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 4px;
+    border-radius: 6px;
+}
+
+.pozycja-cen--miasto .pozycja-cen__nazwa {
+    font-weight: 600;
+}
+
+.pozycja-cen--wybrana {
+    background: var(--linia-slaba);
+}
+
+.pozycja-cen__miejsce,
+.pozycja-cen__wartosc {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.pozycja-cen__tor {
+    height: 10px;
+}
+
+.pozycja-cen__pasek {
+    display: block;
+    height: 10px;
+    border-radius: 3px;
+    background: #ff9f0a;
+}
+
+@media (max-width: 600px) {
+    .pozycja-cen {
+        grid-template-columns: 2em 1fr 5em;
+    }
+
+    .pozycja-cen__tor {
+        display: none;
+    }
+}

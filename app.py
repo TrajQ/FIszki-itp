@@ -9,6 +9,7 @@ from dostepnosc import dostepnosc_bp
 from osiedle import osiedle_bp
 from przepisy import przepisy_bp
 from teren import teren_bp
+from ceny import ceny_bp
 from config import Config
 from ochrona import dodaj_naglowki, sprawdz_zapytanie
 
@@ -30,6 +31,7 @@ def create_app(instance_path=None):
     app.register_blueprint(osiedle_bp, url_prefix="/osiedle")
     app.register_blueprint(przepisy_bp, url_prefix="/przepisy")
     app.register_blueprint(teren_bp, url_prefix="/teren")
+    app.register_blueprint(ceny_bp, url_prefix="/ceny")
 
     from fiszki.baza import init_db as init_db_fiszki, close_db as close_db_fiszki
     from atlas.baza import init_db as init_db_atlas, close_db as close_db_atlas
@@ -37,6 +39,7 @@ def create_app(instance_path=None):
     from osiedle.baza import init_db as init_db_osiedle, close_db as close_db_osiedle
     from przepisy.baza import init_db as init_db_przepisy, close_db as close_db_przepisy
     from teren.baza import init_db as init_db_teren, close_db as close_db_teren
+    from ceny.baza import init_db as init_db_ceny, close_db as close_db_ceny
 
     with app.app_context():
         init_db_fiszki()
@@ -45,12 +48,14 @@ def create_app(instance_path=None):
         init_db_osiedle()
         init_db_przepisy()
         init_db_teren()
+        init_db_ceny()
     app.teardown_appcontext(close_db_fiszki)
     app.teardown_appcontext(close_db_atlas)
     app.teardown_appcontext(close_db_mpzp)
     app.teardown_appcontext(close_db_osiedle)
     app.teardown_appcontext(close_db_przepisy)
     app.teardown_appcontext(close_db_teren)
+    app.teardown_appcontext(close_db_ceny)
 
     @app.route("/")
     def index():
@@ -63,6 +68,7 @@ def create_app(instance_path=None):
         from osiedle.routes import podsumowanie as podsumowanie_osiedla
         from przepisy.routes import podsumowanie as podsumowanie_przepisow
         from teren.routes import podsumowanie as podsumowanie_terenu
+        from ceny.routes import podsumowanie as podsumowanie_cen
 
         podsumowania = {}
         for modul, funkcja in [
@@ -73,6 +79,7 @@ def create_app(instance_path=None):
             ("osiedle", podsumowanie_osiedla),
             ("przepisy", podsumowanie_przepisow),
             ("teren", podsumowanie_terenu),
+            ("ceny", podsumowanie_cen),
         ]:
             try:
                 podsumowania[modul] = funkcja()

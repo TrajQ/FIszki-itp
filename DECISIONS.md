@@ -2339,3 +2339,27 @@ Warsztat działa tylko lokalnie i nie powinien trzymać kont ani tokenów.
   127.0.0.1.
 - Biblioteka `icalendar` — nowa zależność dla kilkudziesięciu linii
   formatu tekstowego.
+
+## D-111 — Ceny: osobny moduł, pierwszy etap na danych GUS dla powiatów
+Data: 2026-09-30
+
+**Decyzja:** Ósmy moduł „Ceny” (decyzja autora: osobny moduł, nie część
+Atlasu). Pierwszy etap korzysta z GUS BDL na poziomie powiatu (miasta na
+prawach powiatu to powiaty). Wskaźnik ceny wybiera użytkownik z
+wyszukiwarki zmiennych BDL dla powiatów i jest zapamiętywany w bazie
+modułu — bez numerów zmiennych w kodzie (jak zestaw raportu gminy,
+D-069). Miasta na prawach powiatu rozpoznajemy po numerze powiatu TERYT
+(≥ 61). Obliczenia w `ceny/analiza.py`, bez modelu językowego.
+
+**Uzasadnienie:** Autor chce sprawdzać ceny w miastach. Dane GUS są
+oficjalne, bezpłatne i dostępne przez API, którego klient już jest w
+projekcie; transakcje z Rejestru Cen Nieruchomości to kolejny etap
+(szczegóły w dzielnicach, mapa).
+
+**Odrzucone alternatywy:**
+- Rozszerzenie Atlasu — Atlas pracuje na gminach, a moduł cen dostanie
+  dane punktowe RCN z mapą; autor wybrał osobny moduł.
+- Ceny z portali ogłoszeniowych — to ceny ofertowe, a pobieranie ich
+  byłoby scrapowaniem stron bez zgody.
+- Dane NBP o cenach w 17 miastach — pliki arkuszy wymagałyby nowej
+  zależności; GUS obejmuje wszystkie powiaty.

@@ -11,7 +11,7 @@
 </div>
 
 <nav class="karta pomoc__spis" aria-label="Spis treści">
-    {% for kotwica, nazwa in [('start', 'Na start'), ('atlas', 'Atlas'), ('mpzp', 'MPZP'), ('fiszki', 'Fiszki'), ('dostepnosc', 'Dostępność'), ('osiedle', 'Osiedle'), ('przepisy', 'Przepisy'), ('teren', 'Teren')] %}
+    {% for kotwica, nazwa in [('start', 'Na start'), ('atlas', 'Atlas'), ('mpzp', 'MPZP'), ('fiszki', 'Fiszki'), ('dostepnosc', 'Dostępność'), ('osiedle', 'Osiedle'), ('przepisy', 'Przepisy'), ('teren', 'Teren'), ('ceny', 'Ceny')] %}
     <a href="#{{ kotwica }}">{{ nazwa }}</a>
     {% endfor %}
 </nav>
@@ -162,6 +162,16 @@
     </details>
     <details><summary>Raport i eksport</summary>
         <p>Raport do druku (mapa, tabela, zdjęcia), GeoJSON do QGIS i CSV — przyciski na stronie projektu. Punkty projektu możesz też pokazać na mapie w module Osiedle.</p>
+    </details>
+</section>
+
+<section id="ceny" class="karta stos">
+    <h2>Ceny</h2>
+    <details><summary>Jak sprawdzić ceny mieszkań w mieście?</summary>
+        <p>Raz wybierz wskaźnik GUS (np. „mediana cen za 1 m2” — lokale sprzedane w transakcjach rynkowych), potem województwo i zaznacz do 6 miast albo powiatów (miasta na prawach powiatu są na początku listy, pogrubione). Zobaczysz wykres w czasie, tabelę zmian (rok do roku, w 5 lat, od początku, średnio rocznie) i ranking powiatów województwa w wybranym roku. „CSV” zapisuje szeregi do arkusza.</p>
+    </details>
+    <details><summary>Skąd są te ceny?</summary>
+        <p>Z Banku Danych Lokalnych GUS — dla powiatów, więc duże miasta są tam jako miasta na prawach powiatu. To ceny z aktów notarialnych zebrane przez GUS, a nie ogłoszenia. Zmiany liczy aplikacja z tych danych.</p>
     </details>
 </section>
 </div>

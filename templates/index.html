@@ -3,7 +3,7 @@
 {% block tresc %}
 <section class="hero">
     <h1>Warsztat.</h1>
-    <p>Siedem niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
+    <p>Osiem niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
 </section>
 
 {% if terminy %}
@@ -94,6 +94,14 @@
         <h2>Teren</h2>
         <p class="karta__opis">Inwentaryzacja w terenie: formularz na telefon bez internetu, punkty ze zdjęciami na mapie.</p>
         {% if p.teren and p.teren.projekty %}<span class="karta__meta">Projekty: {{ p.teren.projekty }}, punkty: {{ p.teren.punkty }}</span>{% endif %}
+    </a>
+    <a class="karta karta--link" href="{{ url_for('ceny.index') }}">
+        <span class="ikona-modulu ikona-modulu--ceny">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M12 12v6"/><path d="M14 13.5c-.5-.7-1.2-1-2-1-1 0-1.8.6-1.8 1.4 0 1.8 3.8 1 3.8 2.8 0 .8-.8 1.3-2 1.3-.8 0-1.6-.3-2-1"/></svg>
+        </span>
+        <h2>Ceny</h2>
+        <p class="karta__opis">Ceny mieszkań w miastach i powiatach z GUS: zmiany w czasie, porównanie miast, ranking w województwie.</p>
+        {% if p.ceny and p.ceny.zmienna %}<span class="karta__meta">Wskaźnik: {{ p.ceny.zmienna | truncate(60) }}</span>{% endif %}
     </a>
 </section>
 

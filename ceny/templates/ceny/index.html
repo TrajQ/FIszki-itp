@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block tytul %}Ceny — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Ceny mieszkań</h1>
+        <p>Ceny z GUS (Bank Danych Lokalnych) dla miast na prawach powiatu i powiatów: zmiany w czasie, porównanie miast i ranking w województwie.</p>
+    </div>
+</div>
+
+<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+
+<section class="karta stos">
+    <h3>1. Wskaźnik ceny</h3>
+    <p id="wybrana-zmienna" class="{{ '' if zmienna else 'wyciszony' }}">
+        {% if zmienna %}<strong>{{ zmienna.nazwa }}</strong>{% if zmienna.jednostka %} [{{ zmienna.jednostka }}]{% endif %}{% else %}Nie wybrano — wyszukaj wskaźnik GUS poniżej (raz, zapamięta się).{% endif %}
+    </p>
+    <details class="wybor-zmiennej" {{ '' if zmienna else 'open' }}>
+        <summary>{{ 'Zmień wskaźnik' if zmienna else 'Wybierz wskaźnik' }}</summary>
+        <form id="formularz-zmiennej" class="rzad">
+            <input id="pole-zmiennej" type="search" placeholder="np. mediana cen za 1 m2" autocomplete="off" required>
+            <button type="submit" class="przycisk--drugi">Szukaj w GUS</button>
+        </form>
+        <div class="szybki-wybor">
+            {% for fraza in frazy %}<button type="button" class="szybki-wybor__fraza" data-fraza="{{ fraza }}">{{ fraza }}</button>{% endfor %}
+        </div>
+        <p class="wyciszony opis-cen">Tylko wskaźniki, które GUS publikuje dla powiatów. Najczęściej używany: mediana ceny 1 m² lokali mieszkalnych sprzedanych w transakcjach rynkowych.</p>
+        <ul id="wyniki-zmiennych" class="wyniki-zmiennych"></ul>
+    </details>
+</section>
+
+<section class="karta stos" id="sekcja-miast" {{ 'hidden' if not zmienna }}>
+    <h3>2. Miasta i powiaty</h3>
+    <div class="rzad">
+        <label>Województwo <select id="pole-woj"><option value="">Wczytywanie…</option></select></label>
+    </div>
+    <ul id="lista-powiatow" class="lista-powiatow"></ul>
+    <p class="wyciszony opis-cen">Zaznacz do {{ maks_miast }} jednostek — miasta na prawach powiatu są na początku listy. Wybór zostaje zapamiętany (także z innych województw).</p>
+    <div id="wybrane" class="wybrane"></div>
+</section>
+
+<section class="karta stos" id="sekcja-wyniku" hidden>
+    <div class="rzad rzad--miedzy">
+        <h3>3. Ceny w czasie</h3>
+        <a id="link-csv" class="przycisk przycisk--drugi" href="#">CSV</a>
+    </div>
+    <div id="wykres" class="wykres-cen"></div>
+    <div class="przewijanie-cen"><table class="tabela" id="tabela-cen"></table></div>
+    <p class="wyciszony opis-cen">Zmiany liczy aplikacja z danych GUS. „Średnio rocznie” — średnie tempo zmian od pierwszego roku z danymi. Źródło: GUS, Bank Danych Lokalnych.</p>
+</section>
+
+<section class="karta stos" id="sekcja-rankingu" hidden>
+    <div class="rzad rzad--miedzy naglowek-rankingu">
+        <h3>4. Ranking w województwie</h3>
+        <label>Rok <select id="pole-rok"></select></label>
+    </div>
+    <p id="opis-rankingu" class="wyciszony"></p>
+    <ol id="ranking" class="ranking-cen"></ol>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_CENY = "{{ url_for('ceny.index') }}";
+    const MAKS_MIAST = {{ maks_miast }};
+    let ZMIENNA = {{ zmienna | tojson }};
+</script>
+<script src="{{ url_for('ceny.static', filename='ceny.js') }}"></script>
+{% endblock %}

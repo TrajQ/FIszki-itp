@@ -1,0 +1,324 @@
+// Moduł ceny (ETAP 103): wybór wskaźnika GUS, miast, wykres, tabela zmian i ranking.
+// Liczby (zmiany, ranking) liczy serwer — ceny/analiza.py; tu tylko rysujemy.
+(function () {
+    "use strict";
+
+    const KOLORY = ["#0071e3", "#ff9f0a", "#34c759", "#ff375f", "#5e5ce6", "#8e6e4e"];
+    const liczba = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
+    const procent = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
+    const komunikat = document.getElementById("komunikat");
+    const poleWoj = document.getElementById("pole-woj");
+    const listaPowiatow = document.getElementById("lista-powiatow");
+    const wybraneEl = document.getElementById("wybrane");
+    const poleRok = document.getElementById("pole-rok");
+    let wybrane = odczytaj("ceny.wybrane", []); // [{id, nazwa, woj}]
+    let dane = new Map(); // id → {szereg, podsumowanie}
+    let numer = 0;
+
+    function el(tag, klasa, tekst) {
+        const e = document.createElement(tag);
+        if (klasa) e.className = klasa;
+        if (tekst !== undefined) e.textContent = tekst;
+        return e;
+    }
+
+    function pokazBlad(tresc) {
+        komunikat.textContent = tresc;
+        komunikat.hidden = !tresc;
+    }
+
+    function odczytaj(klucz, domyslne) {
+        try {
+            return JSON.parse(localStorage.getItem(klucz)) ?? domyslne;
+        } catch (e) {
+            return domyslne;
+        }
+    }
+
+    function zapamietaj(klucz, wartosc) {
+        try {
+            localStorage.setItem(klucz, JSON.stringify(wartosc));
+        } catch (e) {
+            // tylko wygoda
+        }
+    }
+
+    async function zapytaj(sciezka, opcje = {}) {
+        const odp = await fetch(URL_CENY + sciezka, { ...opcje, headers: opcje.body ? { "Content-Type": "application/json" } : undefined });
+        const wynik = await odp.json().catch(() => ({}));
+        if (!odp.ok) throw new Error(wynik.blad || `Błąd ${odp.status}`);
+        return wynik;
+    }
+
+    // ---------- 1. wskaźnik ----------
+
+    async function szukajZmiennych(fraza) {
+        const lista = document.getElementById("wyniki-zmiennych");
+        lista.replaceChildren(el("li", "wyciszony", "Szukam w GUS…"));
+        try {
+            const zmienne = await zapytaj(`zmienne?${new URLSearchParams({ q: fraza })}`);
+            lista.replaceChildren();
+            if (!zmienne.length) lista.appendChild(el("li", "wyciszony", "Nic nie znaleziono — spróbuj innych słów."));
+            for (const z of zmienne) {
+                const przycisk = el("button", "wynik-zmiennej", `${z.nazwa}${z.jednostka ? ` [${z.jednostka}]` : ""}`);
+                przycisk.type = "button";
+                przycisk.addEventListener("click", () => wybierzZmienna(z.id));
+                const li = el("li");
+                li.appendChild(przycisk);
+                lista.appendChild(li);
+            }
+        } catch (e) {
+            lista.replaceChildren(el("li", "komunikat komunikat--blad", e.message));
+        }
+    }
+
+    async function wybierzZmienna(id) {
+        try {
+            ZMIENNA = await zapytaj("zmienna", { method: "PUT", body: JSON.stringify({ id }) });
+            location.reload(); // nowy wskaźnik — wszystkie szeregi od nowa
+        } catch (e) {
+            pokazBlad(e.message);
+        }
+    }
+
+    document.getElementById("formularz-zmiennej").addEventListener("submit", (e) => {
+        e.preventDefault();
+        szukajZmiennych(document.getElementById("pole-zmiennej").value);
+    });
+    for (const b of document.querySelectorAll(".szybki-wybor__fraza")) {
+        b.addEventListener("click", () => {
+            document.getElementById("pole-zmiennej").value = b.dataset.fraza;
+            szukajZmiennych(b.dataset.fraza);
+        });
+    }
+
+    // ---------- 2. miasta ----------
+
+    async function wczytajWojewodztwa() {
+        try {
+            const woj = await zapytaj("wojewodztwa");
+            poleWoj.replaceChildren(new Option("— wybierz —", ""));
+            for (const w of woj) poleWoj.appendChild(new Option(w.nazwa, w.bdl_id));
+            const ostatnie = odczytaj("ceny.woj", "");
+            if (ostatnie && woj.some((w) => w.bdl_id === ostatnie)) {
+                poleWoj.value = ostatnie;
+                await wczytajPowiaty();
+            }
+        } catch (e) {
+            pokazBlad(e.message);
+        }
+    }
+
+    async function wczytajPowiaty() {
+        listaPowiatow.replaceChildren();
+        if (!poleWoj.value) return;
+        zapamietaj("ceny.woj", poleWoj.value);
+        try {
+            const powiaty = await zapytaj(`powiaty/${poleWoj.value}`);
+            for (const p of powiaty) {
+                const li = el("li", p.miasto ? "powiat powiat--miasto" : "powiat");
+                const pole = el("input");
+                pole.type = "checkbox";
+                pole.checked = wybrane.some((w) => w.id === p.bdl_id);
+                pole.addEventListener("change", () => przelacz(p, pole));
+                const etykieta = el("label");
+                etykieta.append(pole, " " + p.nazwa);
+                li.appendChild(etykieta);
+                listaPowiatow.appendChild(li);
+            }
+        } catch (e) {
+            pokazBlad(e.message);
+        }
+        wczytajRanking();
+    }
+
+    function przelacz(powiat, pole) {
+        if (pole.checked) {
+            if (wybrane.length >= MAKS_MIAST) {
+                pole.checked = false;
+                return pokazBlad(`Najwyżej ${MAKS_MIAST} jednostek naraz — odznacz którąś.`);
+            }
+            wybrane.push({ id: powiat.bdl_id, nazwa: powiat.nazwa, woj: poleWoj.value });
+        } else {
+            wybrane = wybrane.filter((w) => w.id !== powiat.bdl_id);
+        }
+        pokazBlad("");
+        zapamietaj("ceny.wybrane", wybrane);
+        odswiez();
+    }
+
+    function pokazWybrane() {
+        wybraneEl.replaceChildren();
+        wybrane.forEach((w, i) => {
+            const znacznik = el("span", "wybrany");
+            znacznik.style.borderColor = KOLORY[i % KOLORY.length];
+            const usun = el("button", "przycisk--tekst", "✕");
+            usun.type = "button";
+            usun.title = "Usuń z porównania";
+            usun.addEventListener("click", () => {
+                wybrane = wybrane.filter((x) => x.id !== w.id);
+                zapamietaj("ceny.wybrane", wybrane);
+                const pole = [...listaPowiatow.querySelectorAll("input")].find((x) => x.parentElement.textContent.trim() === w.nazwa);
+                if (pole) pole.checked = false;
+                odswiez();
+            });
+            znacznik.append(w.nazwa, usun);
+            wybraneEl.appendChild(znacznik);
+        });
+    }
+
+    // ---------- 3. wykres i tabela ----------
+
+    const NS = "http://www.w3.org/2000/svg";
+
+    function svg(tag, atrybuty, tekst) {
+        const e = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(atrybuty)) e.setAttribute(k, v);
+        if (tekst !== undefined) e.textContent = tekst;
+        return e;
+    }
+
+    function rysujWykres() {
+        const pojemnik = document.getElementById("wykres");
+        const serie = wybrane.map((w, i) => ({ ...w, kolor: KOLORY[i % KOLORY.length], szereg: (dane.get(w.id) || {}).szereg || [] })).filter((s) => s.szereg.length);
+        pojemnik.replaceChildren();
+        if (!serie.length) return;
+        const punkty = serie.flatMap((s) => s.szereg);
+        const [r0, r1] = [Math.min(...punkty.map((p) => p.rok)), Math.max(...punkty.map((p) => p.rok))];
+        // „ładne” podziałki osi: krok 1, 2, 2,5 albo 5 × 10^k
+        const maks = Math.max(...punkty.map((p) => p.wartosc));
+        const potega = 10 ** Math.floor(Math.log10(maks / 4 || 1));
+        const krokY = [1, 2, 2.5, 5, 10].map((k) => k * potega).find((k) => maks / k <= 5);
+        const [w0, w1] = [0, Math.ceil(maks / krokY) * krokY];
+        const SZ = 760, WY = 300, M = { l: 70, p: 16, g: 12, d: 30 };
+        const x = (r) => M.l + (r1 === r0 ? 0.5 : (r - r0) / (r1 - r0)) * (SZ - M.l - M.p);
+        const y = (w) => WY - M.d - ((w - w0) / (w1 - w0 || 1)) * (WY - M.g - M.d);
+        const wykres = svg("svg", { viewBox: `0 0 ${SZ} ${WY}`, role: "img", "aria-label": "Ceny w czasie" });
+        for (let w = w0; w <= w1 + krokY / 2; w += krokY) {
+            wykres.append(svg("line", { x1: M.l, x2: SZ - M.p, y1: y(w), y2: y(w), class: "wykres-cen__siatka" }),
+                svg("text", { x: M.l - 8, y: y(w) + 4, "text-anchor": "end", class: "wykres-cen__opis" }, liczba.format(w)));
+        }
+        const krok = Math.max(1, Math.ceil((r1 - r0) / 10));
+        for (let r = r0; r <= r1; r += krok) wykres.appendChild(svg("text", { x: x(r), y: WY - 8, "text-anchor": "middle", class: "wykres-cen__opis" }, r));
+        for (const s of serie) {
+            wykres.appendChild(svg("polyline", { points: s.szereg.map((p) => `${x(p.rok).toFixed(1)},${y(p.wartosc).toFixed(1)}`).join(" "), fill: "none", stroke: s.kolor, "stroke-width": 2.5 }));
+            for (const p of s.szereg) {
+                const kropka = svg("circle", { cx: x(p.rok), cy: y(p.wartosc), r: 3, fill: s.kolor });
+                kropka.appendChild(svg("title", {}, `${s.nazwa}, ${p.rok}: ${liczba.format(p.wartosc)} ${ZMIENNA.jednostka || ""}`));
+                wykres.appendChild(kropka);
+            }
+        }
+        pojemnik.appendChild(wykres);
+    }
+
+    function zmiana(z) {
+        if (!z) return "—";
+        return z.zmiana_proc === null ? liczba.format(z.zmiana) : `${procent.format(z.zmiana_proc)}%`;
+    }
+
+    function rysujTabele() {
+        const tabela = document.getElementById("tabela-cen");
+        const jednostka = ZMIENNA.jednostka ? ` [${ZMIENNA.jednostka}]` : "";
+        const glowa = el("tr");
+        for (const [t, k] of [["Miasto / powiat", ""], ["Rok", "liczba"], [`Cena${jednostka}`, "liczba"], ["Rok do roku", "liczba"], ["W 5 lat", "liczba"], ["Od początku", "liczba"], ["Średnio rocznie", "liczba"]]) glowa.appendChild(el("th", k, t));
+        tabela.replaceChildren(glowa);
+        wybrane.forEach((w, i) => {
+            const d = dane.get(w.id);
+            const tr = el("tr");
+            const nazwa = el("td");
+            const probka = el("span", "probka-cen");
+            probka.style.background = KOLORY[i % KOLORY.length];
+            nazwa.append(probka, w.nazwa);
+            tr.appendChild(nazwa);
+            const s = d && d.podsumowanie;
+            if (!d) {
+                tr.appendChild(el("td", "wyciszony", "wczytywanie…"));
+            } else if (d.blad || !s) {
+                const td = el("td", "wyciszony", d.blad || "brak danych GUS");
+                td.colSpan = 6;
+                tr.appendChild(td);
+            } else {
+                const od = s.od_poczatku ? `${zmiana(s.od_poczatku)} od ${s.od_poczatku.od}` : "—";
+                tr.append(el("td", "liczba", s.rok), el("td", "liczba", liczba.format(s.wartosc)), el("td", "liczba", zmiana(s.rok_do_roku)),
+                    el("td", "liczba", zmiana(s.w_5_lat)), el("td", "liczba", od),
+                    el("td", "liczba", s.srednio_rocznie_proc === null ? "—" : `${procent.format(s.srednio_rocznie_proc)}%`));
+            }
+            tabela.appendChild(tr);
+        });
+        const link = document.getElementById("link-csv");
+        const parametry = new URLSearchParams();
+        for (const w of wybrane) {
+            parametry.append("id", w.id);
+            parametry.append("nazwa", w.nazwa);
+        }
+        link.href = `${URL_CENY}porownanie.csv?${parametry}`;
+    }
+
+    async function odswiez() {
+        pokazWybrane();
+        document.getElementById("sekcja-wyniku").hidden = !wybrane.length;
+        const moj = ++numer;
+        await Promise.all(wybrane.filter((w) => !dane.has(w.id)).map(async (w) => {
+            try {
+                dane.set(w.id, await zapytaj(`szereg/${w.id}`));
+            } catch (e) {
+                dane.set(w.id, { blad: e.message });
+            }
+        }));
+        if (moj !== numer) return;
+        rysujWykres();
+        rysujTabele();
+        if (!ustawLata()) wczytajRanking(); // podświetlenie wybranych miast
+    }
+
+    // ---------- 4. ranking ----------
+
+    function ustawLata() {
+        const lata = [...new Set(wybrane.flatMap((w) => ((dane.get(w.id) || {}).szereg || []).map((p) => p.rok)))].sort((a, b) => b - a);
+        const poprzedni = poleRok.value;
+        if (!lata.length) return false;
+        poleRok.replaceChildren(...lata.map((r) => new Option(r, r)));
+        poleRok.value = lata.includes(Number(poprzedni)) ? poprzedni : String(lata[0]);
+        if (poprzedni === poleRok.value) return false;
+        wczytajRanking();
+        return true; // ranking już się wczytuje
+    }
+
+    async function wczytajRanking() {
+        const sekcja = document.getElementById("sekcja-rankingu");
+        if (!poleWoj.value || !poleRok.value) {
+            sekcja.hidden = true;
+            return;
+        }
+        sekcja.hidden = false;
+        const lista = document.getElementById("ranking");
+        lista.replaceChildren(el("li", "wyciszony", "Wczytywanie…"));
+        try {
+            const r = await zapytaj(`ranking?${new URLSearchParams({ woj: poleWoj.value, rok: poleRok.value })}`);
+            const maks = Math.max(...r.pozycje.map((p) => p.wartosc), 1);
+            document.getElementById("opis-rankingu").textContent = r.liczba
+                ? `${poleWoj.selectedOptions[0].textContent}, ${r.rok}: ${r.liczba} jednostek z danymi, mediana ${liczba.format(r.mediana)} ${ZMIENNA.jednostka || ""}.`
+                : "Brak danych GUS dla tego roku.";
+            lista.replaceChildren();
+            for (const p of r.pozycje) {
+                const li = el("li", "pozycja-cen" + (wybrane.some((w) => w.id === p.bdl_id) ? " pozycja-cen--wybrana" : "") + (p.miasto ? " pozycja-cen--miasto" : ""));
+                const pasek = el("span", "pozycja-cen__pasek");
+                pasek.style.width = `${(100 * p.wartosc) / maks}%`;
+                li.append(el("span", "pozycja-cen__miejsce", `${p.miejsce}.`), el("span", "pozycja-cen__nazwa", p.nazwa),
+                    el("span", "pozycja-cen__tor"), el("span", "pozycja-cen__wartosc", liczba.format(p.wartosc)));
+                li.querySelector(".pozycja-cen__tor").appendChild(pasek);
+                lista.appendChild(li);
+            }
+        } catch (e) {
+            lista.replaceChildren(el("li", "komunikat komunikat--blad", e.message));
+        }
+    }
+
+    poleWoj.addEventListener("change", wczytajPowiaty);
+    poleRok.addEventListener("change", wczytajRanking);
+
+    if (ZMIENNA) {
+        wczytajWojewodztwa();
+        odswiez();
+    }
+})();

@@ -1,7 +1,7 @@
 # Warsztat — kontekst projektu
 
 ## Czym to jest
-Lokalna aplikacja desktopowa (Flask + vanilla JS) łącząca siedem niezależnych
+Lokalna aplikacja desktopowa (Flask + vanilla JS) łącząca osiem niezależnych
 modułów narzędziowych. Uruchamiana ikoną z pulpitu na Linux Mint, dostępna
 wyłącznie na 127.0.0.1. Ma dostęp do internetu (API GUS, WFS gmin, ULDK, Gemini).
 
@@ -24,6 +24,8 @@ kogoś, kto wróci do niego za trzy miesiące.
                 Gemini z cytatami sprawdzanymi w tekście i kotwicą w PDF
 - teren       — inwentaryzacja w terenie: samodzielny formularz HTML na
                 telefon (bez internetu), import pliku, mapa punktów, raport
+- ceny        — ceny mieszkań w miastach i powiatach (GUS BDL): zmiany w
+                czasie, porównanie miast, ranking w województwie (od ETAPu 103)
 
 Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 
@@ -60,7 +62,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 102 (kalendarz: eksport .ics — zamknięty)
-Ostatni ZIP: releases/warsztat_etap102_20260930.zip
-Testy: 472 passed / 0 failed
+ETAP: 103 (ceny: nowy moduł, dane GUS — zamknięty)
+Ostatni ZIP: releases/warsztat_etap103_20260930.zip
+Testy: 475 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

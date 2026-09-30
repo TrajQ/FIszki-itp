@@ -1794,3 +1794,22 @@ Status: zamknięty
 - Poprawka przy okazji (znaleziona przez ostrzeżenie w testach):
   niezamknięty iterator `os.scandir` w kopii automatycznej (ETAP 97)
 - `DECISIONS.md`: D-110
+
+## ETAP 103 — Ceny: nowy moduł — ceny mieszkań z GUS
+Data: 2026-09-30
+Status: zamknięty
+
+- `dane/bdl.py`: poziom powiatu (`powiaty_wojewodztwa`,
+  `wartosci_dla_powiatow`, `teryt_powiatu`, wyszukiwanie zmiennych dla
+  danego poziomu)
+- `ceny/`: `analiza.py` (zmiany r/r, w 5 lat, od początku, średnie roczne
+  tempo, ranking z miejscami i medianą, miasta na prawach powiatu po TERYT
+  ≥ 61), `baza.py` (wybrany wskaźnik, cache BDL 30 dni), `routes.py`,
+  strona z wykresem SVG, tabelą, rankingiem i CSV
+- rejestracja: menu, karta na stronie głównej („Osiem narzędzi”), Pomoc,
+  README, CLAUDE.md (lista modułów), portfolio, instrukcja kopii
+- Poprawki po sprawdzeniu w przeglądarce: układ listy powiatów, „ładne”
+  podziałki osi, podświetlenie wybranych miast w rankingu
+- Nie sprawdzone tutaj: prawdziwe API BDL (zablokowane) — nazwy wskaźników
+  GUS i dostępne lata trzeba zobaczyć u siebie
+- `DECISIONS.md`: D-111
