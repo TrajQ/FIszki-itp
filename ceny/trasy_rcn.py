@@ -22,6 +22,7 @@ from . import baza, rcn
 from .routes import ceny_bp
 
 RYNKI = ("pierwotny", "wtórny", "nieznany")
+CO = ("lokale", "dzialki")  # ETAP 106: mieszkania albo działki z tego samego pliku
 
 
 def katalogi_pobranych() -> list[str]:
@@ -43,10 +44,10 @@ def _importuj(sciezka: str, nazwa: str):
         wynik = rcn.czytaj_plik(sciezka)
     except rcn.BladPliku as e:
         return redirect(url_for("ceny.transakcje", blad=str(e)))
-    if not wynik["lokale"]:
-        return redirect(url_for("ceny.transakcje", blad="W pliku nie ma transakcji lokali mieszkalnych, które dałoby się policzyć."))
-    plik_id = baza.zapisz_plik_rcn(nazwa, wynik["lokale"], wynik["odrzucone"])
-    return redirect(url_for("ceny.transakcje", plik=plik_id))
+    if not wynik["lokale"] and not wynik["dzialki"]:
+        return redirect(url_for("ceny.transakcje", blad="W pliku nie ma transakcji lokali mieszkalnych ani działek, które dałoby się policzyć."))
+    plik_id = baza.zapisz_plik_rcn(nazwa, wynik["lokale"], wynik["odrzucone"], wynik["dzialki"], wynik["odrzucone_dzialki"])
+    return redirect(url_for("ceny.transakcje", plik=plik_id, co="lokale" if wynik["lokale"] else "dzialki"))
 
 
 @ceny_bp.route("/transakcje")
@@ -57,6 +58,7 @@ def transakcje():
         do_importu=pliki_gpkg(),
         katalogi=katalogi_pobranych(),
         wybrany=request.args.get("plik", type=int),
+        co=request.args.get("co") if request.args.get("co") in CO else "lokale",
         blad=request.args.get("blad"),
         rynki=RYNKI,
         maks_obszarow=rcn.MAKS_OBSZAROW,
@@ -80,18 +82,35 @@ def importuj_transakcje():
         return _importuj(tymczasowy, secure_filename(plik.filename) or "rcn.gpkg")
 
 
-def _filtry() -> dict:
+def _co() -> str:
+    co = request.args.get("co") or "lokale"
+    if co not in CO:
+        raise ValueError("Niepoprawny rodzaj nieruchomości.")
+    return co
+
+
+def _filtry(co: str) -> dict:
     rynek = request.args.get("rynek") or None
-    izby = request.args.get("izby") or None
-    if rynek not in (None, *RYNKI) or izby not in (None, "1", "2", "3", "4+"):
+    if rynek not in (None, *RYNKI):
         raise ValueError("Niepoprawny filtr.")
-    return {
+    filtry = {
         "rynek": rynek,
         "od_roku": request.args.get("od", type=int),
         "do_roku": request.args.get("do", type=int),
-        "izby": izby,
         "rodzaj": request.args.get("rodzaj") or None,
     }
+    if co == "dzialki":
+        filtry["przeznaczenie"] = request.args.get("przeznaczenie") or None
+        filtry["nieruchomosc"] = request.args.get("nieruchomosc") or None
+    else:
+        filtry["izby"] = request.args.get("izby") or None
+        if filtry["izby"] not in (None, "1", "2", "3", "4+"):
+            raise ValueError("Niepoprawny filtr.")
+    return filtry
+
+
+def _rekordy(plik_id: int, co: str, filtry: dict | None = None) -> list[dict]:
+    return (baza.dzialki_rcn if co == "dzialki" else baza.lokale_rcn)(plik_id, **(filtry or {}))
 
 
 @ceny_bp.route("/transakcje/<int:plik_id>/dane")
@@ -100,16 +119,20 @@ def dane_transakcji(plik_id):
     if plik is None:
         abort(404)
     try:
-        filtry = _filtry()
+        co = _co()
+        filtry = _filtry(co)
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
-    lokale = baza.lokale_rcn(plik_id, **filtry)
-    wszystkie = baza.lokale_rcn(plik_id)
+    lokale = _rekordy(plik_id, co, filtry)
+    wszystkie = _rekordy(plik_id, co)
     obszary = baza.obszary_rcn(plik_id)
+    tabela = "rcn_dzialki" if co == "dzialki" else "rcn_lokale"
     return jsonify({
         "plik": plik,
+        "co": co,
         "lata": sorted({l["rok"] for l in wszystkie}),
-        "rodzaje": baza.rodzaje_transakcji(plik_id),
+        "listy": {pole: baza.wartosci_pola(plik_id, pole, tabela)
+                  for pole in (("rodzaj", "przeznaczenie", "nieruchomosc") if co == "dzialki" else ("rodzaj",))},
         "statystyki": rcn.statystyki(lokale),
         "mapa": rcn.punkty_mapy(lokale),
         "obszary": obszary,
@@ -168,15 +191,17 @@ def raport_transakcji(plik_id):
     if plik is None:
         abort(404)
     try:
-        filtry = _filtry()
+        co = _co()
+        filtry = _filtry(co)
     except ValueError:
         abort(400)
-    lokale = baza.lokale_rcn(plik_id, **filtry)
+    lokale = _rekordy(plik_id, co, filtry)
     obszary = baza.obszary_rcn(plik_id)
     mapa = rcn.punkty_mapy(lokale)
     return render_template(
         "ceny/raport.html",
         plik=plik,
+        co=co,
         filtry=filtry,
         statystyki=rcn.statystyki(lokale),
         porownanie=rcn.porownanie(lokale, obszary),
@@ -193,12 +218,15 @@ def csv_transakcji(plik_id):
     if plik is None:
         abort(404)
     try:
-        lokale = baza.lokale_rcn(plik_id, **_filtry())
+        co = _co()
+        lokale = _rekordy(plik_id, co, _filtry(co))
     except ValueError:
         abort(400)
     bufor = io.StringIO()
     zapis = csv.writer(bufor, delimiter=";")
-    pola = ["data", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2", "izby", "lat", "lng"]
+    pola = ["data", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2"]
+    pola += ["przeznaczenie", "uzytek", "nieruchomosc", "dzialek"] if co == "dzialki" else ["izby"]
+    pola += ["lat", "lng"]
     zapis.writerow(pola)
     for l in sorted(lokale, key=lambda l: l["data"]):
         zapis.writerow([l[p] if l[p] is not None else "" for p in pola])
@@ -207,7 +235,7 @@ def csv_transakcji(plik_id):
     return Response(
         "﻿" + bufor.getvalue(),
         mimetype="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=rcn_lokale_{plik_id}.csv"},
+        headers={"Content-Disposition": f"attachment; filename=rcn_{co}_{plik_id}.csv"},
     )
 
 

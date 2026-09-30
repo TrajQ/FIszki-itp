@@ -21,9 +21,19 @@ z liczbą odrzuconych z każdego powodu.
 Geometria: nagłówek GeoPackage + WKB, układ PL-1992 (EPSG:2180; x w pliku
 = współrzędna wschodnia, jak w GIS). Do mapy bierzemy środek obiektu i
 przeliczamy go na WGS84 (mpzp/uklady.py).
+
+ETAP 106 — działki (tabela `transakcje_dzialki`, kolumny `dzi_cena_brutto`,
+`dzi_pow_ewid`, `dzi_przezn_wmpzp`, `dzi_sposob_uzyt`, `nier_rodzaj`, z tych
+samych projektów). Powierzchnię bierzemy z obrysu działki w pliku (PL-1992,
+metry), nie z `dzi_pow_ewid`: projekty różnią się co do jej jednostki (ha
+albo m², w części plików mieszane). Cena: cena działki, a bez niej cena
+całej transakcji na sumę powierzchni jej działek (np. dwie sąsiednie
+działki sprzedane razem). Dla działki zabudowanej cena obejmuje budynek —
+dlatego filtr „nieruchomość”.
 """
 
 import math
+import re
 import sqlite3
 import statistics
 import struct
@@ -31,12 +41,19 @@ from datetime import date
 
 from shapely import wkb
 from shapely.geometry import Point, mapping, shape
+from shapely.ops import unary_union
 from shapely.prepared import prep
 from shapely.validation import make_valid
 
 from mpzp.uklady import w_polsce, wgs84_z_pl1992
 
 TABELA = "transakcje_lokale"
+TABELA_DZIALKI = "transakcje_dzialki"
+KOLUMNY_CENY_DZIALKI = ("dzi_cena_brutto", "nier_cena_brutto", "tran_cena_brutto")
+# działki: od małej działki pod garaż do dużego gospodarstwa; cena od gruntów
+# rolnych (kilka zł/m²) do centrów dużych miast
+POW_DZIALKI_M2 = (20, 2_000_000)
+CENA_DZIALKI_M2 = (0.5, 30_000)
 KOLUMNY_CENY = ("lok_cena_brutto", "nier_cena_brutto", "tran_cena_brutto")
 POW_M2 = (10, 500)
 CENA_M2 = (500, 100_000)
@@ -47,23 +64,41 @@ class BladPliku(ValueError):
     """Plik nie jest GeoPackage RCN albo brakuje w nim potrzebnych danych."""
 
 
-def _srodek_geometrii(blob: bytes | None) -> tuple[float, float] | None:
-    """(x, y) środka geometrii z blobu GeoPackage (nagłówek „GP” + WKB)."""
+def _poczatek_wkb(blob: bytes | None) -> int | None:
+    """Położenie WKB w blobie GeoPackage (za nagłówkiem „GP” i kopertą)."""
     if not blob or blob[:2] != b"GP":
         return None
     flagi = blob[3]
-    koperta = (flagi >> 1) & 0b111
-    dlugosc_koperty = {0: 0, 1: 32, 2: 48, 3: 48, 4: 64}.get(koperta)
+    dlugosc_koperty = {0: 0, 1: 32, 2: 48, 3: 48, 4: 64}.get((flagi >> 1) & 0b111)
     if dlugosc_koperty is None or flagi & 0b10000:  # zła koperta albo pusta geometria
         return None
-    if dlugosc_koperty:
-        kolejnosc = "<" if flagi & 1 else ">"
-        minx, maxx, miny, maxy = struct.unpack(kolejnosc + "4d", blob[8:40])
-        return (minx + maxx) / 2, (miny + maxy) / 2
+    return 8 + dlugosc_koperty
+
+
+def _ksztalt(blob: bytes | None):
+    """Geometria shapely z blobu GeoPackage albo None."""
+    poczatek = _poczatek_wkb(blob)
+    if poczatek is None:
+        return None
     try:
-        punkt = wkb.loads(bytes(blob[8:])).representative_point()
+        return wkb.loads(bytes(blob[poczatek:]))
     except Exception:
         return None
+
+
+def _srodek_geometrii(blob: bytes | None) -> tuple[float, float] | None:
+    """(x, y) środka geometrii z blobu GeoPackage (nagłówek „GP” + WKB)."""
+    poczatek = _poczatek_wkb(blob)
+    if poczatek is None:
+        return None
+    if poczatek > 8:  # koperta: środek bez czytania całego WKB
+        kolejnosc = "<" if blob[3] & 1 else ">"
+        minx, maxx, miny, maxy = struct.unpack(kolejnosc + "4d", blob[8:40])
+        return (minx + maxx) / 2, (miny + maxy) / 2
+    ksztalt = _ksztalt(blob)
+    if ksztalt is None:
+        return None
+    punkt = ksztalt.representative_point()
     return punkt.x, punkt.y
 
 
@@ -92,33 +127,60 @@ def _data(tekst) -> date | None:
         return None
 
 
+def _wiersze_tabeli(db, tabele: set, tabela: str, wymagane: list[str], ceny: tuple[str, ...]) -> tuple[list[dict], str | None, int | None]:
+    """Wiersze tabeli RCN, nazwa kolumny geometrii i jej układ; BladPliku, gdy
+    brakuje wymaganych kolumn albo wszystkich kolumn ceny."""
+    kolumny = [w[1] for w in db.execute(f"PRAGMA table_info({tabela})")]
+    brakuje = [k for k in wymagane if k not in kolumny] + ([] if any(k in kolumny for k in ceny) else ["kolumna ceny"])
+    if brakuje:
+        raise BladPliku(f"W tabeli {tabela} brakuje: {', '.join(brakuje)}. Kolumny w pliku: {', '.join(kolumny)[:400]}.")
+    geometria = srs = None
+    if "gpkg_geometry_columns" in tabele:
+        wiersz = db.execute("SELECT column_name, srs_id FROM gpkg_geometry_columns WHERE table_name = ?", (tabela,)).fetchone()
+        if wiersz:
+            geometria, srs = wiersz
+    db.row_factory = sqlite3.Row
+    wiersze = [dict(w) for w in db.execute(f"SELECT * FROM {tabela}")]
+    db.row_factory = None
+    return wiersze, geometria, srs
+
+
 def czytaj_plik(sciezka: str) -> dict:
-    """GeoPackage RCN → {"lokale": [...], "odrzucone": {powód: liczba}, "kolumny": [...]}."""
+    """GeoPackage RCN → {"lokale", "odrzucone", "dzialki", "odrzucone_dzialki"}.
+
+    Czyta tabelę lokali i tabelę działek — tę, która jest w pliku; błąd,
+    gdy nie ma żadnej."""
     try:
         db = sqlite3.connect(f"file:{sciezka}?mode=ro", uri=True)
         tabele = {w[0] for w in db.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
     except sqlite3.DatabaseError as e:
         raise BladPliku("To nie jest plik GeoPackage (baza SQLite).") from e
+    wynik = {"lokale": [], "odrzucone": {}, "dzialki": [], "odrzucone_dzialki": {}}
     try:
-        if TABELA not in tabele:
-            raise BladPliku(f"W pliku nie ma tabeli „{TABELA}” — to nie jest plik RCN z lokalami. Tabele w pliku: {', '.join(sorted(t for t in tabele if not t.startswith(('gpkg_', 'rtree_', 'sqlite_'))))[:300]}.")
-        kolumny = [w[1] for w in db.execute(f"PRAGMA table_info({TABELA})")]
-        ceny = [k for k in KOLUMNY_CENY if k in kolumny]
-        brakuje = [k for k in ("lok_pow_uzyt", "dok_data") if k not in kolumny] + ([] if ceny else ["kolumna ceny"])
-        if brakuje:
-            raise BladPliku(f"W tabeli {TABELA} brakuje: {', '.join(brakuje)}. Kolumny w pliku: {', '.join(kolumny)[:400]}.")
-        geometria = next(
-            (w[0] for w in db.execute("SELECT column_name FROM gpkg_geometry_columns WHERE table_name = ?", (TABELA,))), None
-        ) if "gpkg_geometry_columns" in tabele else None
-        srs = next((w[0] for w in db.execute("SELECT srs_id FROM gpkg_geometry_columns WHERE table_name = ?", (TABELA,))), None) if geometria else None
-        db.row_factory = sqlite3.Row
-        wiersze = [dict(w) for w in db.execute(f"SELECT * FROM {TABELA}")]
+        if TABELA not in tabele and TABELA_DZIALKI not in tabele:
+            raise BladPliku(f"W pliku nie ma tabeli „{TABELA}” ani „{TABELA_DZIALKI}” — to nie jest plik RCN. Tabele w pliku: {', '.join(sorted(t for t in tabele if not t.startswith(('gpkg_', 'rtree_', 'sqlite_'))))[:300]}.")
+        if TABELA in tabele:
+            wiersze, geometria, srs = _wiersze_tabeli(db, tabele, TABELA, ["lok_pow_uzyt", "dok_data"], KOLUMNY_CENY)
+            wynik.update(_lokale(wiersze, geometria, srs))
+        if TABELA_DZIALKI in tabele:
+            wiersze, geometria, srs = _wiersze_tabeli(db, tabele, TABELA_DZIALKI, ["dok_data"], KOLUMNY_CENY_DZIALKI)
+            if geometria is None:
+                raise BladPliku(f"Tabela {TABELA_DZIALKI} nie ma geometrii (obrysów działek) — bez nich nie da się policzyć powierzchni.")
+            wynik.update(_dzialki(wiersze, geometria, srs))
     finally:
         db.close()
-    return _lokale(wiersze, geometria, srs, kolumny)
+    return wynik
 
 
-def _lokale(wiersze: list[dict], geometria: str | None, srs: int | None, kolumny: list[str]) -> dict:
+def _na_wgs84(x: float, y: float, srs: int | None) -> tuple[float | None, float | None]:
+    if srs == 4326:
+        lng, lat = x, y
+    else:  # PL-1992: w pliku x = wschód, y = północ
+        lat, lng = wgs84_z_pl1992(y, x)
+    return (lat, lng) if w_polsce(lat, lng) else (None, None)
+
+
+def _lokale(wiersze: list[dict], geometria: str | None, srs: int | None) -> dict:
     lokali_w_transakcji: dict = {}
     for w in wiersze:
         lokali_w_transakcji[w.get("tran_lokalny_id_iip")] = lokali_w_transakcji.get(w.get("tran_lokalny_id_iip"), 0) + 1
@@ -153,15 +215,8 @@ def _lokale(wiersze: list[dict], geometria: str | None, srs: int | None, kolumny
         if klucz[0] is not None and klucz in widziane:
             continue  # ten sam lokal w tej samej transakcji drugi raz
         widziane.add(klucz)
-        lat = lng = None
         srodek = _srodek_geometrii(w.get(geometria)) if geometria else None
-        if srodek is not None:
-            if srs == 4326:
-                lng, lat = srodek
-            else:  # PL-1992: w pliku x = wschód, y = północ
-                lat, lng = wgs84_z_pl1992(srodek[1], srodek[0])
-            if not w_polsce(lat, lng):
-                lat = lng = None
+        lat, lng = _na_wgs84(*srodek, srs) if srodek else (None, None)
         lokale.append({
             "data": dzien.isoformat(),
             "rok": dzien.year,
@@ -175,7 +230,88 @@ def _lokale(wiersze: list[dict], geometria: str | None, srs: int | None, kolumny
             "lat": lat,
             "lng": lng,
         })
-    return {"lokale": lokale, "odrzucone": {k: v for k, v in odrzucone.items() if v}, "kolumny": kolumny}
+    return {"lokale": lokale, "odrzucone": {k: v for k, v in odrzucone.items() if v}}
+
+
+def _czytelne(kod) -> str:
+    """„budownictwoMieszkaniowe” → „budownictwo mieszkaniowe” (wartości słownikowe RCN)."""
+    tekst = " ".join(str(kod or "").split())
+    return re.sub(r"(?<=[a-ząćęłńóśźż])(?=[A-ZĄĆĘŁŃÓŚŹŻ])", " ", tekst).lower()
+
+
+def _wspolne(wartosci: list[str]) -> str:
+    rozne = {w for w in wartosci if w}
+    return rozne.pop() if len(rozne) == 1 else ("różne" if rozne else "")
+
+
+def _dzialki(wiersze: list[dict], geometria: str, srs: int | None) -> dict:
+    """Wiersze tabeli działek → transakcje z ceną za m² gruntu.
+
+    Działka z własną ceną to jeden rekord. Działki transakcji bez własnych
+    cen łączymy w jeden rekord: cena transakcji / suma ich powierzchni.
+    Liczniki odrzuconych liczą działki."""
+    odrzucone = {"udział w działce": 0, "brak daty": 0, "brak obrysu działki": 0, "bez ceny działki": 0,
+                 "nierealna powierzchnia": 0, "nierealna cena za m²": 0}
+    transakcje: dict = {}
+    for nr, w in enumerate(wiersze):
+        dzialki_transakcji = transakcje.setdefault(w.get("tran_lokalny_id_iip") or f"bez identyfikatora {nr}", {})
+        dzialki_transakcji.setdefault(w.get("dzi_id_dzialki") or nr, w)  # ta sama działka drugi raz — pomijamy
+    wynik = []
+    for dzialki_transakcji in transakcje.values():
+        czesci = []
+        for w in dzialki_transakcji.values():
+            if w.get("nier_udzial") not in (None, "", "1/1", "1"):
+                odrzucone["udział w działce"] += 1
+                continue
+            dzien = _data(w.get("dok_data"))
+            if dzien is None:
+                odrzucone["brak daty"] += 1
+                continue
+            ksztalt = _ksztalt(w.get(geometria)) if srs != 4326 else None  # pole w metrach tylko z układu płaskiego
+            if ksztalt is None or ksztalt.area <= 0:
+                odrzucone["brak obrysu działki"] += 1
+                continue
+            czesci.append((w, dzien, ksztalt))
+        wlasne = [c for c in czesci if _liczba(c[0].get("dzi_cena_brutto"))]
+        bez_ceny = [c for c in czesci if not _liczba(c[0].get("dzi_cena_brutto"))]
+        rekordy = [([c], _liczba(c[0]["dzi_cena_brutto"])) for c in wlasne]
+        if bez_ceny:
+            cena = None
+            if not wlasne:  # cena transakcji obejmuje wtedy dokładnie te działki
+                pierwsza = bez_ceny[0][0]
+                cena = (_liczba(pierwsza.get("nier_cena_brutto")) if len(bez_ceny) == 1 else None) or _liczba(pierwsza.get("tran_cena_brutto"))
+            if cena:
+                rekordy.append((bez_ceny, cena))
+            else:
+                odrzucone["bez ceny działki"] += len(bez_ceny)
+        for czesc, cena in rekordy:
+            pow_m2 = sum(k.area for _, _, k in czesc)
+            if not POW_DZIALKI_M2[0] <= pow_m2 <= POW_DZIALKI_M2[1]:
+                odrzucone["nierealna powierzchnia"] += len(czesc)
+                continue
+            if not CENA_DZIALKI_M2[0] <= cena / pow_m2 <= CENA_DZIALKI_M2[1]:
+                odrzucone["nierealna cena za m²"] += len(czesc)
+                continue
+            w, dzien, _ = czesc[0]
+            punkt = unary_union([k for _, _, k in czesc]).representative_point()
+            lat, lng = _na_wgs84(punkt.x, punkt.y, srs)
+            wynik.append({
+                "data": dzien.isoformat(),
+                "rok": dzien.year,
+                "kwartal": (dzien.month - 1) // 3 + 1,
+                "rynek": _rynek(w.get("tran_rodzaj_rynku")),
+                "rodzaj": str(w.get("tran_rodzaj_trans") or ""),
+                "pow_m2": round(pow_m2, 1),
+                "cena": round(cena, 2),
+                "cena_m2": round(cena / pow_m2, 2),
+                "przeznaczenie": _wspolne([_czytelne(c[0].get("dzi_przezn_wmpzp")) for c in czesc]),
+                "uzytek": _wspolne([_czytelne(c[0].get("dzi_sposob_uzyt")) for c in czesc]),
+                "nieruchomosc": _czytelne(w.get("nier_rodzaj")),
+                "dzialek": len(czesc),
+                "lat": lat,
+                "lng": lng,
+            })
+    return {"dzialki": wynik, "odrzucone_dzialki": {k: v for k, v in odrzucone.items() if v}}
 
 
 # ---------- statystyki ----------
@@ -186,6 +322,30 @@ def _kwartyle(liczby: list[float]) -> tuple[float, float, float]:
         return liczby[0], liczby[0], liczby[0]
     q1, q2, q3 = statistics.quantiles(liczby, n=4, method="inclusive")
     return q1, q2, q3
+
+
+MAKS_GRUP = 10
+
+
+def _grupy(lokale: list[dict]) -> list[dict]:
+    """Tabela pod wykresami: lokale według liczby izb, działki (ETAP 106)
+    według przeznaczenia w planie — najczęstsze, reszta jako „pozostałe”."""
+    po_grupie: dict = {}
+    if "izby" in lokale[0]:
+        for l in lokale:
+            po_grupie.setdefault("brak" if l["izby"] is None else ("4+" if l["izby"] >= 4 else str(l["izby"])), []).append(l)
+        kolejnosc = sorted(po_grupie.items(), key=lambda p: (p[0] == "brak", p[0]))
+    else:
+        for l in lokale:
+            po_grupie.setdefault(l["przeznaczenie"] or "brak danych", []).append(l)
+        kolejnosc = sorted(po_grupie.items(), key=lambda p: -len(p[1]))
+        if len(kolejnosc) > MAKS_GRUP:
+            reszta = [l for _, v in kolejnosc[MAKS_GRUP - 1:] for l in v]
+            kolejnosc = kolejnosc[:MAKS_GRUP - 1] + [("pozostałe", reszta)]
+    return [
+        {"nazwa": k, "liczba": len(v), "mediana_m2": statistics.median(x["cena_m2"] for x in v), "mediana_pow": statistics.median(x["pow_m2"] for x in v)}
+        for k, v in kolejnosc
+    ]
 
 
 def statystyki(lokale: list[dict]) -> dict | None:
@@ -200,14 +360,7 @@ def statystyki(lokale: list[dict]) -> dict | None:
         {"rok": r, "kwartal": k, "liczba": len(v), "mediana_m2": statistics.median(v)}
         for (r, k), v in sorted(po_kwartale.items())
     ]
-    po_izbach: dict = {}
-    for l in lokale:
-        klucz = "brak" if l["izby"] is None else ("4+" if l["izby"] >= 4 else str(l["izby"]))
-        po_izbach.setdefault(klucz, []).append(l)
-    izby = [
-        {"izby": k, "liczba": len(v), "mediana_m2": statistics.median(x["cena_m2"] for x in v), "mediana_pow": statistics.median(x["pow_m2"] for x in v)}
-        for k, v in sorted(po_izbach.items(), key=lambda p: (p[0] == "brak", p[0]))
-    ]
+    grupy = _grupy(lokale)
     # histogram cen za m² od 2. do 98. percentyla (skrajne wartości nie rozciągają osi)
     lo = ceny_m2[int(0.02 * (len(ceny_m2) - 1))]
     hi = ceny_m2[int(0.98 * (len(ceny_m2) - 1))]
@@ -227,7 +380,7 @@ def statystyki(lokale: list[dict]) -> dict | None:
         "od": min(l["data"] for l in lokale),
         "do": max(l["data"] for l in lokale),
         "trend": trend,
-        "izby": izby,
+        "grupy": grupy,
         "histogram": histogram,
     }
 

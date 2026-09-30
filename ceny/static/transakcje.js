@@ -1,6 +1,7 @@
 // Ceny: transakcje z Rejestru Cen Nieruchomości (ETAP 104).
 // Statystyki i progi kolorów liczy serwer (ceny/rcn.py); tu filtry, wykresy i mapa.
 // ETAP 105: obszary rysowane na mapie (Leaflet.draw) i ich porównanie.
+// ETAP 106: ta sama strona dla działek (CO === "dzialki") — inne filtry i tabela grup.
 (function () {
     "use strict";
 
@@ -14,6 +15,7 @@
     const NS = "http://www.w3.org/2000/svg";
     let numer = 0;
     let pierwszeRysowanie = true;
+    const DZIALKI = CO === "dzialki";
 
     function el(tag, klasa, tekst) {
         const e = document.createElement(tag);
@@ -121,17 +123,17 @@
         const kafelki = document.getElementById("kafelki-rcn");
         if (!st) {
             kafelki.replaceChildren(el("p", "wyciszony", "Brak transakcji dla wybranych filtrów."));
-            ["trend-rcn", "histogram-rcn", "izby-rcn"].forEach((id) => document.getElementById(id).replaceChildren());
+            ["trend-rcn", "histogram-rcn", "grupy-rcn"].forEach((id) => document.getElementById(id).replaceChildren());
             warstwa.clearLayers();
             return;
         }
         kafelki.replaceChildren(
             kafelek("Mediana ceny za m²", `${liczba.format(st.mediana_m2)} zł`, `połowa transakcji: ${liczba.format(st.q1_m2)}–${liczba.format(st.q3_m2)} zł`),
             kafelek("Transakcji", liczba.format(st.liczba), `${st.od} – ${st.do}`),
-            kafelek("Mediana ceny lokalu", `${liczba.format(st.mediana_ceny)} zł`),
+            kafelek(DZIALKI ? "Mediana ceny transakcji" : "Mediana ceny lokalu", `${liczba.format(st.mediana_ceny)} zł`),
             kafelek("Mediana powierzchni", `${liczba.format(st.mediana_pow)} m²`),
         );
-        const odrzucone = Object.entries(d.plik.odrzucone);
+        const odrzucone = Object.entries(DZIALKI ? d.plik.odrzucone_dzialki : d.plik.odrzucone);
         document.getElementById("odrzucone-rcn").textContent = odrzucone.length
             ? `Przy imporcie pominięto: ${odrzucone.map(([k, v]) => `${k} — ${liczba.format(v)}`).join(", ")}.`
             : "";
@@ -139,13 +141,13 @@
             (t) => `${t.rok} Q${t.kwartal}`, (t) => `${t.rok}, kwartał ${t.kwartal}: ${liczba.format(t.mediana_m2)} zł/m² (${t.liczba} transakcji)`, true);
         wykresSlupkowy(document.getElementById("histogram-rcn"), st.histogram.map((h) => ({ ...h, wartosc: h.liczba })),
             (h) => liczba.format(h.od), (h) => `${liczba.format(h.od)}–${liczba.format(h.do)} zł/m²: ${h.liczba} transakcji`, false);
-        const tabela = document.getElementById("izby-rcn");
+        const tabela = document.getElementById("grupy-rcn");
         const glowa = el("tr");
-        glowa.append(el("th", "", "Izby"), el("th", "liczba", "Transakcji"), el("th", "liczba", "Mediana za m²"), el("th", "liczba", "Mediana powierzchni"));
+        glowa.append(el("th", "", DZIALKI ? "Przeznaczenie" : "Izby"), el("th", "liczba", "Transakcji"), el("th", "liczba", "Mediana za m²"), el("th", "liczba", "Mediana powierzchni"));
         tabela.replaceChildren(glowa);
-        for (const i of st.izby) {
+        for (const i of st.grupy) {
             const tr = el("tr");
-            tr.append(el("td", "", i.izby), el("td", "liczba", liczba.format(i.liczba)), el("td", "liczba", `${liczba.format(i.mediana_m2)} zł`), el("td", "liczba", `${liczba.format(i.mediana_pow)} m²`));
+            tr.append(el("td", "", i.nazwa), el("td", "liczba", liczba.format(i.liczba)), el("td", "liczba", `${liczba.format(i.mediana_m2)} zł`), el("td", "liczba", `${liczba.format(i.mediana_pow)} m²`));
             tabela.appendChild(tr);
         }
         rysujMape(d.mapa);
@@ -263,9 +265,10 @@
             if (pole.options.length > 1) continue;
             for (const r of d.lata) pole.appendChild(new Option(r, r));
         }
-        const rodzaj = filtry.elements.rodzaj;
-        if (rodzaj.options.length === 1) {
-            for (const r of d.rodzaje) rodzaj.appendChild(new Option(`${r.rodzaj || "(brak)"} — ${r.liczba}`, r.rodzaj));
+        for (const [nazwa, wartosci] of Object.entries(d.listy)) {
+            const pole = filtry.elements[nazwa];
+            if (!pole || pole.options.length > 1) continue;
+            for (const w of wartosci) pole.appendChild(new Option(`${w.wartosc || "(brak)"} — ${w.liczba}`, w.wartosc));
         }
     }
 

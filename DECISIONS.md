@@ -2413,3 +2413,26 @@ z Pythona drukuje się zawsze tak samo i nie zależy od sieci.
   strona) rozjechałyby się.
 - Zrzut mapy Leaflet do PDF — kafelki OSM w druku zależą od sieci i
   licencji wydruku; schemat SVG wystarcza do porównania.
+
+## D-114 — Ceny działek: powierzchnia z obrysu, działki sprzedane razem jako jedna transakcja
+Data: 2026-09-30
+
+**Decyzja:** Transakcje działek czytamy z tabeli `transakcje_dzialki` tego
+samego pliku GeoPackage i trzymamy w osobnej tabeli `rcn_dzialki`, na tej
+samej stronie co mieszkania (przełącznik, wspólne obszary i raport).
+Powierzchnia działki = pole jej obrysu w pliku (PL-1992, metry). Cena:
+`dzi_cena_brutto`; gdy działki transakcji nie mają własnych cen — cena
+nieruchomości (jedna działka) albo transakcji, podzielona przez łączną
+powierzchnię tych działek. Gdy część działek transakcji ma własną cenę,
+a część nie, tych bez ceny nie liczymy.
+
+**Uzasadnienie:** Dwa otwarte projekty czytające te pliki różnią się co do
+jednostki `dzi_pow_ewid` (jeden zakłada hektary, drugi wykrył pliki
+mieszane) — geometria w metrach nie wymaga zgadywania. Dzielenie ceny
+transakcji wielu działek przez powierzchnię jednej zawyżałoby cenę m².
+
+**Odrzucone alternatywy:**
+- `dzi_pow_ewid` w hektarach albo m² z heurystyką — zgadywanie jednostki.
+- Osobna strona dla działek — powieliłaby mapę, wykresy, obszary i raport.
+- Stały filtr „tylko niezabudowane” — wartości słownika `nier_rodzaj` nie
+  są potwierdzone na prawdziwym pliku; filtr z listy wartości w pliku.

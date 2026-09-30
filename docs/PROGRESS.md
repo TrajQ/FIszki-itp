@@ -1857,3 +1857,28 @@ Status: zamknięty
 - Testy: walidacja obszaru, porównanie na znanych liczbach, trasy obszarów
   i raportu (limit, 404, kaskada)
 - `DECISIONS.md`: D-113
+
+## ETAP 106 — Ceny: transakcje działek z Rejestru Cen Nieruchomości
+Data: 2026-09-30
+Status: zamknięty
+
+- `ceny/rcn.py`: `czytaj_plik` czyta tabelę lokali i tabelę
+  `transakcje_dzialki` (którakolwiek jest w pliku); `_dzialki`: cena
+  działki, a bez niej cena transakcji na łączną powierzchnię jej działek
+  (cena nieruchomości przy jednej działce), powierzchnia z obrysu w pliku
+  (PL-1992, m²), odrzucone z powodami (udział, brak daty, brak obrysu,
+  cena nie do rozdzielenia, wartości nierealne); słownikowe wartości RCN
+  czytelnie („budownictwoMieszkaniowe” → „budownictwo mieszkaniowe”)
+- `statystyki`: tabela grup — lokale według izb, działki według
+  przeznaczenia w planie (10 najczęstszych + „pozostałe”); klucz `grupy`
+- `ceny/baza.py`: tabela `rcn_dzialki`, kolumny `liczba_dzialek`,
+  `odrzucone_dzialki` w `rcn_pliki` dopisywane do starych baz,
+  `dzialki_rcn` z filtrami, `wartosci_pola` do list w filtrach
+- Trasy: parametr `co=lokale|dzialki` w danych, CSV i raporcie; strona z
+  przełącznikiem „Mieszkania | Działki”, filtry przeznaczenia i
+  nieruchomości, komunikat dla plików zaimportowanych przed ETAPem 106
+- Sprawdzone w przeglądarce na pliku syntetycznym (800 lokali, 400
+  działek): 1400 i 390 px, raport działek
+- Nazwy tabeli i kolumn działek z kodu dwóch otwartych projektów; jednostki
+  `dzi_pow_ewid` się w nich różnią — dlatego powierzchnia z geometrii
+- `DECISIONS.md`: D-114

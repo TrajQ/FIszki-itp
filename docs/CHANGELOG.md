@@ -742,3 +742,9 @@
   między obszarami i wobec całego pliku
 - Raport cen transakcyjnych do druku / PDF z mapą schematyczną SVG
 - Pomoc: opis porównania dzielnic
+
+## ETAP 106 — 2026-09-30
+- Ceny → Transakcje: działki z tego samego pliku RCN (przełącznik
+  „Mieszkania | Działki”), cena za m² gruntu, filtry przeznaczenia w planie
+  i rodzaju nieruchomości, tabela według przeznaczenia, CSV i raport
+- Pomoc: opis cen działek

@@ -83,7 +83,7 @@ import io  # noqa: E402
 import sqlite3  # noqa: E402
 import struct  # noqa: E402
 
-from shapely.geometry import Point  # noqa: E402
+from shapely.geometry import Point, Polygon  # noqa: E402
 
 from ceny import rcn, trasy_rcn  # noqa: E402
 from mpzp import uklady  # noqa: E402
@@ -143,7 +143,7 @@ def test_czytanie_pliku_rcn(tmp_path):
     assert l1["lat"] == pytest.approx(50.06, abs=1e-6) and l1["lng"] == pytest.approx(19.94, abs=1e-6)  # koperta
     assert l2["lat"] == pytest.approx(50.07, abs=1e-6)  # bez koperty — z WKB
     zly = str(tmp_path / "zly.gpkg")
-    plik_rcn(zly, [lokal(1)], tabela="transakcje_dzialki")
+    plik_rcn(zly, [lokal(1)], tabela="transakcje_budynki")
     with pytest.raises(rcn.BladPliku, match="nie ma tabeli"):
         rcn.czytaj_plik(zly)
     (tmp_path / "tekst.gpkg").write_text("to nie baza")
@@ -158,7 +158,7 @@ def test_statystyki_rcn():
     s = rcn.statystyki(lokale)
     assert s["liczba"] == 5 and s["mediana_m2"] == 12000 and (s["q1_m2"], s["q3_m2"]) == (11000, 13000)
     assert [(t["kwartal"], t["liczba"], t["mediana_m2"]) for t in s["trend"]] == [(1, 2, 10500), (2, 2, 12500), (3, 1, 20000)]
-    assert [(i["izby"], i["liczba"]) for i in s["izby"]] == [("1", 1), ("2", 2), ("3", 1), ("4+", 1)]
+    assert [(i["nazwa"], i["liczba"]) for i in s["grupy"]] == [("1", 1), ("2", 2), ("3", 1), ("4+", 1)]
     assert sum(h["liczba"] for h in s["histogram"]) >= 4
     m = rcn.punkty_mapy(lokale)
     assert len(m["punkty"]) == 5 and len(m["progi"]) == 4 and m["punkty"][0][3] == "2024-07-01"  # najnowsze najpierw
@@ -177,7 +177,7 @@ def test_trasy_transakcji(client, tmp_path, monkeypatch):
     odp = client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / "rcn_1261.gpkg")})
     assert odp.status_code == 302 and "plik=1" in odp.headers["Location"]
     d = client.get("/ceny/transakcje/1/dane").get_json()
-    assert d["statystyki"]["liczba"] == 29 and d["lata"] == [2023, 2024] and d["rodzaje"][0]["rodzaj"] == "wolnyRynek"
+    assert d["statystyki"]["liczba"] == 29 and d["lata"] == [2023, 2024] and d["listy"]["rodzaj"][0]["wartosc"] == "wolnyRynek"
     pierwotny = client.get("/ceny/transakcje/1/dane?rynek=pierwotny&od=2024").get_json()["statystyki"]
     assert 0 < pierwotny["liczba"] < 29
     assert client.get("/ceny/transakcje/1/dane?rynek=x").status_code == 400
@@ -265,3 +265,123 @@ def test_trasy_obszarow_i_raport(client, tmp_path, monkeypatch):
     from ceny import baza
     with client.application.app_context():
         assert baza.obszary_rcn(1) == []
+
+
+# ---------- ETAP 106: działki ----------
+
+
+def wielobok_gpkg(lat, lon, bok):
+    """Blob GeoPackage: kwadrat bok × bok metrów w PL-1992 (x = wschód), z kopertą."""
+    p = uklady.pl1992(lat, lon)
+    x, y = p["y"], p["x"]
+    kwadrat = Polygon([(x, y), (x + bok, y), (x + bok, y + bok), (x, y + bok)])
+    naglowek = b"GP" + bytes([0, 0b011]) + struct.pack("<i", 2180) + struct.pack("<4d", x, x + bok, y, y + bok)
+    return naglowek + kwadrat.wkb
+
+
+KOLUMNY_DZIALEK = ["tran_lokalny_id_iip", "dzi_id_dzialki", "dok_data", "tran_rodzaj_trans", "tran_rodzaj_rynku", "nier_udzial",
+                   "nier_rodzaj", "dzi_cena_brutto", "nier_cena_brutto", "tran_cena_brutto", "dzi_pow_ewid", "dzi_przezn_wmpzp",
+                   "dzi_sposob_uzyt", "geom"]
+
+
+def dodaj_dzialki(sciezka, wiersze):
+    """Dopisuje do pliku RCN tabelę transakcje_dzialki (plik może już mieć lokale)."""
+    db = sqlite3.connect(sciezka)
+    db.execute("CREATE TABLE IF NOT EXISTS gpkg_geometry_columns (table_name TEXT, column_name TEXT, srs_id INTEGER)")
+    db.execute("INSERT INTO gpkg_geometry_columns VALUES ('transakcje_dzialki', 'geom', 2180)")
+    db.execute(f"CREATE TABLE transakcje_dzialki ({', '.join(KOLUMNY_DZIALEK)})")
+    for w in wiersze:
+        db.execute(f"INSERT INTO transakcje_dzialki VALUES ({', '.join('?' * len(KOLUMNY_DZIALEK))})", [w.get(k) for k in KOLUMNY_DZIALEK])
+    db.commit()
+    db.close()
+
+
+def dzialka(tran, nr, bok=30, **zmiany):
+    w = {"tran_lokalny_id_iip": tran, "dzi_id_dzialki": f"121201_1.0001.{nr}", "dok_data": "2024-03-01", "tran_rodzaj_trans": "wolnyRynek",
+         "tran_rodzaj_rynku": "wtorny", "nier_udzial": "1/1", "nier_rodzaj": "gruntowaNiezabudowana",
+         "dzi_przezn_wmpzp": "budownictwoMieszkanioweJednorodzinne", "dzi_sposob_uzyt": "B", "dzi_pow_ewid": 0.09,
+         "geom": wielobok_gpkg(50.0 + nr / 1000, 19.9, bok)}
+    w.update(zmiany)
+    return w
+
+
+def test_czytanie_dzialek(tmp_path):
+    sciezka = str(tmp_path / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(1)])
+    dodaj_dzialki(sciezka, [
+        dzialka("T1", 1, dzi_cena_brutto=200000),                          # 900 m², własna cena
+        dzialka("T1", 1, dzi_cena_brutto=200000),                          # ta sama działka drugi raz
+        dzialka("T2", 2, bok=20, tran_cena_brutto=160000),                 # dwie działki sprzedane razem: 800 m²
+        dzialka("T2", 3, bok=20, tran_cena_brutto=160000, dzi_przezn_wmpzp="zieleń"),
+        dzialka("T3", 4, bok=50, nier_cena_brutto=50000, tran_cena_brutto=999999, nier_rodzaj="gruntowaZabudowana"),  # jedna działka: cena nieruchomości
+        dzialka("T4", 5, dzi_cena_brutto=90000),
+        dzialka("T4", 6, tran_cena_brutto=300000),                         # cena transakcji obejmuje też działkę 5 — nie do rozdzielenia
+        dzialka("T5", 7, nier_udzial="1/2", dzi_cena_brutto=100000),
+        dzialka("T6", 8, geom=None, dzi_cena_brutto=100000),
+        dzialka("T7", 9, bok=100, dzi_cena_brutto=100),                     # 0,01 zł/m²
+        dzialka("T8", 10, dok_data=None, dzi_cena_brutto=100000),
+    ])
+    w = rcn.czytaj_plik(sciezka)
+    assert len(w["lokale"]) == 1
+    assert sorted(round(x["pow_m2"]) for x in w["dzialki"]) == [800, 900, 900, 2500]  # T1 i działka 5 z T4
+    d = {round(x["pow_m2"]): x for x in w["dzialki"]}
+    t2 = d[800]
+    assert (t2["cena_m2"], t2["dzialek"], t2["przeznaczenie"]) == (200.0, 2, "różne")
+    assert d[2500]["cena_m2"] == 20.0 and d[2500]["nieruchomosc"] == "gruntowa zabudowana"
+    t1 = next(x for x in w["dzialki"] if x["cena"] == 200000)
+    assert t1["cena_m2"] == pytest.approx(222.22, abs=0.01) and t1["przeznaczenie"] == "budownictwo mieszkaniowe jednorodzinne"
+    assert t1["lat"] == pytest.approx(50.001, abs=0.001) and t1["lng"] == pytest.approx(19.9, abs=0.001)
+    assert w["odrzucone_dzialki"] == {"udział w działce": 1, "brak daty": 1, "brak obrysu działki": 1, "bez ceny działki": 1,
+                                      "nierealna cena za m²": 1}
+    # sam plik działek (bez tabeli lokali) też się czyta
+    tylko = str(tmp_path / "dzialki.gpkg")
+    dodaj_dzialki(tylko, [dzialka("T1", 1, dzi_cena_brutto=200000)])
+    assert len(rcn.czytaj_plik(tylko)["dzialki"]) == 1 and rcn.czytaj_plik(tylko)["lokale"] == []
+    s = rcn.statystyki(w["dzialki"])
+    assert [g["nazwa"] for g in s["grupy"]][0] == "budownictwo mieszkaniowe jednorodzinne"
+
+
+def test_trasy_dzialek(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(1)])
+    dodaj_dzialki(sciezka, [dzialka(f"T{i}", i, dzi_cena_brutto=100000 + 20000 * i, dok_data=f"202{3 + i % 2}-05-01",
+                                     dzi_przezn_wmpzp="zieleń" if i % 4 == 0 else "budownictwoMieszkaniowe",
+                                     nier_rodzaj="gruntowaZabudowana" if i % 5 == 0 else "gruntowaNiezabudowana") for i in range(1, 21)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    odp = client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    assert "plik=1" in odp.headers["Location"]
+    strona = client.get("/ceny/transakcje?plik=1&co=dzialki").get_data(as_text=True)
+    assert "Przeznaczenie w planie" in strona and "1 lokali · 20 działek" in strona and "name=\"izby\"" not in strona
+    d = client.get("/ceny/transakcje/1/dane?co=dzialki").get_json()
+    assert d["statystyki"]["liczba"] == 20 and d["co"] == "dzialki"
+    assert [w["wartosc"] for w in d["listy"]["przeznaczenie"]] == ["budownictwo mieszkaniowe", "zieleń"]
+    assert d["statystyki"]["grupy"][0] == {**d["statystyki"]["grupy"][0], "nazwa": "budownictwo mieszkaniowe", "liczba": 15}
+    zielen = client.get("/ceny/transakcje/1/dane?co=dzialki&przeznaczenie=zieleń&nieruchomosc=gruntowa niezabudowana").get_json()
+    assert zielen["statystyki"]["liczba"] == 4  # 4, 8, 12, 16 — bez 20 (zabudowana)
+    assert client.get("/ceny/transakcje/1/dane").get_json()["statystyki"]["liczba"] == 1  # lokale dalej osobno
+    assert client.get("/ceny/transakcje/1/dane?co=budynki").status_code == 400
+    csv = client.get("/ceny/transakcje/1.csv?co=dzialki").get_data(as_text=True)
+    assert "przeznaczenie;uzytek;nieruchomosc;dzialek" in csv and csv.count("zieleń") == 5
+    client.post("/ceny/transakcje/1/obszary", json={"nazwa": "Południe", "geometria": prostokat(19.8, 49.9, 20.0, 50.01)})
+    raport = client.get("/ceny/transakcje/1/raport?co=dzialki&nieruchomosc=gruntowa niezabudowana").get_data(as_text=True)
+    assert "Ceny transakcyjne działek" in raport and "Według przeznaczenia w planie" in raport and "Południe" in raport
+    assert "nieruchomość: gruntowa niezabudowana" in raport
+
+
+def test_migracja_starej_bazy(tmp_path):
+    """Baza z ETAPu 104/105 (rcn_pliki bez kolumn działek) dostaje je przy starcie."""
+    (tmp_path / "ceny").mkdir()
+    db = sqlite3.connect(tmp_path / "ceny" / "ceny.db")
+    db.execute("CREATE TABLE rcn_pliki (id INTEGER PRIMARY KEY AUTOINCREMENT, nazwa TEXT NOT NULL, data_importu TEXT NOT NULL, liczba INTEGER NOT NULL, odrzucone TEXT NOT NULL)")
+    db.execute("INSERT INTO rcn_pliki (nazwa, data_importu, liczba, odrzucone) VALUES ('stary.gpkg', '2026-09-01T10:00:00', 5, '{}')")
+    db.commit()
+    db.close()
+    app = create_app(instance_path=str(tmp_path))
+    with app.app_context():
+        from ceny import baza
+        stary = baza.plik_rcn(1)
+    assert stary["liczba_dzialek"] == 0 and stary["odrzucone_dzialki"] == {}
+    with app.test_client() as c:
+        assert "W tym imporcie nie ma działek" in c.get("/ceny/transakcje?plik=1&co=dzialki").get_data(as_text=True)

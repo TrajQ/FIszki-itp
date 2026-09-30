@@ -25,7 +25,9 @@ kogoś, kto wróci do niego za trzy miesiące.
 - teren       — inwentaryzacja w terenie: samodzielny formularz HTML na
                 telefon (bez internetu), import pliku, mapa punktów, raport
 - ceny        — ceny mieszkań w miastach i powiatach (GUS BDL): zmiany w
-                czasie, porównanie miast, ranking w województwie (od ETAPu 103)
+                czasie, porównanie miast, ranking w województwie (od ETAPu 103);
+                transakcje mieszkań i działek z Rejestru Cen Nieruchomości:
+                mapa, trend, porównanie obszarów, raport (ETAPy 104–106)
 
 Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 
@@ -62,7 +64,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 105 (ceny: porównanie obszarów i raport — zamknięty)
-Ostatni ZIP: releases/warsztat_etap105_20260930.zip
-Testy: 485 passed / 0 failed
+ETAP: 106 (ceny: transakcje działek z RCN — zamknięty)
+Ostatni ZIP: releases/warsztat_etap106_20260930.zip
+Testy: 488 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

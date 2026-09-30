@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block tytul %}Transakcje (RCN) — Ceny — Warsztat{% endblock %}
+{% set plik_id = wybrany or (pliki[0].id if pliki else none) %}
+{% set biezacy = pliki | selectattr('id', 'equalto', plik_id) | first %}
 {% block klasa_main %}tresc tresc--szeroka{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
@@ -12,7 +14,7 @@
 <div class="naglowek-strony">
     <div>
         <a class="przycisk przycisk--tekst" href="{{ url_for('ceny.index') }}">‹ Ceny</a>
-        <h1>Transakcje mieszkań</h1>
+        <h1>Transakcje mieszkań i działek</h1>
         <p>Ceny z aktów notarialnych z Rejestru Cen Nieruchomości (GUGiK): mediana za m², rozkład, zmiany co kwartał i mapa transakcji w powiecie.</p>
     </div>
 </div>
@@ -60,8 +62,8 @@
             <ul class="pliki-rcn">
                 {% for p in pliki %}
                 <li class="{{ 'pliki-rcn__wybrany' if p.id == wybrany or (not wybrany and loop.first) }}">
-                    <a href="{{ url_for('ceny.transakcje', plik=p.id) }}">{{ p.nazwa }}</a>
-                    <span class="wyciszony">{{ p.liczba }} lokali · {{ p.data_importu[:10] }}</span>
+                    <a href="{{ url_for('ceny.transakcje', plik=p.id, co=co) }}">{{ p.nazwa }}</a>
+                    <span class="wyciszony">{{ p.liczba }} lokali · {{ p.liczba_dzialek }} działek · {{ p.data_importu[:10] }}</span>
                     <form method="post" action="{{ url_for('ceny.usun_transakcje', plik_id=p.id) }}" onsubmit="return confirm('Usunąć zaimportowane transakcje z tego pliku?')">
                         <button type="submit" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń</button>
                     </form>
@@ -75,18 +77,34 @@
     </aside>
 
     <div class="stos" id="wynik-rcn" {{ 'hidden' if not pliki }}>
+        {% if biezacy %}
+        <nav class="przelacznik-rcn" aria-label="Rodzaj nieruchomości">
+            <a href="{{ url_for('ceny.transakcje', plik=plik_id, co='lokale') }}" class="{{ 'przelacznik-rcn__wybrany' if co == 'lokale' }}">Mieszkania <span class="wyciszony">{{ biezacy.liczba }}</span></a>
+            <a href="{{ url_for('ceny.transakcje', plik=plik_id, co='dzialki') }}" class="{{ 'przelacznik-rcn__wybrany' if co == 'dzialki' }}">Działki <span class="wyciszony">{{ biezacy.liczba_dzialek }}</span></a>
+        </nav>
+        {% if co == 'dzialki' and not biezacy.liczba_dzialek %}
+        <p class="komunikat">W tym imporcie nie ma działek. Pliki zaimportowane przed dodaniem działek zaimportuj ponownie (ten sam plik .gpkg) — Warsztat przeczyta wtedy także tabelę działek. Jeśli plik ma tylko lokale, pobierz z Geoportalu plik z transakcjami działek.</p>
+        {% endif %}
+        {% endif %}
         <section class="karta stos">
             <form id="filtry" class="filtry-rcn">
+                <input type="hidden" name="co" value="{{ co }}">
                 <label>Rynek <select name="rynek"><option value="">wszystkie</option>{% for r in rynki %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></label>
                 <label>Od roku <select name="od"><option value="">—</option></select></label>
                 <label>Do roku <select name="do"><option value="">—</option></select></label>
+                {% if co == 'dzialki' %}
+                <label>Przeznaczenie w planie <select name="przeznaczenie"><option value="">wszystkie</option></select></label>
+                <label>Nieruchomość <select name="nieruchomosc"><option value="">wszystkie</option></select></label>
+                {% else %}
                 <label>Izby <select name="izby"><option value="">wszystkie</option>{% for i in ['1', '2', '3', '4+'] %}<option value="{{ i }}">{{ i }}</option>{% endfor %}</select></label>
+                {% endif %}
                 <label>Rodzaj transakcji <select name="rodzaj"><option value="">wszystkie</option></select></label>
                 <a id="link-csv-rcn" class="przycisk przycisk--drugi" href="#">CSV</a>
                 <a id="link-raport-rcn" class="przycisk przycisk--drugi" href="#" target="_blank" rel="noopener">Raport do druku ↗</a>
             </form>
             <div id="kafelki-rcn" class="kafelki-rcn"></div>
             <p id="odrzucone-rcn" class="wyciszony opis-cen"></p>
+            {% if co == 'dzialki' %}<p class="wyciszony opis-cen">Cena za m² gruntu: cena działki na powierzchnię z jej obrysu w pliku; działki sprzedane razem bez osobnych cen — cena transakcji na ich łączną powierzchnię. Przy nieruchomości zabudowanej cena obejmuje budynek — do porównania samego gruntu wybierz nieruchomość niezabudowaną.</p>{% endif %}
         </section>
 
         <section class="karta stos">
@@ -114,8 +132,8 @@
         </div>
 
         <section class="karta stos">
-            <h3>Według liczby izb</h3>
-            <div class="przewijanie-cen"><table class="tabela" id="izby-rcn"></table></div>
+            <h3>{{ 'Według przeznaczenia w planie' if co == 'dzialki' else 'Według liczby izb' }}</h3>
+            <div class="przewijanie-cen"><table class="tabela" id="grupy-rcn"></table></div>
             <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK), ceny brutto z aktów notarialnych. Statystyki liczy aplikacja.</p>
         </section>
     </div>
@@ -125,7 +143,8 @@
 {% block skrypty %}
 <script>
     const URL_TRANSAKCJE = "{{ url_for('ceny.transakcje') }}";
-    const PLIK_ID = {{ (wybrany or (pliki[0].id if pliki else none)) | tojson }};
+    const PLIK_ID = {{ plik_id | tojson }};
+    const CO = {{ co | tojson }};
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('static', filename='leaflet-draw/leaflet.draw.js') }}"></script>

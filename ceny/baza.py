@@ -46,6 +46,27 @@ CREATE TABLE IF NOT EXISTS rcn_lokale (
 );
 CREATE INDEX IF NOT EXISTS rcn_lokale_plik ON rcn_lokale (plik_id);
 
+-- ETAP 106: transakcje działek z tego samego pliku RCN
+CREATE TABLE IF NOT EXISTS rcn_dzialki (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plik_id INTEGER NOT NULL REFERENCES rcn_pliki(id) ON DELETE CASCADE,
+    data TEXT NOT NULL,
+    rok INTEGER NOT NULL,
+    kwartal INTEGER NOT NULL,
+    rynek TEXT NOT NULL,
+    rodzaj TEXT NOT NULL,
+    pow_m2 REAL NOT NULL,
+    cena REAL NOT NULL,
+    cena_m2 REAL NOT NULL,
+    przeznaczenie TEXT NOT NULL,
+    uzytek TEXT NOT NULL,
+    nieruchomosc TEXT NOT NULL,
+    dzialek INTEGER NOT NULL,
+    lat REAL,
+    lng REAL
+);
+CREATE INDEX IF NOT EXISTS rcn_dzialki_plik ON rcn_dzialki (plik_id);
+
 -- ETAP 105: obszary narysowane na mapie transakcji (dzielnice, osiedla) do porównania
 CREATE TABLE IF NOT EXISTS rcn_obszary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,9 +99,20 @@ def close_db(exception=None):
         db.close()
 
 
+# kolumny dopisane do istniejących baz (jak w module teren)
+KOLUMNY_DODANE = {
+    "rcn_pliki": {"liczba_dzialek": "INTEGER NOT NULL DEFAULT 0", "odrzucone_dzialki": "TEXT NOT NULL DEFAULT '{}'"},  # ETAP 106
+}
+
+
 def init_db():
     db = get_db()
     db.executescript(SCHEMAT)
+    for tabela, kolumny in KOLUMNY_DODANE.items():
+        istniejace = {w["name"] for w in db.execute(f"PRAGMA table_info({tabela})")}
+        for kolumna, definicja in kolumny.items():
+            if kolumna not in istniejace:
+                db.execute(f"ALTER TABLE {tabela} ADD COLUMN {kolumna} {definicja}")
     db.commit()
 
 
@@ -115,60 +147,80 @@ def z_cache(klucz: str, pobierz):
 # ---------- pliki RCN (ETAP 104) ----------
 
 POLA_LOKALU = ("data", "rok", "kwartal", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2", "izby", "lat", "lng")
+POLA_DZIALKI = ("data", "rok", "kwartal", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2", "przeznaczenie", "uzytek",
+                "nieruchomosc", "dzialek", "lat", "lng")
 
 
-def zapisz_plik_rcn(nazwa: str, lokale: list[dict], odrzucone: dict) -> int:
+def zapisz_plik_rcn(nazwa: str, lokale: list[dict], odrzucone: dict, dzialki: list[dict] = (), odrzucone_dzialki: dict | None = None) -> int:
     db = get_db()
     plik_id = db.execute(
-        "INSERT INTO rcn_pliki (nazwa, data_importu, liczba, odrzucone) VALUES (?, ?, ?, ?)",
-        (nazwa, datetime.now().isoformat(timespec="seconds"), len(lokale), json.dumps(odrzucone, ensure_ascii=False)),
+        "INSERT INTO rcn_pliki (nazwa, data_importu, liczba, odrzucone, liczba_dzialek, odrzucone_dzialki) VALUES (?, ?, ?, ?, ?, ?)",
+        (nazwa, datetime.now().isoformat(timespec="seconds"), len(lokale), json.dumps(odrzucone, ensure_ascii=False),
+         len(dzialki), json.dumps(odrzucone_dzialki or {}, ensure_ascii=False)),
     ).lastrowid
-    db.executemany(
-        f"INSERT INTO rcn_lokale (plik_id, {', '.join(POLA_LOKALU)}) VALUES (?, {', '.join('?' * len(POLA_LOKALU))})",
-        [(plik_id, *(l[k] for k in POLA_LOKALU)) for l in lokale],
-    )
+    for tabela, pola, wiersze in (("rcn_lokale", POLA_LOKALU, lokale), ("rcn_dzialki", POLA_DZIALKI, dzialki)):
+        db.executemany(
+            f"INSERT INTO {tabela} (plik_id, {', '.join(pola)}) VALUES (?, {', '.join('?' * len(pola))})",
+            [(plik_id, *(w[k] for k in pola)) for w in wiersze],
+        )
     db.commit()
     return plik_id
 
 
+def _plik(w) -> dict:
+    return {**dict(w), "odrzucone": json.loads(w["odrzucone"]), "odrzucone_dzialki": json.loads(w["odrzucone_dzialki"])}
+
+
 def pliki_rcn() -> list[dict]:
-    wynik = []
-    for w in get_db().execute("SELECT * FROM rcn_pliki ORDER BY id DESC"):
-        wynik.append({**dict(w), "odrzucone": json.loads(w["odrzucone"])})
-    return wynik
+    return [_plik(w) for w in get_db().execute("SELECT * FROM rcn_pliki ORDER BY id DESC")]
 
 
 def plik_rcn(plik_id: int) -> dict | None:
     w = get_db().execute("SELECT * FROM rcn_pliki WHERE id = ?", (plik_id,)).fetchone()
-    return {**dict(w), "odrzucone": json.loads(w["odrzucone"])} if w else None
+    return _plik(w) if w else None
 
 
-def lokale_rcn(plik_id: int, rynek: str | None = None, od_roku: int | None = None, do_roku: int | None = None,
-               izby: str | None = None, rodzaj: str | None = None) -> list[dict]:
+def _transakcje(tabela: str, plik_id: int, rowne: dict, od_roku: int | None, do_roku: int | None) -> tuple[list[str], list]:
+    """Warunki WHERE wspólne dla lokali i działek: plik, lata, pola równe wartości."""
     warunki, parametry = ["plik_id = ?"], [plik_id]
-    if rynek:
-        warunki.append("rynek = ?")
-        parametry.append(rynek)
+    for pole, wartosc in rowne.items():
+        if wartosc:
+            warunki.append(f"{pole} = ?")
+            parametry.append(wartosc)
     if od_roku:
         warunki.append("rok >= ?")
         parametry.append(od_roku)
     if do_roku:
         warunki.append("rok <= ?")
         parametry.append(do_roku)
+    return warunki, parametry
+
+
+def lokale_rcn(plik_id: int, rynek: str | None = None, od_roku: int | None = None, do_roku: int | None = None,
+               izby: str | None = None, rodzaj: str | None = None) -> list[dict]:
+    warunki, parametry = _transakcje("rcn_lokale", plik_id, {"rynek": rynek, "rodzaj": rodzaj}, od_roku, do_roku)
     if izby == "4+":
         warunki.append("izby >= 4")
     elif izby:
         warunki.append("izby = ?")
         parametry.append(int(izby))
-    if rodzaj:
-        warunki.append("rodzaj = ?")
-        parametry.append(rodzaj)
     return [dict(w) for w in get_db().execute(f"SELECT * FROM rcn_lokale WHERE {' AND '.join(warunki)}", parametry)]
 
 
-def rodzaje_transakcji(plik_id: int) -> list[dict]:
-    return [dict(w) for w in get_db().execute(
-        "SELECT rodzaj, COUNT(*) AS liczba FROM rcn_lokale WHERE plik_id = ? GROUP BY rodzaj ORDER BY liczba DESC", (plik_id,))]
+def dzialki_rcn(plik_id: int, rynek: str | None = None, od_roku: int | None = None, do_roku: int | None = None,
+                rodzaj: str | None = None, przeznaczenie: str | None = None, nieruchomosc: str | None = None) -> list[dict]:
+    warunki, parametry = _transakcje(
+        "rcn_dzialki", plik_id, {"rynek": rynek, "rodzaj": rodzaj, "przeznaczenie": przeznaczenie, "nieruchomosc": nieruchomosc},
+        od_roku, do_roku)
+    return [dict(w) for w in get_db().execute(f"SELECT * FROM rcn_dzialki WHERE {' AND '.join(warunki)}", parametry)]
+
+
+def wartosci_pola(plik_id: int, pole: str, tabela: str = "rcn_lokale") -> list[dict]:
+    """Wartości pola z liczbą transakcji (do list w filtrach), od najczęstszej."""
+    assert (tabela, pole) in {("rcn_lokale", "rodzaj"), ("rcn_dzialki", "rodzaj"), ("rcn_dzialki", "przeznaczenie"),
+                              ("rcn_dzialki", "nieruchomosc")}
+    return [{"wartosc": w[0], "liczba": w[1]} for w in get_db().execute(
+        f"SELECT {pole}, COUNT(*) AS liczba FROM {tabela} WHERE plik_id = ? GROUP BY {pole} ORDER BY liczba DESC", (plik_id,))]
 
 
 def usun_plik_rcn(plik_id: int) -> bool:
