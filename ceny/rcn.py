@@ -39,6 +39,7 @@ import statistics
 import struct
 from datetime import date
 
+import h3
 from shapely import wkb
 from shapely.geometry import Point, mapping, shape
 from shapely.ops import unary_union
@@ -562,4 +563,47 @@ def podobne(rekordy: list[dict], lat: float, lng: float, promien_m: float, pow_m
             {k: r.get(k) for k in ("data", "rynek", "pow_m2", "cena", "cena_m2", "izby", "przeznaczenie", "lat", "lng", "odleglosc_m")}
             for r in kandydaci[:MAKS_NA_LISCIE]
         ],
+    }
+
+
+# ---------- mapa cen w heksagonach H3 (ETAP 108) ----------
+
+ROZDZIELCZOSCI_H3 = (7, 8, 9)  # średnia krawędź wg h3: ok. 1,4 km / 530 m / 200 m
+MINIMA_W_KOMORCE = (3, 5, 10)
+
+
+def krawedz_h3_m(rozdzielczosc: int) -> int:
+    """Średnia długość krawędzi heksagonu H3, zaokrąglona do 10 m."""
+    return int(round(h3.average_hexagon_edge_length(rozdzielczosc, unit="m"), -1))
+
+
+def heksagony(rekordy: list[dict], rozdzielczosc: int, minimum: int) -> dict:
+    """Mediana ceny za m² w komórkach H3. Komórki z mniej niż `minimum`
+    transakcjami są ukryte (jedna transakcja nie maluje całego heksagonu);
+    progi kolorów — kwintyle median pokazanych komórek."""
+    po_komorce: dict = {}
+    for r in rekordy:
+        if r["lat"] is not None:
+            po_komorce.setdefault(h3.latlng_to_cell(r["lat"], r["lng"], rozdzielczosc), []).append(r["cena_m2"])
+    komorki, ukryte, w_ukrytych = [], 0, 0
+    for komorka, ceny in sorted(po_komorce.items()):
+        if len(ceny) < minimum:
+            ukryte += 1
+            w_ukrytych += len(ceny)
+            continue
+        komorki.append({
+            "h3": komorka,
+            "granica": [[round(a, 6), round(b, 6)] for a, b in h3.cell_to_boundary(komorka)],
+            "liczba": len(ceny),
+            "mediana_m2": statistics.median(ceny),
+        })
+    mediany = [k["mediana_m2"] for k in komorki]
+    return {
+        "rozdzielczosc": rozdzielczosc,
+        "krawedz_m": krawedz_h3_m(rozdzielczosc),
+        "minimum": minimum,
+        "komorki": komorki,
+        "progi": statistics.quantiles(mediany, n=5, method="inclusive") if len(mediany) >= 5 else [],
+        "ukryte": ukryte,
+        "transakcji_w_ukrytych": w_ukrytych,
     }

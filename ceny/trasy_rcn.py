@@ -66,6 +66,8 @@ def transakcje():
         maks_obszarow=rcn.MAKS_OBSZAROW,
         promienie=rcn.PROMIENIE_M,
         tolerancje=rcn.TOLERANCJE,
+        minima=rcn.MINIMA_W_KOMORCE,
+        krawedzie_h3=[(r, rcn.krawedz_h3_m(r)) for r in rcn.ROZDZIELCZOSCI_H3],
     )
 
 
@@ -241,6 +243,25 @@ def podobne_transakcje(plik_id):
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
     return jsonify(rcn.podobne(_rekordy(plik_id, co, filtry), lat, lng, promien, pow_m2, tolerancja))
+
+
+# ---------- mapa cen w heksagonach (ETAP 108) ----------
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/heksagony")
+def heksagony_transakcji(plik_id):
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    rozdzielczosc = request.args.get("rozdzielczosc", type=int)
+    minimum = request.args.get("minimum", type=int)
+    try:
+        co = _co()
+        filtry = _filtry(co)
+        if rozdzielczosc not in rcn.ROZDZIELCZOSCI_H3 or minimum not in rcn.MINIMA_W_KOMORCE:
+            raise ValueError("Niepoprawna wielkość heksagonów albo minimum transakcji.")
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify(rcn.heksagony(_rekordy(plik_id, co, filtry), rozdzielczosc, minimum))
 
 
 @ceny_bp.route("/transakcje/<int:plik_id>.csv")

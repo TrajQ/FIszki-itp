@@ -425,3 +425,36 @@ def test_trasa_podobnych(client, tmp_path, monkeypatch):
     dz = client.get("/ceny/transakcje/1/podobne?co=dzialki&lat=50.002&lng=19.9&pow=900&promien=1000&tolerancja=0.3").get_json()
     assert dz["liczba"] == 3 and dz["transakcje"][0]["przeznaczenie"] == "budownictwo mieszkaniowe jednorodzinne"
     assert "Podobne transakcje" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)
+
+
+# ---------- ETAP 108: heksagony H3 ----------
+
+
+def test_heksagony():
+    import h3
+    # 6 transakcji w jednym miejscu, 2 obok (osobna komórka), 1 bez położenia
+    rekordy = [{"cena_m2": float(c), "lat": 50.06, "lng": 19.94} for c in (10000, 11000, 12000, 13000, 14000, 30000)]
+    rekordy += [{"cena_m2": 9000.0, "lat": 50.1, "lng": 20.1}] * 2 + [{"cena_m2": 1.0, "lat": None, "lng": None}]
+    w = rcn.heksagony(rekordy, 8, 5)
+    assert len(w["komorki"]) == 1 and w["ukryte"] == 1 and w["transakcji_w_ukrytych"] == 2
+    k = w["komorki"][0]
+    assert k["h3"] == h3.latlng_to_cell(50.06, 19.94, 8) and k["liczba"] == 6 and k["mediana_m2"] == 12500
+    assert len(k["granica"]) == 6 and w["krawedz_m"] == 530 and w["progi"] == []  # za mało komórek na kwintyle
+    assert len(rcn.heksagony(rekordy, 8, 2)["komorki"]) == 2
+
+
+def test_trasa_heksagonow(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_cena_brutto=500000 + 1000 * i, tran_rodzaj_rynku="pierwotny" if i < 4 else "wtorny",
+                             geom=geometria_gpkg(50.06 + (i % 3) * 0.02, 19.94)) for i in range(1, 16)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    w = client.get("/ceny/transakcje/1/heksagony?rozdzielczosc=8&minimum=5").get_json()
+    assert [k["liczba"] for k in w["komorki"]] == [5, 5, 5]
+    assert client.get("/ceny/transakcje/1/heksagony?rozdzielczosc=8&minimum=5&rynek=pierwotny").get_json()["ukryte"] == 3  # filtry strony
+    assert client.get("/ceny/transakcje/1/heksagony?rozdzielczosc=12&minimum=5").status_code == 400
+    assert client.get("/ceny/transakcje/1/heksagony?rozdzielczosc=8&minimum=4").status_code == 400
+    assert client.get("/ceny/transakcje/9/heksagony?rozdzielczosc=8&minimum=5").status_code == 404
+    assert "heksagony (mediana)" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)

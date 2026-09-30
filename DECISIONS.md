@@ -2457,3 +2457,24 @@ ma. Mediana z przedziałem uczciwie pokazuje rozrzut cen.
   wytłumaczenia na pierwszym roku; może później jako osobny ETAP.
 - Korekta o trend cen w czasie — przy kilkunastu transakcjach niestabilna.
 - Wzór haversine — w promieniu do 5 km różnica pomijalna, prostszy kod.
+
+## D-116 — Ceny: kartogram w heksagonach H3 liczony na serwerze, z minimum transakcji
+Data: 2026-09-30
+
+**Decyzja:** Widok „heksagony” liczy serwer: transakcje z położeniem
+przypisujemy do komórek H3 (`h3.latlng_to_cell`, rozdzielczość 7/8/9),
+w komórce mediana ceny za m²; komórki z mniej niż 3/5/10 transakcjami
+(wybór użytkownika, domyślnie 5) nie są pokazywane, a legenda podaje ich
+liczbę. Kolory — kwintyle median komórek, te same barwy co punkty.
+Opis wielkości heksagonu z `h3.average_hexagon_edge_length`.
+
+**Uzasadnienie:** Heksagony pokazują przestrzenny wzór cen czytelniej niż
+tysiące nakładających się punktów, a stała siatka pozwala porównywać
+miejsca. Minimum transakcji chroni przed kolorowaniem obszaru jedną
+nietypową transakcją. H3 jest już w projekcie (moduł dostępność, D-015).
+
+**Odrzucone alternatywy:**
+- Mapa ciepła (gęstość) — pokazuje, gdzie jest dużo transakcji, a nie
+  jakie są ceny; wymagałaby też wtyczki Leaflet.
+- Siatka kwadratów w PL-1992 — własny kod siatki, gdy H3 już jest.
+- Średnia zamiast mediany — wrażliwa na pojedyncze skrajne ceny.

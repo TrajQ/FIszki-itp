@@ -3,6 +3,7 @@
 // ETAP 105: obszary rysowane na mapie (Leaflet.draw) i ich porównanie.
 // ETAP 106: ta sama strona dla działek (CO === "dzialki") — inne filtry i tabela grup.
 // ETAP 107: podobne transakcje wokół klikniętego miejsca (wycena porównawcza).
+// ETAP 108: widok mapy „heksagony” — mediana ceny za m² w komórkach H3 (liczy serwer).
 (function () {
     "use strict";
 
@@ -42,6 +43,9 @@
     }).addTo(mapa);
     const warstwa = L.featureGroup().addTo(mapa);
     const warstwaObszarow = L.featureGroup().addTo(mapa);
+    const warstwaHeksagonow = L.featureGroup().addTo(mapa);
+    const widokMapy = document.getElementById("widok-mapy");
+    let numerHeksagonow = 0;
 
     function klasa(cena, progi) {
         let i = 0;
@@ -49,30 +53,68 @@
         return i;
     }
 
+    function pokazLegende(progi, opis) {
+        const legenda = document.getElementById("legenda-rcn");
+        legenda.replaceChildren();
+        const granice = [null, ...progi, null];
+        progi.length && KOLORY.forEach((kolor, i) => {
+            const zakres = granice[i] === null ? `do ${liczba.format(granice[i + 1])}` : granice[i + 1] === null ? `ponad ${liczba.format(granice[i])}` : `${liczba.format(granice[i])}–${liczba.format(granice[i + 1])}`;
+            const pozycja = el("span", "legenda-rcn__pozycja");
+            const probka = el("span", "legenda-rcn__probka");
+            probka.style.background = kolor;
+            pozycja.append(probka, `${zakres} zł/m²`);
+            legenda.appendChild(pozycja);
+        });
+        legenda.appendChild(el("span", "wyciszony", opis));
+    }
+
+    function dopasujWidok(grupa) {
+        if (pierwszeRysowanie && grupa.getLayers().length) {
+            mapa.fitBounds(grupa.getBounds(), { padding: [20, 20] });
+            pierwszeRysowanie = false;
+        }
+    }
+
     function rysujMape(m) {
         warstwa.clearLayers();
+        if (widokMapy.elements.widok.value === "heksagony") return; // heksagony rysuje rysujHeksagony()
         for (const [lat, lng, cenaM2, data, pow] of m.punkty) {
             L.circleMarker([lat, lng], { radius: 5, weight: 0.6, color: "#3a2a1a", fillColor: KOLORY[klasa(cenaM2, m.progi)], fillOpacity: 0.85 })
                 .bindTooltip(`${liczba.format(cenaM2)} zł/m² · ${pow} m² · ${data}`)
                 .addTo(warstwa);
         }
-        if (pierwszeRysowanie && m.punkty.length) {
-            mapa.fitBounds(warstwa.getBounds(), { padding: [20, 20] });
-            pierwszeRysowanie = false;
-        }
-        const legenda = document.getElementById("legenda-rcn");
-        legenda.replaceChildren();
-        const granice = [null, ...m.progi, null];
-        m.progi.length && KOLORY.forEach((kolor, i) => {
-            const opis = granice[i] === null ? `do ${liczba.format(granice[i + 1])}` : granice[i + 1] === null ? `ponad ${liczba.format(granice[i])}` : `${liczba.format(granice[i])}–${liczba.format(granice[i + 1])}`;
-            const pozycja = el("span", "legenda-rcn__pozycja");
-            const probka = el("span", "legenda-rcn__probka");
-            probka.style.background = kolor;
-            pozycja.append(probka, `${opis} zł/m²`);
-            legenda.appendChild(pozycja);
-        });
+        dopasujWidok(warstwa);
         const uwaga = m.wszystkich_z_polozeniem > m.punkty.length ? ` (na mapie ${m.punkty.length} najnowszych z ${m.wszystkich_z_polozeniem})` : "";
-        legenda.appendChild(el("span", "wyciszony", `Kolory: pięć równolicznych klas ceny za m²${uwaga}.`));
+        pokazLegende(m.progi, `Kolory: pięć równolicznych klas ceny za m²${uwaga}.`);
+    }
+
+    // ---------- heksagony (ETAP 108) ----------
+
+    async function rysujHeksagony() {
+        warstwaHeksagonow.clearLayers();
+        if (widokMapy.elements.widok.value !== "heksagony") return;
+        const moj = ++numerHeksagonow;
+        const parametry = parametryFiltrow();
+        parametry.set("rozdzielczosc", widokMapy.elements.rozdzielczosc.value);
+        parametry.set("minimum", widokMapy.elements.minimum.value);
+        try {
+            const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/heksagony?${parametry}`);
+            const h = await odp.json();
+            if (!odp.ok) throw new Error(h.blad || `Błąd ${odp.status}`);
+            if (moj !== numerHeksagonow) return;
+            warstwaHeksagonow.clearLayers();
+            for (const k of h.komorki) {
+                L.polygon(k.granica, { color: "#ffffff", weight: 0.8, fillColor: KOLORY[klasa(k.mediana_m2, h.progi)], fillOpacity: 0.75 })
+                    .bindTooltip(`mediana ${liczba.format(k.mediana_m2)} zł/m² · ${k.liczba} transakcji`)
+                    .addTo(warstwaHeksagonow);
+            }
+            dopasujWidok(warstwaHeksagonow);
+            const ukryte = h.ukryte ? ` Ukryte heksagony z mniej niż ${h.minimum} transakcjami: ${h.ukryte} (transakcji w nich: ${liczba.format(h.transakcji_w_ukrytych)}).` : "";
+            pokazLegende(h.progi, `Heksagony H3 o krawędzi ok. ${liczba.format(h.krawedz_m)} m: mediana ceny za m² transakcji w heksagonie, pięć równolicznych klas.${ukryte}`);
+        } catch (e) {
+            komunikat.textContent = e.message;
+            komunikat.hidden = false;
+        }
     }
 
     // ---------- wykresy ----------
@@ -376,6 +418,7 @@
             pokaz(d);
             pokazObszary(d);
             if (miejsce) szukajPodobnych(); // te same filtry co reszta strony
+            rysujHeksagony();
         } catch (e) {
             komunikat.textContent = e.message;
             komunikat.hidden = false;
@@ -383,5 +426,6 @@
     }
 
     filtry.addEventListener("change", wczytaj);
+    widokMapy.addEventListener("change", wczytaj); // punkty albo heksagony — oba z bieżących danych
     wczytaj();
 })();

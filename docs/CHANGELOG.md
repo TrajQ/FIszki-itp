@@ -753,3 +753,8 @@
 - Ceny → Transakcje: podobne transakcje wokół wskazanego miejsca —
   mediana ceny za m² i orientacyjna cena mieszkania lub działki
 - Pomoc: opis wyceny porównawczej
+
+## ETAP 108 — 2026-09-30
+- Ceny → Transakcje: widok mapy w heksagonach H3 — mediana ceny za m²,
+  wybór wielkości heksagonu i minimum transakcji
+- Pomoc: opis mapy w heksagonach

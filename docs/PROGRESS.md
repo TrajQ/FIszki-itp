@@ -1901,3 +1901,21 @@ Status: zamknięty
   (poprawione po sprawdzeniu w przeglądarce)
 - Działa dla mieszkań i działek
 - `DECISIONS.md`: D-115
+
+## ETAP 108 — Ceny: mapa cen w heksagonach H3
+Data: 2026-09-30
+Status: zamknięty
+
+- `ceny/rcn.py`: `heksagony` — mediana ceny za m² w komórkach H3
+  (rozdzielczość 7, 8 albo 9), komórki z mniej niż 3/5/10 transakcjami
+  ukryte (z licznikiem ukrytych komórek i transakcji w nich), progi kolorów
+  z kwintyli median; `krawedz_h3_m` — średnia krawędź z biblioteki h3
+- Trasa `/ceny/transakcje/<id>/heksagony` z filtrami strony (lokale i
+  działki), walidacja rozdzielczości i minimum
+- Strona: nad mapą widok „punkty | heksagony (mediana)”, wielkość
+  heksagonu, minimum transakcji; legenda z długością krawędzi i ukrytymi
+- Poprawione po sprawdzeniu: opisy wielkości heksagonów wpisałem z pamięci
+  (460 m) — h3 4.5 podaje 531 m, teraz opis liczy biblioteka; polska
+  odmiana w legendzie
+- Bez nowej zależności: `h3==4.5.0` jest od D-015
+- `DECISIONS.md`: D-116

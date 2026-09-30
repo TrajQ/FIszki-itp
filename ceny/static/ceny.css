@@ -454,3 +454,29 @@
     color: inherit;
     opacity: 0.8;
 }
+
+/* ---------- widok mapy: punkty / heksagony (ETAP 108) ---------- */
+
+.przelacznik-widoku {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.przelacznik-widoku legend {
+    float: left;
+    padding: 0;
+    margin-right: 4px;
+    font-size: 13px;
+    color: var(--tekst-drugi);
+}
+
+.filtry-rcn .przelacznik-widoku label {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}

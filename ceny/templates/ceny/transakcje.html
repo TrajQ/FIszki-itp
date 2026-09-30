@@ -109,6 +109,15 @@
 
         <section class="karta stos">
             <h3>Mapa transakcji</h3>
+            <form id="widok-mapy" class="filtry-rcn">
+                <fieldset class="przelacznik-widoku">
+                    <legend>Widok</legend>
+                    <label><input type="radio" name="widok" value="punkty" checked> punkty</label>
+                    <label><input type="radio" name="widok" value="heksagony"> heksagony (mediana)</label>
+                </fieldset>
+                <label>Wielkość heksagonu <select name="rozdzielczosc">{% for r, krawedz in krawedzie_h3 %}<option value="{{ r }}" {{ 'selected' if r == 8 }}>krawędź ≈ {{ krawedz }} m</option>{% endfor %}</select></label>
+                <label>Najmniej transakcji w heksagonie <select name="minimum">{% for m in minima %}<option value="{{ m }}" {{ 'selected' if m == 5 }}>{{ m }}</option>{% endfor %}</select></label>
+            </form>
             <div id="mapa-rcn" class="mapa-rcn"></div>
             <div id="legenda-rcn" class="legenda-rcn"></div>
         </section>
