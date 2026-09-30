@@ -1690,3 +1690,31 @@ Status: zamknięty
   przy temacie; akapit w Pomocy
 - Test „eksport → import” potwierdza, że własny import czyta nowy plik
 - `DECISIONS.md`: D-103
+
+## ETAP 96 — Przegląd kodu 79–95 i testy wydajności
+Data: 2026-09-30
+Status: zamknięty
+
+- pyflakes na wszystkich plikach zmienionych od ETAPu 78: czysto (poza
+  zamierzonymi importami rejestrującymi trasy); usunięty zbędny import w
+  teście MPZP
+- 16 głównych stron w szerokości 390 i 1300 px: bez błędów JS, bez
+  przewijania w poziomie
+- Pomiary na dużych danych (ten kontener):
+
+  | Operacja | Czas |
+  |---|---|
+  | Dostępność: zasięg z punktu, 20 tys. komórek | 0,05 s |
+  | Dostępność: szybki model, 5 punktów, 20 tys. komórek | 0,18 s |
+  | Dostępność: gdzie nowa placówka, 20 tys. komórek, 15 / 30 min | 3,5 → 2,4 s / 8,4 → 5,5 s |
+  | Atlas: wskaźnik złożony, 300 gmin × 12 składowych (3 metody) | 0,01 s |
+  | Przepisy: zapis aktu z 3000 artykułami / 20 wyszukiwań | 0,84 s / 0,49 s |
+  | Osiedle: cień, 149 terenów (równonoc / zima) | 0,52 / 0,62 s |
+  | Teren: import / raport 3000 punktów | 0,22 / 0,25 s |
+
+- „Gdzie nowa placówka”: aktualizacja punktów kandydatów przyrostowo
+  zamiast od nowa w każdej rundzie i porównanie odległości przed
+  arcsinusem; wynik identyczny ze starą wersją (sprawdzone na 16
+  zestawach). Resztę czasu zajmuje przejście po ok. 1,8 mln par
+  sąsiadów — dalsze przyspieszenie wymagałoby wektoryzacji (numpy)
+- `DECISIONS.md`: D-104

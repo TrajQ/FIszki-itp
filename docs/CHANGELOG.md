@@ -683,3 +683,10 @@
 - Fiszki: **tematy trafiają do Anki jako tagi**; eksport do Anki jednego
   tematu (link „Anki” przy temacie).
 - Dodano `DECISIONS.md` D-103 i 2 testy.
+
+## ETAP 96 — 2026-09-30
+- Przegląd kodu ETAPów 79–95 i pomiary wydajności na dużych danych
+  (tabela w PROGRESS).
+- Przyspieszono „Gdzie nowa placówka” (Dostępność) o ok. 30–35% przy tym
+  samym wyniku.
+- Dodano `DECISIONS.md` D-104.

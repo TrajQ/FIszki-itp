@@ -2210,3 +2210,23 @@ podział na tematy, który w Warsztacie porządkuje naukę do egzaminów.
   Anki; plik tekstowy jest oficjalnie obsługiwany i czytelny.
 - Nagłówek `#deck:` — talia musi już istnieć w Anki; lepiej, żeby
   użytkownik wybrał ją przy imporcie.
+
+## D-104 — Wydajność: mierzyć, poprawiać tylko przy tym samym wyniku
+Data: 2026-09-30
+
+**Decyzja:** Po serii etapów mierzymy czasy na danych na granicy limitów
+(20 tys. komórek H3, 3000 artykułów, 3000 punktów, 150 terenów).
+Optymalizujemy tylko to, co wyraźnie odstaje („Gdzie nowa placówka”), i
+tylko zmianami, które dają identyczny wynik — sprawdzonymi porównaniem ze
+starą wersją na wielu zestawach danych.
+
+**Uzasadnienie:** Aplikacja działa na laptopie jednej osoby; czasy rzędu
+sekundy przy maksymalnych danych są akceptowalne, a poprawność wyniku
+jest ważniejsza niż szybkość.
+
+**Odrzucone alternatywy:**
+- Odległość płaska zamiast po kuli — szybsza, ale zmieniałaby wynik na
+  krawędzi zasięgu.
+- Wektoryzacja w numpy — możliwa (numpy przychodzi z shapely), ale
+  przepisałaby czytelny algorytm; do rozważenia, gdy pliki z wynikami
+  będą regularnie tak duże.

@@ -773,8 +773,6 @@ def test_porownanie_dzialek(client, monkeypatch):
 def test_karta_dzialki_wymiary_polozenie_orto(client, monkeypatch):
     from urllib.parse import parse_qs, urlsplit
 
-    from mpzp import karta
-
     monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_kwadrat())
     monkeypatch.setattr(mpzp_routes, "znajdz_wydzielenia_dzialki", lambda g, geom: [])
     strona = client.get("/mpzp/raport?id=306401_1.0051.AR_18.14").get_data(as_text=True)

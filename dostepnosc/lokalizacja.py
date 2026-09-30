@@ -25,7 +25,7 @@ import math
 
 import h3
 
-from .model import KRETOSC_DOMYSLNA, PREDKOSC_DOMYSLNA_KMH, _odleglosc_m
+from .model import _R_ZIEMI_M, KRETOSC_DOMYSLNA, PREDKOSC_DOMYSLNA_KMH
 
 MAKS_PLACOWEK = 5
 ZAKRES_PROGU_MIN = (1, 120)
@@ -60,38 +60,57 @@ def najlepsze_lokalizacje(
     promien_m = prog_min * (predkosc_kmh * 1000 / 60) / kretosc
     krawedz_m = h3.average_hexagon_edge_length(h3.get_resolution(komorki[0]), unit="m") if komorki else 1
     k = math.ceil(promien_m / (krawedz_m * 1.5)) + 1  # odstęp środków sąsiadów ≈ 1,73 krawędzi
-    w_siatce = set(komorki)
-    zasieg = {}  # komórka poza zasięgiem → kandydaci, którzy do niej dojdą
+    # Odległość po kuli (haversine, jak model._odleglosc_m) porównujemy przed
+    # arcsinusem i pierwiastkiem: d ≤ r ⇔ a ≤ sin²(r / 2R). Sinusy i cosinusy
+    # liczone raz na komórkę (ETAP 96: kilka razy szybciej, ten sam wynik).
+    rad = {c: (math.radians(la), math.radians(ln)) for c, (la, ln) in srodki.items()}
+    cos_fi = {c: math.cos(fi) for c, (fi, _) in rad.items()}
+    a_max = math.sin(promien_m / (2 * _R_ZIEMI_M)) ** 2
+    # kandydat → komórki poza zasięgiem, do których z niego dojdzie się w progu
+    obejmuje: dict[str, list[str]] = {}
     for komorka in poza:
-        lat, lng = srodki[komorka]
-        zasieg[komorka] = [
-            kandydat for kandydat in h3.grid_disk(komorka, k)
-            if kandydat in w_siatce and _odleglosc_m(lat, lng, *srodki[kandydat]) <= promien_m
-        ]
+        fi1, la1 = rad[komorka]
+        cos1 = cos_fi[komorka]
+        for kandydat in h3.grid_disk(komorka, k):
+            polozenie = rad.get(kandydat)
+            if polozenie is None:
+                continue  # poza siatką pliku
+            fi2, la2 = polozenie
+            a = math.sin((fi2 - fi1) / 2) ** 2 + cos1 * cos_fi[kandydat] * math.sin((la2 - la1) / 2) ** 2
+            if a <= a_max:
+                obejmuje.setdefault(kandydat, []).append(komorka)
+
+    # Punkty kandydata = suma wag komórek, które obejmie. Po wyborze placówki
+    # odejmujemy obsłużone komórki u wszystkich kandydatów, którzy do nich
+    # dochodzą (ETAP 96) — zamiast liczyć wszystko od nowa w każdej rundzie.
+    punkty = {kandydat: sum(poza[c] for c in lista) for kandydat, lista in obejmuje.items()}
+    kto_dochodzi: dict[str, list[str]] = {}
+    for kandydat, lista in obejmuje.items():
+        for c in lista:
+            kto_dochodzi.setdefault(c, []).append(kandydat)
 
     propozycje = []
     obsluzone: set[str] = set()
     for nr in range(1, ile + 1):
-        punkty: dict[str, float] = {}
-        for komorka, kandydaci in zasieg.items():
-            if komorka in obsluzone:
-                continue
-            for kandydat in kandydaci:
-                punkty[kandydat] = punkty.get(kandydat, 0.0) + poza[komorka]
-        if not punkty:
-            break
         # remis: kandydat o niższym indeksie H3 (powtarzalny wynik)
-        najlepszy = max(sorted(punkty), key=punkty.get)
-        nowe = [c for c, kandydaci in zasieg.items() if c not in obsluzone and najlepszy in kandydaci]
+        dodatnie = sorted(kandydat for kandydat, p in punkty.items() if p > 1e-9)
+        if not dodatnie:
+            break
+        najlepszy = max(dodatnie, key=punkty.get)
+        nowe = [c for c in obejmuje[najlepszy] if c not in obsluzone]
+        wynik_najlepszego = sum(poza[c] for c in nowe)  # dokładnie, bez błędów odejmowania
         obsluzone.update(nowe)
+        for c in nowe:
+            for kandydat in kto_dochodzi[c]:
+                punkty[kandydat] -= poza[c]
         lat, lng = srodki[najlepszy]
         propozycje.append({
             "nr": nr,
             "komorka": najlepszy,
             "lat": lat,
             "lng": lng,
-            "obejmie": round(punkty[najlepszy], 1),
-            "obejmie_proc": round(100 * punkty[najlepszy] / razem, 1) if razem else None,
+            "obejmie": round(wynik_najlepszego, 1),
+            "obejmie_proc": round(100 * wynik_najlepszego / razem, 1) if razem else None,
             "komorki": len(nowe),
         })
 
