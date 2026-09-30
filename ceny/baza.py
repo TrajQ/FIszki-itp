@@ -215,6 +215,18 @@ def dzialki_rcn(plik_id: int, rynek: str | None = None, od_roku: int | None = No
     return [dict(w) for w in get_db().execute(f"SELECT * FROM rcn_dzialki WHERE {' AND '.join(warunki)}", parametry)]
 
 
+def w_prostokacie(tabela: str, lat_min: float, lat_max: float, lng_min: float, lng_max: float) -> dict[int, list[dict]]:
+    """Transakcje wszystkich plików w prostokącie współrzędnych, pogrupowane
+    po pliku (ETAP 109: ceny w okolicy działki i obszaru osiedla)."""
+    assert tabela in ("rcn_lokale", "rcn_dzialki")
+    po_pliku: dict[int, list[dict]] = {}
+    for w in get_db().execute(
+        f"SELECT * FROM {tabela} WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?", (lat_min, lat_max, lng_min, lng_max)
+    ):
+        po_pliku.setdefault(w["plik_id"], []).append(dict(w))
+    return po_pliku
+
+
 def wartosci_pola(plik_id: int, pole: str, tabela: str = "rcn_lokale") -> list[dict]:
     """Wartości pola z liczbą transakcji (do list w filtrach), od najczęstszej."""
     assert (tabela, pole) in {("rcn_lokale", "rodzaj"), ("rcn_dzialki", "rodzaj"), ("rcn_dzialki", "przeznaczenie"),

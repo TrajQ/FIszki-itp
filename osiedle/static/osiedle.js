@@ -24,6 +24,7 @@
     const polaZalozen = document.querySelectorAll("[data-zalozenie]");
     const sekcjaProgramu = document.getElementById("sekcja-programu");
     const sekcjaCienia = document.getElementById("sekcja-cienia");
+    const sekcjaCen = document.getElementById("sekcja-cen");
     const formatWsk = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
     const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
     const formatProc = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
@@ -627,7 +628,7 @@
         if (!id) {
             koncepcja = null;
             mapa.removeControl(kontrolkaRysowania);
-            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, sekcjaCienia, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = true));
+            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, sekcjaCienia, sekcjaCen, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = true));
             ukryjCien();
             projektTerenu.value = "";
             pokazTeren();
@@ -648,8 +649,9 @@
             },
         });
         kontrolkaRysowania.addTo(mapa);
-        [sekcjaRysowania, sekcjaCienia, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = false));
+        [sekcjaRysowania, sekcjaCienia, sekcjaCen, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = false));
         ukryjCien();
+        wynikCen.hidden = true;
         const zapisanyTeren = (dane.ustawienia || {}).teren_projekt;
         // projekt mógł zostać usunięty w module Teren — wtedy nic nie pokazujemy
         projektTerenu.value = [...projektTerenu.options].some((o) => o.value === String(zapisanyTeren)) ? String(zapisanyTeren) : "";
@@ -729,4 +731,65 @@
     }
     // Najpierw lista projektów terenowych — otwarta koncepcja ustawia z niej swój wybór.
     wczytajProjektyTerenu().then(() => wczytajListe(ostatnia).catch(() => wczytajListe().catch((e) => pokazKomunikat(e.message))));
+
+    // ---------- ceny w okolicy (ETAP 109) — liczy moduł ceny z zaimportowanego pliku RCN ----------
+
+    const wynikCen = document.getElementById("wynik-cen");
+
+    function wierszCen(nazwa, s) {
+        const tr = element("tr");
+        tr.appendChild(element("th", "", nazwa));
+        if (!s) {
+            const brak = element("td", "wyciszony", "brak transakcji");
+            brak.colSpan = 3;
+            tr.appendChild(brak);
+            return tr;
+        }
+        tr.append(element("td", "liczba", `${s.liczba}${s.w_srodku ? ` (w obszarze ${s.w_srodku})` : ""}`),
+            element("td", "liczba", `${formatM2.format(s.mediana_m2)} zł`),
+            element("td", "liczba", `${formatM2.format(s.q1_m2)}–${formatM2.format(s.q3_m2)}`));
+        return tr;
+    }
+
+    document.getElementById("pokaz-ceny").addEventListener("click", async () => {
+        let obszar = null;
+        rysunek.eachLayer((w) => {
+            if (w.funkcja === OBSZAR) obszar = w.toGeoJSON().geometry;
+        });
+        wynikCen.hidden = false;
+        if (!obszar) {
+            wynikCen.replaceChildren(element("p", "komunikat", "Najpierw narysuj obszar opracowania (albo złóż go z działek)."));
+            return;
+        }
+        let d;
+        try {
+            d = await zapytaj(URL_CENY_OKOLICA, { method: "POST", body: JSON.stringify({ geometria: obszar, promien: Number(document.getElementById("promien-cen").value) }) });
+        } catch (e) {
+            wynikCen.replaceChildren(element("p", "komunikat komunikat--blad", e.message));
+            return;
+        }
+        if (!d.plik) {
+            const p = element("p", "wyciszony", d.pliki_zaimportowane
+                ? "W zaimportowanych plikach RCN nie ma transakcji w tym zasięgu — zwiększ promień albo zaimportuj plik tego powiatu. "
+                : "Nie zaimportowano jeszcze żadnego pliku RCN. ");
+            const a = element("a", "", "Ceny → Transakcje");
+            a.href = d.url_importu;
+            p.appendChild(a);
+            wynikCen.replaceChildren(p);
+            return;
+        }
+        const tabela = element("table", "tabela tabela-cen-okolicy");
+        const glowa = element("tr");
+        glowa.append(element("th", "", ""), element("th", "liczba", "Transakcji"), element("th", "liczba", "Mediana za m²"), element("th", "liczba", "Połowa transakcji"));
+        tabela.append(glowa, wierszCen("Mieszkania", d.lokale), wierszCen("Działki", d.dzialki));
+        const przewijanie = element("div", "tabela-cen-okolicy-wrap");
+        przewijanie.appendChild(tabela);
+        const okres = [d.lokale, d.dzialki].filter(Boolean);
+        const lata = `${okres.map((s) => s.od).sort()[0].slice(0, 4)}–${okres.map((s) => s.do).sort().at(-1).slice(0, 4)}`;
+        const link = element("a", "przycisk przycisk--tekst", `Plik ${d.plik.nazwa} — mapa i podobne transakcje ↗`);
+        link.href = d.plik.url;
+        link.target = "_blank";
+        wynikCen.replaceChildren(przewijanie,
+            element("p", "wyciszony opis-panelu", `Transakcje z lat ${lata}, ceny brutto z aktów notarialnych. Działki: cena za m² gruntu; przy zabudowanych obejmuje budynek.`), link);
+    });
 })();

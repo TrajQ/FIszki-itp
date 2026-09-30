@@ -1002,3 +1002,30 @@ button.wpis-zapisany {
 .usluga-w-punkcie > .stos {
     margin-top: 8px;
 }
+
+/* ETAP 109: ceny w okolicy działki (z pliku RCN modułu ceny) */
+.ceny-okolicy__promien {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 0.85rem;
+}
+
+.ceny-okolicy__promien select {
+    width: auto;
+}
+
+.ceny-okolicy__tabela {
+    overflow-x: auto;
+}
+
+.ceny-okolicy__tabela .tabela {
+    font-size: 0.85rem;
+}
+
+.ceny-okolicy__tabela th,
+.ceny-okolicy__tabela td {
+    white-space: nowrap;
+}

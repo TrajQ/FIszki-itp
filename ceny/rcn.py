@@ -42,6 +42,7 @@ from datetime import date
 import h3
 from shapely import wkb
 from shapely.geometry import Point, mapping, shape
+from shapely.ops import transform as shapely_transform
 from shapely.ops import unary_union
 from shapely.prepared import prep
 from shapely.validation import make_valid
@@ -606,4 +607,65 @@ def heksagony(rekordy: list[dict], rozdzielczosc: int, minimum: int) -> dict:
         "progi": statistics.quantiles(mediany, n=5, method="inclusive") if len(mediany) >= 5 else [],
         "ukryte": ukryte,
         "transakcji_w_ukrytych": w_ukrytych,
+    }
+
+
+# ---------- ceny w okolicy działki / obszaru (ETAP 109, dla MPZP i osiedla) ----------
+
+PROMIENIE_OKOLICY_M = (250, 500, 1000, 2000)
+
+
+def ksztalt_okolicy(geometria) -> object:
+    """GeoJSON punktu albo wieloboku (WGS84) z MPZP / osiedla → shapely; BladPliku, gdy zły."""
+    if isinstance(geometria, dict) and geometria.get("type") == "Point":
+        try:
+            punkt = shape(geometria)
+        except Exception as e:
+            raise BladPliku("Niepoprawny punkt.") from e
+        if not w_polsce(punkt.y, punkt.x):
+            raise BladPliku("Punkt musi leżeć w Polsce.")
+        return punkt
+    return shape(sprawdz_obszar(geometria))
+
+
+def prostokat_okolicy(ksztalt, promien_m: float) -> tuple[float, float, float, float]:
+    """(lat_min, lat_max, lng_min, lng_max) obejmujący kształt z zapasem promienia — do zapytania SQL."""
+    minx, miny, maxx, maxy = ksztalt.bounds
+    dlat = promien_m / 111_195 * 1.01
+    dlng = dlat / math.cos(math.radians((miny + maxy) / 2))
+    return miny - dlat, maxy + dlat, minx - dlng, maxx + dlng
+
+
+def okolica(rekordy: list[dict], ksztalt, promien_m: float) -> dict | None:
+    """Transakcje w odległości do promien_m od kształtu (wewnątrz: 0 m).
+
+    Odległość w lokalnym układzie metrycznym wokół kształtu (przybliżenie
+    równoodległościowe, jak w `odleglosc_m`)."""
+    srodek = ksztalt.centroid
+    kx = math.cos(math.radians(srodek.y)) * 111_195
+    ky = 111_195
+    lokalny = shapely_transform(lambda x, y, z=None: ((x - srodek.x) * kx, (y - srodek.y) * ky), ksztalt)
+    lokalny_prep = prep(lokalny.buffer(promien_m))
+    wewnatrz = prep(lokalny)
+    w_zasiegu, w_srodku = [], 0
+    for r in rekordy:
+        if r["lat"] is None:
+            continue
+        p = Point((r["lng"] - srodek.x) * kx, (r["lat"] - srodek.y) * ky)
+        if lokalny_prep.contains(p):
+            w_zasiegu.append(r)
+            w_srodku += wewnatrz.contains(p)
+    if not w_zasiegu:
+        return None
+    q1, mediana, q3 = _kwartyle(sorted(r["cena_m2"] for r in w_zasiegu))
+    return {
+        "liczba": len(w_zasiegu),
+        "w_srodku": w_srodku,
+        "mediana_m2": mediana,
+        "q1_m2": q1,
+        "q3_m2": q3,
+        "mediana_pow": statistics.median(r["pow_m2"] for r in w_zasiegu),
+        "od": min(r["data"] for r in w_zasiegu),
+        "do": max(r["data"] for r in w_zasiegu),
+        "lata": _mediany_lat(w_zasiegu),
     }

@@ -1919,3 +1919,23 @@ Status: zamknięty
   odmiana w legendzie
 - Bez nowej zależności: `h3==4.5.0` jest od D-015
 - `DECISIONS.md`: D-116
+
+## ETAP 109 — Ceny: ceny w okolicy działki (MPZP) i obszaru osiedla
+Data: 2026-09-30
+Status: zamknięty
+
+- `ceny/rcn.py`: `ksztalt_okolicy` (punkt albo wielobok w Polsce),
+  `prostokat_okolicy` (zakres do zapytania SQL), `okolica` — transakcje w
+  odległości do promienia od kształtu (w lokalnym układzie metrycznym),
+  liczba, w tym wewnątrz, mediana za m² z kwartylami, lata
+- `ceny/baza.py`: `w_prostokacie` — transakcje wszystkich plików w
+  prostokącie współrzędnych, pogrupowane po pliku
+- Trasa POST `/ceny/okolica`: plik RCN z największą liczbą transakcji w
+  zasięgu (pliki powiatów się nie mieszają), mieszkania i działki
+- MPZP: pod wynikiem działki sekcja „Ceny w okolicy — Twój plik RCN”
+  (pobierana po rozwinięciu, promień 250 m – 2 km)
+- Osiedle: karta „Ceny w okolicy” wokół obszaru opracowania
+- Sprawdzone w przeglądarce (MPZP z podstawioną odpowiedzią działki, bo
+  ULDK jest tu zablokowane): poprawiona szerokość tabel na telefonie; w
+  osiedlu kolumna panelu rozpychała stronę — `minmax(0, 1fr)`
+- `DECISIONS.md`: D-117

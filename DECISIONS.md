@@ -2478,3 +2478,27 @@ nietypową transakcją. H3 jest już w projekcie (moduł dostępność, D-015).
   jakie są ceny; wymagałaby też wtyczki Leaflet.
 - Siatka kwadratów w PL-1992 — własny kod siatki, gdy H3 już jest.
 - Średnia zamiast mediany — wrażliwa na pojedyncze skrajne ceny.
+
+## D-117 — Ceny w okolicy: MPZP i osiedle pytają moduł ceny przez jedną trasę
+Data: 2026-09-30
+
+**Decyzja:** MPZP i osiedle nie czytają bazy modułu ceny — wysyłają
+geometrię (działka albo obszar opracowania) i promień do POST
+`/ceny/okolica`, a moduł ceny wybiera zaimportowany plik RCN z największą
+liczbą transakcji w zasięgu i zwraca podsumowanie mieszkań i działek.
+Każdy z dwóch modułów ma własny, krótki kod tabeli (bez wspólnego
+komponentu JS). Odległość od kształtu liczona w lokalnym układzie
+metrycznym (przybliżenie równoodległościowe).
+
+**Uzasadnienie:** Moduły zostają niezależne (osobne bazy, D-004), a
+statystyka jest w jednym miejscu. Wybór jednego pliku zamiast łączenia
+chroni przed podwójnym liczeniem, gdy ktoś zaimportował ten sam powiat
+dwa razy. Wspólny komponent JS dla dwóch modułów to abstrakcja, której
+CLAUDE.md każe unikać.
+
+**Odrzucone alternatywy:**
+- Łączenie transakcji ze wszystkich plików — duplikaty przy ponownym
+  imporcie tego samego pliku.
+- Import `ceny.baza` w mpzp i osiedlu — zależność między bazami modułów.
+- Usługa WMS RCN (ETAP 90) zamiast pliku — daje atrybuty w punkcie, nie
+  statystykę okolicy.

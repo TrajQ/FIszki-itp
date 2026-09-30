@@ -264,6 +264,42 @@ def heksagony_transakcji(plik_id):
     return jsonify(rcn.heksagony(_rekordy(plik_id, co, filtry), rozdzielczosc, minimum))
 
 
+# ---------- ceny w okolicy działki (MPZP) i obszaru osiedla (ETAP 109) ----------
+
+
+@ceny_bp.route("/okolica", methods=["POST"])
+def okolica():
+    """JSON {geometria: GeoJSON punktu/wieloboku, promien: m} → podsumowanie
+    mieszkań i działek z tego zaimportowanego pliku RCN, który ma w zasięgu
+    najwięcej transakcji (pliki różnych powiatów się nie mieszają)."""
+    dane = request.get_json(silent=True) or {}
+    promien = dane.get("promien")
+    try:
+        ksztalt = rcn.ksztalt_okolicy(dane.get("geometria"))
+        if promien not in rcn.PROMIENIE_OKOLICY_M:
+            raise rcn.BladPliku("Niepoprawny promień.")
+    except rcn.BladPliku as e:
+        return jsonify({"blad": str(e)}), 400
+    prostokat = rcn.prostokat_okolicy(ksztalt, promien)
+    wyniki: dict[int, dict] = {}
+    for co, tabela in (("lokale", "rcn_lokale"), ("dzialki", "rcn_dzialki")):
+        for plik_id, rekordy in baza.w_prostokacie(tabela, *prostokat).items():
+            wyniki.setdefault(plik_id, {"lokale": None, "dzialki": None})[co] = rcn.okolica(rekordy, ksztalt, promien)
+
+    def razem(w):
+        return sum(s["liczba"] for s in w.values() if s)
+
+    najlepszy = max((p for p in wyniki if razem(wyniki[p])), key=lambda p: razem(wyniki[p]), default=None)
+    odpowiedz = {"promien": promien, "promienie": list(rcn.PROMIENIE_OKOLICY_M), "pliki_zaimportowane": len(baza.pliki_rcn()),
+                 "url_importu": url_for("ceny.transakcje"), "plik": None, "lokale": None, "dzialki": None}
+    if najlepszy is not None:
+        plik = baza.plik_rcn(najlepszy)
+        odpowiedz.update(wyniki[najlepszy])
+        odpowiedz["plik"] = {"id": plik["id"], "nazwa": plik["nazwa"], "data_importu": plik["data_importu"][:10],
+                             "url": url_for("ceny.transakcje", plik=plik["id"])}
+    return jsonify(odpowiedz)
+
+
 @ceny_bp.route("/transakcje/<int:plik_id>.csv")
 def csv_transakcji(plik_id):
     plik = baza.plik_rcn(plik_id)

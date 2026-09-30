@@ -80,6 +80,7 @@ def test_klient_bdl_powiaty(monkeypatch):
 # ---------- ETAP 104: transakcje z Rejestru Cen Nieruchomości ----------
 
 import io  # noqa: E402
+import math  # noqa: E402
 import sqlite3  # noqa: E402
 import struct  # noqa: E402
 
@@ -458,3 +459,48 @@ def test_trasa_heksagonow(client, tmp_path, monkeypatch):
     assert client.get("/ceny/transakcje/1/heksagony?rozdzielczosc=8&minimum=4").status_code == 400
     assert client.get("/ceny/transakcje/9/heksagony?rozdzielczosc=8&minimum=5").status_code == 404
     assert "heksagony (mediana)" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)
+
+
+# ---------- ETAP 109: ceny w okolicy działki i obszaru ----------
+
+
+def test_okolica():
+    rekordy = [{"cena_m2": float(c), "pow_m2": 50.0, "data": f"202{r}-01-01", "rok": 2020 + r, "lat": 50.0 + d / 111_195, "lng": 19.9}
+               for c, r, d in [(10000, 3, 0), (12000, 4, 50), (14000, 4, 400), (50000, 4, 1200)]]
+    rekordy.append({**rekordy[0], "lat": None, "lng": None})
+    dzialka_ = rcn.ksztalt_okolicy(prostokat(19.8995, 49.9999, 19.9005, 50.0001))  # ok. 70 × 22 m wokół pierwszej transakcji
+    w = rcn.okolica(rekordy, dzialka_, 500)
+    assert (w["liczba"], w["w_srodku"], w["mediana_m2"]) == (3, 1, 12000) and w["lata"] == {2023: 10000, 2024: 13000}
+    assert rcn.okolica(rekordy, dzialka_, 2000)["liczba"] == 4
+    punkt = rcn.ksztalt_okolicy({"type": "Point", "coordinates": [19.9, 50.0]})
+    assert rcn.okolica(rekordy, punkt, 250)["liczba"] == 2
+    assert rcn.okolica(rekordy, rcn.ksztalt_okolicy({"type": "Point", "coordinates": [21.0, 52.2]}), 2000) is None
+    with pytest.raises(rcn.BladPliku):
+        rcn.ksztalt_okolicy({"type": "Point", "coordinates": [2.3, 48.8]})
+    lat_min, lat_max, lng_min, lng_max = rcn.prostokat_okolicy(punkt, 1000)
+    assert lat_min < 50.0 - 0.009 and lng_max > 19.9 + 0.009 / math.cos(math.radians(50))
+
+
+def test_trasa_okolicy(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    krakow, wieliczka = str(pobrane / "krakow.gpkg"), str(pobrane / "wieliczka.gpkg")
+    plik_rcn(krakow, [lokal(i, lok_cena_brutto=600000 + 10000 * i, geom=geometria_gpkg(50.0 + i / 20000, 19.9)) for i in range(1, 7)])
+    dodaj_dzialki(krakow, [dzialka(f"T{i}", i, dzi_cena_brutto=90000 * i) for i in range(1, 4)])  # działki ok. 50,001–50,003
+    plik_rcn(wieliczka, [lokal(i, geom=geometria_gpkg(50.0, 19.9 + i / 50000)) for i in range(1, 3)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    url = "/ceny/okolica"
+    punkt = {"type": "Point", "coordinates": [19.9, 50.0]}
+    assert client.post(url, json={"geometria": punkt, "promien": 500}).get_json()["plik"] is None  # nic nie zaimportowano
+    for s in (krakow, wieliczka):
+        client.post("/ceny/transakcje/import", data={"sciezka": s})
+    w = client.post(url, json={"geometria": punkt, "promien": 500}).get_json()
+    assert w["plik"]["nazwa"] == "krakow.gpkg" and w["lokale"]["liczba"] == 6 and w["dzialki"]["liczba"] == 3  # plik z największą liczbą
+    assert w["pliki_zaimportowane"] == 2 and w["plik"]["url"].endswith("plik=1")
+    assert client.post(url, json={"geometria": punkt, "promien": 300}).status_code == 400
+    assert client.post(url, json={"geometria": {"type": "Point", "coordinates": [2.3, 48.8]}, "promien": 500}).status_code == 400
+    obszar = client.post(url, json={"geometria": prostokat(19.899, 49.999, 19.901, 50.0002), "promien": 250}).get_json()
+    assert obszar["lokale"]["w_srodku"] == 3  # 50,00005 / 50,0001 / 50,00015 w obszarze (do 50,0002)
+    # MPZP i osiedle wołają tę trasę
+    for strona in ("/mpzp/", "/osiedle/"):
+        assert 'URL_CENY_OKOLICA = "/ceny/okolica"' in client.get(strona).get_data(as_text=True)

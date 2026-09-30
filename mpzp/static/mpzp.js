@@ -608,6 +608,85 @@
         return szczegoly;
     }
 
+    // Ceny z pliku RCN zaimportowanego w module Ceny (ETAP 109) — liczy serwer
+    // (ceny/rcn.py: okolica), tu tylko tabela. Pobierane po rozwinięciu.
+    function sekcjaCenWOkolicy(dzialka) {
+        const szczegoly = element("details", "usluga-w-punkcie");
+        szczegoly.appendChild(element("summary", "", "Ceny w okolicy — Twój plik RCN"));
+        const promien = element("select");
+        promien.setAttribute("aria-label", "Promień");
+        const tresc = element("div", "stos");
+        const naglowek = element("div", "ceny-okolicy__promien");
+        naglowek.append(element("span", "wyciszony", "Transakcje do"), promien, element("span", "wyciszony", "od działki"));
+        szczegoly.append(naglowek, tresc);
+        const zl = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
+
+        function wiersz(nazwa, s) {
+            const tr = element("tr");
+            tr.appendChild(element("th", "", nazwa));
+            if (!s) {
+                const brak = element("td", "wyciszony", "brak transakcji");
+                brak.colSpan = 4;
+                tr.appendChild(brak);
+                return tr;
+            }
+            tr.append(element("td", "liczba", `${s.liczba}${s.w_srodku ? ` (na działce ${s.w_srodku})` : ""}`),
+                element("td", "liczba", `${zl.format(s.mediana_m2)} zł`), element("td", "liczba", `${zl.format(s.q1_m2)}–${zl.format(s.q3_m2)}`),
+                element("td", "", `${s.od.slice(0, 4)}–${s.do.slice(0, 4)}`));
+            return tr;
+        }
+
+        async function pobierz() {
+            tresc.replaceChildren(element("p", "wyciszony", "Liczę…"));
+            try {
+                const odpowiedz = await fetch(URL_CENY_OKOLICA, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ geometria: dzialka.geometria, promien: Number(promien.value || 500) }),
+                });
+                const d = await odpowiedz.json();
+                if (!odpowiedz.ok) throw new Error(d.blad || `Błąd ${odpowiedz.status}`);
+                if (!promien.options.length) {
+                    for (const p of d.promienie) promien.appendChild(new Option(p < 1000 ? `${p} m` : `${p / 1000} km`, p, false, p === d.promien));
+                }
+                if (!d.plik) {
+                    const p = element("p", "wyciszony", d.pliki_zaimportowane
+                        ? "W zaimportowanych plikach RCN nie ma transakcji w tym promieniu — zwiększ promień albo zaimportuj plik tego powiatu. "
+                        : "Nie zaimportowano jeszcze żadnego pliku RCN. ");
+                    const a = element("a", "", "Ceny → Transakcje");
+                    a.href = d.url_importu;
+                    p.appendChild(a);
+                    tresc.replaceChildren(p);
+                    return;
+                }
+                const tabela = element("table", "tabela");
+                const glowa = element("tr");
+                glowa.append(element("th", "", ""), element("th", "liczba", "Transakcji"), element("th", "liczba", "Mediana za m²"),
+                    element("th", "liczba", "Połowa transakcji"), element("th", "", "Lata"));
+                tabela.append(glowa, wiersz("Mieszkania", d.lokale), wiersz("Działki", d.dzialki));
+                const przewijanie = element("div", "ceny-okolicy__tabela");
+                przewijanie.appendChild(tabela);
+                const link = element("a", "przycisk przycisk--tekst", `Plik ${d.plik.nazwa} — mapa i podobne transakcje ↗`);
+                link.href = d.plik.url;
+                link.target = "_blank";
+                tresc.replaceChildren(przewijanie, link);
+            } catch (e) {
+                tresc.replaceChildren(element("p", "komunikat komunikat--blad", e.message));
+            }
+            tresc.appendChild(element("p", "przypis", "Ceny brutto z aktów notarialnych z pliku RCN zaimportowanego w module Ceny (plik powiatu z największą liczbą transakcji w zasięgu). Działki: cena za m² gruntu; przy zabudowanych obejmuje budynek."));
+        }
+
+        let pobrane = false;
+        szczegoly.addEventListener("toggle", () => {
+            if (szczegoly.open && !pobrane) {
+                pobrane = true;
+                pobierz();
+            }
+        });
+        promien.addEventListener("change", pobierz);
+        return szczegoly;
+    }
+
     function sekcjeUslug(punkt) {
         return [
             sekcjaUslugi("plany_ogolne", "Plan ogólny gminy", "Źródło: plany ogólne gmin w usłudze GUGiK — na razie tylko gminy, które już uchwaliły plan ogólny. Atrybuty jak w usłudze; rozstrzyga uchwała.", punkt),
@@ -639,7 +718,7 @@
         } else if (dane.blad) {
             pokazBlad(dane.blad, dane.dzialka);
         }
-        if (dane.dzialka && dane.punkt) panelWyniku.append(...sekcjeUslug(dane.punkt));
+        if (dane.dzialka && dane.punkt) panelWyniku.append(...sekcjeUslug(dane.punkt), sekcjaCenWOkolicy(dane.dzialka));
         odswiezHistorie();
     }
 

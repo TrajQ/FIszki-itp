@@ -18,6 +18,10 @@
     min-height: 520px;
 }
 
+.panel-osiedla > * {
+    min-width: 0;
+}
+
 .panel-osiedla h3,
 .panel-osiedla h4 {
     margin: 0;
@@ -123,7 +127,7 @@ button.przycisk--niebezpieczny-tekst {
 
 @media (max-width: 1000px) {
     .uklad-osiedla {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr); /* szeroka tabela nie rozpycha strony (ETAP 109) */
     }
 
     .karta-mapy-osiedla {
@@ -465,4 +469,13 @@ button.przycisk--niebezpieczny-tekst {
 
 #sekcja-cienia h4 {
     margin: 4px 0 0;
+}
+
+/* ETAP 109: ceny w okolicy — tabela w wąskim panelu przewija się poziomo */
+.tabela-cen-okolicy-wrap {
+    overflow-x: auto;
+}
+
+.tabela-cen-okolicy {
+    font-size: 13px;
 }

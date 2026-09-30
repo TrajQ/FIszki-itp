@@ -758,3 +758,8 @@
 - Ceny → Transakcje: widok mapy w heksagonach H3 — mediana ceny za m²,
   wybór wielkości heksagonu i minimum transakcji
 - Pomoc: opis mapy w heksagonach
+
+## ETAP 109 — 2026-09-30
+- MPZP: ceny mieszkań i działek w okolicy działki z zaimportowanego pliku RCN
+- Osiedle: karta „Ceny w okolicy” obszaru opracowania
+- Pomoc: opis cen w okolicy

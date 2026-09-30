@@ -166,6 +166,18 @@
             </div>
             <div id="wynik-cienia" class="stos" hidden></div>
         </section>
+
+        <section id="sekcja-cen" class="karta stos" hidden>
+            <h3>Ceny w okolicy</h3>
+            <p class="wyciszony opis-panelu">Mieszkania i działki sprzedane w obszarze opracowania i wokół niego — z pliku Rejestru Cen Nieruchomości zaimportowanego w module Ceny.</p>
+            <div class="rzad">
+                <select id="promien-cen" aria-label="Promień od obszaru">
+                    {% for p in [250, 500, 1000, 2000] %}<option value="{{ p }}" {{ 'selected' if p == 500 }}>do {{ p ~ ' m' if p < 1000 else (p // 1000) ~ ' km' }} od obszaru</option>{% endfor %}
+                </select>
+                <button id="pokaz-ceny" type="button" class="przycisk--drugi">Pokaż</button>
+            </div>
+            <div id="wynik-cen" class="stos" hidden></div>
+        </section>
     </aside>
 </div>
 {% endblock %}
@@ -173,6 +185,7 @@
 {% block skrypty %}
 <script>
     const URL_KONCEPCJE = "{{ url_for('osiedle.lista_koncepcji') }}";
+    const URL_CENY_OKOLICA = "{{ url_for('ceny.okolica') }}"; // ETAP 109: zaimportowane pliki RCN (moduł ceny)
     const OBSZAR = {{ obszar | tojson }};
     const FUNKCJE = {{ funkcje | tojson }};
     const DOMYSLNE = {{ domyslne | tojson }};

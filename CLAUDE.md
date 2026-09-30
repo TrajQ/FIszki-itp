@@ -27,7 +27,8 @@ kogoś, kto wróci do niego za trzy miesiące.
 - ceny        — ceny mieszkań w miastach i powiatach (GUS BDL): zmiany w
                 czasie, porównanie miast, ranking w województwie (od ETAPu 103);
                 transakcje mieszkań i działek z Rejestru Cen Nieruchomości:
-                mapa, trend, porównanie obszarów, raport (ETAPy 104–106)
+                mapa, trend, porównanie obszarów, raport, wycena porównawcza,
+                heksagony H3, ceny w okolicy w MPZP i osiedlu (ETAPy 104–109)
 
 Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 
@@ -64,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 108 (ceny: mapa cen w heksagonach H3 — zamknięty)
-Ostatni ZIP: releases/warsztat_etap108_20260930.zip
-Testy: 492 passed / 0 failed
+ETAP: 109 (ceny: ceny w okolicy w MPZP i osiedlu — zamknięty)
+Ostatni ZIP: releases/warsztat_etap109_20260930.zip
+Testy: 494 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).
