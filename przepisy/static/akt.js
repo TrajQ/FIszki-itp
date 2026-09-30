@@ -63,3 +63,98 @@
         }
     });
 })();
+
+// Fiszki z artykułu (ETAP 82): propozycje Gemini (tylko z cytatem w tekście
+// artykułu, sprawdza serwer) → zaznaczenie i poprawki → zapis do Fiszek.
+(function () {
+    "use strict";
+
+    function element(tag, klasa, tekst) {
+        const el = document.createElement(tag);
+        if (klasa) el.className = klasa;
+        if (tekst !== undefined) el.textContent = tekst;
+        return el;
+    }
+
+    async function wyslij(url, cialo) {
+        const odpowiedz = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cialo || {}) });
+        const dane = await odpowiedz.json().catch(() => ({}));
+        if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
+        return dane;
+    }
+
+    function panelPropozycji(id, dane) {
+        const panel = element("div", "propozycje-fiszek");
+        const stan = element("p", "wyciszony");
+        if (!dane.propozycje.length) {
+            panel.append(element("p", "wyciszony", `Brak propozycji z cytatem w tekście${dane.odrzucone ? ` (odrzucone: ${dane.odrzucone})` : ""}. Spróbuj jeszcze raz.`));
+            return panel;
+        }
+        if (dane.odrzucone) panel.append(element("p", "wyciszony", `Odrzucone propozycje bez cytatu w tekście albo z obcymi liczbami: ${dane.odrzucone}.`));
+        const wiersze = dane.propozycje.map((p) => {
+            const w = element("div", "propozycja");
+            const wybor = element("input");
+            wybor.type = "checkbox";
+            wybor.checked = true;
+            wybor.setAttribute("aria-label", "Zapisz tę fiszkę");
+            const pola = element("div", "propozycja__pola");
+            const pytanie = element("textarea");
+            pytanie.rows = 2;
+            pytanie.value = p.pytanie;
+            const odpowiedz = element("textarea");
+            odpowiedz.rows = 2;
+            odpowiedz.value = p.odpowiedz;
+            pola.append(pytanie, odpowiedz, element("blockquote", "wyciszony", `„${p.fragment}”`));
+            w.append(wybor, pola);
+            panel.append(w);
+            return { wybor, pytanie, odpowiedz, fragment: p.fragment };
+        });
+        const temat = element("input");
+        temat.type = "text";
+        temat.value = "przepisy";
+        temat.maxLength = 60;
+        const lTemat = element("label", "propozycje-fiszek__temat", "Temat ");
+        lTemat.append(temat);
+        const zapisz = element("button", "", "Zapisz zaznaczone");
+        zapisz.type = "button";
+        zapisz.addEventListener("click", async () => {
+            const fiszki = wiersze.filter((w) => w.wybor.checked).map((w) => ({ pytanie: w.pytanie.value, odpowiedz: w.odpowiedz.value, fragment: w.fragment }));
+            if (!fiszki.length) return (stan.textContent = "Zaznacz co najmniej jedną fiszkę.");
+            zapisz.disabled = true;
+            try {
+                const wynik = await wyslij(`${URL_JEDNOSTKI}${id}/fiszki`, { fiszki, tematy: temat.value ? [temat.value] : [] });
+                const gotowe = element("p", "komunikat komunikat--sukces");
+                const link = element("a", "", "otwórz w Fiszkach ›");
+                link.href = wynik.url;
+                gotowe.append(`Dodane fiszki: ${wynik.dodane} (z kotwicą w PDF-ie aktu) — `, link);
+                panel.replaceChildren(gotowe);
+            } catch (e) {
+                stan.textContent = e.message;
+                zapisz.disabled = false;
+            }
+        });
+        const rzad = element("div", "rzad");
+        rzad.append(lTemat, zapisz);
+        panel.append(rzad, stan);
+        return panel;
+    }
+
+    document.querySelectorAll(".przycisk-fiszek").forEach((przycisk) => {
+        przycisk.addEventListener("click", async () => {
+            const sekcja = przycisk.closest(".jednostka");
+            const stary = sekcja.querySelector(".propozycje-fiszek");
+            if (stary) stary.remove();
+            przycisk.disabled = true;
+            przycisk.textContent = "✦ Gemini myśli…";
+            try {
+                sekcja.append(panelPropozycji(przycisk.dataset.jednostka, await wyslij(`${URL_JEDNOSTKI}${przycisk.dataset.jednostka}/szkice-fiszek`)));
+            } catch (e) {
+                const blad = element("p", "komunikat komunikat--blad propozycje-fiszek", e.message);
+                sekcja.append(blad);
+            } finally {
+                przycisk.disabled = false;
+                przycisk.textContent = "✦ Fiszki";
+            }
+        });
+    });
+})();

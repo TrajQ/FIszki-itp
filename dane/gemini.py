@@ -310,3 +310,40 @@ def opisz_gmine(fakty: list[str]) -> str:
         raise BladGemini("Gemini zwrócił pusty opis.")
     sprawdz_liczby(opis, fakty)
     return opis
+
+
+# ---------- Przepisy: fiszki z artykułu (ETAP 82) ----------
+
+PROMPT_FISZEK_Z_PRZEPISU = (
+    "Jesteś asystentem studenta gospodarki przestrzennej uczącego się przepisów. "
+    "Dostajesz tekst jednej jednostki aktu prawnego ({oznaczenie}). Ułóż od 1 do "
+    "{liczba} fiszek sprawdzających, co ten przepis stanowi (obowiązki, warunki, "
+    "terminy, definicje) — WYŁĄCZNIE na podstawie podanego tekstu. W odpowiedzi "
+    "wskaż jednostkę redakcyjną (np. „art. 15 ust. 2 pkt 6”), jeśli wynika z tekstu. "
+    "Nie dodawaj faktów ani liczb spoza tekstu. Pytania i odpowiedzi zwięzłe, po polsku.\n"
+    "Każda fiszka musi mieć pole \"fragment\": DOSŁOWNY cytat (fragment zdania, "
+    "skopiowany znak w znak z tekstu), na którym opiera się odpowiedź.\n"
+    "Odpowiedz WYŁĄCZNIE listą JSON w formacie: "
+    '[{{"pytanie": "...", "odpowiedz": "...", "fragment": "..."}}]'
+)
+
+
+def zaproponuj_fiszki_z_przepisu(tekst: str, oznaczenie: str, liczba: int = 4) -> list[dict]:
+    """Propozycje {"pytanie", "odpowiedz", "fragment"} z jednej jednostki aktu.
+
+    Cytaty i liczby sprawdza wywołujący (przepisy/pytania.py)."""
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
+    try:
+        client = genai.Client(api_key=Config.GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model=Config.GEMINI_MODEL,
+            contents=tekst,
+            config=types.GenerateContentConfig(
+                system_instruction=PROMPT_FISZEK_Z_PRZEPISU.format(oznaczenie=oznaczenie, liczba=liczba),
+                response_mime_type="application/json",
+            ),
+        )
+    except errors.APIError as e:
+        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    return sparsuj_liste_fiszek(response.text or "")

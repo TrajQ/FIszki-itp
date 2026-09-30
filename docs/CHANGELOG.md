@@ -592,3 +592,9 @@
 - Osiedle: plan miejscowy i działki ewidencyjne (GUGiK) jako nakładki
   pod rysunkiem koncepcji, wybór zapamiętany.
 - Dodano `DECISIONS.md` D-088 i 1 test.
+
+## ETAP 82 — 2026-09-30
+- Przepisy: **„✦ Fiszki” przy każdym artykule** — propozycje Gemini z
+  cytatem sprawdzanym w tekście artykułu i liczbami tylko z przepisu,
+  wybór i poprawki, zapis do Fiszek z kotwicą w PDF-ie aktu.
+- Dodano `DECISIONS.md` D-089 i 2 testy.

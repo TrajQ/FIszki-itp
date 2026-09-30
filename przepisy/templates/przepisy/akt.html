@@ -36,7 +36,10 @@
         <section class="jednostka" id="j{{ j.id }}">
             <div class="jednostka__pasek">
                 <strong>{{ j.oznaczenie }}</strong>
-                <a class="wyciszony" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}#page={{ j.strona_od }}" target="_blank" rel="noopener">PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</a>
+                <span class="rzad jednostka__akcje">
+                    {% if j.oznaczenie != 'Tytuł' %}<button type="button" class="przycisk--tekst przycisk-fiszek" data-jednostka="{{ j.id }}" title="Gemini zaproponuje fiszki z tego artykułu; zostaną tylko te z cytatem w tekście">✦ Fiszki</button>{% endif %}
+                    <a class="wyciszony" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}#page={{ j.strona_od }}" target="_blank" rel="noopener">PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</a>
+                </span>
             </div>
             <p class="jednostka__tekst">{{ j.tekst }}</p>
         </section>
@@ -49,6 +52,7 @@
 <script>
     const URL_AKTU = "{{ url_for('przepisy.usun_akt', akt_id=akt.id) }}";
     const URL_LISTY = "{{ url_for('przepisy.index') }}";
+    const URL_JEDNOSTKI = "{{ url_for('przepisy.szkice_fiszek_z_jednostki', jednostka_id=0) }}".replace(/0\/szkice-fiszek$/, "");
 </script>
 <script src="{{ url_for('przepisy.static', filename='akt.js') }}"></script>
 {% endblock %}

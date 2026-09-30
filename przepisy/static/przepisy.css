@@ -363,3 +363,63 @@ button.przycisk--niebezpieczny-tekst {
         grid-template-columns: 1fr;
     }
 }
+
+/* ETAP 82: fiszki z artykułu */
+.jednostka__akcje {
+    gap: 8px;
+}
+
+.przycisk-fiszek {
+    padding: 0 4px;
+    font-size: 12px;
+}
+
+.propozycje-fiszek {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: var(--promien-maly);
+    background: var(--tlo-wyciszone);
+    font-size: 13px;
+}
+
+.propozycje-fiszek p {
+    margin: 0;
+}
+
+.propozycja {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.propozycja input[type="checkbox"] {
+    margin-top: 6px;
+}
+
+.propozycja__pola {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.propozycja__pola textarea {
+    width: 100%;
+    font: inherit;
+}
+
+.propozycja__pola blockquote {
+    margin: 0;
+    padding-left: 8px;
+    border-left: 3px solid var(--akcent);
+    font-size: 12px;
+}
+
+.propozycje-fiszek__temat {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}

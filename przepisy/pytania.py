@@ -113,3 +113,20 @@ def strona_cytatu(teksty_stron: dict[int, str], cytat: str, domyslna: int) -> in
         if szukany in do_porownania(teksty_stron[nr]):
             return nr
     return domyslna
+
+
+def sprawdz_propozycje_fiszek(propozycje: list[dict], jednostka: dict) -> tuple[list[dict], int]:
+    """Propozycje fiszek z artykułu (ETAP 82): zostają tylko te, których
+    cytat jest w tekście jednostki, a liczby w pytaniu i odpowiedzi — w jej
+    tekście albo oznaczeniu. Zwraca (dobre, liczba_odrzuconych)."""
+    tekst = do_porownania(jednostka["tekst"])
+    liczby_zrodla = liczby_w_tekscie(f"{jednostka['oznaczenie']} {jednostka['tekst']}")
+    dobre = []
+    for p in propozycje:
+        fragment = " ".join(p["fragment"].split()).strip(' "„”')
+        if len(fragment) < 10 or do_porownania(fragment) not in tekst:
+            continue
+        if liczby_w_tekscie(f"{p['pytanie']} {p['odpowiedz']}") - liczby_zrodla:
+            continue
+        dobre.append({**p, "fragment": fragment})
+    return dobre, len(propozycje) - len(dobre)

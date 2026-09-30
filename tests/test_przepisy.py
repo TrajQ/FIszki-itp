@@ -297,3 +297,43 @@ def test_strona_porownania(client):
     assert "zmienione: 0" in html and "Brak różnic" in html
     assert "Art. 15a" in client.get("/przepisy/porownanie?stary=1&nowy=2&wszystkie=1").get_data(as_text=True)
     assert client.get("/przepisy/porownanie?stary=1&nowy=9").status_code == 404
+
+
+# ---------- ETAP 82: fiszki z artykułu ----------
+
+from przepisy.pytania import sprawdz_propozycje_fiszek  # noqa: E402
+
+
+def test_sprawdz_propozycje_fiszek():
+    j = {"oznaczenie": "Art. 15", "tekst": "Art. 15. 2. W planie miejscowym określa się obowiązkowo maksymalną intensywność zabudowy w terminie 30 dni."}
+    dobre, odrzucone = sprawdz_propozycje_fiszek([
+        {"pytanie": "Co określa plan?", "odpowiedz": "Intensywność (art. 15 ust. 2).", "fragment": "określa się  obowiązkowo maksymalną intensywność"},
+        {"pytanie": "W jakim terminie?", "odpowiedz": "30 dni.", "fragment": "w terminie 30 dni"},
+        {"pytanie": "Ile pięter?", "odpowiedz": "Najwyżej 5.", "fragment": "maksymalną intensywność zabudowy"},  # liczba spoza tekstu
+        {"pytanie": "?", "odpowiedz": "x", "fragment": "tego zdania nie ma w przepisie"},
+    ], j)
+    assert [d["odpowiedz"] for d in dobre] == ["Intensywność (art. 15 ust. 2).", "30 dni."] and odrzucone == 2
+    assert dobre[0]["fragment"] == "określa się obowiązkowo maksymalną intensywność"
+
+
+def test_fiszki_z_artykulu(client, monkeypatch):
+    wgraj(client)
+    jednostka = next(j for j in client.application.test_client().get("/przepisy/szukaj?q=art. 15").get_json()["wyniki"])
+    monkeypatch.setattr(gemini, "zaproponuj_fiszki_z_przepisu", lambda tekst, oznaczenie, liczba=4: [
+        {"pytanie": "Kto sporządza projekt planu?", "odpowiedz": "Wójt (art. 15 ust. 1).", "fragment": "Wójt sporządza projekt planu miejscowego"},
+        {"pytanie": "Zmyślone", "odpowiedz": "x", "fragment": "zdanie spoza przepisu"}])
+    url = f"/przepisy/jednostki/{jednostka['id']}"
+    dane = client.post(url + "/szkice-fiszek").get_json()
+    assert len(dane["propozycje"]) == 1 and dane["odrzucone"] == 1
+
+    r = client.post(url + "/fiszki", json={"fiszki": dane["propozycje"], "tematy": ["planowanie"]})
+    assert r.status_code == 201 and r.get_json()["dodane"] == 1
+    fiszki = client.get(r.get_json()["url"] + "fiszki").get_json()
+    assert fiszki[0]["fragment_tekstu"] == "Wójt sporządza projekt planu miejscowego" and fiszki[0]["strona"] == 2
+
+    # podrobiony cytat i pusta odpowiedź — nic nie zapisujemy (także pierwszej, poprawnej)
+    zle = [dane["propozycje"][0], {"pytanie": "a", "odpowiedz": "b", "fragment": "nie ma tego w artykule"}]
+    assert client.post(url + "/fiszki", json={"fiszki": zle}).status_code == 400
+    assert client.post(url + "/fiszki", json={"fiszki": [{**dane["propozycje"][0], "odpowiedz": " "}]}).status_code == 400
+    assert len(client.get(r.get_json()["url"] + "fiszki").get_json()) == 1
+    assert client.post("/przepisy/jednostki/999/szkice-fiszek").status_code == 404

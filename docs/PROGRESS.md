@@ -1508,3 +1508,14 @@ Status: zamknięty
   przeładowaniu, zapytania do usługi GUGiK wysyłane
 - Nie sprawdzone tutaj: obraz planów (sieć zablokowana)
 - `DECISIONS.md`: D-088
+
+## ETAP 82 — Przepisy: fiszki z artykułu
+Data: 2026-09-30
+Status: zamknięty
+
+- `gemini.zaproponuj_fiszki_z_przepisu`, `pytania.sprawdz_propozycje_fiszek`,
+  trasy `/przepisy/jednostki/<id>/szkice-fiszek` i `/fiszki`, panel w
+  `akt.js`
+- Sprawdzone w przeglądarce z podstawionym modelem na PDF-ie ustawy
+  (2 propozycje, 1 odrzucona, 1 zapisana)
+- `DECISIONS.md`: D-089

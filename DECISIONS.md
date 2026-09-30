@@ -1889,3 +1889,24 @@ planu — obraz planu pod rysunkiem uzupełnia wpisywanie ustaleń (D-064).
 - Automatyczne przepisanie wskaźników z planu do koncepcji — usługa
   podaje je jako tekst w różnych formatach; zgadywanie liczb z tekstu
   łamie zasadę „liczby z danych”.
+
+## D-089 — Przepisy: fiszki z całego artykułu, sprawdzane cytatem i liczbami
+Data: 2026-09-30
+
+**Decyzja:** Przy każdej jednostce na stronie aktu „✦ Fiszki”: Gemini
+(`dane/gemini.py: zaproponuj_fiszki_z_przepisu`, prompt dla przepisów —
+treść normy, wskazanie jednostki redakcyjnej) proponuje do 4 fiszek z
+dosłownym cytatem. Serwer odrzuca propozycje, których cytatu nie ma w
+tekście jednostki albo których pytanie/odpowiedź zawiera liczbę spoza
+jej tekstu i oznaczenia (`pytania.sprawdz_propozycje_fiszek`). Student
+zaznacza i poprawia; zapis przez `fiszki/zewnetrzne.py` (D-074) z
+kotwicą na stronie PDF-a, na której naprawdę jest cytat. Przy zapisie
+cytaty sprawdzane ponownie; wszystkie przed zapisem pierwszej — nic „do
+połowy”.
+
+**Uzasadnienie:** Nauka przepisów artykuł po artykule; te same gwarancje
+co przy fiszkach z cytatu odpowiedzi (D-068, D-074).
+
+**Odrzucone alternatywy:**
+- Prompt fiszek z podręcznika — pytania o „stronę”, bez wskazania
+  artykułu i ustępu.

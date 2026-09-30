@@ -191,3 +191,61 @@ def porownanie_wersji():
         wynik = {"stary": stary, "nowy": nowy, **porownanie.porownaj(baza.jednostki_aktu(a), baza.jednostki_aktu(b))}
     return render_template("przepisy/porownanie.html", akty=akty, wynik=wynik, stary_id=a, nowy_id=b,
                            tylko_zmiany=request.args.get("wszystkie") != "1")
+
+
+# ---------- fiszki z artykułu (ETAP 82) ----------
+
+
+def _jednostka_albo_404(jednostka_id: int) -> tuple[dict, dict]:
+    j = baza.jednostka(jednostka_id)
+    if j is None:
+        abort(404)
+    return j, _akt_albo_404(j["akt_id"])
+
+
+@przepisy_bp.route("/jednostki/<int:jednostka_id>/szkice-fiszek", methods=["POST"])
+def szkice_fiszek_z_jednostki(jednostka_id):
+    """Propozycje fiszek z jednego artykułu — tylko z cytatem w tekście."""
+    j, _ = _jednostka_albo_404(jednostka_id)
+    try:
+        propozycje = gemini.zaproponuj_fiszki_z_przepisu(j["tekst"][: pytania.MAKS_ZNAKOW_JEDNOSTKI], j["oznaczenie"])
+    except gemini.BladGemini as e:
+        return jsonify({"blad": str(e)}), 502
+    dobre, odrzucone = pytania.sprawdz_propozycje_fiszek(propozycje, j)
+    return jsonify({"propozycje": dobre, "odrzucone": odrzucone})
+
+
+@przepisy_bp.route("/jednostki/<int:jednostka_id>/fiszki", methods=["POST"])
+def fiszki_z_jednostki(jednostka_id):
+    """Zapis wybranych fiszek z artykułu z kotwicą na stronie cytatu.
+    Cytaty sprawdzamy jeszcze raz — przeglądarka mogła je zmienić."""
+    j, akt = _jednostka_albo_404(jednostka_id)
+    dane = request.get_json(silent=True) or {}
+    wybrane = dane.get("fiszki")
+    if not isinstance(wybrane, list) or not wybrane:
+        return jsonify({"blad": "Zaznacz co najmniej jedną fiszkę."}), 400
+    tekst = pytania.do_porownania(j["tekst"])
+    sciezka = os.path.join(baza.folder_plikow(), akt["nazwa_pliku"])
+    strony = teksty_stron(sciezka, j["strona_od"], j["strona_do"])
+    # Najpierw sprawdzamy wszystkie — żadnego zapisu „do połowy”.
+    do_zapisu = []
+    for f in wybrane:
+        if not isinstance(f, dict):
+            return jsonify({"blad": "Zły format fiszki."}), 400
+        fragment = " ".join(str(f.get("fragment") or "").split())
+        pytanie, odpowiedz = str(f.get("pytanie") or "").strip(), str(f.get("odpowiedz") or "").strip()
+        if not fragment or pytania.do_porownania(fragment) not in tekst:
+            return jsonify({"blad": "Cytat fiszki nie pochodzi z tego artykułu."}), 400
+        if not pytanie or not odpowiedz:
+            return jsonify({"blad": "Każda fiszka musi mieć pytanie i odpowiedź."}), 400
+        do_zapisu.append((pytania.strona_cytatu(strony, fragment, j["strona_od"]), fragment, pytanie, odpowiedz))
+    pdf_id = None
+    for strona, fragment, pytanie, odpowiedz in do_zapisu:
+        try:
+            wynik = fiszki_zewnetrzne.dodaj_fiszke(
+                sciezka, f"{akt['nazwa'][:120]}.pdf", strona, fragment, pytanie, odpowiedz, dane.get("tematy"),
+            )
+        except fiszki_zewnetrzne.BladFiszki as e:  # np. za długi temat — sprawdzany przy pierwszej fiszce
+            return jsonify({"blad": str(e)}), 400
+        pdf_id = wynik["pdf_id"]
+    return jsonify({"dodane": len(wybrane), "url": url_for("fiszki.widok_pdf", pdf_id=pdf_id)}), 201
