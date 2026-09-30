@@ -337,3 +337,65 @@ def test_fiszki_z_artykulu(client, monkeypatch):
     assert client.post(url + "/fiszki", json={"fiszki": [{**dane["propozycje"][0], "odpowiedz": " "}]}).status_code == 400
     assert len(client.get(r.get_json()["url"] + "fiszki").get_json()) == 1
     assert client.post("/przepisy/jednostki/999/szkice-fiszek").status_code == 404
+
+
+# ---------- ETAP 88: akty z API Sejmu ----------
+
+from dane import sejm  # noqa: E402
+
+
+class _Odp:
+    def __init__(self, json_=None, tresc=b"", status=200):
+        self._json, self.tresc, self.status_code = json_, tresc, status
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            import requests
+
+            raise requests.HTTPError(response=self)
+
+    def json(self):
+        return self._json
+
+    def iter_content(self, rozmiar):
+        yield self.tresc
+
+
+def test_sejm_szukaj_i_pobierz(client, monkeypatch):
+    zapytania = []
+    wyniki = {"count": 3, "items": [
+        {"publisher": "DU", "year": 2003, "pos": 717, "title": "Ustawa z dnia 27 marca 2003 r. o planowaniu i zagospodarowaniu przestrzennym",
+         "type": "Ustawa", "status": "obowiązujący", "textPDF": True},
+        {"publisher": "DU", "year": 2024, "pos": 1130, "title": "Obwieszczenie Marszałka Sejmu RP w sprawie ogłoszenia jednolitego tekstu ustawy o planowaniu i zagospodarowaniu przestrzennym",
+         "type": "Obwieszczenie", "status": "obowiązujący", "textPDF": "/eli/acts/DU/2024/1130/text.pdf"},
+        {"publisher": "DU", "year": "x", "pos": 1, "title": "zepsuty wpis"},
+    ]}
+
+    def get(url, params=None, **k):
+        zapytania.append((url, params))
+        if url.endswith("/search"):
+            return _Odp(wyniki)
+        return _Odp(tresc=b"%PDF-1.4 ustawa")
+
+    monkeypatch.setattr(sejm.requests, "get", get)
+    akty = client.get("/przepisy/sejm/szukaj?q=planowaniu").get_json()
+    assert [a["adres"] for a in akty] == ["Dz.U. 2024 poz. 1130", "Dz.U. 2003 poz. 717"]  # najnowsze najpierw
+    assert akty[0]["tekst_jednolity"] and akty[0]["ma_pdf"] and not akty[1]["tekst_jednolity"]
+    assert zapytania[0][1] == {"title": "planowaniu", "publisher": "DU", "limit": sejm.MAKS_WYNIKOW}
+    assert client.get("/przepisy/sejm/szukaj?q=ab").status_code == 502  # za krótkie
+
+    odp = client.post("/przepisy/sejm/pobierz", json={"rok": 2024, "pozycja": 1130, "tytul": "Obwieszczenie … jednolitego tekstu"})
+    assert odp.status_code == 201
+    assert zapytania[-1][0] == "https://api.sejm.gov.pl/eli/acts/DU/2024/1130/text.pdf"
+    html = client.get(odp.get_json()["url"]).get_data(as_text=True)
+    assert "(Dz.U. 2024 poz. 1130)" in html and "Art. 1" in html
+    assert client.post("/przepisy/sejm/pobierz", json={"rok": "x"}).status_code == 400
+
+    monkeypatch.setattr(sejm.requests, "get", lambda url, **k: _Odp(tresc=b"<html>nie PDF"))
+    assert "nie zwróciło pliku PDF" in client.post("/przepisy/sejm/pobierz", json={"rok": 2024, "pozycja": 1}).get_json()["blad"]
+
+    def brak_sieci(*a, **k):
+        raise sejm.requests.ConnectionError("x")
+
+    monkeypatch.setattr(sejm.requests, "get", brak_sieci)
+    assert "brak połączenia" in client.get("/przepisy/sejm/szukaj?q=planowaniu").get_json()["blad"]

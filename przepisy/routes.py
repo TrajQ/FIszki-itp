@@ -6,7 +6,7 @@ import uuid
 from flask import Blueprint, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 
-from dane import gemini
+from dane import gemini, sejm
 from fiszki import zewnetrzne as fiszki_zewnetrzne
 
 from . import baza, porownanie, pytania
@@ -64,16 +64,60 @@ def dodaj_akt():
         return redirect(url_for("przepisy.index", blad="To nie jest plik PDF."))
     plik.seek(0)
     nazwa_na_dysku = f"{uuid.uuid4().hex}_{secure_filename(plik.filename) or 'akt.pdf'}"
+    plik.save(os.path.join(baza.folder_plikow(), nazwa_na_dysku))
+    try:
+        akt_id = _zapisz_akt(nazwa_na_dysku, plik.filename)
+    except BladPdf as e:
+        return redirect(url_for("przepisy.index", blad=str(e)))
+    return redirect(url_for("przepisy.widok_aktu", akt_id=akt_id))
+
+
+def _zapisz_akt(nazwa_na_dysku: str, nazwa_pliku: str, nazwa: str | None = None) -> int:
+    """PDF już zapisany w folderze modułu → podział na jednostki i wpis w bazie.
+    Przy błędzie odczytu usuwa plik i przepuszcza BladPdf."""
     sciezka = os.path.join(baza.folder_plikow(), nazwa_na_dysku)
-    plik.save(sciezka)
     try:
         strony = strony_z_pdf(sciezka)
-    except BladPdf as e:
+    except BladPdf:
         os.remove(sciezka)
-        return redirect(url_for("przepisy.index", blad=str(e)))
+        raise
     jednostki = podziel(strony)
-    akt_id = baza.dodaj_akt(nazwa_z_tytulu(jednostki, plik.filename), nazwa_na_dysku, len(strony), jednostki)
-    return redirect(url_for("przepisy.widok_aktu", akt_id=akt_id))
+    return baza.dodaj_akt(nazwa or nazwa_z_tytulu(jednostki, nazwa_pliku), nazwa_na_dysku, len(strony), jednostki)
+
+
+# ---------- akty z API Sejmu (ETAP 88) ----------
+
+
+@przepisy_bp.route("/sejm/szukaj")
+def szukaj_w_sejmie():
+    try:
+        return jsonify(sejm.szukaj_aktow(request.args.get("q", "")))
+    except sejm.BladSejmu as e:
+        return jsonify({"blad": str(e)}), 502
+
+
+@przepisy_bp.route("/sejm/pobierz", methods=["POST"])
+def pobierz_z_sejmu():
+    """Pobiera urzędowy PDF aktu i dodaje go jak wgrany plik."""
+    dane = request.get_json(silent=True) or {}
+    try:
+        rok, pozycja = int(dane.get("rok")), int(dane.get("pozycja"))
+    except (TypeError, ValueError):
+        return jsonify({"blad": "Wymagane rok i pozycja (liczby)."}), 400
+    tytul = " ".join(str(dane.get("tytul") or "").split())
+    try:
+        pdf = sejm.pobierz_pdf(rok, pozycja)
+    except sejm.BladSejmu as e:
+        return jsonify({"blad": str(e)}), 502
+    nazwa_na_dysku = f"{uuid.uuid4().hex}_DU_{rok}_{pozycja}.pdf"
+    with open(os.path.join(baza.folder_plikow(), nazwa_na_dysku), "wb") as f:
+        f.write(pdf)
+    nazwa = f"{tytul} (Dz.U. {rok} poz. {pozycja})"[:MAKS_DLUGOSC_NAZWY] if tytul else None
+    try:
+        akt_id = _zapisz_akt(nazwa_na_dysku, f"Dz.U. {rok} poz. {pozycja}", nazwa)
+    except BladPdf as e:
+        return jsonify({"blad": str(e)}), 422
+    return jsonify({"id": akt_id, "url": url_for("przepisy.widok_aktu", akt_id=akt_id)}), 201
 
 
 @przepisy_bp.route("/akty/<int:akt_id>")

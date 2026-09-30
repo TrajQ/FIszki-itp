@@ -423,3 +423,35 @@ button.przycisk--niebezpieczny-tekst {
     align-items: center;
     gap: 6px;
 }
+
+/* ---------- pobieranie z Dziennika Ustaw (ETAP 88) ---------- */
+
+.wyniki-sejmu {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.wynik-sejmu {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid var(--linia-slaba);
+}
+
+.wynik-sejmu__opis {
+    min-width: 0;
+    font-size: 14px;
+}
+
+.wynik-sejmu__opis .wyciszony {
+    font-size: 12px;
+}
+
+.wynik-sejmu button {
+    flex: none;
+}

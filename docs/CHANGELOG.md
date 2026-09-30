@@ -634,3 +634,9 @@
 - Dodano `docs/PORTFOLIO.md` — opis Warsztatu do portfolio (po polsku, ze
   streszczeniem po angielsku) i listę zrzutów ekranu do zrobienia.
 - Dodano `DECISIONS.md` D-095.
+
+## ETAP 88 — 2026-09-30
+- Przepisy: **pobieranie ustaw z Dziennika Ustaw** (API Sejmu, ta sama
+  baza co ISAP) — wyszukiwanie po tytule, oznaczone teksty jednolite,
+  pobranie jednym kliknięciem zamiast ręcznego ściągania PDF-a.
+- Dodano `dane/sejm.py`, `przepisy/static/sejm.js`, `DECISIONS.md` D-096 i 1 test.

@@ -61,6 +61,17 @@
     </form>
     <p class="wyciszony opis-panelu">PDF musi mieć warstwę tekstową (skany bez OCR nie zadziałają). Tekst dzielony jest na artykuły („Art. 15.”) i paragrafy („§ 4.”).</p>
 </section>
+
+<section class="karta stos">
+    <h3>Pobierz z Dziennika Ustaw</h3>
+    <form id="formularz-sejmu" class="rzad">
+        <input id="pole-sejmu" type="search" placeholder="słowa z tytułu, np. planowaniu i zagospodarowaniu" autocomplete="off" required>
+        <button type="submit" class="przycisk--drugi">Szukaj</button>
+    </form>
+    <p class="wyciszony opis-panelu">Urzędowe teksty z API Sejmu (ta sama baza co ISAP). Aktualny tekst ustawy to zwykle najnowsze „Obwieszczenie … w sprawie ogłoszenia jednolitego tekstu” — takie pozycje są oznaczone.</p>
+    <p id="stan-sejmu" class="wyciszony" hidden></p>
+    <ul id="wyniki-sejmu" class="wyniki-sejmu"></ul>
+</section>
 {% endblock %}
 
 {% block skrypty %}
@@ -70,7 +81,10 @@
     const URL_PYTANIE = "{{ url_for('przepisy.zadaj_pytanie') }}";
     const URL_PYTANIA = "{{ url_for('przepisy.usun_pytanie', pytanie_id=0) }}".replace(/0$/, "");
     const HISTORIA = {{ historia | tojson }};
+    const URL_SEJM_SZUKAJ = "{{ url_for('przepisy.szukaj_w_sejmie') }}";
+    const URL_SEJM_POBIERZ = "{{ url_for('przepisy.pobierz_z_sejmu') }}";
 </script>
 <script src="{{ url_for('przepisy.static', filename='przepisy.js') }}"></script>
 <script src="{{ url_for('przepisy.static', filename='pytania.js') }}"></script>
+<script src="{{ url_for('przepisy.static', filename='sejm.js') }}"></script>
 {% endblock %}

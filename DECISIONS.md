@@ -2036,3 +2036,26 @@ bezpieczniejszy niż pytanie bez przygotowanej odpowiedzi na rozmowie.
 - Zrzuty z danych testowych — mylące.
 - Osobna strona internetowa portfolio — wymaga hostingu; na razie
   wystarczy plik w repo i PDF-y z raportów.
+
+## D-096 — Przepisy: teksty aktów z API Sejmu (ELI)
+Data: 2026-09-30
+
+**Decyzja:** Wyszukiwanie aktów po słowach tytułu w Dzienniku Ustaw przez
+oficjalne API Kancelarii Sejmu (`api.sejm.gov.pl/eli`: `/acts/search`,
+`/acts/DU/{rok}/{poz}/text.pdf`) i pobranie urzędowego PDF-a do modułu
+tą samą ścieżką co wgrany plik (podział na jednostki, FTS). Wyniki od
+najnowszych; pozycje „… jednolitego tekstu …” oznaczone. Nazwa aktu =
+tytuł z API + adres Dz.U. Bez filtrowania „tylko obowiązujące” — nie
+potwierdziłem formatu parametru, pokazujemy za to status aktu.
+
+**Uzasadnienie:** Aktualny tekst jednolity to podstawa pracy z
+przepisami, a ręczne szukanie PDF-a w ISAP to kilka kroków. API jest
+publiczne, bez klucza — zgodne z zasadą „wyłącznie API i usługi”.
+
+**Odrzucone alternatywy:**
+- Tekst HTML aktu (`text.html`) — dla nowszych aktów API daje tylko PDF,
+  a moduł i kotwice w PDF-ie już działają na PDF-ach.
+- Pobieranie ze strony ISAP — to byłoby scrapowanie strony, a jest API.
+- Automatyczne szukanie najnowszego tekstu jednolitego (powiązania
+  aktów) — format powiązań w API nie jest jednoznacznie opisany; wybór
+  zostawiamy użytkownikowi.

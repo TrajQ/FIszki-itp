@@ -1578,3 +1578,19 @@ Status: zamknięty
   streszczenie po angielsku; katalog `docs/portfolio/` na zrzuty
 - Bez zmian w kodzie; testy bez zmian (448)
 - `DECISIONS.md`: D-095
+
+## ETAP 88 — Przepisy: akty z Dziennika Ustaw przez API Sejmu
+Data: 2026-09-30
+Status: zamknięty
+
+- `dane/sejm.py` (wyszukiwanie po tytule, pobieranie urzędowego PDF),
+  trasy `/przepisy/sejm/szukaj` i `/przepisy/sejm/pobierz`, blok „Pobierz
+  z Dziennika Ustaw”, `sejm.js`; wspólna funkcja `_zapisz_akt` dla PDF
+  wgranego i pobranego
+- Format odpowiedzi API ustalony z dokumentacji i kodu kilku otwartych
+  projektów (tu API jest zablokowane przez sieć); kod nie zakłada obecności
+  pól
+- Sprawdzone w przeglądarce z podstawionym API i prawdziwym PDF-em ustawy:
+  3 wyniki, oznaczony tekst jednolity, pobranie → strona aktu z artykułami
+- Nie sprawdzone tutaj: prawdziwe API Sejmu
+- `DECISIONS.md`: D-096
