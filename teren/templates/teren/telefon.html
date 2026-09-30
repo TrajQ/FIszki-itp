@@ -67,11 +67,15 @@
 </style>
 </head>
 <body>
+{% set ankieta = projekt.rodzaj == 'ankieta' %}
 <h1>{{ projekt.nazwa }}</h1>
-<p class="wyciszony" style="margin: 0 4px">Formularz terenowy Warsztatu · działa bez internetu · punkty zostają w tym telefonie, dopóki ich nie wyeksportujesz.</p>
+<p class="wyciszony" style="margin: 0 4px">Formularz terenowy Warsztatu · działa bez internetu · {{ 'odpowiedzi zostają' if ankieta else 'punkty zostają' }} w tym telefonie, dopóki ich nie wyeksportujesz.</p>
 
 <form id="formularz" class="karta" autocomplete="off">
-    <h2>Nowy punkt</h2>
+    <h2>{{ 'Nowa odpowiedź' if ankieta else 'Nowy punkt' }}</h2>
+    {% if ankieta %}<div id="pola"></div>
+    <details>
+        <summary>Miejsce ankiety i zdjęcie (opcjonalnie)</summary>{% endif %}
     <div class="gps">
         <div id="gps-stan" class="gps__stan">Położenie: brak</div>
         <button id="gps" type="button">📍 Pobierz</button>
@@ -84,18 +88,19 @@
         </div>
     </details>
 
-    <div id="pola"></div>
+    {% if not ankieta %}<div id="pola"></div>{% endif %}
 
     <label for="zdjecie">Zdjęcie</label>
     <input id="zdjecie" type="file" accept="image/*" capture="environment">
     <img id="podglad" class="podglad" alt="Podgląd zdjęcia" hidden>
+    {% if ankieta %}</details>{% endif %}
 
     <label for="uwagi">Uwagi</label>
     <textarea id="uwagi" maxlength="2000"></textarea>
     <p id="komunikat" class="komunikat" hidden></p>
 </form>
 
-<section class="karta">
+<section class="karta"{{ ' hidden' if ankieta and not mapa }}>
     <div class="gps">
         <h2 style="margin: 0">Mapa</h2>
         <button id="gdzie-jestem" type="button">📍 Gdzie jestem</button>
@@ -105,26 +110,26 @@
 </section>
 
 <section class="karta">
-    <h2>Zapisane punkty: <span id="liczba">0</span></h2>
+    <h2>{{ 'Zapisane odpowiedzi' if ankieta else 'Zapisane punkty' }}: <span id="liczba">0</span></h2>
     <ul id="lista" class="lista"></ul>
     <div class="rzad" style="margin-top: 10px">
         <button id="eksport" type="button">⬇ Eksportuj plik</button>
         <button id="udostepnij" type="button" hidden>↗ Udostępnij</button>
     </div>
-    <p class="wyciszony">Plik przenieś na komputer (kabel, e-mail, dysk w chmurze) i zaimportuj w Warsztacie: Teren → „{{ projekt.nazwa }}” → Import. Ponowny import tego samego pliku nie dubluje punktów.</p>
+    <p class="wyciszony">Plik przenieś na komputer (kabel, e-mail, dysk w chmurze) i zaimportuj w Warsztacie: Teren → „{{ projekt.nazwa }}” → Import. Ponowny import tego samego pliku nie dubluje {{ 'odpowiedzi' if ankieta else 'punktów' }}.</p>
     <details>
         <summary>Wyczyść pamięć telefonu (po udanym imporcie)</summary>
         <button id="wyczysc" type="button" style="margin-top: 8px; color: var(--blad)">Usuń wszystkie punkty z telefonu</button>
     </details>
 </section>
 
-<div class="dol"><button id="zapisz" type="button" class="glowny">Zapisz punkt</button></div>
+<div class="dol"><button id="zapisz" type="button" class="glowny">{{ 'Zapisz odpowiedź' if ankieta else 'Zapisz punkt' }}</button></div>
 
 <script>
 (function () {
     "use strict";
 
-    const PROJEKT = {{ {"nazwa": projekt.nazwa, "klucz": projekt.klucz, "pola": projekt.pola} | tojson }};
+    const PROJEKT = {{ {"nazwa": projekt.nazwa, "klucz": projekt.klucz, "pola": projekt.pola, "ankieta": ankieta} | tojson }};
     const FORMAT = {{ format_pliku | tojson }};
     // ETAP 83: podkład mapy (jeden obraz ortofotomapy obszaru prac) albo null.
     const MAPA = {{ mapa | tojson if mapa else 'null' }};
@@ -243,6 +248,18 @@
                     opcje.appendChild(l);
                 }
                 pojemnik.appendChild(opcje);
+            } else if (pole.typ === "wiele") {
+                // ETAP 93: wielokrotny wybór — pola zaznaczania
+                pojemnik.appendChild(element("label", {}, `${pole.nazwa} (można kilka)`));
+                const opcje = element("div", { className: "opcje" });
+                for (const o of pole.opcje) {
+                    const l = element("label", {});
+                    l.style.margin = "0";
+                    l.style.fontWeight = "400";
+                    l.append(element("input", { type: "checkbox", name: id, value: o }), element("span", {}, o));
+                    opcje.appendChild(l);
+                }
+                pojemnik.appendChild(opcje);
             } else {
                 pojemnik.appendChild(element("label", { htmlFor: id }, pole.nazwa));
                 const input = element("input", { id, type: pole.typ === "liczba" ? "number" : "text" });
@@ -262,6 +279,9 @@
             if (pole.typ === "wybor" || pole.typ === "tak_nie") {
                 const r = document.querySelector(`input[name="${id}"]:checked`);
                 if (r) wynik[pole.nazwa] = pole.typ === "tak_nie" ? r.value === "tak" : r.value;
+            } else if (pole.typ === "wiele") {
+                const zaznaczone = [...document.querySelectorAll(`input[name="${id}"]:checked`)].map((x) => x.value);
+                if (zaznaczone.length) wynik[pole.nazwa] = zaznaczone;
             } else {
                 const v = $(id).value.trim();
                 if (v !== "") wynik[pole.nazwa] = pole.typ === "liczba" ? Number(v) : v;
@@ -306,7 +326,8 @@
             dokladnosc = null;
         }
         if (lat === null || lat === undefined) {
-            if (!confirm("Punkt nie ma położenia. Zapisać mimo to? (Nie pojawi się na mapie w Warsztacie.)")) return;
+            // w ankiecie miejsce jest opcjonalne — nie pytamy
+            if (!PROJEKT.ankieta && !confirm("Punkt nie ma położenia. Zapisać mimo to? (Nie pojawi się na mapie w Warsztacie.)")) return;
             lat = lng = null;
         }
         const punkt = {
@@ -325,7 +346,7 @@
         polozenie = null;
         pokazPolozenie();
         document.querySelectorAll(".opcje input").forEach((x) => (x.dataset.zaznaczony = ""));
-        komunikat("Zapisano punkt.", "ok");
+        komunikat(PROJEKT.ankieta ? "Zapisano odpowiedź — można zacząć następną." : "Zapisano punkt.", "ok");
         window.scrollTo({ top: 0, behavior: "smooth" });
         await pokazListe();
     });
@@ -342,8 +363,8 @@
             if (p.zdjecie) li.appendChild(element("img", { src: p.zdjecie, alt: "" }));
             const opis = element("div");
             const pierwsza = Object.values(p.wartosci)[0];
-            opis.append(element("strong", {}, pierwsza === undefined ? "(bez wartości)" : String(pierwsza === true ? "tak" : pierwsza === false ? "nie" : pierwsza)),
-                element("div", { className: "wyciszony" }, `${new Date(p.czas).toLocaleString("pl-PL")}${p.lat === null ? " · bez położenia" : ""}`));
+            opis.append(element("strong", {}, pierwsza === undefined ? "(bez wartości)" : String(pierwsza === true ? "tak" : pierwsza === false ? "nie" : Array.isArray(pierwsza) ? pierwsza.join("; ") : pierwsza)),
+                element("div", { className: "wyciszony" }, `${new Date(p.czas).toLocaleString("pl-PL")}${p.lat === null && !PROJEKT.ankieta ? " · bez położenia" : ""}`));
             const usun = element("button", { type: "button" }, "Usuń");
             usun.addEventListener("click", async () => {
                 if (!confirm("Usunąć ten punkt z telefonu?")) return;

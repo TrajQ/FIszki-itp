@@ -311,3 +311,52 @@ def test_kalendarz_egzaminy_i_teren(client):
 
     client.post("/teren/projekty/1/termin", data={"termin": dzien(1), "usun": "1"})
     assert "Park Wilsona" not in client.get("/").get_data(as_text=True).split('class="siatka-kart"')[0]
+
+
+# ---------- ETAP 93: tryb ankiety i wielokrotny wybór ----------
+
+
+def test_wielokrotny_wybor_w_polach_i_pliku():
+    pola = sprawdz_pola(WZORY["ankieta"]["pola"])
+    assert pola[1]["typ"] == "wiele" and "odpoczynek" in pola[1]["opcje"] and not pola[1]["skala"]
+    with pytest.raises(BladDanych, match="powtarzają"):
+        sprawdz_pola([{"nazwa": "x", "typ": "wiele", "opcje": ["a", "A"]}])
+    p = punkt(wartosci={"po co tu przychodzisz": ["sport", "odpoczynek", "sport"], "czego tu brakuje": []})
+    wynik = odczytaj_plik(plik("k", p), "k", pola)[0]["wartosci"]
+    assert wynik == {"po co tu przychodzisz": ["odpoczynek", "sport"]}  # kolejność opcji, bez powtórzeń, pusta lista pominięta
+    for zle in ({"po co tu przychodzisz": "sport"}, {"po co tu przychodzisz": ["latanie"]}):
+        with pytest.raises(BladDanych):
+            odczytaj_plik(plik("k", punkt(wartosci=zle)), "k", pola)
+
+
+def test_zestawienie_wielokrotnego_wyboru():
+    from teren.raport import zestawienie
+
+    pola = sprawdz_pola([{"nazwa": "brakuje", "typ": "wiele", "opcje": ["ławek", "zieleni", "cienia"]}])
+    punkty = [{"wartosci": {"brakuje": ["ławek", "zieleni"]}}, {"wartosci": {"brakuje": ["zieleni"]}}, {"wartosci": {}}, {"wartosci": {}}]
+    z = zestawienie(pola, punkty)[0]
+    assert z["wiele"] and z["wypelnione"] == 2
+    assert [(r["wartosc"], r["liczba"], r["procent"]) for r in z["rozklad"]] == [("ławek", 1, 25), ("zieleni", 2, 50), ("cienia", 0, 0)]
+
+
+def test_ankieta_obieg(client):
+    client.post("/teren/projekty", data={"nazwa": "Ankieta — Rynek Jeżycki", "wzor": "ankieta"})
+    html = client.get("/teren/projekty/1").get_data(as_text=True)
+    assert 'value="ankieta" selected' in html
+    telefon = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert "Nowa odpowiedź" in telefon and "Miejsce ankiety i zdjęcie (opcjonalnie)" in telefon and '"ankieta": true' in telefon
+    klucz = re.search(r'"klucz": "([^"]+)"', telefon).group(1)
+    odpowiedzi = [
+        punkt("odp1000000a", lat=None, lng=None, zdjecie=None, wartosci={"po co tu przychodzisz": ["zakupy", "spotkania"], "wiek": "19–35"}),
+        punkt("odp2000000a", lat=None, lng=None, zdjecie=None, wartosci={"po co tu przychodzisz": ["zakupy"]}),
+    ]
+    r = client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(json.dumps(plik(klucz, *odpowiedzi)).encode()), "a.json")},
+                    content_type="multipart/form-data")
+    assert r.get_json() == {"dodane": 2, "pominiete": 0}
+    raport = client.get("/teren/projekty/1/raport").get_data(as_text=True)
+    assert "Ankieta · odpowiedzi: 2" in raport and "Wyniki ankiety" in raport and "nie sumują się do 100" in raport
+    assert "zakupy; spotkania" in raport and 'class="raport-terenu__mapa"' not in raport  # bez położeń — bez mapy
+    assert "zakupy; spotkania" in client.get("/teren/projekty/1.csv").get_data(as_text=True)
+    assert client.post("/teren/projekty/1/rodzaj", data={"rodzaj": "inwentaryzacja"}).status_code == 302
+    assert "Nowy punkt" in client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert client.post("/teren/projekty/1/rodzaj", data={"rodzaj": "x"}).status_code == 400

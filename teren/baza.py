@@ -53,6 +53,8 @@ KOLUMNY_DODANE = {
         "obszar": "TEXT",
         # ETAP 86: planowany termin wyjścia w teren (RRRR-MM-DD) — w kalendarzu na stronie głównej
         "termin": "TEXT",
+        # ETAP 93: inwentaryzacja albo ankieta
+        "rodzaj": "TEXT NOT NULL DEFAULT 'inwentaryzacja'",
     },
 }
 
@@ -106,6 +108,12 @@ def ustaw_obszar(projekt_id: int, obszar: list[float] | None):
     db.commit()
 
 
+def ustaw_rodzaj(projekt_id: int, rodzaj: str):
+    db = get_db()
+    db.execute("UPDATE projekty SET rodzaj = ? WHERE id = ?", (rodzaj, projekt_id))
+    db.commit()
+
+
 def ustaw_termin(projekt_id: int, termin: str | None):
     db = get_db()
     db.execute("UPDATE projekty SET termin = ? WHERE id = ?", (termin, projekt_id))
@@ -126,11 +134,11 @@ def projekt(projekt_id: int) -> dict | None:
     return _projekt(wiersz) if wiersz else None
 
 
-def utworz_projekt(nazwa: str, pola: list[dict]) -> int:
+def utworz_projekt(nazwa: str, pola: list[dict], rodzaj: str = "inwentaryzacja") -> int:
     db = get_db()
     projekt_id = db.execute(
-        "INSERT INTO projekty (nazwa, klucz, pola, data_utworzenia) VALUES (?, ?, ?, ?)",
-        (nazwa, secrets.token_urlsafe(12), json.dumps(pola, ensure_ascii=False), datetime.now().isoformat(timespec="seconds")),
+        "INSERT INTO projekty (nazwa, klucz, pola, data_utworzenia, rodzaj) VALUES (?, ?, ?, ?, ?)",
+        (nazwa, secrets.token_urlsafe(12), json.dumps(pola, ensure_ascii=False), datetime.now().isoformat(timespec="seconds"), rodzaj),
     ).lastrowid
     db.commit()
     return projekt_id

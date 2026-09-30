@@ -1,7 +1,8 @@
 """Projekt inwentaryzacji: pola formularza i sprawdzanie pliku z telefonu (ETAP 65).
 
 Pole formularza: {"nazwa", "typ", "opcje", "skala"} — typ „wybor” (lista
-opcji), „tekst”, „liczba” albo „tak_nie”. „skala” (tylko lista wyboru):
+opcji), „wiele” (wielokrotny wybór — wartością jest lista opcji, ETAP 93),
+„tekst”, „liczba” albo „tak_nie”. „skala” (tylko lista wyboru):
 opcje są uporządkowane od najlepszej do najgorszej, więc mapa i raport
 kolorują je od zielonego do czerwonego (ETAP 70). Wartości punktu to słownik
 {nazwa pola: wartość}.
@@ -18,7 +19,11 @@ import math
 import re
 from datetime import datetime
 
-TYPY_POL = {"wybor": "lista wyboru", "tekst": "tekst", "liczba": "liczba", "tak_nie": "tak / nie"}
+TYPY_POL = {"wybor": "lista wyboru", "wiele": "wielokrotny wybór", "tekst": "tekst", "liczba": "liczba", "tak_nie": "tak / nie"}
+TYPY_Z_OPCJAMI = ("wybor", "wiele")
+# Rodzaj projektu (ETAP 93): inwentaryzacja (punkty na mapie) albo ankieta
+# (odpowiedzi ludzi; położenie i zdjęcie opcjonalne, na pierwszym planie pytania).
+RODZAJE = {"inwentaryzacja": "inwentaryzacja", "ankieta": "ankieta"}
 MAKS_POL = 20
 MAKS_OPCJI = 30
 MAKS_DLUGOSC = 200  # nazwa pola, opcja, wartość tekstowa
@@ -45,6 +50,17 @@ WZORY = {
             {"nazwa": "kondygnacje", "typ": "liczba", "opcje": []},
             {"nazwa": "stan techniczny", "typ": "wybor", "opcje": ["dobry", "średni", "zły", "ruina"], "skala": True},
             {"nazwa": "wartość kulturowa", "typ": "tak_nie", "opcje": []},
+        ],
+    },
+    "ankieta": {
+        "nazwa": "Ankieta: przestrzeń publiczna",
+        "rodzaj": "ankieta",
+        "pola": [
+            {"nazwa": "jak często tu bywasz", "typ": "wybor", "opcje": ["codziennie", "kilka razy w tygodniu", "kilka razy w miesiącu", "rzadziej", "pierwszy raz"]},
+            {"nazwa": "po co tu przychodzisz", "typ": "wiele", "opcje": ["przejście", "odpoczynek", "zakupy", "spotkania", "sport", "z dziećmi", "praca / nauka", "inne"]},
+            {"nazwa": "czy czujesz się tu bezpiecznie", "typ": "wybor", "opcje": ["tak", "raczej tak", "raczej nie", "nie"], "skala": True},
+            {"nazwa": "czego tu brakuje", "typ": "wiele", "opcje": ["ławek", "zieleni", "cienia", "oświetlenia", "toalet", "miejsc zabaw", "stojaków rowerowych", "koszy", "niczego"]},
+            {"nazwa": "wiek", "typ": "wybor", "opcje": ["do 18", "19–35", "36–60", "61 i więcej"]},
         ],
     },
     "przestrzen": {
@@ -89,10 +105,12 @@ def sprawdz_pola(pola) -> list[dict]:
         if typ not in TYPY_POL:
             raise BladDanych(f"Pole „{nazwa}”: nieznany typ.")
         opcje = []
-        if typ == "wybor":
+        if typ in TYPY_Z_OPCJAMI:
             opcje = [sprawdz_tekst(o, f"Pole „{nazwa}”, opcja") for o in (p.get("opcje") or []) if str(o or "").strip()]
             if len(opcje) < 2:
                 raise BladDanych(f"Pole „{nazwa}”: lista wyboru potrzebuje co najmniej 2 opcji.")
+            if len({o.lower() for o in opcje}) < len(opcje):
+                raise BladDanych(f"Pole „{nazwa}”: opcje się powtarzają.")
             if len(opcje) > MAKS_OPCJI:
                 raise BladDanych(f"Pole „{nazwa}”: najwyżej {MAKS_OPCJI} opcji.")
         wynik.append({"nazwa": nazwa, "typ": typ, "opcje": opcje, "skala": typ == "wybor" and p.get("skala") is True})
@@ -123,6 +141,14 @@ def _wartosci(surowe, pola: list[dict], opis: str) -> dict:
             continue
         if p["typ"] == "liczba":
             wynik[p["nazwa"]] = _liczba(w, f"{opis}, {p['nazwa']}")
+        elif p["typ"] == "wiele":
+            if not isinstance(w, list):
+                raise BladDanych(f"{opis}, {p['nazwa']}: oczekiwano listy odpowiedzi.")
+            wybrane = {sprawdz_tekst(x, f"{opis}, {p['nazwa']}", wymagany=False) for x in w}
+            if nieznane := wybrane - set(p["opcje"]):
+                raise BladDanych(f"{opis}, {p['nazwa']}: „{sorted(nieznane)[0]}” nie ma na liście opcji.")
+            if wybrane:
+                wynik[p["nazwa"]] = [o for o in p["opcje"] if o in wybrane]  # w kolejności opcji
         elif p["typ"] == "tak_nie":
             if not isinstance(w, bool):
                 raise BladDanych(f"{opis}, {p['nazwa']}: oczekiwano tak/nie.")

@@ -2145,3 +2145,24 @@ migracje). Uczciwa nazwa i R² chronią przed nadinterpretacją.
   wartości; liniowy jest prostszy do wyjaśnienia.
 - Przekazanie ekstrapolacji do opisu Gemini — model mógłby ją przedstawić
   jak pewną prognozę.
+
+## D-101 — Teren: ankieta jako rodzaj projektu, nie osobny moduł
+Data: 2026-09-30
+
+**Decyzja:** Ankieta korzysta z całej ścieżki modułu teren (formularz HTML
+offline → plik JSON → import → raport). Projekt ma rodzaj
+„inwentaryzacja” albo „ankieta” (kolumna dopisywana do starych baz),
+który zmienia tylko wygląd formularza i raportu. Doszedł typ pola „wiele”
+(lista zaznaczonych opcji, zapisywana w kolejności opcji); w zestawieniu
+procent liczony od wszystkich odpowiedzi, więc suma może przekroczyć 100%
+— raport o tym mówi.
+
+**Uzasadnienie:** Ankiety z użytkownikami przestrzeni to typowe zadanie
+na zajęciach z planowania; formularz offline i import już działały.
+
+**Odrzucone alternatywy:**
+- Osobny moduł ankiet — powielałby formularz, import i raport.
+- Formularze Google — wymagają internetu i konta, a dane trafiają poza
+  komputer autora.
+- Kolumny 0/1 dla każdej opcji wielokrotnego wyboru w bazie — lista w JSON
+  wartości punktu pasuje do obecnego zapisu wartości.

@@ -664,3 +664,10 @@
   pod wykresem każdego wskaźnika (np. ludności), z oznaczeniem trendu
   niestabilnego (R² < 0,7).
 - Dodano `DECISIONS.md` D-100 i 1 test.
+
+## ETAP 93 — 2026-09-30
+- Teren: **tryb ankiety** — projekt „ankieta” z formularzem na telefon
+  zaczynającym od pytań (miejsce i zdjęcie opcjonalne) i raportem „Wyniki
+  ankiety”; wzór „Ankieta: przestrzeń publiczna”.
+- Teren: nowy typ pola **wielokrotny wybór**.
+- Dodano `DECISIONS.md` D-101 i 3 testy.

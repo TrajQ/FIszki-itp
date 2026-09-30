@@ -18,7 +18,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 from markupsafe import Markup
 
 from . import baza, podklad, raport
-from .projekt import FORMAT, TYPY_POL, WZORY, BladDanych, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
+from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
     "teren",
@@ -89,7 +89,19 @@ def nowy_projekt():
         pola = sprawdz_pola(wzor["pola"] if wzor else [{"nazwa": "uwaga", "typ": "tekst", "opcje": []}])
     except BladDanych as e:
         return redirect(url_for("teren.index", blad=str(e)))
-    return redirect(url_for("teren.widok_projektu", projekt_id=baza.utworz_projekt(nazwa, pola)))
+    rodzaj = (wzor or {}).get("rodzaj", "inwentaryzacja")
+    return redirect(url_for("teren.widok_projektu", projekt_id=baza.utworz_projekt(nazwa, pola, rodzaj)))
+
+
+@teren_bp.route("/projekty/<int:projekt_id>/rodzaj", methods=["POST"])
+def ustaw_rodzaj(projekt_id):
+    """Inwentaryzacja albo ankieta (ETAP 93) — zmienia wygląd formularza na telefon i raportu."""
+    _projekt_albo_404(projekt_id)
+    rodzaj = request.form.get("rodzaj")
+    if rodzaj not in RODZAJE:
+        abort(400)
+    baza.ustaw_rodzaj(projekt_id, rodzaj)
+    return redirect(url_for("teren.widok_projektu", projekt_id=projekt_id))
 
 
 @teren_bp.route("/projekty/<int:projekt_id>")
@@ -251,7 +263,7 @@ def eksport_csv(projekt_id):
         wartosci = []
         for nazwa in nazwy_pol:
             w = pt["wartosci"].get(nazwa, "")
-            wartosci.append("tak" if w is True else "nie" if w is False else w)
+            wartosci.append("tak" if w is True else "nie" if w is False else "; ".join(w) if isinstance(w, list) else w)
         zapis.writerow([pt["id"], pt["czas"], pt["lat"], pt["lng"], pt["dokladnosc_m"], "tak" if pt["polozenie_reczne"] else "nie",
                         *wartosci, pt["uwagi"], pt["zdjecie"] or ""])
     return Response(

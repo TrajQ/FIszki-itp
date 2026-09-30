@@ -5,7 +5,9 @@
 {% block head %}<link rel="stylesheet" href="{{ url_for('teren.static', filename='teren.css') }}">{% endblock %}
 
 {% macro liczba(x) %}{{ ('%.2f' % x).rstrip('0').rstrip('.').replace('.', ',') }}{% endmacro %}
-{% macro wartosc(w) %}{% if w is sameas true %}tak{% elif w is sameas false %}nie{% elif w is number %}{{ liczba(w) }}{% else %}{{ w }}{% endif %}{% endmacro %}
+{% macro wartosc(w) %}{% if w is sameas true %}tak{% elif w is sameas false %}nie{% elif w is number %}{{ liczba(w) }}{% elif w is string %}{{ w }}{% else %}{{ w | join('; ') }}{% endif %}{% endmacro %}
+{% set ankieta = projekt.rodzaj == 'ankieta' %}
+{% set z_polozeniem = punkty | selectattr('lat') | list | length %}
 
 {% block tresc %}
 <div class="raport-terenu">
@@ -27,11 +29,12 @@
     <section class="raport-terenu__strona">
         <h1>{{ projekt.nazwa }}</h1>
         <p class="wyciszony">
-            Inwentaryzacja terenowa · punktów: {{ punkty | length }}
-            (z położeniem: {{ punkty | selectattr('lat') | list | length }}, ze zdjęciem: {{ punkty | selectattr('zdjecie') | list | length }})
+            {% if ankieta %}Ankieta · odpowiedzi: {{ punkty | length }}{% if z_polozeniem %} (z miejscem: {{ z_polozeniem }}){% endif %}
+            {% else %}Inwentaryzacja terenowa · punktów: {{ punkty | length }}
+            (z położeniem: {{ z_polozeniem }}, ze zdjęciem: {{ punkty | selectattr('zdjecie') | list | length }}){% endif %}
             {% if od %} · pomiary {{ od[:10] }}{% if do[:10] != od[:10] %} – {{ do[:10] }}{% endif %}{% endif %}
         </p>
-        <div class="raport-terenu__mapa">{{ mapa }}</div>
+        {% if not ankieta or z_polozeniem %}<div class="raport-terenu__mapa">{{ mapa }}</div>
         {% if pole %}
         <ul class="raport-terenu__legenda">
             <li class="wyciszony">{{ pole.nazwa }}:</li>
@@ -39,11 +42,11 @@
             <li><span class="legenda__probka" style="background: {{ kolor_brak }}"></span> brak wartości</li>
         </ul>
         {% endif %}
-        <p class="wyciszony przypis">Mapa schematyczna: punkty z pomiaru GPS telefonu (dokładność w tabeli), bez podkładu. Numery jak w tabeli i przy zdjęciach.</p>
+        <p class="wyciszony przypis">Mapa schematyczna: punkty z pomiaru GPS telefonu (dokładność w tabeli), bez podkładu. Numery jak w tabeli i przy zdjęciach.</p>{% endif %}
     </section>
 
     <section class="raport-terenu__strona">
-        <h2>Zestawienie</h2>
+        <h2>{{ 'Wyniki ankiety' if ankieta else 'Zestawienie' }}</h2>
         <div class="raport-terenu__zestawienie">
             {% for z in zestawienie %}
             <div class="raport-terenu__pole">
@@ -51,18 +54,19 @@
                 {% if z.rozklad is defined %}
                 <table class="tabela">
                     {% for r in z.rozklad %}<tr><td>{{ r.wartosc }}</td><td class="liczba">{{ r.liczba }}</td><td class="liczba wyciszony">{{ liczba(r.procent) }}%</td></tr>{% endfor %}
-                    {% if z.wypelnione < z.wszystkie %}<tr class="wyciszony"><td>brak wartości</td><td class="liczba">{{ z.wszystkie - z.wypelnione }}</td><td></td></tr>{% endif %}
+                    {% if z.wypelnione < z.wszystkie %}<tr class="wyciszony"><td>{{ 'bez odpowiedzi' if ankieta else 'brak wartości' }}</td><td class="liczba">{{ z.wszystkie - z.wypelnione }}</td><td></td></tr>{% endif %}
                 </table>
+                {% if z.wiele %}<p class="wyciszony przypis">Można było wybrać kilka odpowiedzi — procenty nie sumują się do 100.</p>{% endif %}
                 {% elif z.statystyki is defined %}
                 {% set s = z.statystyki %}
                 <table class="tabela">
-                    <tr><td>punktów z wartością</td><td class="liczba">{{ z.wypelnione }}</td></tr>
+                    <tr><td>{{ 'odpowiedzi' if ankieta else 'punktów z wartością' }}</td><td class="liczba">{{ z.wypelnione }}</td></tr>
                     <tr><td>min – max</td><td class="liczba">{{ liczba(s.min) }} – {{ liczba(s.max) }}</td></tr>
                     <tr><td>średnia</td><td class="liczba">{{ liczba(s.srednia) }}</td></tr>
                     <tr><td>mediana</td><td class="liczba">{{ liczba(s.mediana) }}</td></tr>
                 </table>
                 {% else %}
-                <p class="wyciszony">wypełnione w {{ z.wypelnione }} z {{ z.wszystkie }} punktów</p>
+                <p class="wyciszony">wypełnione w {{ z.wypelnione }} z {{ z.wszystkie }} {{ 'odpowiedzi' if ankieta else 'punktów' }}</p>
                 {% endif %}
             </div>
             {% endfor %}
@@ -70,7 +74,7 @@
     </section>
 
     <section class="raport-terenu__strona">
-        <h2>Punkty</h2>
+        <h2>{{ 'Odpowiedzi' if ankieta else 'Punkty' }}</h2>
         <table class="tabela raport-terenu__punkty">
             <thead><tr><th>Nr</th><th>Data</th>{% for x in projekt.pola %}<th>{{ x.nazwa }}</th>{% endfor %}<th>Uwagi</th><th>Położenie</th></tr></thead>
             <tbody>

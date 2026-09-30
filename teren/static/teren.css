@@ -421,3 +421,19 @@ button.przycisk--niebezpieczny-tekst {
         overflow-x: auto;
     }
 }
+
+/* ---------- wielokrotny wybór w poprawce punktu (ETAP 93) ---------- */
+
+.poprawka-wiele {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-weight: 400;
+}
+
+.poprawka-wiele__opcja {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}

@@ -21,6 +21,8 @@ def ponumeruj(punkty: list[dict]) -> list[dict]:
 
 
 def _tekst(w) -> str:
+    if isinstance(w, list):
+        return "; ".join(w)
     return "tak" if w is True else "nie" if w is False else str(w)
 
 
@@ -38,6 +40,13 @@ def zestawienie(pola: list[dict], punkty: list[dict]) -> list[dict]:
                 {"wartosc": o, "liczba": teksty.count(o), "procent": 100 * teksty.count(o) / len(punkty) if punkty else 0}
                 for o in opcje
             ]
+        elif pole["typ"] == "wiele":
+            # procent wszystkich punktów (odpowiedzi); suma może przekroczyć 100%
+            pozycja["rozklad"] = [
+                {"wartosc": o, "liczba": sum(1 for w in wartosci if o in w), "procent": 100 * sum(1 for w in wartosci if o in w) / len(punkty) if punkty else 0}
+                for o in pole["opcje"]
+            ]
+            pozycja["wiele"] = True
         elif pole["typ"] == "liczba" and wartosci:
             pozycja["statystyki"] = {
                 "min": min(wartosci),

@@ -1646,3 +1646,19 @@ Status: zamknięty
 - Ekstrapolacja nie trafia do faktów dla Gemini (model nie dostaje
   prognoz do opisu)
 - `DECISIONS.md`: D-100
+
+## ETAP 93 — Teren: tryb ankiety i wielokrotny wybór
+Data: 2026-09-30
+Status: zamknięty
+
+- rodzaj projektu (`projekty.rodzaj`: inwentaryzacja / ankieta), wzór
+  „Ankieta: przestrzeń publiczna”, przełącznik na stronie projektu
+- nowy typ pola „wiele” (wielokrotny wybór; wartość = lista opcji w ich
+  kolejności): sprawdzanie pliku, formularz na telefon, poprawka punktu,
+  zestawienie (procent odpowiedzi, suma > 100%), CSV („a; b”)
+- formularz ankiety: najpierw pytania, miejsce i zdjęcie w rozwijanej
+  sekcji, bez pytania o brak położenia, bez mapy (chyba że jest obszar
+  prac); raport „Wyniki ankiety”, bez mapy przy braku położeń
+- Sprawdzone w przeglądarce: odpowiedź na „telefonie” (390 px) → eksport
+  → import → raport → poprawka z dodaniem opcji
+- `DECISIONS.md`: D-101

@@ -49,6 +49,18 @@
         </section>
 
         <section class="karta stos">
+            <h3>Rodzaj projektu</h3>
+            <form class="rzad" method="post" action="{{ url_for('teren.ustaw_rodzaj', projekt_id=projekt.id) }}">
+                <select name="rodzaj" aria-label="Rodzaj projektu">
+                    <option value="inwentaryzacja" {{ 'selected' if projekt.rodzaj != 'ankieta' }}>inwentaryzacja (punkty na mapie)</option>
+                    <option value="ankieta" {{ 'selected' if projekt.rodzaj == 'ankieta' }}>ankieta (odpowiedzi ludzi)</option>
+                </select>
+                <button type="submit" class="przycisk--drugi">Zapisz</button>
+            </form>
+            <p class="wyciszony opis">W ankiecie formularz na telefon zaczyna od pytań, a miejsce i zdjęcie są opcjonalne; raport pokazuje wyniki ankiety. Po zmianie pobierz formularz jeszcze raz.</p>
+        </section>
+
+        <section class="karta stos">
             <h3>Termin w terenie</h3>
             <form class="rzad" method="post" action="{{ url_for('teren.ustaw_termin', projekt_id=projekt.id) }}">
                 <input name="termin" type="date" value="{{ projekt.termin or '' }}" aria-label="Termin wyjścia w teren">

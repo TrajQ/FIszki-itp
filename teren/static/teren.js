@@ -32,7 +32,7 @@
         return dane;
     }
 
-    const tekstWartosci = (w) => (w === true ? "tak" : w === false ? "nie" : w === undefined || w === null ? "" : String(w));
+    const tekstWartosci = (w) => (w === true ? "tak" : w === false ? "nie" : w === undefined || w === null ? "" : Array.isArray(w) ? w.join("; ") : String(w));
 
     // ---------- mapa ----------
 
@@ -243,6 +243,18 @@
             const opcje = pole.typ === "wybor" ? pole.opcje : ["tak", "nie"];
             for (const o of opcje) kontrolka.appendChild(new Option(o, o));
             kontrolka.value = wartosc === undefined ? "" : tekstWartosci(wartosc);
+        } else if (pole.typ === "wiele") {
+            // ETAP 93: wielokrotny wybór — pola zaznaczania
+            kontrolka = element("div", "poprawka-wiele");
+            for (const o of pole.opcje) {
+                const l = element("label", "poprawka-wiele__opcja");
+                const c = element("input");
+                c.type = "checkbox";
+                c.value = o;
+                c.checked = Array.isArray(wartosc) && wartosc.includes(o);
+                l.append(c, " " + o);
+                kontrolka.appendChild(l);
+            }
         } else {
             kontrolka = element("input");
             kontrolka.type = pole.typ === "liczba" ? "number" : "text";
@@ -300,6 +312,11 @@
         if (!poprawiany) return;
         const wartosci = {};
         for (const k of polaPoprawki.querySelectorAll("[data-pole]")) {
+            if (k.dataset.typ === "wiele") {
+                const zaznaczone = [...k.querySelectorAll("input:checked")].map((c) => c.value);
+                if (zaznaczone.length) wartosci[k.dataset.pole] = zaznaczone;
+                continue;
+            }
             if (k.value === "") continue;
             wartosci[k.dataset.pole] = k.dataset.typ === "liczba" ? Number(k.value) : k.dataset.typ === "tak_nie" ? k.value === "tak" : k.value;
         }
@@ -401,7 +418,7 @@
         opcje.value = pole.opcje.join(", ");
         opcje.placeholder = "opcje po przecinku, np. dobry, średni, zły";
         opcje.dataset.rola = "opcje";
-        opcje.hidden = pole.typ !== "wybor";
+        opcje.hidden = pole.typ !== "wybor" && pole.typ !== "wiele";
         const skala = element("label", "edytor-pol__skala");
         const skalaPole = element("input");
         skalaPole.type = "checkbox";
@@ -410,7 +427,7 @@
         skala.append(skalaPole, " skala: opcje od najlepszej do najgorszej (kolory od zielonego do czerwonego)");
         skala.hidden = pole.typ !== "wybor";
         typ.addEventListener("change", () => {
-            opcje.hidden = typ.value !== "wybor";
+            opcje.hidden = typ.value !== "wybor" && typ.value !== "wiele";
             skala.hidden = typ.value !== "wybor";
         });
         const usun = element("button", "przycisk--tekst", "✕");
