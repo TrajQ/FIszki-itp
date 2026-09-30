@@ -49,7 +49,7 @@
 
         <section id="sekcja-rysowania" class="karta stos" hidden>
             <h3>Co rysujesz</h3>
-            <p class="wyciszony opis-panelu">Wybierz funkcję, potem narzędzie wieloboku albo prostokąta na mapie (lewy górny róg). Kliknij narysowany teren, żeby zmienić funkcję.</p>
+            <p class="wyciszony opis-panelu">Wybierz funkcję, potem narzędzie wieloboku albo prostokąta na mapie (lewy górny róg). Kliknij narysowany teren, żeby zmienić funkcję. Plan miejscowy i działki pod rysunkiem włączysz w przełączniku warstw (prawy górny róg mapy).</p>
             <div id="funkcje" class="funkcje">
                 <label class="funkcja"><input type="radio" name="funkcja" value="{{ obszar }}" checked>
                     <span class="funkcja__probka funkcja__probka--obszar"></span> obszar opracowania</label>
@@ -161,6 +161,7 @@
     const OBSZAR = {{ obszar | tojson }};
     const FUNKCJE = {{ funkcje | tojson }};
     const DOMYSLNE = {{ domyslne | tojson }};
+    const URL_WARSTWY_KRAJOWE = "{{ url_for('mpzp.warstwy_krajowe') }}";
     const URL_TEREN_PROJEKTY = "{{ url_for('teren.lista_projektow') }}";
     const URL_TEREN_PUNKTY = "{{ url_for('teren.lista_punktow', projekt_id=0) }}";
 </script>

@@ -1498,3 +1498,13 @@ Status: zamknięty
 - Nie sprawdzone tutaj: prawdziwe obrazy GUGiK i dopasowanie obrysu na
   prawdziwym zdjęciu (sieć zablokowana)
 - `DECISIONS.md`: D-087
+
+## ETAP 81 — Osiedle: plan miejscowy pod rysunkiem
+Data: 2026-09-30
+Status: zamknięty
+
+- nakładki WMS w `osiedle.js`, adres trasy MPZP w szablonie
+- Sprawdzone w przeglądarce: nakładki w przełączniku, zapamiętanie po
+  przeładowaniu, zapytania do usługi GUGiK wysyłane
+- Nie sprawdzone tutaj: obraz planów (sieć zablokowana)
+- `DECISIONS.md`: D-088

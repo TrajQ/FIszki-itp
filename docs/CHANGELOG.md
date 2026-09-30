@@ -587,3 +587,8 @@
   środka w WGS84, PL-1992 i PL-2000, ortofotomapa obecna i najstarsza
   archiwalna z obrysem granicy, linki do kroniki zmian i kalkulatora.
 - Dodano `mpzp/karta.py`, `DECISIONS.md` D-087 i 2 testy.
+
+## ETAP 81 — 2026-09-30
+- Osiedle: plan miejscowy i działki ewidencyjne (GUGiK) jako nakładki
+  pod rysunkiem koncepcji, wybór zapamiętany.
+- Dodano `DECISIONS.md` D-088 i 1 test.

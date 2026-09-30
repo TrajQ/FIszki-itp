@@ -74,7 +74,56 @@
         "Bez podkładu": L.layerGroup(),
     };
     PODKLADY["Mapa (OpenStreetMap)"].addTo(mapa);
-    L.control.layers(PODKLADY, {}, { position: "topright" }).addTo(mapa);
+    const kontrolkaWarstw = L.control.layers(PODKLADY, {}, { position: "topright" }).addTo(mapa);
+
+    // Plany miejscowe i działki pod rysunkiem (ETAP 81) — te same nakładki
+    // krajowych integracji GUGiK co w module MPZP (jego trasa podaje nazwy
+    // warstw z opisu usługi). Rysunek koncepcji leży zawsze nad nimi.
+    // Włączone nakładki zapamiętujemy w przeglądarce.
+    function nakladkaWms(opis, przezroczystosc) {
+        return L.tileLayer.wms(opis.url, {
+            layers: opis.warstwy,
+            format: "image/png",
+            transparent: true,
+            version: "1.3.0",
+            opacity: przezroczystosc,
+            maxZoom: 20,
+            attribution: "plany i działki: GUGiK",
+            ...(opis.mercator === false ? { crs: L.CRS.EPSG4326 } : {}),
+        });
+    }
+
+    function zapamietaneNakladki() {
+        try {
+            return JSON.parse(localStorage.getItem("osiedle.nakladki") || "[]");
+        } catch (e) {
+            return [];
+        }
+    }
+
+    fetch(URL_WARSTWY_KRAJOWE)
+        .then((odpowiedz) => odpowiedz.json())
+        .then((dane) => {
+            const nakladki = {
+                "Plan miejscowy (GUGiK)": nakladkaWms(dane.plany, 0.55),
+                "Działki ewidencyjne (GUGiK)": nakladkaWms(dane.dzialki, 1),
+            };
+            const wlaczone = zapamietaneNakladki();
+            for (const [nazwa, warstwa] of Object.entries(nakladki)) {
+                kontrolkaWarstw.addOverlay(warstwa, nazwa);
+                if (wlaczone.includes(nazwa)) warstwa.addTo(mapa);
+            }
+            const zapamietaj = () => {
+                const teraz = Object.entries(nakladki).filter(([, w]) => mapa.hasLayer(w)).map(([n]) => n);
+                try {
+                    localStorage.setItem("osiedle.nakladki", JSON.stringify(teraz));
+                } catch (e) {
+                    // tylko wygoda
+                }
+            };
+            mapa.on("overlayadd overlayremove", zapamietaj);
+        })
+        .catch(() => {}); // bez nakładek rysowanie działa jak dotąd
 
     // ---------- rysowanie (Leaflet.draw) ----------
 

@@ -60,7 +60,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 80 (mpzp: karta działki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap80_20260930.zip
-Testy: 435 passed / 0 failed
+ETAP: 81 (osiedle: plan miejscowy pod rysunkiem — zamknięty)
+Ostatni ZIP: releases/warsztat_etap81_20260930.zip
+Testy: 436 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

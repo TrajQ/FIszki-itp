@@ -1871,3 +1871,21 @@ wydruku; bez nowej strony obok istniejącego raportu.
 **Odrzucone alternatywy:**
 - Układ PL-1992 (EPSG:2180) w zapytaniu WMS — kolejność osi w WMS 1.3.0
   dla tego układu łatwo pomylić, a nie da się jej tu sprawdzić na żywo.
+
+## D-088 — Osiedle: plan miejscowy i działki jako nakładki pod rysunkiem
+Data: 2026-09-30
+
+**Decyzja:** Mapa Osiedla ma w przełączniku warstw nakładki „Plan
+miejscowy (GUGiK)” (przezroczystość 0,55) i „Działki ewidencyjne
+(GUGiK)” — te same usługi WMS krajowych integracji co w MPZP, z nazwami
+warstw z trasy `/mpzp/warstwy-krajowe` (Osiedle korzysta z niej jak z
+usługi, bez importu kodu MPZP). Włączone nakładki zapamiętane w
+przeglądarce. Rysunek koncepcji jest zawsze nad nimi.
+
+**Uzasadnienie:** Koncepcję rysuje się w granicach i przeznaczeniach
+planu — obraz planu pod rysunkiem uzupełnia wpisywanie ustaleń (D-064).
+
+**Odrzucone alternatywy:**
+- Automatyczne przepisanie wskaźników z planu do koncepcji — usługa
+  podaje je jako tekst w różnych formatach; zgadywanie liczb z tekstu
+  łamie zasadę „liczby z danych”.

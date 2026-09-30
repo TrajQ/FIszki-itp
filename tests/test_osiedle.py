@@ -291,3 +291,11 @@ def test_obszar_z_dzialek(client, monkeypatch):
     assert client.post(url + "/obszar-z-dzialek", json={"dzialki": ["zly"]}).status_code == 400
     assert client.post(url + "/obszar-z-dzialek", json={"dzialki": ["awaria"]}).status_code == 502
     assert client.post(url + "/obszar-z-dzialek", json={"dzialki": []}).status_code == 400
+
+
+# ---------- ETAP 81: plan miejscowy pod rysunkiem ----------
+
+
+def test_strona_osiedla_ma_nakladki_planow(client):
+    html = client.get("/osiedle/").get_data(as_text=True)
+    assert 'URL_WARSTWY_KRAJOWE = "/mpzp/warstwy-krajowe"' in html
