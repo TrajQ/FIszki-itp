@@ -413,3 +413,11 @@ button.przycisk--niebezpieczny-tekst {
 .komorka-akcji {
     white-space: nowrap;
 }
+
+/* ETAP 79: wąskie okno — tabela punktów raportu przewija się w poziomie */
+@media screen and (max-width: 700px) {
+    .raport-terenu__punkty {
+        display: block;
+        overflow-x: auto;
+    }
+}

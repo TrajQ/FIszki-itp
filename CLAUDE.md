@@ -60,7 +60,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 78 (dostępność: gdzie nowa placówka — zamknięty)
-Ostatni ZIP: releases/warsztat_etap78_20260929.zip
+ETAP: 79 (przegląd po ETAPach 67–78 — zamknięty)
+Ostatni ZIP: releases/warsztat_etap79_20260930.zip
 Testy: 433 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

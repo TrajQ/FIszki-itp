@@ -910,3 +910,31 @@ button.wpis-zapisany {
         height: 50vh;
     }
 }
+
+/* ETAP 79: wąskie okno — przyciski trybu kroniki zawijają się, tabela
+   symboli przewija się w poziomie zamiast poszerzać stronę */
+.przelacznik-kroniki {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .tabela-symboli {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+.kronika__suwak {
+    flex-wrap: wrap;
+}
+
+.kronika__suwak input[type="range"] {
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .kronika__suwak input[type="range"] {
+        flex-basis: 100%;
+        order: -1; /* suwak na pełną szerokość, przyciski pod nim */
+    }
+}

@@ -1834,3 +1834,19 @@ moduł już ma; liczby liczy kod, a uproszczenia są jawnie opisane w panelu.
 - Dokładne rozwiązanie programowaniem całkowitoliczbowym — nowa
   zależność (solver) i wolniej; zachłanny wynik jest zrozumiały krok po
   kroku, a pierwsza propozycja jest optymalna.
+
+## D-086 — Przegląd po ETAPach 67–78
+Data: 2026-09-30
+
+**Decyzja:** Przegląd kodu i stron po dwunastu ETAPach: pyflakes na całym
+projekcie i `node --check` na wszystkich skryptach — czysto; przegląd
+logiki nowych ścieżek danych (import wyników z telefonu, fiszki z
+przepisów, poprawki punktów, obszar z działek, aktualizator, lokalizacja
+placówek) — bez błędów. Test wszystkich 24 stron aplikacji w trzech
+szerokościach okna (1300, 700, 390 px): brak błędów JS; na 390 px trzy
+strony wychodziły poza okno (suwak lat kroniki, tabela symboli planu,
+tabela punktów w raporcie z terenu) — poprawione (zawijanie, przewijanie
+tabeli w poziomie; wydruk bez zmian).
+
+**Uzasadnienie:** Co kilka ETAPów przegląd całości — poprzedni (D-072)
+znalazł błąd utraty danych, którego testy jednostkowe nie łapały.

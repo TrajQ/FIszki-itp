@@ -1479,3 +1479,11 @@ Status: zamknięty
 - Sprawdzone w przeglądarce na pliku przykładowym (przystanki, 15 min:
   48% → 62% mieszkańców z 3 placówkami)
 - `DECISIONS.md`: D-085
+
+## ETAP 79 — Przegląd po ETAPach 67–78
+Data: 2026-09-30
+Status: zamknięty
+
+- 24 strony × 3 szerokości okna w przeglądarce: bez błędów JS, bez
+  poziomego przewijania po poprawkach
+- `DECISIONS.md`: D-086

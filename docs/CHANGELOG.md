@@ -574,3 +574,10 @@
   które obejmą progiem najwięcej mieszkańców poza zasięgiem, znaczniki
   na mapie, zasięg przed i po.
 - Dodano `dostepnosc/lokalizacja.py`, `DECISIONS.md` D-085 i 2 testy.
+
+## ETAP 79 — 2026-09-30
+- Przegląd po ETAPach 67–78 (bez nowych funkcji): lint i składnia JS
+  czyste, logika nowych ścieżek danych bez błędów; wąskie okno (390 px):
+  suwak lat w kronice zmian zawija się, tabela symboli i tabela punktów
+  raportu z terenu przewijają się w poziomie.
+- Dodano `DECISIONS.md` D-086.
