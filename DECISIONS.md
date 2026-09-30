@@ -2302,3 +2302,21 @@ porównawczy (zimą cienie są wielokrotnie dłuższe).
 - Osobny raport cienia — dwa wydruki tej samej koncepcji.
 - Cień na szkicach porównania wariantów — przy małych szkicach numery i
   strefa zasłaniałyby rysunek.
+
+## D-109 — Przepisy: aktualność tekstu po przedmiocie ustawy z nazwy aktu
+Data: 2026-09-30
+
+**Decyzja:** Aktualność sprawdzamy tylko dla aktów pobranych z Dziennika
+Ustaw (ETAP 88): z nazwy aktu bierzemy adres (rok, pozycja) i przedmiot
+ustawy, szukamy w API Sejmu po przedmiocie i zostawiamy obwieszczenia
+„… jednolitego tekstu …” zawierające ten sam przedmiot, nowsze niż akt.
+Wynik pokazujemy; pobranie nowszego tekstu jest decyzją użytkownika.
+
+**Uzasadnienie:** Teksty jednolite ustaw planistycznych zmieniają się
+często; praca na starym tekście to częsty błąd.
+
+**Odrzucone alternatywy:**
+- Powiązania aktów z API (np. „tekst jednolity dla aktu”) — ich format
+  nie jest jednoznacznie opisany (D-096); tytuły są pewniejsze.
+- Automatyczne sprawdzanie przy każdym otwarciu aktu — niepotrzebne
+  zapytania do API; wystarczy przycisk.

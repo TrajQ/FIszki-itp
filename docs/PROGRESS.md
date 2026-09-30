@@ -1767,3 +1767,17 @@ Status: zamknięty
   `_sciezka` rysuje też wieloboki z kolekcji geometrii
 - Sprawdzone w przeglądarce (także zmiana dnia i wydruk do PDF)
 - `DECISIONS.md`: D-108
+
+## ETAP 101 — Przepisy: sprawdzanie, czy jest nowszy tekst jednolity
+Data: 2026-09-30
+Status: zamknięty
+
+- `sejm.adres_i_przedmiot` (adres Dz.U. i przedmiot ustawy z nazwy aktu:
+  „o …” albo np. „Prawo budowlane”; obwieszczenia i ustawy) i
+  `sejm.nowsze_teksty_jednolite` (wyszukiwanie po przedmiocie, tylko
+  obwieszczenia z tekstem jednolitym tej samej ustawy, nowsze niż akt)
+- trasa `/przepisy/akty/<id>/aktualnosc`, przycisk „Czy jest nowszy
+  tekst?” na stronie aktu z Dziennika Ustaw, pobranie jednym kliknięciem;
+  akapit w Pomocy
+- Sprawdzone w przeglądarce z podstawionym API (także 390 px)
+- `DECISIONS.md`: D-109

@@ -710,3 +710,9 @@
 - Osiedle: **odległości i cień w raporcie do druku** — strefa cienia i
   numery terenów na szkicu, tabele jak na stronie, wybór dnia.
 - Dodano `DECISIONS.md` D-108 i 1 test.
+
+## ETAP 101 — 2026-09-30
+- Przepisy: **„Czy jest nowszy tekst?”** — dla ustaw pobranych z Dziennika
+  Ustaw szuka nowszego obwieszczenia z tekstem jednolitym i pozwala je
+  pobrać.
+- Dodano `DECISIONS.md` D-109 i 2 testy.

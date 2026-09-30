@@ -96,6 +96,16 @@ def szukaj_w_sejmie():
         return jsonify({"blad": str(e)}), 502
 
 
+@przepisy_bp.route("/akty/<int:akt_id>/aktualnosc")
+def aktualnosc_aktu(akt_id):
+    """Czy w Dzienniku Ustaw jest nowszy tekst jednolity tej ustawy (ETAP 101)."""
+    akt = _akt_albo_404(akt_id)
+    try:
+        return jsonify(sejm.nowsze_teksty_jednolite(akt["nazwa"]))
+    except sejm.BladSejmu as e:
+        return jsonify({"blad": str(e)}), 422 if "pobranych z Dziennika" in str(e) else 502
+
+
 @przepisy_bp.route("/sejm/pobierz", methods=["POST"])
 def pobierz_z_sejmu():
     """Pobiera urzędowy PDF aktu i dodaje go jak wgrany plik."""

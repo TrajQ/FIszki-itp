@@ -13,11 +13,13 @@
     </div>
     <div class="rzad">
         <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}" target="_blank" rel="noopener">Otwórz PDF</a>
+        {% if '(Dz.U. ' in akt.nazwa %}<button id="sprawdz-aktualnosc" type="button" class="przycisk--tekst" title="Szuka w Dzienniku Ustaw nowszego obwieszczenia z tekstem jednolitym">Czy jest nowszy tekst?</button>{% endif %}
         <button id="zmien-nazwe" type="button" class="przycisk--tekst">Zmień nazwę</button>
         <button id="usun-akt" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń</button>
     </div>
 </div>
 <p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+<div id="aktualnosc" class="karta stos aktualnosc-aktu" hidden></div>
 
 <div class="uklad-aktu">
     <nav class="karta spis-aktu" aria-label="Spis jednostek">
@@ -52,6 +54,8 @@
 <script>
     const URL_AKTU = "{{ url_for('przepisy.usun_akt', akt_id=akt.id) }}";
     const URL_LISTY = "{{ url_for('przepisy.index') }}";
+    const URL_AKTUALNOSC = "{{ url_for('przepisy.aktualnosc_aktu', akt_id=akt.id) }}";
+    const URL_SEJM_POBIERZ = "{{ url_for('przepisy.pobierz_z_sejmu') }}";
     const URL_JEDNOSTKI = "{{ url_for('przepisy.szkice_fiszek_z_jednostki', jednostka_id=0) }}".replace(/0\/szkice-fiszek$/, "");
 </script>
 <script src="{{ url_for('przepisy.static', filename='akt.js') }}"></script>

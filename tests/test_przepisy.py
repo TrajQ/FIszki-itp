@@ -399,3 +399,37 @@ def test_sejm_szukaj_i_pobierz(client, monkeypatch):
 
     monkeypatch.setattr(sejm.requests, "get", brak_sieci)
     assert "brak połączenia" in client.get("/przepisy/sejm/szukaj?q=planowaniu").get_json()["blad"]
+
+
+# ---------- ETAP 101: czy jest nowszy tekst jednolity ----------
+
+
+def test_adres_i_przedmiot():
+    assert sejm.adres_i_przedmiot("Obwieszczenie Marszałka Sejmu RP z dnia 5 lipca 2024 r. w sprawie ogłoszenia jednolitego tekstu ustawy o planowaniu i zagospodarowaniu przestrzennym (Dz.U. 2024 poz. 1130)") == (2024, 1130, "o planowaniu i zagospodarowaniu przestrzennym")
+    assert sejm.adres_i_przedmiot("Ustawa z dnia 7 lipca 1994 r. - Prawo budowlane (Dz.U. 1994 poz. 414)") == (1994, 414, "Prawo budowlane")
+    assert sejm.adres_i_przedmiot("USTAWA z dnia 7 lipca 1994 r. Prawo budowlane") is None  # wgrany PDF bez adresu
+
+
+def test_nowszy_tekst_jednolity(client, monkeypatch):
+    def tj(rok, poz, tytul="Obwieszczenie … w sprawie ogłoszenia jednolitego tekstu ustawy o planowaniu i zagospodarowaniu przestrzennym"):
+        return {"publisher": "DU", "year": rok, "pos": poz, "title": tytul, "textPDF": True, "status": "obowiązujący"}
+
+    wyniki = {"items": [tj(2023, 977), tj(2024, 1130), tj(2025, 50), tj(2025, 60, "Ustawa o zmianie ustawy o planowaniu i zagospodarowaniu przestrzennym"),
+                        tj(2026, 5, "Obwieszczenie … jednolitego tekstu ustawy o planowaniu przestrzennym w innym akcie")]}
+    zapytania = []
+
+    def get(url, params=None, **k):
+        zapytania.append(params)
+        return _Odp(wyniki) if url.endswith("/search") else _Odp(tresc=b"%PDF-1.4 x")
+
+    monkeypatch.setattr(sejm.requests, "get", get)
+    odp = client.post("/przepisy/sejm/pobierz", json={"rok": 2024, "pozycja": 1130, "tytul": tj(2024, 1130)["title"]})
+    akt_url = odp.get_json()["url"]
+    akt_id = int(akt_url.rstrip("/").split("/")[-1])
+    assert "Czy jest nowszy tekst?" in client.get(akt_url).get_data(as_text=True)
+    w = client.get(f"/przepisy/akty/{akt_id}/aktualnosc").get_json()
+    assert w["przedmiot"] == "o planowaniu i zagospodarowaniu przestrzennym" and w["adres"] == "Dz.U. 2024 poz. 1130"
+    assert [a["adres"] for a in w["nowsze"]] == ["Dz.U. 2025 poz. 50"]  # starsze, nowelizacje i inne ustawy odpadają
+    assert zapytania[-1]["title"] == "o planowaniu i zagospodarowaniu przestrzennym"
+    wgraj(client)  # akt wgrany z dysku — bez adresu Dz.U.
+    assert client.get("/przepisy/akty/2/aktualnosc").status_code == 422

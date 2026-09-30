@@ -158,3 +158,74 @@
         });
     });
 })();
+
+// ---------- czy jest nowszy tekst jednolity (ETAP 101) ----------
+(function () {
+    "use strict";
+
+    const przycisk = document.getElementById("sprawdz-aktualnosc");
+    const pole = document.getElementById("aktualnosc");
+    if (!przycisk) return;
+
+    function el(tag, klasa, tekst) {
+        const e = document.createElement(tag);
+        if (klasa) e.className = klasa;
+        if (tekst !== undefined) e.textContent = tekst;
+        return e;
+    }
+
+    async function pobierz(akt, guzik) {
+        guzik.disabled = true;
+        guzik.textContent = "Pobieram…";
+        try {
+            const odp = await fetch(URL_SEJM_POBIERZ, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ rok: akt.rok, pozycja: akt.pozycja, tytul: akt.tytul }),
+            });
+            const dane = await odp.json().catch(() => ({}));
+            if (!odp.ok) throw new Error(dane.blad || `Błąd ${odp.status}`);
+            location.href = dane.url;
+        } catch (e) {
+            guzik.disabled = false;
+            guzik.textContent = "Pobierz";
+            pole.appendChild(el("p", "komunikat komunikat--blad", e.message));
+        }
+    }
+
+    przycisk.addEventListener("click", async () => {
+        przycisk.disabled = true;
+        pole.hidden = false;
+        pole.replaceChildren(el("p", "wyciszony", "Sprawdzam w Dzienniku Ustaw…"));
+        try {
+            const odp = await fetch(URL_AKTUALNOSC);
+            const w = await odp.json().catch(() => ({}));
+            if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+            if (!w.nowsze.length) {
+                pole.replaceChildren(el("p", "", `Nie znalazłem nowszego tekstu jednolitego ustawy „${w.przedmiot}” niż ${w.adres}.`),
+                    el("p", "wyciszony", "Sprawdź też nowelizacje ogłoszone po ostatnim tekście jednolitym — tekst jednolity nie zawsze obejmuje najnowsze zmiany."));
+                return;
+            }
+            pole.replaceChildren(el("p", "", `Jest nowszy tekst jednolity ustawy „${w.przedmiot}” (masz ${w.adres}):`));
+            const lista = el("ul", "wyniki-sejmu");
+            for (const a of w.nowsze) {
+                const li = el("li", "wynik-sejmu");
+                const opis = el("div", "wynik-sejmu__opis");
+                opis.append(el("span", "", a.tytul), el("br"), el("span", "wyciszony", a.adres));
+                li.appendChild(opis);
+                if (a.ma_pdf) {
+                    const guzik = el("button", "przycisk--drugi", "Pobierz");
+                    guzik.type = "button";
+                    guzik.addEventListener("click", () => pobierz(a, guzik));
+                    li.appendChild(guzik);
+                }
+                lista.appendChild(li);
+            }
+            pole.appendChild(lista);
+        } catch (e) {
+            pole.replaceChildren(el("p", "komunikat komunikat--blad", e.message));
+        } finally {
+            przycisk.disabled = false;
+        }
+    });
+})();

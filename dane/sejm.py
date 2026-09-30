@@ -16,6 +16,8 @@ Z odpowiedzi bierzemy tylko potrzebne pola i nie zakładamy, że wszystkie
 są zawsze obecne (np. textPDF bywa wartością logiczną albo adresem).
 """
 
+import re
+
 import requests
 
 from .siec import opis_bledu_sieci
@@ -88,3 +90,37 @@ def pobierz_pdf(rok: int, pozycja: int, wydawca: str = "DU") -> bytes:
     if not dane.startswith(b"%PDF-"):
         raise BladSejmu("API Sejmu nie zwróciło pliku PDF dla tego aktu (może nie mieć tekstu w PDF).")
     return bytes(dane)
+
+
+# ---------- czy jest nowszy tekst jednolity (ETAP 101) ----------
+
+_ADRES = re.compile(r"\(Dz\.U\. (\d{4}) poz\. (\d+)\)\s*$")
+# przedmiot ustawy: „o planowaniu …” albo „Prawo budowlane” — najpierw po „tekstu
+# ustawy” (obwieszczenie), dopiero potem po dacie (sama ustawa)
+_PRZEDMIOT = [
+    re.compile(r"tekstu ustawy\s*[–-]?\s*([^()]+?)\s*(?:\(Dz\.U\.|$)"),
+    re.compile(r"\d{4} r\.\s*[–-]?\s*([^()]+?)\s*(?:\(Dz\.U\.|$)"),
+]
+
+
+def adres_i_przedmiot(nazwa: str) -> tuple[int, int, str] | None:
+    """Z nazwy aktu pobranego z Dziennika Ustaw: (rok, pozycja, przedmiot) albo None."""
+    adres = _ADRES.search(nazwa or "")
+    przedmiot = next((m for wzor in _PRZEDMIOT if (m := wzor.search(nazwa or ""))), None)
+    if not adres or not przedmiot or len(przedmiot.group(1)) < 5:
+        return None
+    return int(adres.group(1)), int(adres.group(2)), " ".join(przedmiot.group(1).split())
+
+
+def nowsze_teksty_jednolite(nazwa: str) -> dict:
+    """Obwieszczenia z tekstem jednolitym tej samej ustawy, nowsze niż akt w bibliotece."""
+    dane = adres_i_przedmiot(nazwa)
+    if dane is None:
+        raise BladSejmu("To działa dla aktów pobranych z Dziennika Ustaw — w nazwie musi zostać tytuł i „(Dz.U. rok poz. …)”.")
+    rok, pozycja, przedmiot = dane
+    wszystkie = szukaj_aktow(przedmiot)
+    nowsze = [
+        a for a in wszystkie
+        if a["tekst_jednolity"] and przedmiot.lower() in a["tytul"].lower() and (a["rok"], a["pozycja"]) > (rok, pozycja)
+    ]
+    return {"przedmiot": przedmiot, "adres": f"Dz.U. {rok} poz. {pozycja}", "nowsze": nowsze}
