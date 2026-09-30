@@ -2363,3 +2363,28 @@ projekcie; transakcje z Rejestru Cen Nieruchomości to kolejny etap
   byłoby scrapowaniem stron bez zgody.
 - Dane NBP o cenach w 17 miastach — pliki arkuszy wymagałyby nowej
   zależności; GUS obejmuje wszystkie powiaty.
+
+## D-112 — Ceny: RCN z pliku GeoPackage czytanego przez sqlite3
+Data: 2026-09-30
+
+**Decyzja:** Transakcje lokali czytamy z pliku GeoPackage powiatu,
+pobranego przez użytkownika z Geoportalu, bezpośrednio przez `sqlite3` i
+`shapely.wkb` (bez GDAL). Plik wskazuje się z katalogu Pobrane (tylko z
+listy pokazanej przez Warsztat) albo wgrywa, jeśli jest mały. Cena lokalu
+wg hierarchii cena lokalu → nieruchomości → transakcji (ostatnia tylko
+przy jednym lokalu w transakcji); odrzucamy lokale niemieszkalne, udziały
+i wartości nierealne, z licznikami powodów. Zaimportowane lokale trzymamy
+w bazie modułu, więc filtry działają bez ponownego czytania pliku.
+
+**Uzasadnienie:** RCN to ceny z aktów notarialnych dla pojedynczych
+lokali — dokładniejsze w skali miasta niż mediana GUS dla powiatu. Pliki
+są bezpłatne od 2026 r.; usługa WFS nie byłaby wygodna do pobrania całego
+powiatu z ogranicznikami liczby obiektów.
+
+**Odrzucone alternatywy:**
+- GDAL/pyogrio/geopandas — ciężkie zależności dla odczytu jednej tabeli.
+- Pobieranie przez WFS w aplikacji — schemat odpowiedzi niepotwierdzony
+  (D-098), a limity obiektów na zapytanie wymagałyby stronicowania.
+- Wgrywanie tylko przez przeglądarkę — pliki dużych miast przekraczają
+  limit 50 MB; wskazanie z Pobranych jest bezpieczne (tylko pliki z
+  listy).

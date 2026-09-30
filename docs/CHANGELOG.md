@@ -729,3 +729,10 @@
   roku, w 5 lat, od początku, średnio rocznie), ranking w województwie, CSV.
 - Klient BDL obsługuje poziom powiatu.
 - Dodano `ceny/`, `DECISIONS.md` D-111 i 3 testy.
+
+## ETAP 104 — 2026-09-30
+- Ceny: **transakcje z Rejestru Cen Nieruchomości** — import pliku
+  GeoPackage powiatu (z katalogu Pobrane), mediana ceny za m² z kwartylami,
+  trend co kwartał, rozkład cen, izby, mapa transakcji, filtry i CSV.
+- Przeliczenie współrzędnych PL-1992 → WGS84.
+- Dodano `ceny/rcn.py`, `ceny/trasy_rcn.py`, `DECISIONS.md` D-112 i 4 testy.

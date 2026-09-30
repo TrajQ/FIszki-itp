@@ -1813,3 +1813,25 @@ Status: zamknięty
 - Nie sprawdzone tutaj: prawdziwe API BDL (zablokowane) — nazwy wskaźników
   GUS i dostępne lata trzeba zobaczyć u siebie
 - `DECISIONS.md`: D-111
+
+## ETAP 104 — Ceny: transakcje z Rejestru Cen Nieruchomości
+Data: 2026-09-30
+Status: zamknięty
+
+- `ceny/rcn.py`: czytanie GeoPackage RCN przez sqlite3 (tabela
+  `transakcje_lokale`, nazwy kolumn z kodu kilku otwartych projektów,
+  sprawdzane w pliku), cena lokalu → nieruchomości → transakcji (tylko
+  jednolokalowej), odrzucanie z licznikami, środek geometrii z nagłówka
+  GeoPackage (koperta albo WKB) w PL-1992 → WGS84; statystyki (mediana i
+  kwartyle za m², trend kwartalny, izby, histogram), punkty mapy z
+  kwintylami
+- `mpzp/uklady.py`: przeliczenie odwrotne PL-1992 → WGS84 (szeregi
+  Krügera) z testem „tam i z powrotem” w 5 miejscach Polski
+- baza modułu: `rcn_pliki`, `rcn_lokale`; `ceny/trasy_rcn.py`: strona
+  „Transakcje (RCN)”, import z katalogu Pobrane (tylko pliki z listy) albo
+  wgranie, dane z filtrami, CSV, usuwanie
+- Sprawdzone w przeglądarce na syntetycznym pliku (800 transakcji +
+  12 niemieszkalnych); poprawione przepełnienie układu na 390 px
+- Nie sprawdzone: prawdziwy plik z Geoportalu (nazwy kolumn i wartości
+  rynku trzeba potwierdzić na pierwszym imporcie)
+- `DECISIONS.md`: D-112

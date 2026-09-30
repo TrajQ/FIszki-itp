@@ -177,3 +177,125 @@
         display: none;
     }
 }
+
+/* ---------- transakcje RCN (ETAP 104) ---------- */
+
+.uklad-rcn {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.uklad-rcn > * {
+    min-width: 0;
+}
+
+.uklad-rcn input[type="file"] {
+    max-width: 100%;
+}
+
+.instrukcja-rcn {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+}
+
+.pliki-gpkg,
+.pliki-rcn {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+}
+
+.pliki-gpkg span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.pliki-rcn li {
+    display: grid;
+    gap: 2px;
+    padding: 6px 8px;
+    border-radius: 8px;
+}
+
+.pliki-rcn__wybrany {
+    background: var(--linia-slaba);
+}
+
+.filtry-rcn {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 10px;
+}
+
+.kafelki-rcn {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.kafelek-rcn {
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--linia-slaba);
+}
+
+.kafelek-rcn__etykieta,
+.kafelek-rcn__dopisek {
+    font-size: 12px;
+}
+
+.kafelek-rcn__wartosc {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.mapa-rcn {
+    height: 460px;
+    border-radius: 10px;
+}
+
+.legenda-rcn {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 12px;
+}
+
+.legenda-rcn__pozycja {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legenda-rcn__probka {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid #3a2a1a;
+}
+
+.kolumny-rcn {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 800px) {
+    .uklad-rcn {
+        grid-template-columns: 1fr;
+    }
+
+    .mapa-rcn {
+        height: 340px;
+    }
+}

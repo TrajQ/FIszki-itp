@@ -29,3 +29,13 @@ def test_strefy_pl2000():
 
 def test_poza_polska():
     assert uklady.w_polsce(52, 19) and not uklady.w_polsce(40, 19) and not uklady.w_polsce(52, 30)
+
+
+# ---------- ETAP 104: przeliczenie odwrotne PL-1992 → WGS84 ----------
+
+
+@pytest.mark.parametrize("lat, lon", [(52.4064, 16.9252), (50.0614, 19.9366), (54.35, 18.65), (49.3, 22.7), (53.9, 14.25)])
+def test_pl1992_tam_i_z_powrotem(lat, lon):
+    p = uklady.pl1992(lat, lon)
+    lat2, lon2 = uklady.wgs84_z_pl1992(p["x"], p["y"])
+    assert lat2 == pytest.approx(lat, abs=1e-8) and lon2 == pytest.approx(lon, abs=1e-8)  # ok. 1 mm

@@ -78,3 +78,39 @@ def pl2000(lat: float, lon: float) -> dict:
 def w_polsce(lat: float, lon: float) -> bool:
     """Z grubsza obszar Polski z zapasem — poza nim układy PL nie mają sensu."""
     return 48.5 <= lat <= 55.5 and 13.5 <= lon <= 24.5
+
+
+# ---------- przeliczenie odwrotne: PL-1992 → WGS84 (ETAP 104) ----------
+
+_BETA = (
+    _N / 2 - 2 * _N**2 / 3 + 37 * _N**3 / 96 - _N**4 / 360 - 81 * _N**5 / 512 + 96199 * _N**6 / 604800,
+    _N**2 / 48 + _N**3 / 15 - 437 * _N**4 / 1440 + 46 * _N**5 / 105 - 1118711 * _N**6 / 3870720,
+    17 * _N**3 / 480 - 37 * _N**4 / 840 - 209 * _N**5 / 4480 + 5569 * _N**6 / 90720,
+    4397 * _N**4 / 161280 - 11 * _N**5 / 504 - 830251 * _N**6 / 7257600,
+    4583 * _N**5 / 161280 - 108847 * _N**6 / 3991680,
+    20648693 * _N**6 / 638668800,
+)
+
+
+def odwrotne_gauss_kruger(polnoc: float, wschod: float, poludnik: float, skala: float) -> tuple[float, float]:
+    """(szerokość, długość) w stopniach — odwrotność gauss_kruger (szeregi
+    Krügera, Karney 2011; szerokość z konforemnej metodą Newtona)."""
+    ksi = polnoc / (skala * _A_PROSTOKATNE)
+    eta = wschod / (skala * _A_PROSTOKATNE)
+    ksi_p, eta_p = ksi, eta
+    for j, beta in enumerate(_BETA, start=1):
+        ksi_p -= beta * math.sin(2 * j * ksi) * math.cosh(2 * j * eta)
+        eta_p -= beta * math.cos(2 * j * ksi) * math.sinh(2 * j * eta)
+    tau_p = math.sin(ksi_p) / math.hypot(math.sinh(eta_p), math.cos(ksi_p))  # tangens szerokości konforemnej
+    dl = math.atan2(math.sinh(eta_p), math.cos(ksi_p))
+    tau = tau_p
+    for _ in range(5):
+        sigma = math.sinh(_E * math.atanh(_E * tau / math.sqrt(1 + tau * tau)))
+        tau_i = tau * math.sqrt(1 + sigma * sigma) - sigma * math.sqrt(1 + tau * tau)
+        tau += (tau_p - tau_i) / math.sqrt(1 + tau_i * tau_i) * (1 + (1 - _E**2) * tau * tau) / ((1 - _E**2) * math.sqrt(1 + tau * tau))
+    return math.degrees(math.atan(tau)), poludnik + math.degrees(dl)
+
+
+def wgs84_z_pl1992(x: float, y: float) -> tuple[float, float]:
+    """PL-1992 (x — północ, y — wschód, jak w geodezji) → (szerokość, długość)."""
+    return odwrotne_gauss_kruger(x + 5_300_000, y - 500_000, 19.0, 0.9993)

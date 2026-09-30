@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block tytul %}Transakcje (RCN) — Ceny — Warsztat{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('ceny.index') }}">‹ Ceny</a>
+        <h1>Transakcje mieszkań</h1>
+        <p>Ceny z aktów notarialnych z Rejestru Cen Nieruchomości (GUGiK): mediana za m², rozkład, zmiany co kwartał i mapa transakcji w powiecie.</p>
+    </div>
+</div>
+
+{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+
+<div class="uklad-rcn">
+    <aside class="stos">
+        <section class="karta stos">
+            <h3>Plik z Rejestru Cen Nieruchomości</h3>
+            <ol class="instrukcja-rcn">
+                <li>Na <a href="https://www.geoportal.gov.pl/mapy/rejestr-cen-nieruchomosci/" target="_blank" rel="noopener noreferrer">geoportal.gov.pl ↗</a> w module „Rejestr Cen Nieruchomości” wybierz „Dane do pobrania” i pobierz plik <strong>GeoPackage</strong> swojego powiatu (miasta).</li>
+                <li>Plik trafi do katalogu Pobrane — wybierz go poniżej.</li>
+            </ol>
+            {% if do_importu %}
+            <ul class="pliki-gpkg">
+                {% for p in do_importu %}
+                <li>
+                    <form method="post" action="{{ url_for('ceny.importuj_transakcje') }}" class="rzad rzad--miedzy">
+                        <span>{{ p.nazwa }} <span class="wyciszony">{{ p.mb }} MB</span></span>
+                        <input type="hidden" name="sciezka" value="{{ p.sciezka }}">
+                        <button type="submit" class="przycisk--drugi">Importuj</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="wyciszony opis-cen">Duży plik czyta się chwilę (wszystkie transakcje lokali w powiecie).</p>
+            {% else %}
+            <p class="wyciszony opis-cen">W {{ katalogi | join(' ani w ') }} nie ma plików .gpkg.</p>
+            {% endif %}
+            <details>
+                <summary>Wgraj plik z innego miejsca</summary>
+                <form method="post" action="{{ url_for('ceny.importuj_transakcje') }}" enctype="multipart/form-data" class="rzad">
+                    <input type="file" name="plik" accept=".gpkg" required>
+                    <button type="submit" class="przycisk--drugi">Wgraj</button>
+                </form>
+                <p class="wyciszony opis-cen">Do 50 MB — większy plik wskaż z katalogu Pobrane.</p>
+            </details>
+        </section>
+
+        <section class="karta stos">
+            <h3>Zaimportowane</h3>
+            {% if pliki %}
+            <ul class="pliki-rcn">
+                {% for p in pliki %}
+                <li class="{{ 'pliki-rcn__wybrany' if p.id == wybrany or (not wybrany and loop.first) }}">
+                    <a href="{{ url_for('ceny.transakcje', plik=p.id) }}">{{ p.nazwa }}</a>
+                    <span class="wyciszony">{{ p.liczba }} lokali · {{ p.data_importu[:10] }}</span>
+                    <form method="post" action="{{ url_for('ceny.usun_transakcje', plik_id=p.id) }}" onsubmit="return confirm('Usunąć zaimportowane transakcje z tego pliku?')">
+                        <button type="submit" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="wyciszony">Jeszcze nic.</p>
+            {% endif %}
+        </section>
+    </aside>
+
+    <div class="stos" id="wynik-rcn" {{ 'hidden' if not pliki }}>
+        <section class="karta stos">
+            <form id="filtry" class="filtry-rcn">
+                <label>Rynek <select name="rynek"><option value="">wszystkie</option>{% for r in rynki %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></label>
+                <label>Od roku <select name="od"><option value="">—</option></select></label>
+                <label>Do roku <select name="do"><option value="">—</option></select></label>
+                <label>Izby <select name="izby"><option value="">wszystkie</option>{% for i in ['1', '2', '3', '4+'] %}<option value="{{ i }}">{{ i }}</option>{% endfor %}</select></label>
+                <label>Rodzaj transakcji <select name="rodzaj"><option value="">wszystkie</option></select></label>
+                <a id="link-csv-rcn" class="przycisk przycisk--drugi" href="#">CSV</a>
+            </form>
+            <div id="kafelki-rcn" class="kafelki-rcn"></div>
+            <p id="odrzucone-rcn" class="wyciszony opis-cen"></p>
+        </section>
+
+        <section class="karta stos">
+            <h3>Mapa transakcji</h3>
+            <div id="mapa-rcn" class="mapa-rcn"></div>
+            <div id="legenda-rcn" class="legenda-rcn"></div>
+        </section>
+
+        <div class="kolumny-rcn">
+            <section class="karta stos">
+                <h3>Mediana ceny za m² co kwartał</h3>
+                <div id="trend-rcn" class="wykres-cen"></div>
+            </section>
+            <section class="karta stos">
+                <h3>Rozkład cen za m²</h3>
+                <div id="histogram-rcn" class="wykres-cen"></div>
+            </section>
+        </div>
+
+        <section class="karta stos">
+            <h3>Według liczby izb</h3>
+            <div class="przewijanie-cen"><table class="tabela" id="izby-rcn"></table></div>
+            <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK), ceny brutto z aktów notarialnych. Statystyki liczy aplikacja.</p>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_TRANSAKCJE = "{{ url_for('ceny.transakcje') }}";
+    const PLIK_ID = {{ (wybrany or (pliki[0].id if pliki else none)) | tojson }};
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('ceny.static', filename='transakcje.js') }}"></script>
+{% endblock %}
