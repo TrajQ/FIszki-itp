@@ -705,3 +705,8 @@
 - Teren: **paski wykresu** w zestawieniu raportu (wyniki ankiety,
   rozkład wartości pól), w kolorach skali dla pól „od najlepszej”.
 - Dodano `DECISIONS.md` D-107 i 1 test.
+
+## ETAP 100 — 2026-09-30
+- Osiedle: **odległości i cień w raporcie do druku** — strefa cienia i
+  numery terenów na szkicu, tabele jak na stronie, wybór dnia.
+- Dodano `DECISIONS.md` D-108 i 1 test.

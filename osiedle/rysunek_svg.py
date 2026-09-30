@@ -14,17 +14,27 @@ MARGINES_PX = 24
 KROKI_PODZIALKI_M = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000]
 
 
-def _geometrie_w_metrach(geojson: dict) -> list[tuple[str, object]]:
-    """[(funkcja, geometria w metrach)] — obszar opracowania na początku (pod spodem)."""
+def _cechy(geojson: dict) -> list[tuple[str, object]]:
     cechy = []
     for cecha in geojson.get("features") or []:
         try:
             cechy.append(((cecha.get("properties") or {}).get("funkcja"), shape(cecha["geometry"])))
         except Exception:
             continue  # zapisany rysunek przeszedł walidację; to tylko ostrożność
+    return cechy
+
+
+def _szerokosc(cechy) -> float:
+    """Szerokość geograficzna skali metrycznej rysunku (średnia środków)."""
+    return sum(g.centroid.y for _, g in cechy) / len(cechy)
+
+
+def _geometrie_w_metrach(geojson: dict) -> list[tuple[str, object]]:
+    """[(funkcja, geometria w metrach)] — obszar opracowania na początku (pod spodem)."""
+    cechy = _cechy(geojson)
     if not cechy:
         return []
-    szerokosc = sum(g.centroid.y for _, g in cechy) / len(cechy)
+    szerokosc = _szerokosc(cechy)
     wynik = [(f, _w_metrach(g, szerokosc)) for f, g in cechy]
     return sorted(wynik, key=lambda p: p[0] != OBSZAR)
 
@@ -56,7 +66,11 @@ def _pierscien(wspolrzedne, przelicz) -> str:
 
 
 def _sciezka(geometria, przelicz) -> str:
-    wieloboki = geometria.geoms if geometria.geom_type == "MultiPolygon" else [geometria]
+    if geometria.geom_type in ("MultiPolygon", "GeometryCollection"):
+        # z kolekcji rysujemy tylko wieloboki (np. różnica figur bywa kolekcją z odcinkami)
+        wieloboki = [w for g in geometria.geoms for w in (getattr(g, "geoms", None) or [g]) if w.geom_type == "Polygon"]
+    else:
+        wieloboki = [geometria]
     czesci = []
     for w in wieloboki:
         czesci.append(_pierscien(w.exterior.coords, przelicz))
@@ -64,8 +78,17 @@ def _sciezka(geometria, przelicz) -> str:
     return " ".join(czesci)
 
 
-def szkic_svg(geojson: dict, szerokosc_px: int = 640, wysokosc_px: int = 480, metry_na_px: float | None = None) -> str:
-    """Szkic jednej koncepcji; metry_na_px — wspólna skala przy porównaniu."""
+def szkic_svg(
+    geojson: dict,
+    szerokosc_px: int = 640,
+    wysokosc_px: int = 480,
+    metry_na_px: float | None = None,
+    strefa_cienia: dict | None = None,
+    numery: bool = False,
+) -> str:
+    """Szkic jednej koncepcji; metry_na_px — wspólna skala przy porównaniu.
+    ETAP 100: strefa_cienia (GeoJSON w stopniach, z osiedle/cien.py) i
+    numery terenów (jak w tabeli cienia: kolejne tereny bez obszaru)."""
     geometrie = _geometrie_w_metrach(geojson)
     otwarcie = (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc_px} {wysokosc_px}" '
@@ -88,6 +111,8 @@ def szkic_svg(geojson: dict, szerokosc_px: int = 640, wysokosc_px: int = 480, me
         return szerokosc_px / 2 + (p[0] - srodek_x) / skala, pole_srodek_y - (p[1] - srodek_y) / skala
 
     czesci = [otwarcie]
+    cechy = _cechy(geojson)
+    szerokosc = _szerokosc(cechy)
     for funkcja, g in geometrie:
         d = _sciezka(g, przelicz)
         if funkcja == OBSZAR:
@@ -95,6 +120,18 @@ def szkic_svg(geojson: dict, szerokosc_px: int = 640, wysokosc_px: int = 480, me
         else:
             kolor = FUNKCJE.get(funkcja, {}).get("kolor", "#8e8e93")
             czesci.append(f'<path d="{d}" fill="{kolor}" fill-opacity="0.75" stroke="{kolor}" stroke-width="1" fill-rule="evenodd"/>')
+
+    if strefa_cienia is not None:
+        d = _sciezka(_w_metrach(shape(strefa_cienia), szerokosc), przelicz)
+        czesci.append(f'<path d="{d}" fill="#1d1d1f" fill-opacity="0.22" stroke="#48484a" stroke-width="1" stroke-dasharray="4 3" fill-rule="nonzero"/>')
+    if numery:
+        tereny = [g for f, g in cechy if f != OBSZAR]  # kolejność z zapisu — jak w tabeli cienia
+        for nr, g in enumerate(tereny, start=1):
+            x, y = przelicz(_w_metrach(g, szerokosc).representative_point().coords[0])
+            czesci.append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="9" fill="#ffffff" stroke="#1d1d1f" stroke-width="1"/>'
+                f'<text x="{x:.1f}" y="{y + 4:.1f}" text-anchor="middle" font-size="11" fill="#1d1d1f">{nr}</text>'
+            )
 
     # podziałka: najdłuższy „okrągły” odcinek do ok. 1/4 szerokości
     dlugosc_m = max((k for k in KROKI_PODZIALKI_M if k / skala <= szerokosc_px / 4), default=KROKI_PODZIALKI_M[0])

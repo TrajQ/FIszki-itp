@@ -345,3 +345,21 @@ def test_trasa_cienia(client):
     assert w["tereny"][0]["od_granicy_m"] is None and w["zacienione"][0]["funkcja"] == "ZP"
     assert client.get(f"/osiedle/koncepcje/{k['id']}/cien?dzien=x").status_code == 400
     assert client.get("/osiedle/koncepcje/999/cien").status_code == 404
+
+
+# ---------- ETAP 100: odległości i cień w raporcie ----------
+
+
+def test_raport_z_cieniem(client):
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Raport"}).get_json()
+    client.put(f"/osiedle/koncepcje/{k['id']}", json={"geojson": kolekcja(
+        prostokat(0, 0, 100, 100, "obszar"), prostokat(20, 20, 40, 30, "MW", kondygnacje=6), prostokat(20, 55, 40, 30, "MN"))})
+    html = client.get(f"/osiedle/koncepcje/{k['id']}/raport").get_data(as_text=True)
+    assert "Odległości i cień" in html and "Tereny w strefie możliwego cienia" in html
+    assert 'stroke-dasharray="4 3"' in html and ">2</text>" in html  # strefa i numery terenów na szkicu
+    zima = client.get(f"/osiedle/koncepcje/{k['id']}/raport?cien=zima").get_data(as_text=True)
+    assert "przesilenie zimowe" in zima and 'value="zima" selected' in zima
+    bez = client.get(f"/osiedle/koncepcje/{k['id']}/raport?cien=nie").get_data(as_text=True)
+    assert "Tereny w strefie" not in bez and 'stroke-dasharray="4 3"' not in bez and "Pokaż odległości i cień" in bez
+    # porównanie wariantów bez zmian: szkic bez numerów i cienia
+    assert 'stroke-dasharray="4 3"' not in client.get(f"/osiedle/porownanie?id={k['id']}&id={k['id']}").get_data(as_text=True)

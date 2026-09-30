@@ -25,8 +25,41 @@
         <ul class="legenda-osiedla">
             <li><span class="funkcja__probka funkcja__probka--obszar"></span> obszar opracowania</li>
             {% for f in b.funkcje %}<li><span class="funkcja__probka" style="background: {{ f.kolor }}"></span> <strong>{{ f.funkcja }}</strong> {{ f.nazwa }}</li>{% endfor %}
+            {% if cien %}<li><span class="funkcja__probka raport-osiedla__probka-cienia"></span> strefa możliwego cienia ({{ cien.dzien }}, 9–15)</li>{% endif %}
         </ul>
     </section>
+
+    {% if cien %}
+    <section class="raport-osiedla__strona">
+        <div class="rzad rzad--miedzy">
+            <h3>Odległości i cień</h3>
+            <form class="raport-osiedla__akcje-cienia" method="get">
+                <select name="cien" aria-label="Dzień" onchange="this.form.submit()">
+                    {% for klucz, d in dni_cienia.items() %}<option value="{{ klucz }}" {{ 'selected' if klucz == dzien_cienia }}>{{ d[0] }}</option>{% endfor %}
+                    <option value="nie">bez analizy cienia</option>
+                </select>
+            </form>
+        </div>
+        <p class="wyciszony">{{ cien.dzien }}, szerokość {{ m(cien.szerokosc, 2) }}° N. Najgorszy przypadek: budynki przy krawędzi terenu, wysokość = kondygnacje × {{ m(cien.wysokosc_kondygnacji_m, 0) }} m, godziny 9–15 czasu słonecznego. Numery terenów jak na szkicu.</p>
+        <table class="tabela">
+            <tr><th>Teren</th><th class="liczba">Wysokość [m]</th><th class="liczba">Cień w południe [m]</th><th class="liczba">Od granicy obszaru [m]</th></tr>
+            {% for t in cien.tereny %}<tr><td>{{ t.nr }}. <strong>{{ t.funkcja }}</strong></td><td class="liczba">{{ m(t.wysokosc_m) }}</td><td class="liczba">{{ m(t.cien_w_poludnie_m) if t.cien_w_poludnie_m is not none else '—' }}</td><td class="liczba">{% if t.od_granicy_m is none %}—{% elif t.od_granicy_m == 0 %}0 — sięga granicy{% else %}{{ m(t.od_granicy_m) }}{% endif %}</td></tr>{% endfor %}
+        </table>
+        {% if cien.tereny | selectattr('od_granicy_m', 'equalto', 0) | list %}<p class="komunikat komunikat--ostrzezenie">Teren zabudowy sięga granicy obszaru — budynki trzeba będzie odsunąć od granicy działki (minimalne odległości: § 12 warunków technicznych).</p>{% endif %}
+        {% if cien.zacienione %}
+        <h3>Tereny w strefie możliwego cienia</h3>
+        <table class="tabela">
+            <tr><th>Teren</th><th class="liczba">Powierzchnia [m²]</th><th class="liczba">W strefie cienia [m²]</th><th class="liczba">%</th></tr>
+            {% for z in cien.zacienione %}<tr><td>{{ z.nr }}. <strong>{{ z.funkcja }}</strong></td><td class="liczba">{{ m(z.pole_m2, 0) }}</td><td class="liczba">{{ m(z.w_cieniu_m2, 0) }}</td><td class="liczba">{{ m(z.procent) }}</td></tr>{% endfor %}
+        </table>
+        <p class="wyciszony">Przy zabudowie blisko tych miejsc sprawdź na projekcie budynków nasłonecznienie (§ 60) i przesłanianie (§ 13) wg warunków technicznych.</p>
+        {% else %}
+        <p class="wyciszony">Cień nie sięga terenów MN, MW ani ZP.</p>
+        {% endif %}
+    </section>
+    {% elif dzien_cienia == 'nie' %}
+    <p class="raport-osiedla__akcje-cienia"><a href="?cien=rownonoc">Pokaż odległości i cień</a></p>
+    {% endif %}
 
     <section class="raport-osiedla__strona">
         <div class="raport-osiedla__kolumny">

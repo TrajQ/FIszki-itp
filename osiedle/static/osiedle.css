@@ -369,7 +369,17 @@ button.przycisk--niebezpieczny-tekst {
     }
 }
 
+/* ETAP 100: cień w raporcie */
+.raport-osiedla__probka-cienia {
+    background: rgba(29, 29, 31, 0.22);
+    border: 1px dashed #48484a;
+}
+
 @media print {
+    .raport-osiedla__akcje-cienia {
+        display: none;
+    }
+
     @page {
         size: A4 portrait;
         margin: 10mm;

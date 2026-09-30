@@ -4,7 +4,7 @@ from flask import Response, render_template, request
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
 
-from . import baza
+from . import baza, cien
 from .bilans import FUNKCJE, bilans
 from .program import ZALOZENIA
 from .routes import _koncepcja_albo_404, osiedle_bp
@@ -17,11 +17,23 @@ MAKS_WARIANTOW = 4
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>/raport")
 def raport(koncepcja_id):
     k = _koncepcja_albo_404(koncepcja_id)
+    # ETAP 100: odległości i strefa cienia (?cien=rownonoc|zima|lato|nie; domyślnie równonoc)
+    dzien = request.args.get("cien", "rownonoc")
+    analiza_cienia = cien.analiza(k["geojson"], dzien) if dzien in cien.DNI else None
+    if analiza_cienia is not None and not analiza_cienia["tereny"]:
+        analiza_cienia = None  # bez terenów zabudowy nie ma czego pokazać
     return render_template(
         "osiedle/raport.html",
         k=k,
         b=bilans(k["geojson"], k["ustawienia"]),
-        szkic=Markup(szkic_svg(k["geojson"], 1000, 620)),  # tylko liczby i kolory z kodu
+        szkic=Markup(szkic_svg(  # tylko liczby i kolory z kodu
+            k["geojson"], 1000, 620,
+            strefa_cienia=analiza_cienia["strefa"] if analiza_cienia else None,
+            numery=analiza_cienia is not None,
+        )),
+        cien=analiza_cienia,
+        dzien_cienia=dzien,
+        dni_cienia=cien.DNI,
         funkcje=FUNKCJE,
         ustalenia=USTALENIA,
         zalozenia=ZALOZENIA,

@@ -1755,3 +1755,15 @@ Status: zamknięty
 - poprawki po sprawdzeniu w przeglądarce: bez kreski przy 0%, szersze
   kolumny zestawienia (etykiety się nie łamią)
 - `DECISIONS.md`: D-107
+
+## ETAP 100 — Osiedle: odległości i cień w raporcie do druku
+Data: 2026-09-30
+Status: zamknięty
+
+- raport koncepcji: sekcja „Odległości i cień” (dzień z listy, domyślnie
+  równonoc, „bez analizy cienia”), strefa cienia i numery terenów na
+  szkicu, pozycja w legendzie; lista wyboru ukryta przy druku
+- `szkic_svg(…, strefa_cienia, numery)` — porównanie wariantów bez zmian;
+  `_sciezka` rysuje też wieloboki z kolekcji geometrii
+- Sprawdzone w przeglądarce (także zmiana dnia i wydruk do PDF)
+- `DECISIONS.md`: D-108

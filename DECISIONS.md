@@ -2284,3 +2284,21 @@ liczb, a tabela zostaje obok — liczby zawsze widać.
 - Osobne wykresy SVG — więcej kodu dla tego samego efektu przy
   wykresach słupkowych jednej zmiennej.
 - Biblioteka wykresów — nowa zależność i CDN (sprzeczne z zasadami).
+
+## D-108 — Osiedle: analiza cienia w raporcie domyślnie włączona
+Data: 2026-09-30
+
+**Decyzja:** Raport do druku pokazuje odległości i strefę cienia dla
+równonocy, jeśli koncepcja ma tereny zabudowy; dzień można zmienić
+(parametr `?cien=`), a analizę wyłączyć (`?cien=nie`). Numery terenów na
+szkicu odpowiadają tabelom (kolejność zapisu rysunku, bez obszaru).
+Szkic w porównaniu wariantów zostaje bez tych dodatków.
+
+**Uzasadnienie:** Raport idzie do prowadzącego jako całość koncepcji —
+cień i odległości od granicy są jej częścią. Równonoc to umowny dzień
+porównawczy (zimą cienie są wielokrotnie dłuższe).
+
+**Odrzucone alternatywy:**
+- Osobny raport cienia — dwa wydruki tej samej koncepcji.
+- Cień na szkicach porównania wariantów — przy małych szkicach numery i
+  strefa zasłaniałyby rysunek.
