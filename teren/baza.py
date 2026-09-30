@@ -42,10 +42,16 @@ CREATE TABLE IF NOT EXISTS punkty (
 # Kolumny dodane później: CREATE TABLE IF NOT EXISTS nie dodaje ich do
 # istniejącej bazy, więc dopisujemy je przy starcie (bez utraty danych).
 KOLUMNY_DODANE = {
-    # ETAP 72: 1 = położenie poprawione ręcznie w Warsztacie (dokładność GPS nie obowiązuje)
-    "polozenie_reczne": "INTEGER NOT NULL DEFAULT 0",
-    # ETAP 72: czas ostatniej poprawki w Warsztacie
-    "data_poprawki": "TEXT",
+    "punkty": {
+        # ETAP 72: 1 = położenie poprawione ręcznie w Warsztacie (dokładność GPS nie obowiązuje)
+        "polozenie_reczne": "INTEGER NOT NULL DEFAULT 0",
+        # ETAP 72: czas ostatniej poprawki w Warsztacie
+        "data_poprawki": "TEXT",
+    },
+    "projekty": {
+        # ETAP 83: obszar prac [południe, zachód, północ, wschód] — podkład mapy w formularzu
+        "obszar": "TEXT",
+    },
 }
 
 
@@ -78,15 +84,24 @@ def close_db(exception=None):
 def init_db():
     db = get_db()
     db.executescript(SCHEMAT)
-    istniejace = {w["name"] for w in db.execute("PRAGMA table_info(punkty)")}
-    for kolumna, definicja in KOLUMNY_DODANE.items():
-        if kolumna not in istniejace:
-            db.execute(f"ALTER TABLE punkty ADD COLUMN {kolumna} {definicja}")
+    for tabela, kolumny in KOLUMNY_DODANE.items():
+        istniejace = {w["name"] for w in db.execute(f"PRAGMA table_info({tabela})")}
+        for kolumna, definicja in kolumny.items():
+            if kolumna not in istniejace:
+                db.execute(f"ALTER TABLE {tabela} ADD COLUMN {kolumna} {definicja}")
     db.commit()
 
 
 def _projekt(wiersz) -> dict:
-    return {**dict(wiersz), "pola": json.loads(wiersz["pola"])}
+    wynik = {**dict(wiersz), "pola": json.loads(wiersz["pola"])}
+    wynik["obszar"] = json.loads(wynik["obszar"]) if wynik.get("obszar") else None
+    return wynik
+
+
+def ustaw_obszar(projekt_id: int, obszar: list[float] | None):
+    db = get_db()
+    db.execute("UPDATE projekty SET obszar = ? WHERE id = ?", (json.dumps(obszar) if obszar else None, projekt_id))
+    db.commit()
 
 
 def projekty() -> list[dict]:

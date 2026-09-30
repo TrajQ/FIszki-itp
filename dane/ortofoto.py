@@ -112,3 +112,27 @@ def lata_archiwalne() -> dict:
     if wynik["lata"]:
         _pamiec[url] = (time.time(), wynik)
     return wynik
+
+
+# ---------- Obraz ortofotomapy dla prostokąta (ETAP 83) ----------
+
+URL_ORTO_OBECNA = "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/StandardResolution"
+
+
+def obraz_ortofotomapy(bbox_3857: tuple[float, float, float, float], szerokosc: int, wysokosc: int) -> bytes:
+    """Jeden obraz JPEG aktualnej ortofotomapy GUGiK (WMS GetMap, EPSG:3857 —
+    ten sam układ co mapy Leaflet w aplikacji). Ortofotomapa GUGiK jest
+    udostępniana bezpłatnie; pobieramy jeden obraz, nie hurtem kafelki."""
+    parametry = {
+        "SERVICE": "WMS", "REQUEST": "GetMap", "VERSION": "1.3.0", "LAYERS": "Raster", "STYLES": "",
+        "CRS": "EPSG:3857", "BBOX": ",".join(f"{v:.2f}" for v in bbox_3857),
+        "WIDTH": szerokosc, "HEIGHT": wysokosc, "FORMAT": "image/jpeg",
+    }
+    try:
+        odpowiedz = requests.get(URL_ORTO_OBECNA, params=parametry, timeout=40)
+        odpowiedz.raise_for_status()
+    except requests.RequestException as e:
+        raise BladOrtofoto(f"Ortofotomapa: {opis_bledu_sieci(e)}.") from e
+    if not odpowiedz.content.startswith(b"\xff\xd8\xff"):
+        raise BladOrtofoto("Usługa ortofotomapy nie zwróciła obrazu JPEG (np. komunikat o błędzie).")
+    return odpowiedz.content

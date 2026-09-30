@@ -1910,3 +1910,29 @@ co przy fiszkach z cytatu odpowiedzi (D-068, D-074).
 **Odrzucone alternatywy:**
 - Prompt fiszek z podręcznika — pytania o „stronę”, bez wskazania
   artykułu i ustępu.
+
+## D-090 — Teren: mapa offline w formularzu z jednym obrazem ortofotomapy
+Data: 2026-09-30
+
+**Decyzja:** Projekt terenowy ma opcjonalny obszar prac (ustawiany z
+widoku mapy, 50 m – 3 km boku; kolumna `projekty.obszar`, dopisywana do
+starych baz). Przy pobieraniu formularza Warsztat pobiera JEDEN obraz
+aktualnej ortofotomapy GUGiK tego obszaru (WMS GetMap, EPSG:3857, do
+1600 px, `dane/ortofoto.obraz_ortofotomapy`) i osadza go w pliku HTML.
+Telefon rysuje na płótnie (Web Mercator — ten sam układ co obraz):
+podkład, zapisane punkty z numerami, pozycję GPS z kołem dokładności,
+podziałkę; ostrzega, gdy jesteś poza obszarem. Bez obszaru albo przy
+błędzie usługi — mapa bez zdjęcia (punkty i pozycja). Przy okazji
+naprawiono formularz: po zapisie punktu śledzenie GPS się kończy, a koniec
+czasu przy już ustalonym położeniu nie jest błędem (wcześniej po ok. 30 s
+pojawiał się mylący komunikat „Nie udało się ustalić położenia”).
+
+**Uzasadnienie:** W terenie trzeba widzieć, gdzie się jest i co już
+zinwentaryzowano. Ortofotomapa GUGiK jest udostępniana bezpłatnie
+(otwarte dane); jeden obraz obszaru to zwykłe użycie usługi WMS.
+
+**Odrzucone alternatywy:**
+- Kafelki OSM do pracy offline — zasady korzystania z serwerów kafelków
+  OSM zabraniają pobierania hurtowego.
+- Wiele poziomów przybliżenia (piramida kafelków) — wiele zapytań i duży
+  plik; jeden obraz 1600 px wystarcza na obszar do 3 km.

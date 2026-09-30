@@ -238,3 +238,48 @@ def test_stara_baza_dostaje_nowe_kolumny(tmp_path):
     with app.test_client() as c:
         punkty = c.get("/teren/projekty/1/punkty").get_json()
     assert punkty[0]["polozenie_reczne"] is False and punkty[0]["data_poprawki"] is None
+
+
+# ---------- ETAP 83: obszar prac i mapa offline w formularzu ----------
+
+
+def test_obszar_prac_i_podklad(client, monkeypatch):
+    from dane import ortofoto
+    from teren import podklad
+
+    client.post("/teren/projekty", data={"nazwa": "Park", "wzor": "zielen"})
+    url = "/teren/projekty/1/obszar"
+    assert client.put(url, json={"obszar": [52.40, 16.90, 52.41, 16.92]}).get_json()["obszar"] == [52.4, 16.9, 52.41, 16.92]
+    for zle in ([52.41, 16.90, 52.40, 16.92], [52.0, 16.0, 52.2, 16.3], [52.4, 16.9, 52.4001, 16.9001], "x", [1, 2, 3]):
+        assert client.put(url, json={"obszar": zle}).status_code == 400
+
+    zapytania = []
+    monkeypatch.setattr(ortofoto, "obraz_ortofotomapy", lambda bbox, s, w: zapytania.append((bbox, s, w)) or JPEG)
+    html = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert "data:image/jpeg;base64," in html and '"bbox_3857"' in html
+    (x1, y1, x2, y2), szer, wys = zapytania[0]
+    assert max(szer, wys) == podklad.MAKS_PX and szer / wys == pytest.approx((x2 - x1) / (y2 - y1), rel=0.01)
+
+    def awaria(bbox, s, w):
+        raise ortofoto.BladOrtofoto("brak połączenia")
+
+    monkeypatch.setattr(ortofoto, "obraz_ortofotomapy", awaria)
+    html = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert "brak po" in html and "data:image/jpeg" not in html  # formularz działa bez podkładu (komunikat w JSON)
+
+    assert client.put(url, json={"obszar": None}).get_json() == {"obszar": None}
+    assert "const MAPA = null" in client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+
+
+def test_obraz_ortofotomapy_odrzuca_nie_jpeg(monkeypatch):
+    from dane import ortofoto
+
+    class Odp:
+        content = b"<ServiceException>zly</ServiceException>"
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(ortofoto.requests, "get", lambda *a, **k: Odp())
+    with pytest.raises(ortofoto.BladOrtofoto, match="JPEG"):
+        ortofoto.obraz_ortofotomapy((0, 0, 1, 1), 10, 10)

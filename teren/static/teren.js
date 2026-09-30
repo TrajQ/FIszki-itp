@@ -322,6 +322,46 @@
         }
     });
 
+    // ---------- obszar prac (ETAP 83) ----------
+
+    const warstwaObszaru = L.layerGroup().addTo(mapa);
+
+    function pokazObszar() {
+        warstwaObszaru.clearLayers();
+        const opis = document.getElementById("opis-obszaru");
+        document.getElementById("usun-obszar").hidden = !PROJEKT.obszar;
+        if (!PROJEKT.obszar) {
+            opis.textContent = "Nie ustawiono — formularz na telefon będzie miał mapę bez podkładu.";
+            return;
+        }
+        const [s, w, n, e] = PROJEKT.obszar;
+        L.rectangle([[s, w], [n, e]], { color: "#0071e3", weight: 2, dashArray: "6 4", fill: false, interactive: false }).addTo(warstwaObszaru);
+        const szer = Math.round(mapa.distance([s, w], [s, e]));
+        const wys = Math.round(mapa.distance([s, w], [n, w]));
+        opis.textContent = `Ustawiony: ${szer} × ${wys} m (niebieska przerywana ramka).`;
+    }
+
+    async function zapiszObszar(obszar) {
+        try {
+            const wynik = await zapytaj(`${URL_PROJEKTU}/obszar`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ obszar }),
+            });
+            PROJEKT.obszar = wynik.obszar;
+            pokazObszar();
+            komunikat(obszar ? "Zapisano obszar prac. Pobierz formularz na telefon jeszcze raz." : "Usunięto obszar prac.", false);
+        } catch (e) {
+            komunikat(e.message, true);
+        }
+    }
+
+    document.getElementById("ustaw-obszar").addEventListener("click", () => {
+        const g = mapa.getBounds();
+        zapiszObszar([g.getSouth(), g.getWest(), g.getNorth(), g.getEast()]);
+    });
+    document.getElementById("usun-obszar").addEventListener("click", () => zapiszObszar(null));
+
     // ---------- import ----------
 
     document.getElementById("formularz-importu").addEventListener("submit", async (e) => {
@@ -425,5 +465,6 @@
 
     rysujEdytor();
     wypelnijFiltr();
+    pokazObszar();
     wczytaj(true).catch((e) => komunikat(e.message, true));
 })();

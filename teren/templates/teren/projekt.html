@@ -38,6 +38,16 @@
             <p class="wyciszony opis">Plik JSON z przycisku „Eksportuj plik” w formularzu na telefonie. Punkty już zaimportowane są pomijane.</p>
         </section>
 
+        <section class="karta stos">
+            <h3>Obszar prac</h3>
+            <p id="opis-obszaru" class="wyciszony opis"></p>
+            <div class="rzad">
+                <button id="ustaw-obszar" type="button" class="przycisk--drugi">Ustaw z widoku mapy</button>
+                <button id="usun-obszar" type="button" class="przycisk--tekst" hidden>Usuń</button>
+            </div>
+            <p class="wyciszony opis">Formularz na telefon dostanie wtedy mapę offline z ortofotomapą tego obszaru (do 3 km boku) — pobierz go po ustawieniu obszaru.</p>
+        </section>
+
         <section id="panel-poprawki" class="karta stos panel-poprawki" hidden>
             <div class="rzad rzad--miedzy">
                 <h3>Popraw punkt</h3>
@@ -88,7 +98,7 @@
 
 {% block skrypty %}
 <script>
-    const PROJEKT = {{ {"id": projekt.id, "nazwa": projekt.nazwa, "pola": projekt.pola} | tojson }};
+    const PROJEKT = {{ {"id": projekt.id, "nazwa": projekt.nazwa, "pola": projekt.pola, "obszar": projekt.obszar} | tojson }};
     const TYPY = {{ typy | tojson }};
     const URL_PROJEKTU = "{{ url_for('teren.zmien_projekt', projekt_id=projekt.id) }}";
     const URL_LISTY = "{{ url_for('teren.index') }}";

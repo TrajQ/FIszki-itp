@@ -62,6 +62,7 @@
     .dol { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
            background: var(--karta); border-top: 1px solid var(--linia); }
     details summary { color: var(--akcent); font-size: 14px; cursor: pointer; margin-top: 10px; }
+    .mapa { display: block; width: 100%; margin-top: 8px; border-radius: 10px; background: var(--tlo); touch-action: manipulation; }
     [hidden] { display: none !important; }
 </style>
 </head>
@@ -95,6 +96,15 @@
 </form>
 
 <section class="karta">
+    <div class="gps">
+        <h2 style="margin: 0">Mapa</h2>
+        <button id="gdzie-jestem" type="button">📍 Gdzie jestem</button>
+    </div>
+    <canvas id="mapa" class="mapa" aria-label="Mapa: zapisane punkty i twoja pozycja"></canvas>
+    <p id="mapa-opis" class="wyciszony"></p>
+</section>
+
+<section class="karta">
     <h2>Zapisane punkty: <span id="liczba">0</span></h2>
     <ul id="lista" class="lista"></ul>
     <div class="rzad" style="margin-top: 10px">
@@ -116,6 +126,8 @@
 
     const PROJEKT = {{ {"nazwa": projekt.nazwa, "klucz": projekt.klucz, "pola": projekt.pola} | tojson }};
     const FORMAT = {{ format_pliku | tojson }};
+    // ETAP 83: podkład mapy (jeden obraz ortofotomapy obszaru prac) albo null.
+    const MAPA = {{ mapa | tojson if mapa else 'null' }};
     const MAKS_BOK_ZDJECIA = 1600;
     const DOBRA_DOKLADNOSC_M = 10;
     const CZAS_GPS_MS = 30000;
@@ -190,11 +202,15 @@
                 if (!polozenie || p.coords.accuracy < polozenie.dokladnosc_m) {
                     polozenie = { lat: p.coords.latitude, lng: p.coords.longitude, dokladnosc_m: p.coords.accuracy };
                     pokazPolozenie();
+                    rysujMape();
                 }
                 if (p.coords.accuracy <= DOBRA_DOKLADNOSC_M) zatrzymajGps();
             },
             (e) => {
                 zatrzymajGps();
+                // Koniec czasu, gdy odczyt już jest (telefon stoi, dokładność nie
+                // spadła poniżej 10 m) — to nie błąd: zostaje najlepszy odczyt.
+                if (e.code === 3 && polozenie) return;
                 komunikat(e.code === 1 ? "Brak zgody na położenie. Zezwól przeglądarce na lokalizację albo wpisz współrzędne ręcznie." : "Nie udało się ustalić położenia — spróbuj na otwartej przestrzeni albo wpisz ręcznie.", "blad");
                 $("reczne").open = true;
             },
@@ -302,6 +318,7 @@
         } catch (e) {
             return komunikat(`Nie zapisano: ${e && e.name === "QuotaExceededError" ? "pamięć telefonu pełna — wyeksportuj i wyczyść punkty" : e}`, "blad");
         }
+        zatrzymajGps(); // odczyt zużyty w tym punkcie — następny punkt pobiera położenie od nowa
         $("formularz").reset();
         $("podglad").hidden = true;
         zdjecie = null;
@@ -315,6 +332,8 @@
 
     async function pokazListe() {
         const punkty = (await wszystkie()).sort((a, b) => b.czas.localeCompare(a.czas));
+        ostatniePunkty = punkty;
+        rysujMape();
         $("liczba").textContent = punkty.length;
         const lista = $("lista");
         lista.replaceChildren();
@@ -374,6 +393,112 @@
         await transakcja("readwrite", (s) => s.clear());
         pokazListe();
     });
+
+    // ---------- mapa offline (ETAP 83) ----------
+    // Web Mercator (EPSG:3857) — ten sam układ co obraz podkładu z Warsztatu.
+
+    const R = 6378137;
+    const merkator = (lat, lng) => [R * lng * Math.PI / 180, R * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))];
+    const plotno = $("mapa");
+    let obrazPodkladu = null;
+    let ostatniePunkty = [];
+
+    if (MAPA && MAPA.obraz) {
+        obrazPodkladu = new Image();
+        obrazPodkladu.onload = () => rysujMape();
+        obrazPodkladu.src = MAPA.obraz;
+    }
+
+    function zasieg() {
+        if (MAPA) return MAPA.bbox_3857;
+        const xy = ostatniePunkty.filter((p) => p.lat !== null).map((p) => merkator(p.lat, p.lng));
+        if (polozenie) xy.push(merkator(polozenie.lat, polozenie.lng));
+        if (!xy.length) return null;
+        const xs = xy.map((p) => p[0]), ys = xy.map((p) => p[1]);
+        const [cx, cy] = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+        const pol = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 150) * 0.6;
+        return [cx - pol, cy - pol, cx + pol, cy + pol];
+    }
+
+    function rysujMape() {
+        const bbox = zasieg();
+        const szer = plotno.clientWidth || 360;
+        const proporcja = bbox ? (bbox[2] - bbox[0]) / (bbox[3] - bbox[1]) : 4 / 3;
+        const wys = Math.round(Math.min(szer / proporcja, szer * 1.4));
+        const skalaEkranu = window.devicePixelRatio || 1;
+        plotno.width = szer * skalaEkranu;
+        plotno.height = wys * skalaEkranu;
+        plotno.style.height = `${wys}px`;
+        const c = plotno.getContext("2d");
+        c.setTransform(skalaEkranu, 0, 0, skalaEkranu, 0, 0);
+        c.clearRect(0, 0, szer, wys);
+        if (!bbox) {
+            $("mapa-opis").textContent = "Mapa pokaże punkty i twoją pozycję, gdy zapiszesz pierwszy punkt albo użyjesz „Gdzie jestem”.";
+            return;
+        }
+        const [x1, y1, x2, y2] = bbox;
+        const px = (lat, lng) => {
+            const [x, y] = merkator(lat, lng);
+            return [(x - x1) / (x2 - x1) * szer, (y2 - y) / (y2 - y1) * wys];
+        };
+        if (obrazPodkladu && obrazPodkladu.complete) c.drawImage(obrazPodkladu, 0, 0, szer, wys);
+
+        // zapisane punkty — numery w kolejności zapisu
+        const wKolejnosci = [...ostatniePunkty].sort((a, b) => a.czas.localeCompare(b.czas));
+        wKolejnosci.forEach((p, i) => {
+            if (p.lat === null) return;
+            const [x, y] = px(p.lat, p.lng);
+            c.beginPath(); c.arc(x, y, 9, 0, 2 * Math.PI);
+            c.fillStyle = "#ff9f0a"; c.fill(); c.lineWidth = 2; c.strokeStyle = "#fff"; c.stroke();
+            c.fillStyle = "#fff"; c.font = "bold 10px sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
+            c.fillText(String(i + 1), x, y);
+        });
+
+        // metry w terenie na piksel (skala Web Mercator maleje z cos szerokości)
+        const srodekLat = (Math.atan(Math.sinh(((y1 + y2) / 2) / R)) * 180) / Math.PI;
+        const mNaPx = ((x2 - x1) / szer) * Math.cos((srodekLat * Math.PI) / 180);
+        if (polozenie) {
+            const [x, y] = px(polozenie.lat, polozenie.lng);
+            c.beginPath(); c.arc(x, y, Math.max(6, polozenie.dokladnosc_m / mNaPx), 0, 2 * Math.PI);
+            c.fillStyle = "rgba(0,113,227,0.18)"; c.fill();
+            c.beginPath(); c.arc(x, y, 6, 0, 2 * Math.PI);
+            c.fillStyle = "#0071e3"; c.fill(); c.lineWidth = 2.5; c.strokeStyle = "#fff"; c.stroke();
+        }
+
+        // podziałka
+        const kroki = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000];
+        const metry = kroki.filter((k) => k / mNaPx <= szer / 3).pop() || 5;
+        const dl = metry / mNaPx;
+        c.fillStyle = "rgba(255,255,255,0.85)"; c.fillRect(6, wys - 26, dl + 52, 20);
+        c.strokeStyle = "#1d1d1f"; c.lineWidth = 2;
+        c.beginPath(); c.moveTo(12, wys - 12); c.lineTo(12 + dl, wys - 12); c.stroke();
+        c.fillStyle = "#1d1d1f"; c.font = "11px sans-serif"; c.textAlign = "left"; c.textBaseline = "middle";
+        c.fillText(`${metry} m`, 16 + dl, wys - 12);
+
+        const opis = [];
+        if (MAPA && MAPA.obraz) opis.push("Podkład: ortofotomapa GUGiK obszaru prac.");
+        else if (MAPA && MAPA.blad) opis.push(`Podkład niedostępny (${MAPA.blad}) — mapa bez zdjęcia.`);
+        else opis.push("Bez podkładu — ustaw obszar prac w Warsztacie, żeby mieć zdjęcie terenu.");
+        if (polozenie && MAPA) {
+            const [x, y] = px(polozenie.lat, polozenie.lng);
+            if (x < 0 || y < 0 || x > szer || y > wys) opis.push("Jesteś poza obszarem prac.");
+        }
+        $("mapa-opis").textContent = opis.join(" ");
+    }
+
+    $("gdzie-jestem").addEventListener("click", () => {
+        if (!("geolocation" in navigator)) return komunikat("Ta przeglądarka nie udostępnia GPS.", "blad");
+        navigator.geolocation.getCurrentPosition(
+            (p) => {
+                polozenie = { lat: p.coords.latitude, lng: p.coords.longitude, dokladnosc_m: p.coords.accuracy };
+                pokazPolozenie();
+                rysujMape();
+            },
+            () => komunikat("Nie udało się ustalić położenia.", "blad"),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
+        );
+    });
+    window.addEventListener("resize", rysujMape);
 
     // ---------- start ----------
 

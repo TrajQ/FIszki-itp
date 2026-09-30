@@ -598,3 +598,12 @@
   cytatem sprawdzanym w tekście artykułu i liczbami tylko z przepisu,
   wybór i poprawki, zapis do Fiszek z kotwicą w PDF-ie aktu.
 - Dodano `DECISIONS.md` D-089 i 2 testy.
+
+## ETAP 83 — 2026-09-30
+- Teren: obszar prac projektu i **mapa offline w formularzu na telefon**
+  (ortofotomapa GUGiK obszaru w pliku, zapisane punkty, pozycja GPS z
+  dokładnością, podziałka, „Gdzie jestem”).
+- Naprawiono: mylący komunikat „Nie udało się ustalić położenia” po
+  zapisaniu punktu albo przy stojącym telefonie.
+- Dodano `teren/podklad.py`, `dane/ortofoto.obraz_ortofotomapy`,
+  `DECISIONS.md` D-090 i 2 testy.

@@ -16,7 +16,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 
 from markupsafe import Markup
 
-from . import baza, raport
+from . import baza, podklad, raport
 from .projekt import FORMAT, TYPY_POL, WZORY, BladDanych, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
@@ -89,6 +89,19 @@ def zmien_projekt(projekt_id):
     return jsonify(baza.projekt(projekt_id))
 
 
+@teren_bp.route("/projekty/<int:projekt_id>/obszar", methods=["PUT"])
+def ustaw_obszar(projekt_id):
+    """Obszar prac (ETAP 83) — podkład mapy w formularzu na telefon."""
+    _projekt_albo_404(projekt_id)
+    obszar = (request.get_json(silent=True) or {}).get("obszar")
+    try:
+        obszar = podklad.sprawdz_obszar(obszar) if obszar is not None else None
+    except podklad.BladObszaru as e:
+        return jsonify({"blad": str(e)}), 400
+    baza.ustaw_obszar(projekt_id, obszar)
+    return jsonify({"obszar": obszar})
+
+
 @teren_bp.route("/projekty/<int:projekt_id>", methods=["DELETE"])
 def usun_projekt(projekt_id):
     _projekt_albo_404(projekt_id)
@@ -100,7 +113,9 @@ def usun_projekt(projekt_id):
 def formularz(projekt_id):
     """Samodzielny formularz na telefon: cały CSS i JS w jednym pliku."""
     p = _projekt_albo_404(projekt_id)
-    html = render_template("teren/telefon.html", projekt=p, format_pliku=FORMAT)
+    # ETAP 83: z obszarem prac — mapa z podkładem ortofotomapy w pliku.
+    mapa = podklad.podklad(p["obszar"]) if p["obszar"] else None
+    html = render_template("teren/telefon.html", projekt=p, format_pliku=FORMAT, mapa=mapa)
     return Response(
         html,
         mimetype="text/html",

@@ -1519,3 +1519,16 @@ Status: zamknięty
 - Sprawdzone w przeglądarce z podstawionym modelem na PDF-ie ustawy
   (2 propozycje, 1 odrzucona, 1 zapisana)
 - `DECISIONS.md`: D-089
+
+## ETAP 83 — Teren: mapa offline w formularzu
+Data: 2026-09-30
+Status: zamknięty
+
+- obszar prac (trasa PUT, karta na stronie projektu), podkład w
+  formularzu, płótno mapy w `telefon.html`
+- Sprawdzone w przeglądarce cały obieg z podstawionym obrazem: za duży
+  obszar odrzucony, obszar 1269 × 815 m, formularz 56 kB, mapa na
+  „telefonie” z punktem i pozycją
+- Znaleziony i naprawiony błąd GPS w formularzu (śledzenie po zapisie)
+- Nie sprawdzone tutaj: prawdziwy obraz GUGiK (sieć zablokowana)
+- `DECISIONS.md`: D-090
