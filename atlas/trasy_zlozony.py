@@ -137,7 +137,7 @@ def wskaznik_zlozony_mapa():
         if len(opis_skladowych) > 170:  # przypis ma się zmieścić w szerokości arkusza
             opis_skladowych = opis_skladowych[:169] + "…"
         przypisy = [
-            f"Metoda: {wynik['nazwa_metody']}, średnia ważona składowych; klasy kwantylowe.",
+            f"Metoda: {wynik['nazwa_metody']}" + ("" if wynik["metoda"] == "hellwig" else ", średnia ważona składowych") + "; klasy kwantylowe.",
             f"Składowe: {opis_skladowych}",
             "Źródło: GUS, Bank Danych Lokalnych; granice: PRG, GUGiK. Opracowanie własne w aplikacji Warsztat.",
         ]

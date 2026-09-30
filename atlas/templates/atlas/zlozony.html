@@ -28,7 +28,7 @@
             <label>Rok <input id="pole-rok" type="number" min="1995" max="2100" value="2023" required></label>
             <label>Metoda <select id="pole-metoda">{% for k, v in metody.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
         </div>
-        <p class="wyciszony opis-raportu">Unitaryzacja zerowana: każda składowa przeskalowana do 0–1 (1 = najlepsza gmina). Standaryzacja: odchylenie od średniej województwa w odchyleniach standardowych. Wynik to średnia ważona składowych; gminy bez danych którejś składowej są pomijane.</p>
+        <p class="wyciszony opis-raportu">Unitaryzacja zerowana: każda składowa przeskalowana do 0–1 (1 = najlepsza gmina). Standaryzacja: odchylenie od średniej województwa w odchyleniach standardowych. Wynik to średnia ważona składowych. Metoda Hellwiga: odległość gminy od „wzorca rozwoju” (najlepszych wartości wszystkich składowych), wynik zwykle 0–1, bliżej 1 = bliżej wzorca; gminy bez danych którejś składowej są pomijane.</p>
     </section>
 
     <section class="karta stos">

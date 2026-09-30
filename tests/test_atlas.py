@@ -1149,3 +1149,35 @@ def test_wskaznik_zlozony_trasy(raport_client, monkeypatch):
     assert svg.mimetype == "image/svg+xml" and "attachment" in svg.headers["Content-Disposition"]
     tekst = svg.get_data(as_text=True)
     assert "Wskaźnik złożony" in tekst and "brak danych" in tekst and "unitaryzacja zerowana" in tekst
+
+
+# ---------- ETAP 91: metoda Hellwiga ----------
+
+
+def test_wskaznik_zlozony_hellwig():
+    from atlas import zlozony
+    a = _skladowa("mieszkania", 1, {"a": 1, "b": 2, "c": 3})
+    b = _skladowa("bezrobocie", -1, {"a": 3, "b": 2, "c": 1})
+    wynik = zlozony.wskaznik_zlozony([a, b], "hellwig")
+    # z: a = (−1,22; −1,22), b = (0; 0), c = (1,22; 1,22) = wzorzec; d = (3,46; 1,73; 0)
+    # d0 = 1,73 + 2·1,41 = 4,56; m = 1 − d/d0 = (0,24; 0,62; 1)
+    m = {g["teryt"]: g["wartosc"] for g in wynik["gminy"]}
+    assert m["c"] == 1.0 and m["b"] == pytest.approx(0.6202, abs=1e-3) and m["a"] == pytest.approx(0.2404, abs=1e-3)
+    assert [g["teryt"] for g in wynik["gminy"]] == ["c", "b", "a"]
+    # waga przesuwa wynik: ważniejsza składowa, w której gmina jest słaba, obniża miarę
+    c = _skladowa("zieleń", 1, {"a": 3, "b": 1, "c": 2})
+    rowne = {g["teryt"]: g["wartosc"] for g in zlozony.wskaznik_zlozony([a, c], "hellwig")["gminy"]}
+    wazone = {g["teryt"]: g["wartosc"] for g in zlozony.wskaznik_zlozony([a, {**c, "waga": 5}], "hellwig")["gminy"]}
+    assert wazone["a"] > rowne["a"] and wazone["c"] < rowne["c"]
+
+
+def test_wskaznik_zlozony_hellwig_na_stronie(raport_client, monkeypatch):
+    c = raport_client
+    w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
+    trzecia = "011212105044"
+    wartosci = {1: [(GMINA, 800.0), ("011212105033", 5000.0), (trzecia, 2000.0)], 2: [(GMINA, 40.0), ("011212105033", 50.0), (trzecia, 10.0)]}
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [{"bdl_id": b, "teryt": b, "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
+    assert "metoda Hellwiga" in c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)
+    wynik = c.get(f"/atlas/wskaznik-zlozony/wynik?woj={WOJ_RAPORTU}&rok=2023&metoda=hellwig&s={w1}:1:1,{w2}:-1:1").get_json()
+    assert wynik["metoda"] == "hellwig" and wynik["gminy"][0]["wartosc"] <= 1

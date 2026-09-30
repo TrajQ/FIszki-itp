@@ -9,7 +9,19 @@ i uśredniamy z wagami — klasyczna metoda analizy regionalnej:
 - standaryzacja: (x − średnia) / odchylenie standardowe (populacyjne —
   gminy województwa to cała populacja); destymulanta ze znakiem minus.
 
-Wskaźnik = średnia ważona składowych. Liczymy tylko dla gmin, które mają
+Wskaźnik = średnia ważona składowych.
+
+Metoda Hellwiga (ETAP 91) — miara rozwoju względem wzorca:
+1. standaryzacja jak wyżej (destymulanty ze znakiem minus, więc dla
+   każdej składowej więcej = lepiej),
+2. wzorzec rozwoju z_0j = najlepsza wartość składowej wśród gmin,
+3. odległość gminy od wzorca d_i0 = √(Σ w_j (z_ij − z_0j)²), wagi
+   przeskalowane tak, by ich suma była liczbą składowych (równe wagi =
+   wersja klasyczna),
+4. d_0 = średnia(d_i0) + 2·odchylenie(d_i0), miara m_i = 1 − d_i0 / d_0.
+   Zwykle 0–1; im bliżej 1, tym bliżej wzorca.
+
+Liczymy tylko dla gmin, które mają
 wartości wszystkich składowych — pozostałe wymieniamy jako pominięte.
 Składowa stała we wszystkich gminach (max = min) nic nie różnicuje —
 zgłaszamy ją jako błąd, zamiast dzielić przez zero.
@@ -17,7 +29,11 @@ zgłaszamy ją jako błąd, zamiast dzielić przez zero.
 
 import statistics
 
-METODY = {"unitaryzacja": "unitaryzacja zerowana (0–1)", "standaryzacja": "standaryzacja (z)"}
+METODY = {
+    "unitaryzacja": "unitaryzacja zerowana (0–1)",
+    "standaryzacja": "standaryzacja (z)",
+    "hellwig": "metoda Hellwiga (odległość od wzorca)",
+}
 MAKS_SKLADOWYCH = 12
 
 
@@ -41,11 +57,22 @@ def _unormuj(wartosci: dict[str, float], kierunek: int, metoda: str, nazwa: str)
     return {t: kierunek * (x - srednia) / odchylenie for t, x in wartosci.items()}
 
 
+def _hellwig(unormowane: list[dict], wagi: list[float], gminy: set[str]) -> dict[str, float]:
+    wzorzec = [max(u.values()) for u in unormowane]
+    odleglosci = {
+        t: sum(w * (u[t] - z0) ** 2 for u, w, z0 in zip(unormowane, wagi, wzorzec)) ** 0.5 for t in gminy
+    }
+    d0 = statistics.fmean(odleglosci.values()) + 2 * statistics.pstdev(odleglosci.values())
+    if d0 == 0:
+        raise BladWskaznika("Wszystkie gminy są w tym samym miejscu względem wzorca — nic nie różnicuje.")
+    return {t: 1 - d / d0 for t, d in odleglosci.items()}
+
+
 def wskaznik_zlozony(skladowe: list[dict], metoda: str = "unitaryzacja") -> dict:
     """skladowe: [{"nazwa", "kierunek" (1 stymulanta / -1 destymulanta),
     "waga" (> 0), "gminy": [{"teryt", "nazwa", "wartosc"}]}]."""
     if metoda not in METODY:
-        raise BladWskaznika("Metoda: unitaryzacja albo standaryzacja.")
+        raise BladWskaznika("Metoda: unitaryzacja, standaryzacja albo metoda Hellwiga.")
     if not 2 <= len(skladowe) <= MAKS_SKLADOWYCH:
         raise BladWskaznika(f"Wybierz od 2 do {MAKS_SKLADOWYCH} składowych.")
     for s in skladowe:
@@ -58,13 +85,19 @@ def wskaznik_zlozony(skladowe: list[dict], metoda: str = "unitaryzacja") -> dict
     if len(wspolne) < 3:
         raise BladWskaznika("Za mało gmin z danymi wszystkich składowych (potrzeba co najmniej 3). Sprawdź rok.")
 
+    normalizacja = "standaryzacja" if metoda == "hellwig" else metoda
     unormowane = [
-        _unormuj({t: w[t] for t in wspolne}, s["kierunek"], metoda, s["nazwa"]) for s, w in zip(skladowe, wartosci)
+        _unormuj({t: w[t] for t in wspolne}, s["kierunek"], normalizacja, s["nazwa"]) for s, w in zip(skladowe, wartosci)
     ]
     suma_wag = sum(s["waga"] for s in skladowe)
+    wyniki = (
+        _hellwig(unormowane, [s["waga"] * len(skladowe) / suma_wag for s in skladowe], wspolne)
+        if metoda == "hellwig"
+        else {t: sum(s["waga"] * u[t] for s, u in zip(skladowe, unormowane)) / suma_wag for t in wspolne}
+    )
     gminy = []
     for t in wspolne:
-        wynik = sum(s["waga"] * u[t] for s, u in zip(skladowe, unormowane)) / suma_wag
+        wynik = wyniki[t]
         gminy.append({
             "teryt": t,
             "nazwa": nazwy_gmin[t],

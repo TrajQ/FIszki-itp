@@ -2103,3 +2103,22 @@ atrybutami nie wymaga znajomości schematu danych.
   krokiem po sprawdzeniu usługi na żywo.
 - Pobieranie paczek GeoPackage/GeoParquet z RCN — duże pliki, a
   potrzebny jest podgląd dla jednej działki.
+
+## D-099 — Atlas: metoda Hellwiga z wagami, odchylenie populacyjne
+Data: 2026-09-30
+
+**Decyzja:** Trzecia metoda wskaźnika złożonego: taksonomiczna miara
+rozwoju Hellwiga. Standaryzacja z kierunkiem (destymulanty ze znakiem
+minus), wzorzec = maksimum każdej składowej, odległość euklidesowa ważona
+(wagi przeskalowane do sumy równej liczbie składowych, więc równe wagi
+dają wersję klasyczną), d0 = średnia + 2 odchylenia standardowe
+(populacyjne, jak w standaryzacji — D-091), m = 1 − d/d0.
+
+**Uzasadnienie:** Hellwig to najczęściej uczona metoda porządkowania
+liniowego w analizie regionalnej; była odrzuconą alternatywą w D-091
+„na później”. Liczy kod, bez modelu językowego.
+
+**Odrzucone alternatywy:**
+- Wzorzec z maksimum wartości surowych bez standaryzacji — składowe
+  w różnych jednostkach nie dałyby się porównać.
+- Odchylenie z próby (n − 1) — gminy województwa to cała populacja.

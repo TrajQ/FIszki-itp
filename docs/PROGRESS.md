@@ -1622,3 +1622,14 @@ Status: zamknięty
 - Sprawdzone w przeglądarce z podstawioną usługą; prawdziwa usługa
   niedostępna z tego środowiska
 - `DECISIONS.md`: D-098
+
+## ETAP 91 — Atlas: metoda Hellwiga we wskaźniku złożonym
+Data: 2026-09-30
+Status: zamknięty
+
+- `atlas/zlozony.py`: metoda „hellwig” (standaryzacja, wzorzec rozwoju,
+  ważona odległość, d0 = średnia + 2σ); przypis kartogramu bez „średniej
+  ważonej” dla tej metody
+- Test zgodny z obliczeniem ręcznym (m = 0,24; 0,62; 1) i test wpływu wag
+- Sprawdzone w przeglądarce (wybór metody, ranking, kartogram)
+- `DECISIONS.md`: D-099

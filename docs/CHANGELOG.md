@@ -653,3 +653,8 @@
   działki w panelu.
 - Naprawiono odczyt tabel HTML z odpowiedzi usług (nagłówek + 2 kolumny).
 - Dodano `DECISIONS.md` D-098 i 1 test.
+
+## ETAP 91 — 2026-09-30
+- Atlas: **metoda Hellwiga** we wskaźniku złożonym — miara rozwoju jako
+  odległość od wzorca (najlepszych wartości składowych), z wagami.
+- Dodano `DECISIONS.md` D-099 i 2 testy.
