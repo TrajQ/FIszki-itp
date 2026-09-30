@@ -1961,3 +1961,24 @@ liczby liczy Python z danych GUS — nie model językowy.
   być kolejnym krokiem, gdy będzie potrzebna.
 - Dobór wag automatycznie (np. z korelacji) — wagi to decyzja badacza,
   powinny być jawne.
+
+## D-092 — Dostępność: zasięg z punktu jako okręgi szybkiego modelu
+Data: 2026-09-30
+
+**Decyzja:** „Izochrony” z klikniętego punktu liczymy szybkim modelem
+(D-052: linia prosta × krętość / prędkość), więc są okręgami o promieniu
+t × prędkość / krętość dla 5, 10 i 15 minut. W zasięgu są komórki siatki
+pliku, których środek leży w okręgu (jak w szybkim modelu). Przy kolumnie
+czasu dojścia podajemy też, ilu z mieszkańców w zasięgu ma dziś do usługi
+dalej niż dany próg. Prędkość i krętość z pól szybkiego modelu.
+
+**Uzasadnienie:** Uzupełnia „gdzie nowa placówka” (D-085) o sprawdzenie
+miejsca wskazanego przez użytkownika („a gdyby tu?”), bez nowych danych
+i zależności. Okrąg uczciwie pokazuje, czym jest model.
+
+**Odrzucone alternatywy:**
+- Izochrony po sieci ulic (OSRM, OSM) — wymagałyby pobierania sieci albo
+  zewnętrznej usługi; moduł z zasady czyta gotowe wyniki analiz
+  sieciowych, a szybki model ma być natychmiastowy.
+- Progi ustawiane suwakiem — 5/10/15 min to standard „miasta
+  15-minutowego”; suwak progu jest już w krzywej dostępności.

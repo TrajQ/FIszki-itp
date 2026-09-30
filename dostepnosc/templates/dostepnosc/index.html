@@ -89,6 +89,16 @@
                 <p id="wynik-lokalizacji" class="lokalizacja__wynik" hidden></p>
                 <ol id="lista-lokalizacji" class="lista-luk"></ol>
             </div>
+            <div class="lokalizacja stos">
+                <h4>Zasięg z punktu</h4>
+                <p class="wyciszony">Kliknij miejsce na mapie: okręgi 5, 10 i 15 minut marszu (szybki model, parametry niżej) i liczba mieszkańców w zasięgu. Przy czasie dojścia do usługi — także ilu z nich ma dziś dalej.</p>
+                <div class="rzad">
+                    <button id="wskaz-zasieg" type="button" class="przycisk--drugi">Wskaż punkt</button>
+                    <button id="usun-zasieg" type="button" class="przycisk--tekst" hidden>Usuń okręgi</button>
+                </div>
+                <table id="wynik-zasiegu" class="tabela tabela-zasiegu" hidden></table>
+                <p id="opis-zasiegu" class="lokalizacja__wynik" hidden></p>
+            </div>
             <p id="meta-pliku" class="wyciszony meta-pliku"></p>
             <div class="rzad">
                 <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>

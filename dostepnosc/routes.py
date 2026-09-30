@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 import math
 
-from . import druk, lokalizacja, model
+from . import druk, lokalizacja, model, zasieg
 from . import wyniki as wyniki_h3
 from .wyniki import BladWynikow
 
@@ -355,6 +355,34 @@ def nowa_placowka(nazwa):
         )
     except (lokalizacja.BladLokalizacji, BladWynikow) as e:
         return jsonify({"blad": str(e)}), 422
+    return jsonify(wynik)
+
+
+@dostepnosc_bp.route("/plik/<nazwa>/zasieg")
+def zasieg_z_punktu(nazwa):
+    """Ilu mieszkańców dojdzie z klikniętego punktu w 5, 10 i 15 minut
+    (ETAP 85, dostepnosc/zasieg.py). Z kolumną czasu dojścia — także, ilu
+    z nich ma dziś dalej niż próg."""
+    kolumna = request.args.get("kolumna", "")
+    lat = request.args.get("lat", type=float)
+    lng = request.args.get("lng", type=float)
+    if lat is None or lng is None:
+        return jsonify({"blad": "Wymagane lat i lng (stopnie WGS84)."}), 400
+    try:
+        dane = _wczytaj(nazwa)
+        czasy = dane["kolumny"][kolumna] if kolumna in dane["kolumny"] and wyniki_h3.czy_minuty(kolumna) else None
+        wynik = zasieg.zasieg_punktu(
+            dane["komorki"],
+            dane.get("ludnosc"),
+            lat,
+            lng,
+            czasy,
+            request.args.get("predkosc", model.PREDKOSC_DOMYSLNA_KMH, type=float),
+            request.args.get("kretosc", model.KRETOSC_DOMYSLNA, type=float),
+        )
+    except (model.BladModelu, BladWynikow) as e:
+        return jsonify({"blad": str(e)}), 422
+    wynik["kolumna"] = kolumna if czasy is not None else None
     return jsonify(wynik)
 
 

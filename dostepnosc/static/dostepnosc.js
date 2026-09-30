@@ -217,7 +217,7 @@
                 w.on("mouseover", () => w.setStyle({ weight: 2.5, color: "#1d1d1f" }));
                 w.on("mouseout", () => warstwa.resetStyle(w));
                 w.on("click", (e) => {
-                    if (!wstawianie) pokazKomorke(cecha.properties.h3, e.latlng);
+                    if (!wstawianie && !wskazywanieZasiegu) pokazKomorke(cecha.properties.h3, e.latlng);
                 });
             },
         }).addTo(mapa);
@@ -287,6 +287,98 @@
         } finally {
             przycisk.disabled = false;
         }
+    });
+
+    // ---------- zasięg z punktu (ETAP 85) ----------
+    // Liczby liczy serwer (dostepnosc/zasieg.py); tu okręgi i tabela.
+
+    const KOLORY_ZASIEGU = { 5: "#30d158", 10: "#ffd60a", 15: "#ff9f0a" };
+    const warstwaZasiegu = L.layerGroup().addTo(mapa);
+    const przyciskZasieg = document.getElementById("wskaz-zasieg");
+    const przyciskUsunZasieg = document.getElementById("usun-zasieg");
+    const tabelaZasiegu = document.getElementById("wynik-zasiegu");
+    const opisZasiegu = document.getElementById("opis-zasiegu");
+    let wskazywanieZasiegu = false;
+    let numerZasiegu = 0;
+
+    function ustawWskazywanie(wlacz) {
+        wskazywanieZasiegu = wlacz;
+        if (wlacz && wstawianie) ustawWstawianie(false);
+        przyciskZasieg.textContent = wlacz ? "Kliknij na mapie…" : "Wskaż punkt";
+        przyciskZasieg.classList.toggle("model__wstawiaj--aktywny", wlacz);
+        mapa.getContainer().classList.toggle("mapa--wstawianie", wlacz);
+    }
+
+    function komorkaTabeli(tag, tekst, klasa) {
+        const el = document.createElement(tag);
+        el.textContent = tekst;
+        if (klasa) el.className = klasa;
+        return el;
+    }
+
+    async function pokazZasieg(latlng) {
+        const numer = ++numerZasiegu;
+        const adres = new URL(`${urlPliku}/zasieg`, location.href);
+        adres.searchParams.set("lat", latlng.lat.toFixed(6));
+        adres.searchParams.set("lng", latlng.lng.toFixed(6));
+        if (biezacaKolumna && biezacaKolumna !== WARTOSC_LACZNY) adres.searchParams.set("kolumna", biezacaKolumna);
+        adres.searchParams.set("predkosc", String(liczbaZPola(document.getElementById("model-predkosc"), 4.8)));
+        adres.searchParams.set("kretosc", String(liczbaZPola(document.getElementById("model-kretosc"), 1.3)));
+        let w;
+        try {
+            w = await pobierzJson(adres);
+        } catch (e) {
+            opisZasiegu.textContent = e.message;
+            opisZasiegu.hidden = false;
+            return;
+        }
+        if (numer !== numerZasiegu) return;
+        warstwaZasiegu.clearLayers();
+        for (const p of [...w.progi].reverse()) {
+            L.circle([w.lat, w.lng], {
+                radius: p.promien_m, color: KOLORY_ZASIEGU[p.minuty], weight: 2, dashArray: "6 4",
+                fillColor: KOLORY_ZASIEGU[p.minuty], fillOpacity: 0.08, interactive: false,
+            }).addTo(warstwaZasiegu);
+        }
+        L.circleMarker([w.lat, w.lng], { radius: 6, color: "#ffffff", weight: 2, fillColor: "#1d1d1f", fillOpacity: 1 }).addTo(warstwaZasiegu);
+
+        const jednostka = w.z_ludnoscia ? "Mieszkańcy" : "Komórki";
+        const naglowek = document.createElement("tr");
+        naglowek.append(komorkaTabeli("th", "Pieszo"), komorkaTabeli("th", "Promień", "liczba"), komorkaTabeli("th", jednostka, "liczba"));
+        if (w.kolumna) naglowek.append(komorkaTabeli("th", "dziś dalej", "liczba"));
+        tabelaZasiegu.replaceChildren(naglowek);
+        for (const p of w.progi) {
+            const tr = document.createElement("tr");
+            const znak = komorkaTabeli("td", `${p.minuty} min`);
+            znak.style.borderLeft = `4px solid ${KOLORY_ZASIEGU[p.minuty]}`;
+            const ile = w.z_ludnoscia ? p.ludnosc : p.komorki;
+            tr.append(znak, komorkaTabeli("td", `${formatLiczby.format(p.promien_m)} m`, "liczba"),
+                komorkaTabeli("td", `${formatLiczby.format(ile)} (${formatProcentu.format(w.razem ? 100 * ile / w.razem : 0)}%)`, "liczba"));
+            if (w.kolumna) tr.append(komorkaTabeli("td", formatLiczby.format(p.nowi), "liczba"));
+            tabelaZasiegu.appendChild(tr);
+        }
+        tabelaZasiegu.hidden = false;
+        opisZasiegu.textContent = !w.w_siatce
+            ? "Punkt jest poza siatką pliku — w zasięgu 15 minut nie ma żadnej komórki."
+            : w.kolumna
+                ? `„dziś dalej” — ${w.z_ludnoscia ? "mieszkańcy" : "komórki"}, którzy do usługi z mapy mają dziś dalej niż dany próg; tylu obejmie nowa placówka w tym miejscu.`
+                : "Wybierz czas dojścia do usługi, żeby zobaczyć, ilu z nich ma ją dziś dalej.";
+        opisZasiegu.hidden = false;
+        przyciskUsunZasieg.hidden = false;
+    }
+
+    przyciskZasieg.addEventListener("click", () => ustawWskazywanie(!wskazywanieZasiegu));
+    przyciskUsunZasieg.addEventListener("click", () => {
+        numerZasiegu++;
+        warstwaZasiegu.clearLayers();
+        tabelaZasiegu.hidden = true;
+        opisZasiegu.hidden = true;
+        przyciskUsunZasieg.hidden = true;
+    });
+    mapa.on("click", (e) => {
+        if (!wskazywanieZasiegu) return;
+        ustawWskazywanie(false);
+        pokazZasieg(e.latlng);
     });
 
     // ---------- krzywa dostępności i własny próg (ETAP 38) ----------
@@ -573,6 +665,7 @@
     }
 
     function ustawWstawianie(wlacz) {
+        if (wlacz && wskazywanieZasiegu) ustawWskazywanie(false);
         wstawianie = wlacz;
         modelWstawiaj.textContent = wlacz ? "Zakończ wstawianie" : "Wstawiaj punkty";
         modelWstawiaj.classList.toggle("model__wstawiaj--aktywny", wlacz);

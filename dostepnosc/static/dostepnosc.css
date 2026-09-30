@@ -584,3 +584,18 @@ button.model__wstawiaj--aktywny {
     margin: 0;
     font-size: 13px;
 }
+
+/* ---------- zasięg z punktu (ETAP 85) ---------- */
+
+.tabela-zasiegu {
+    font-size: 13px;
+}
+
+.tabela-zasiegu td,
+.tabela-zasiegu th {
+    padding: 5px 6px;
+}
+
+.tabela-zasiegu td {
+    white-space: nowrap;
+}

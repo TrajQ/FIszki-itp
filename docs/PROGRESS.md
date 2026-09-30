@@ -1544,3 +1544,14 @@ Status: zamknięty
   destymulanta, waga 2, 3 gminy pominięte): ranking, kartogram, szerokość
   telefonu 390 px bez poziomego przewijania strony
 - `DECISIONS.md`: D-091
+
+## ETAP 85 — Dostępność: zasięg z punktu
+Data: 2026-09-30
+Status: zamknięty
+
+- `dostepnosc/zasieg.py`, trasa `/dostepnosc/plik/<nazwa>/zasieg`,
+  blok „Zasięg z punktu” (okręgi na mapie, tabela)
+- Sprawdzone w przeglądarce na pliku przykładowym: klik w trybie rysuje
+  okręgi i nie otwiera okienka komórki, zwykły klik — jak dawniej;
+  390 px bez poziomego przewijania (poprawiona szerokość tabeli)
+- `DECISIONS.md`: D-092

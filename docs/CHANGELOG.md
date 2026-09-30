@@ -615,3 +615,9 @@
   surowymi i po normalizacji.
 - Dodano `atlas/zlozony.py`, `atlas/trasy_zlozony.py`, `DECISIONS.md` D-091
   i 3 testy.
+
+## ETAP 85 — 2026-09-30
+- Dostępność: **zasięg z punktu** — kliknij miejsce na mapie: okręgi 5, 10
+  i 15 minut marszu (szybki model), mieszkańcy w zasięgu i ilu z nich ma
+  dziś do wybranej usługi dalej niż próg.
+- Dodano `dostepnosc/zasieg.py`, `DECISIONS.md` D-092 i 2 testy.

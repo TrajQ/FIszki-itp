@@ -424,3 +424,41 @@ def test_trasa_nowej_placowki(client):
     assert len(w["propozycje"]) == 3 and w["w_zasiegu_po_proc"] > w["w_zasiegu_przed_proc"]
     assert client.get(url, query_string={"kolumna": "ludnosc"}).status_code == 400
     assert client.get(url, query_string={"kolumna": "czas_szkola_min", "prog": 500}).status_code == 422
+
+
+# ---------- ETAP 85: zasięg z punktu ----------
+
+from dostepnosc import model, zasieg  # noqa: E402
+
+
+def test_zasieg_punktu_okregi_i_nowi():
+    srodek = h3.latlng_to_cell(52.40, 16.92, 9)
+    komorki = sorted(h3.grid_disk(srodek, 12))
+    lat, lng = h3.cell_to_latlng(srodek)
+    ludnosc = [10.0] * len(komorki)
+    czasy = [3.0 if k == srodek else None for k in komorki]
+    w = zasieg.zasieg_punktu(komorki, ludnosc, lat, lng, czasy)
+    p5, p10, p15 = w["progi"]
+    # 80 m/min / 1,3 → promień 5 min ≈ 308 m
+    assert (p5["minuty"], p5["promien_m"]) == (5, 308) and p15["promien_m"] == 923
+    assert 0 < p5["ludnosc"] < p10["ludnosc"] < p15["ludnosc"] <= w["razem"]
+    assert p5["nowi"] == p5["ludnosc"] - 10  # komórka środka ma dziś 3 min — nie jest „nowa”
+    # w zasięgu = komórki, których środek leży w okręgu
+    assert p5["komorki"] == sum(1 for k in komorki if model._odleglosc_m(lat, lng, *h3.cell_to_latlng(k)) <= 5 * 80 / 1.3)
+    # bez ludności i bez czasów: liczymy komórki, brak „nowi”
+    bez = zasieg.zasieg_punktu(komorki, None, lat, lng)
+    assert bez["progi"][0]["ludnosc"] == bez["progi"][0]["komorki"] and "nowi" not in bez["progi"][0]
+    # daleko od siatki
+    assert zasieg.zasieg_punktu(komorki, ludnosc, 50.0, 20.0)["w_siatce"] is False
+    with pytest.raises(model.BladModelu):
+        zasieg.zasieg_punktu(komorki, ludnosc, lat, lng, predkosc_kmh=20)
+
+
+def test_trasa_zasiegu(client):
+    url = "/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/zasieg"
+    w = client.get(url, query_string={"lat": 52.4064, "lng": 16.9252, "kolumna": "czas_przystanek_min"}).get_json()
+    assert w["kolumna"] == "czas_przystanek_min" and w["w_siatce"] and "nowi" in w["progi"][2]
+    bez_kolumny = client.get(url, query_string={"lat": 52.4064, "lng": 16.9252, "kolumna": "ludnosc"}).get_json()
+    assert bez_kolumny["kolumna"] is None and "nowi" not in bez_kolumny["progi"][0]
+    assert client.get(url, query_string={"lat": "x", "lng": 1}).status_code == 400
+    assert client.get(url, query_string={"lat": 52.4, "lng": 16.9, "kretosc": 5}).status_code == 422
