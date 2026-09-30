@@ -9,10 +9,10 @@ from werkzeug.utils import secure_filename
 
 from dane import uldk
 
-from . import baza
+from . import baza, cien
 from .bilans import FUNKCJE, OBSZAR, BladKoncepcji, bilans
 from .program import ZALOZENIA
-from .wskazniki import DOMYSLNE
+from .wskazniki import DOMYSLNE, BladParametru
 
 osiedle_bp = Blueprint(
     "osiedle",
@@ -137,6 +137,17 @@ def obszar_z_dzialek(koncepcja_id):
         return jsonify({"blad": str(e)}), 400
     baza.zapisz(koncepcja_id, geojson=geojson)
     return jsonify({**baza.pobierz(koncepcja_id), "bilans": wynik})
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>/cien")
+def cien_koncepcji(koncepcja_id):
+    """Odległości terenów zabudowy od granicy obszaru i strefa możliwego
+    cienia (ETAP 94, osiedle/cien.py) — dla zapisanego rysunku."""
+    k = _koncepcja_albo_404(koncepcja_id)
+    try:
+        return jsonify(cien.analiza(k["geojson"], request.args.get("dzien", "rownonoc")))
+    except (cien.BladCienia, BladKoncepcji, BladParametru) as e:
+        return jsonify({"blad": str(e)}), 400
 
 
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>", methods=["DELETE"])

@@ -435,3 +435,24 @@ button.przycisk--niebezpieczny-tekst {
     width: 100%;
     font: 13px ui-monospace, monospace;
 }
+
+/* ---------- odległości i cień (ETAP 94) ---------- */
+
+.tabela-cienia {
+    font-size: 13px;
+}
+
+.tabela-cienia td,
+.tabela-cienia th {
+    padding: 5px 6px;
+}
+
+.lista-cienia {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+}
+
+#sekcja-cienia h4 {
+    margin: 4px 0 0;
+}

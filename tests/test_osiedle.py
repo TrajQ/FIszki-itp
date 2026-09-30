@@ -299,3 +299,49 @@ def test_obszar_z_dzialek(client, monkeypatch):
 def test_strona_osiedla_ma_nakladki_planow(client):
     html = client.get("/osiedle/").get_data(as_text=True)
     assert 'URL_WARSTWY_KRAJOWE = "/mpzp/warstwy-krajowe"' in html
+
+
+# ---------- ETAP 94: odległości od granicy i cień ----------
+
+from osiedle import cien  # noqa: E402
+
+
+def test_polozenie_slonca():
+    wys, az = cien.polozenie_slonca(52.0, 0.0, 12)
+    assert wys == pytest.approx(38.0) and az == pytest.approx(180.0)  # równonoc: 90° − φ, na południu
+    assert cien.polozenie_slonca(52.0, 23.44, 12)[0] == pytest.approx(61.44)
+    rano, wieczor = cien.polozenie_slonca(52.0, 0.0, 9), cien.polozenie_slonca(52.0, 0.0, 15)
+    assert rano[0] == pytest.approx(wieczor[0]) and 90 < rano[1] < 180 < wieczor[1] < 270  # symetria wokół południa
+
+
+def test_cien_pada_na_polnoc_i_odleglosc_od_granicy():
+    # blok MW 5 kondygnacji (15 m) w środku; MN 10 m na północ i 20 m na południe (cień w równonoc sięga ok. 19 m)
+    geojson = kolekcja(
+        prostokat(0, 0, 200, 200, "obszar"),
+        prostokat(80, 80, 40, 40, "MW", kondygnacje=5),
+        prostokat(80, 130, 40, 30, "MN"),
+        prostokat(80, 10, 40, 50, "MN"),
+        prostokat(0, 0, 30, 30, "U", kondygnacje=1),
+    )
+    w = cien.analiza(geojson, "rownonoc")
+    mw = next(t for t in w["tereny"] if t["funkcja"] == "MW")
+    assert mw["wysokosc_m"] == 15 and mw["cien_w_poludnie_m"] == pytest.approx(15 / 0.7813, abs=0.2)  # tg 38° ≈ 0,78
+    assert mw["od_granicy_m"] == pytest.approx(80, abs=0.5)
+    u = next(t for t in w["tereny"] if t["funkcja"] == "U")
+    assert u["od_granicy_m"] == 0  # teren usług w narożniku obszaru
+    zacienione = {z["nr"]: z for z in w["zacienione"]}
+    assert 2 in zacienione and 3 not in zacienione  # (numery bez obszaru) cień bloku sięga MN od północy, nie od południa
+    assert w["strefa"]["type"] in ("Polygon", "MultiPolygon")
+    zima = cien.analiza(geojson, "zima")
+    assert {z["nr"]: z for z in zima["zacienione"]}[2]["w_cieniu_m2"] > zacienione[2]["w_cieniu_m2"]  # zimą cień dłuższy
+    with pytest.raises(cien.BladCienia):
+        cien.analiza(geojson, "jesien")
+
+
+def test_trasa_cienia(client):
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Cień"}).get_json()
+    client.put(f"/osiedle/koncepcje/{k['id']}", json={"geojson": kolekcja(prostokat(0, 0, 40, 40, "MW"), prostokat(0, 50, 40, 20, "ZP"))})
+    w = client.get(f"/osiedle/koncepcje/{k['id']}/cien").get_json()
+    assert w["tereny"][0]["od_granicy_m"] is None and w["zacienione"][0]["funkcja"] == "ZP"
+    assert client.get(f"/osiedle/koncepcje/{k['id']}/cien?dzien=x").status_code == 400
+    assert client.get("/osiedle/koncepcje/999/cien").status_code == 404

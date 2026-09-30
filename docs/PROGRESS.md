@@ -1662,3 +1662,18 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: odpowiedź na „telefonie” (390 px) → eksport
   → import → raport → poprawka z dodaniem opcji
 - `DECISIONS.md`: D-101
+
+## ETAP 94 — Osiedle: odległości od granicy i strefa możliwego cienia
+Data: 2026-09-30
+Status: zamknięty
+
+- `osiedle/cien.py`: położenie słońca (wzory astronomiczne, czas
+  słoneczny 9–15, równonoc i przesilenia), wysokość = kondygnacje × 3 m,
+  ślad cienia jako suma Minkowskiego terenu z wektorem cienia, tereny MN,
+  MW i ZP w strefie, odległość terenów zabudowy od granicy obszaru
+- trasa `/osiedle/koncepcje/<id>/cien`, karta „Odległości i cień”
+  (strefa na mapie, tabela, klik → zaznaczenie terenu, ostrzeżenie przy
+  terenie sięgającym granicy)
+- Test znalazł błąd w samym teście (odstęp 20 m > cień 19 m w równonoc) —
+  kod liczył poprawnie
+- `DECISIONS.md`: D-102

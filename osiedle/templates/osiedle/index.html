@@ -151,6 +151,21 @@
                 </div>
             </details>
         </section>
+
+        <section id="sekcja-cienia" class="karta stos" hidden>
+            <h3>Odległości i cień</h3>
+            <p class="wyciszony opis-panelu">Najgorszy przypadek: budynki przy samej krawędzi terenu, wysokość = kondygnacje × 3 m. Strefa możliwego cienia terenów MN, MW i U co godzinę 9–15 (czas słoneczny).</p>
+            <div class="rzad">
+                <select id="dzien-cienia" aria-label="Dzień">
+                    <option value="rownonoc">równonoc (21 marca)</option>
+                    <option value="zima">przesilenie zimowe (21 grudnia)</option>
+                    <option value="lato">przesilenie letnie (21 czerwca)</option>
+                </select>
+                <button id="pokaz-cien" type="button" class="przycisk--drugi">Pokaż</button>
+                <button id="ukryj-cien" type="button" class="przycisk--tekst" hidden>Ukryj</button>
+            </div>
+            <div id="wynik-cienia" class="stos" hidden></div>
+        </section>
     </aside>
 </div>
 {% endblock %}

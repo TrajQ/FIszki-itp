@@ -2166,3 +2166,29 @@ na zajęciach z planowania; formularz offline i import już działały.
   komputer autora.
 - Kolumny 0/1 dla każdej opcji wielokrotnego wyboru w bazie — lista w JSON
   wartości punktu pasuje do obecnego zapisu wartości.
+
+## D-102 — Osiedle: cień jako najgorszy przypadek dla terenów, nie budynków
+Data: 2026-09-30
+
+**Decyzja:** Koncepcja ma tereny, nie budynki, więc liczymy najgorszy
+przypadek: budynki przy krawędzi terenu, wysokość = kondygnacje × 3 m.
+Położenie słońca ze wzorów astronomicznych (deklinacja 0° / ±23,44°,
+kąt godzinny, czas słoneczny 9–15). Strefa cienia to suma Minkowskiego
+terenu z wektorem cienia w każdej godzinie (bez samego terenu); pokazujemy
+powierzchnię terenów MN, MW i ZP w strefie. Odległość od granicy obszaru
+= najmniejsza odległość terenu zabudowy od brzegu obszaru. Przepisy (§ 12,
+§ 13, § 60 warunków technicznych) tylko wskazujemy, bez podawania ich
+wartości w kodzie.
+
+**Uzasadnienie:** Na etapie koncepcji trzeba zobaczyć, czy wysoka
+zabudowa od południa nie zasłania domów i zieleni, i czy tereny nie
+dochodzą do granicy działek. Dokładna analiza nasłonecznienia wymaga
+projektu budynków — tu jej nie udajemy.
+
+**Odrzucone alternatywy:**
+- Rysowanie pojedynczych budynków — duża zmiana modułu; tereny z
+  parametrami to obecny poziom szczegółu koncepcji.
+- Czas strefowy zamiast słonecznego — wymaga długości geograficznej i
+  równania czasu; czas słoneczny jest prostszy i wystarcza do porównania.
+- Wartości z warunków technicznych w kodzie (np. odległości) — łatwo o
+  nieaktualny przepis; odsyłamy do paragrafów.

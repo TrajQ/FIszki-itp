@@ -671,3 +671,10 @@
   ankiety”; wzór „Ankieta: przestrzeń publiczna”.
 - Teren: nowy typ pola **wielokrotny wybór**.
 - Dodano `DECISIONS.md` D-101 i 3 testy.
+
+## ETAP 94 — 2026-09-30
+- Osiedle: **odległości i cień** — odległość terenów zabudowy od granicy
+  obszaru (np. działek) i strefa możliwego cienia (równonoc, przesilenia,
+  godz. 9–15) z listą terenów mieszkaniowych i zieleni, na które może
+  padać cień.
+- Dodano `osiedle/cien.py`, `DECISIONS.md` D-102 i 3 testy.

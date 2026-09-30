@@ -23,6 +23,7 @@
     const polaUstalen = document.querySelectorAll("[data-ustalenie]");
     const polaZalozen = document.querySelectorAll("[data-zalozenie]");
     const sekcjaProgramu = document.getElementById("sekcja-programu");
+    const sekcjaCienia = document.getElementById("sekcja-cienia");
     const formatWsk = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
     const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
     const formatProc = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
@@ -398,6 +399,11 @@
             pokazKomunikat("");
             stanZapisu.textContent = "Zapisano";
             pokazBilans(dane.bilans);
+            if (warstwaCienia.getLayers().length) {
+                ukryjCien();
+                wynikCienia.hidden = false;
+                wynikCienia.replaceChildren(element("p", "wyciszony", "Rysunek się zmienił — kliknij „Pokaż”, żeby policzyć cień od nowa."));
+            }
         } catch (e) {
             if (numer === numerZapisu) {
                 stanZapisu.textContent = "Nie zapisano";
@@ -525,6 +531,94 @@
         }
     }
 
+    // ---------- odległości i cień (ETAP 94) — liczy serwer (osiedle/cien.py) ----------
+
+    const warstwaCienia = L.featureGroup().addTo(mapa);
+    const wynikCienia = document.getElementById("wynik-cienia");
+    const przyciskUkryjCien = document.getElementById("ukryj-cien");
+
+    function ukryjCien() {
+        warstwaCienia.clearLayers();
+        wynikCienia.hidden = true;
+        przyciskUkryjCien.hidden = true;
+    }
+
+    // n-ty teren rysunku (bez obszaru) — ta sama kolejność co w zapisanym GeoJSON
+    function warstwaTerenuNr(nr) {
+        const tereny = [];
+        rysunek.eachLayer((w) => {
+            if (w.funkcja !== OBSZAR) tereny.push(w);
+        });
+        return tereny[nr - 1];
+    }
+
+    function wierszTerenu(nr, tekst) {
+        const przycisk = element("button", "przycisk--tekst", tekst);
+        przycisk.type = "button";
+        przycisk.title = "Zaznacz ten teren na mapie";
+        przycisk.addEventListener("click", () => {
+            const w = warstwaTerenuNr(nr);
+            if (w) {
+                zaznacz(w);
+                mapa.fitBounds(w.getBounds(), { maxZoom: 18, padding: [40, 40] });
+            }
+        });
+        return przycisk;
+    }
+
+    document.getElementById("pokaz-cien").addEventListener("click", async () => {
+        if (!koncepcja) return;
+        await dokonczZapis();
+        let w;
+        try {
+            w = await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}/cien?dzien=${document.getElementById("dzien-cienia").value}`);
+        } catch (e) {
+            return pokazKomunikat(e.message);
+        }
+        ukryjCien();
+        wynikCienia.hidden = false;
+        przyciskUkryjCien.hidden = false;
+        if (!w.tereny.length) {
+            wynikCienia.replaceChildren(element("p", "wyciszony", "Brak terenów zabudowy (MN, MW, U) — nie ma czego liczyć."));
+            return;
+        }
+        if (w.strefa) {
+            L.geoJSON(w.strefa, { interactive: false, style: { color: "#48484a", weight: 1, dashArray: "4 3", fillColor: "#1d1d1f", fillOpacity: 0.22 } }).addTo(warstwaCienia);
+        }
+        const tabela = element("table", "tabela tabela-cienia");
+        const glowa = element("tr");
+        glowa.append(element("th", "", "Teren"), element("th", "liczba", "Wysokość"), element("th", "liczba", "Cień w południe"), element("th", "liczba", "Od granicy obszaru"));
+        tabela.appendChild(glowa);
+        for (const t of w.tereny) {
+            const tr = element("tr");
+            const nazwa = element("td");
+            nazwa.appendChild(wierszTerenu(t.nr, `${t.funkcja} (teren ${t.nr})`));
+            const granica = t.od_granicy_m === null ? "— (brak obszaru)" : t.od_granicy_m === 0 ? "0 m — sięga granicy" : `${formatWsk.format(t.od_granicy_m)} m`;
+            tr.append(nazwa, element("td", "liczba", `${formatWsk.format(t.wysokosc_m)} m`),
+                element("td", "liczba", t.cien_w_poludnie_m === null ? "—" : `${formatWsk.format(t.cien_w_poludnie_m)} m`), element("td", "liczba", granica));
+            tabela.appendChild(tr);
+        }
+        const czesci = [element("p", "wyciszony opis-panelu", `${w.dzien}, szerokość ${formatWsk.format(w.szerokosc)}° N: słońce w południe ${formatWsk.format(w.slonce.find((s) => s.godzina === 12).wysokosc)}° nad horyzontem.`), tabela];
+        if (w.tereny.some((t) => t.od_granicy_m === 0)) {
+            czesci.push(element("p", "komunikat komunikat--ostrzezenie", "Teren zabudowy sięga granicy obszaru — budynki trzeba będzie odsunąć od granicy działki (minimalne odległości: § 12 warunków technicznych)."));
+        }
+        if (w.zacienione.length) {
+            czesci.push(element("h4", "", "Tereny w strefie możliwego cienia"));
+            const lista = element("ul", "lista-cienia");
+            for (const z of w.zacienione) {
+                const li = element("li");
+                li.append(wierszTerenu(z.nr, `${z.funkcja} (teren ${z.nr})`), ` — ${formatM2.format(z.w_cieniu_m2)} m² (${formatProc.format(z.procent)}% terenu)`);
+                lista.appendChild(li);
+            }
+            czesci.push(lista, element("p", "wyciszony opis-panelu", "Przy zabudowie blisko tych miejsc sprawdź na projekcie budynków nasłonecznienie (§ 60) i przesłanianie (§ 13) wg warunków technicznych."));
+        } else {
+            czesci.push(element("p", "wyciszony", "Cień nie sięga terenów MN, MW ani ZP."));
+        }
+        wynikCienia.replaceChildren(...czesci);
+    });
+
+    przyciskUkryjCien.addEventListener("click", ukryjCien);
+
     async function otworz(id) {
         await dokonczZapis();
         zaznacz(null);
@@ -533,7 +627,8 @@
         if (!id) {
             koncepcja = null;
             mapa.removeControl(kontrolkaRysowania);
-            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = true));
+            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, sekcjaCienia, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = true));
+            ukryjCien();
             projektTerenu.value = "";
             pokazTeren();
             return;
@@ -553,7 +648,8 @@
             },
         });
         kontrolkaRysowania.addTo(mapa);
-        [sekcjaRysowania, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = false));
+        [sekcjaRysowania, sekcjaCienia, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = false));
+        ukryjCien();
         const zapisanyTeren = (dane.ustawienia || {}).teren_projekt;
         // projekt mógł zostać usunięty w module Teren — wtedy nic nie pokazujemy
         projektTerenu.value = [...projektTerenu.options].some((o) => o.value === String(zapisanyTeren)) ? String(zapisanyTeren) : "";
