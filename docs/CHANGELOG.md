@@ -678,3 +678,8 @@
   godz. 9–15) z listą terenów mieszkaniowych i zieleni, na które może
   padać cień.
 - Dodano `osiedle/cien.py`, `DECISIONS.md` D-102 i 3 testy.
+
+## ETAP 95 — 2026-09-30
+- Fiszki: **tematy trafiają do Anki jako tagi**; eksport do Anki jednego
+  tematu (link „Anki” przy temacie).
+- Dodano `DECISIONS.md` D-103 i 2 testy.

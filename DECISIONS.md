@@ -2192,3 +2192,21 @@ projektu budynków — tu jej nie udajemy.
   równania czasu; czas słoneczny jest prostszy i wystarcza do porównania.
 - Wartości z warunków technicznych w kodzie (np. odległości) — łatwo o
   nieaktualny przepis; odsyłamy do paragrafów.
+
+## D-103 — Fiszki: tagi Anki z tematów
+Data: 2026-09-30
+
+**Decyzja:** Plik dla Anki dostaje czwartą kolumnę z tematami fiszki jako
+tagami i nagłówek `#tags column:4` (podręcznik Anki, import plików
+tekstowych, Anki 2.1.54+). Spacje w nazwie tematu zamieniamy na „_”, bo w
+Anki rozdzielają tagi. Eksport można zawęzić do jednego tematu, tak jak
+druk.
+
+**Uzasadnienie:** Eksport do Anki istniał od wczesnych etapów, ale gubił
+podział na tematy, który w Warsztacie porządkuje naukę do egzaminów.
+
+**Odrzucone alternatywy:**
+- Paczka .apkg — wymaga zależności albo ręcznego budowania bazy SQLite
+  Anki; plik tekstowy jest oficjalnie obsługiwany i czytelny.
+- Nagłówek `#deck:` — talia musi już istnieć w Anki; lepiej, żeby
+  użytkownik wybrał ją przy imporcie.

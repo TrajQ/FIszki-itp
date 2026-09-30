@@ -1677,3 +1677,16 @@ Status: zamknięty
 - Test znalazł błąd w samym teście (odstęp 20 m > cień 19 m w równonoc) —
   kod liczył poprawnie
 - `DECISIONS.md`: D-102
+
+## ETAP 95 — Fiszki: tematy jako tagi w eksporcie Anki i eksport jednego tematu
+Data: 2026-09-30
+Status: zamknięty
+
+- Przy przeglądzie okazało się, że eksport do Anki już istniał (plik
+  tekstowy z nagłówkami, linki na stronach, testy) — punkt z listy
+  pomysłów był nietrafiony. Uzupełnione to, czego brakowało:
+- kolumna tagów (`#tags column:4`) z tematami fiszek (spacje → „_”),
+  eksport jednego tematu (`/fiszki/eksport.txt?temat=`) i link „Anki”
+  przy temacie; akapit w Pomocy
+- Test „eksport → import” potwierdza, że własny import czyta nowy plik
+- `DECISIONS.md`: D-103

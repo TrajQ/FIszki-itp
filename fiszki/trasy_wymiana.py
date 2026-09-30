@@ -68,22 +68,31 @@ def _pole_anki(tekst):
     return tekst.replace("\r\n", "\n").replace("\n", "<br>")
 
 
-def _odpowiedz_anki(fiszki, pdf):
+def _tag_anki(temat: str) -> str:
+    # Tagi w Anki rozdziela spacja, więc spacje w nazwie tematu → „_”.
+    return "_".join(temat.split())
+
+
+def _odpowiedz_anki(fiszki, pdf, temat=None):
     """Plik tekstowy rozdzielany tabulatorami — Anki importuje go przez
-    Plik → Importuj. Kolumny: pytanie, odpowiedź, źródło (plik i strona)."""
-    wiersze = ["#separator:tab", "#html:true"]
+    Plik → Importuj. Kolumny: pytanie, odpowiedź, źródło (plik i strona),
+    tagi. Tematy fiszek (ETAP 95) trafiają do Anki jako tagi — nagłówek
+    „#tags column” wg podręcznika Anki (pliki tekstowe, Anki 2.1.54+)."""
+    tagi = tematy.tematy_fiszek(get_db())  # {fiszka_id: [tematy]}
+    wiersze = ["#separator:tab", "#html:true", "#tags column:4"]
     for f in fiszki:
         zrodlo = f"{f['nazwa_oryginalna']}, s. {f['strona']}" if f["strona"] else f["nazwa_oryginalna"]
         wiersze.append(
-            "\t".join(_pole_anki(t) for t in (f["pytanie"], f["odpowiedz"], zrodlo))
+            "\t".join(
+                [*(_pole_anki(t) for t in (f["pytanie"], f["odpowiedz"], zrodlo)),
+                 " ".join(_tag_anki(t) for t in tagi.get(f["id"], []))]
+            )
         )
-
+    nazwa = _nazwa_pliku_eksportu(pdf, "txt") if temat is None else f"fiszki_{secure_filename(_tag_anki(temat)) or 'temat'}.txt"
     return Response(
         "\n".join(wiersze) + "\n",
         mimetype="text/plain; charset=utf-8",
-        headers={
-            "Content-Disposition": f"attachment; filename={_nazwa_pliku_eksportu(pdf, 'txt')}"
-        },
+        headers={"Content-Disposition": f"attachment; filename={nazwa}"},
     )
 
 
@@ -106,7 +115,9 @@ def eksport_csv_wszystkie():
 
 @fiszki_bp.route("/eksport.txt")
 def eksport_anki_wszystkie():
-    return _odpowiedz_anki(_fiszki_do_eksportu(), None)
+    """Wszystkie fiszki albo (?temat=) tylko jeden temat (ETAP 95)."""
+    temat = _temat_z_zapytania()
+    return _odpowiedz_anki(_fiszki_do_eksportu(temat=temat), None, temat)
 
 
 # ---------- Wyszukiwarka i usuwanie PDF-a (ETAP 11) ----------

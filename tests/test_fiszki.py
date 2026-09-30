@@ -190,11 +190,12 @@ def test_eksport_anki_escapuje_html_tabulatory_i_nowe_linie(client):
     odpowiedz = client.get("/fiszki/1/eksport.txt")
     assert odpowiedz.status_code == 200
     linie = odpowiedz.data.decode("utf-8").splitlines()
-    assert linie[:2] == ["#separator:tab", "#html:true"]
-    assert linie[2].split("\t") == [
+    assert linie[:3] == ["#separator:tab", "#html:true", "#tags column:4"]
+    assert linie[3].split("\t") == [
         "Co znaczy &lt;MN&gt;?",
         "Zabudowa mieszkaniowa<br>jednorodzinna",
         "wyklad.pdf, s. 2",
+        "",
     ]
 
 
@@ -281,3 +282,29 @@ def test_usuniecie_pdf_usuwa_plik_fiszki_i_powtorki(client, app):
         assert db.execute("SELECT COUNT(*) FROM fiszki").fetchone()[0] == 1
         assert db.execute("SELECT COUNT(*) FROM powtorki").fetchone()[0] == 0
     assert client.post("/fiszki/1/usun").status_code == 404
+
+
+# ---------- ETAP 95: tematy jako tagi Anki i eksport jednego tematu ----------
+
+
+def test_eksport_anki_z_tagami_i_jednego_tematu(client):
+    wgraj_pdf(client, nazwa="wyklad.pdf")
+    dodaj_fiszke(client, pytanie="P1?", tematy=["kolokwium 1", "prawo"])
+    dodaj_fiszke(client, pytanie="P2?", tematy=["prawo"])
+    dodaj_fiszke(client, pytanie="P3?")
+    wszystkie = client.get("/fiszki/eksport.txt").data.decode("utf-8").splitlines()[3:]
+    assert [w.split("\t")[3] for w in wszystkie] == ["kolokwium_1 prawo", "prawo", ""]
+    odp = client.get("/fiszki/eksport.txt?temat=kolokwium 1")
+    assert "fiszki_kolokwium_1.txt" in odp.headers["Content-Disposition"]
+    assert [w.split("\t")[0] for w in odp.data.decode("utf-8").splitlines()[3:]] == ["P1?"]
+    assert "eksport.txt?temat=prawo" in client.get("/fiszki/").get_data(as_text=True)
+
+
+def test_eksport_anki_wraca_importem(client):
+    wgraj_pdf(client, nazwa="wyklad.pdf")
+    dodaj_fiszke(client, pytanie="P1?", odpowiedz="O1", tematy=["prawo"])
+    plik = client.get("/fiszki/eksport.txt").data
+    wgraj_pdf(client, nazwa="drugi.pdf")
+    odp = client.post("/fiszki/2/import", data={"plik": (io.BytesIO(plik), "fiszki.txt")}, content_type="multipart/form-data")
+    assert odp.status_code in (200, 302)
+    assert client.get("/fiszki/2/fiszki").get_json()[0]["pytanie"] == "P1?"

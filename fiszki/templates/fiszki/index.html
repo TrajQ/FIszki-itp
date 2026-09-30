@@ -144,6 +144,7 @@
                 <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.powtorka', temat=t.temat, wszystkie=1) }}" title="Wszystkie fiszki tematu, bez zmiany harmonogramu">Przed egzaminem</a>
                 <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.quiz', temat=t.temat) }}">Quiz</a>
                 <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.druk', temat=t.temat) }}">Druk</a>
+                <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.eksport_anki_wszystkie', temat=t.temat) }}" title="Plik do importu w Anki; temat trafi tam jako tag">Anki</a>
             </span>
         </li>
         {% endfor %}
