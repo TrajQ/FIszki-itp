@@ -716,3 +716,9 @@
   Ustaw szuka nowszego obwieszczenia z tekstem jednolitym i pozwala je
   pobrać.
 - Dodano `DECISIONS.md` D-109 i 2 testy.
+
+## ETAP 102 — 2026-09-30
+- Strona główna: **„Dodaj do kalendarza (.ics)”** — egzaminy i wyjścia w
+  teren do Kalendarza Google, Thunderbirda albo telefonu.
+- Naprawiono niezamknięty iterator katalogu w kopii automatycznej.
+- Dodano `kalendarz.py`, `DECISIONS.md` D-110 i 2 testy.

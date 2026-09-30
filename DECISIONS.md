@@ -2320,3 +2320,22 @@ często; praca na starym tekście to częsty błąd.
   nie jest jednoznacznie opisany (D-096); tytuły są pewniejsze.
 - Automatyczne sprawdzanie przy każdym otwarciu aktu — niepotrzebne
   zapytania do API; wystarczy przycisk.
+
+## D-110 — Kalendarz: plik .ics zamiast integracji z Kalendarzem Google
+Data: 2026-09-30
+
+**Decyzja:** Terminy eksportujemy do pliku iCalendar (RFC 5545), który
+użytkownik importuje sam. Wydarzenia całodniowe; UID liczony z rodzaju,
+daty i nazwy, więc ponowny import aktualizuje te same wydarzenia. Plik
+powstaje w bibliotece standardowej (bez nowej zależności).
+
+**Uzasadnienie:** Terminy nauki i terenu chcemy mieć w telefonie, ale
+Warsztat działa tylko lokalnie i nie powinien trzymać kont ani tokenów.
+
+**Odrzucone alternatywy:**
+- API Kalendarza Google — logowanie OAuth i klucze w aplikacji lokalnej;
+  sprzeczne z zasadą prostoty i „zero sekretów”.
+- Subskrypcja kalendarza (adres URL) — telefon nie połączy się z
+  127.0.0.1.
+- Biblioteka `icalendar` — nowa zależność dla kilkudziesięciu linii
+  formatu tekstowego.

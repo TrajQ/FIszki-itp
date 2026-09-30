@@ -92,7 +92,7 @@ def kopia_automatyczna(folder_instance: str, folder_kopii: str, co_ile_dni: int 
     zrobionych ręcznie z przeglądarki nie rusza). Zwraca ścieżkę nowej kopii
     albo None, gdy nie było potrzeby."""
     teraz = time.time() if teraz is None else teraz
-    if co_ile_dni <= 0 or not os.path.isdir(folder_instance) or not any(os.scandir(folder_instance)):
+    if co_ile_dni <= 0 or not os.path.isdir(folder_instance) or not os.listdir(folder_instance):
         return None
     ostatnia = ostatnia_kopia_automatyczna(folder_kopii)
     if ostatnia and teraz - os.path.getmtime(ostatnia["sciezka"]) < co_ile_dni * 86400:

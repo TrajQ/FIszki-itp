@@ -184,3 +184,38 @@ def test_pomoc_opisuje_funkcje_z_etapow_88_97(czysty_client):
     for fraza in ("Pobierz z Dziennika Ustaw", "Plan ogólny gminy", "Ceny transakcyjne (RCN)", "metodę Hellwiga",
                   "trend niestabilny", "Ankieta: przestrzeń publiczna", "wielokrotny wybór", "Odległości i cień", "AUTO_KOPIA_DNI"):
         assert fraza in html, fraza
+
+
+# ---------- ETAP 102: terminy do kalendarza (.ics) ----------
+
+
+def test_plik_ics_zgodny_z_rfc5545():
+    from datetime import datetime, timezone
+
+    from kalendarz import plik_ics
+
+    terminy = [{"data": "2026-10-02", "rodzaj": "egzamin", "nazwa": "Kolokwium, prawo; część 1", "opis": "wszystkie fiszki: utrwalone 40%\nok. 5 dziennie", "url": "/fiszki/#egzaminy"},
+               {"data": "2026-10-12", "rodzaj": "teren", "nazwa": "Zieleń — " + "Park Wilsona " * 8, "opis": "punkty: 0", "url": "/teren/projekty/1"}]
+    ics = plik_ics(terminy, "http://127.0.0.1:5000", datetime(2026, 9, 30, 8, 0, tzinfo=timezone.utc))
+    linie = ics.split("\r\n")
+    assert linie[0] == "BEGIN:VCALENDAR" and linie[-2] == "END:VCALENDAR" and linie[-1] == ""
+    assert "\n" not in ics.replace("\r\n", "")  # tylko CRLF
+    assert all(len(l.encode("utf-8")) <= 75 for l in linie)
+    rozlozone = ics.replace("\r\n ", "")  # złożenie łamanych linii
+    assert "SUMMARY:Egzamin: Kolokwium\\, prawo\; część 1" in rozlozone
+    assert "DESCRIPTION:wszystkie fiszki: utrwalone 40%\\nok. 5 dziennie" in rozlozone
+    assert "DTSTART;VALUE=DATE:20261002\r\nDTEND;VALUE=DATE:20261003" in ics and "DTSTAMP:20260930T080000Z" in ics
+    assert rozlozone.count("BEGIN:VEVENT") == 2 and "URL:http://127.0.0.1:5000/teren/projekty/1" in rozlozone
+    # UID stały — ponowny import aktualizuje zamiast dublować
+    assert plik_ics(terminy, "x").split("UID:")[1][:20] == ics.split("UID:")[1][:20]
+
+
+def test_trasa_kalendarza(czysty_client):
+    from datetime import date, timedelta
+
+    c = czysty_client
+    c.post("/fiszki/egzaminy", data={"nazwa": "Egzamin z planowania", "data": (date.today() + timedelta(days=5)).isoformat()})
+    odp = c.get("/kalendarz.ics")
+    assert odp.mimetype == "text/calendar" and "warsztat_terminy.ics" in odp.headers["Content-Disposition"]
+    assert "SUMMARY:Egzamin: Egzamin z planowania" in odp.get_data(as_text=True)
+    assert 'href="/kalendarz.ics"' in c.get("/").get_data(as_text=True)

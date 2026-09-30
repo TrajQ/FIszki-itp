@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask, Response, redirect, render_template, url_for
+from flask import Flask, Response, redirect, render_template, request, url_for
 
 from atlas import atlas_bp
 from mpzp import mpzp_bp
@@ -80,7 +80,18 @@ def create_app(instance_path=None):
                 app.logger.exception("Nie udało się policzyć podsumowania modułu %s", modul)
                 podsumowania[modul] = None
 
-        # Kalendarz (ETAP 86): egzaminy z Fiszek i wyjścia w teren, od najbliższego.
+        terminy = wszystkie_terminy()
+        from kopia import ostatnia_kopia_automatyczna
+
+        return render_template(
+            "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
+            kopia_auto=ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
+            auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
+        )
+
+    def wszystkie_terminy() -> list[dict]:
+        """Kalendarz (ETAP 86): egzaminy z Fiszek i wyjścia w teren, od najbliższego.
+        Błąd jednego modułu nie blokuje reszty."""
         from fiszki.routes import terminy as terminy_fiszek
         from teren.routes import terminy as terminy_terenu
 
@@ -90,13 +101,17 @@ def create_app(instance_path=None):
                 terminy += funkcja()
             except Exception:
                 app.logger.exception("Nie udało się odczytać terminów modułu %s", modul)
-        terminy.sort(key=lambda t: (t["data"], t["rodzaj"], t["nazwa"]))
-        from kopia import ostatnia_kopia_automatyczna
+        return sorted(terminy, key=lambda t: (t["data"], t["rodzaj"], t["nazwa"]))
 
-        return render_template(
-            "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
-            kopia_auto=ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
-            auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
+    @app.route("/kalendarz.ics")
+    def kalendarz_ics():
+        """Wszystkie nadchodzące terminy jako plik iCalendar (ETAP 102)."""
+        from kalendarz import plik_ics
+
+        return Response(
+            plik_ics(wszystkie_terminy(), request.host_url.rstrip("/")),
+            mimetype="text/calendar",
+            headers={"Content-Disposition": "attachment; filename=warsztat_terminy.ics"},
         )
 
     @app.route("/pomoc")

@@ -26,6 +26,7 @@
         {% endfor %}
     </ol>
     {% if wiecej_terminow %}<p class="wyciszony">Dalsze terminy: w Fiszkach (egzaminy) i w projektach Terenu.</p>{% endif %}
+    <p><a class="przycisk przycisk--tekst" href="{{ url_for('kalendarz_ics') }}" title="Plik .ics z wszystkimi nadchodzącymi terminami — do Kalendarza Google, Thunderbirda albo telefonu">Dodaj do kalendarza (.ics)</a></p>
 </section>
 {% endif %}
 

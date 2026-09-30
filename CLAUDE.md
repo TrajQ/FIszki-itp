@@ -60,7 +60,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 101 (przepisy: nowszy tekst jednolity — zamknięty)
-Ostatni ZIP: releases/warsztat_etap101_20260930.zip
-Testy: 470 passed / 0 failed
+ETAP: 102 (kalendarz: eksport .ics — zamknięty)
+Ostatni ZIP: releases/warsztat_etap102_20260930.zip
+Testy: 472 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

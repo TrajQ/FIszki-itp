@@ -1781,3 +1781,16 @@ Status: zamknięty
   akapit w Pomocy
 - Sprawdzone w przeglądarce z podstawionym API (także 390 px)
 - `DECISIONS.md`: D-109
+
+## ETAP 102 — Kalendarz: eksport terminów do pliku .ics
+Data: 2026-09-30
+Status: zamknięty
+
+- `kalendarz.py` (RFC 5545: wydarzenia całodniowe, CRLF, łamanie linii po
+  75 bajtach bez cięcia znaków UTF-8, escapowanie, stały UID), trasa
+  `/kalendarz.ics` ze wszystkimi nadchodzącymi terminami (wspólna funkcja
+  `wszystkie_terminy` ze stroną główną), link „Dodaj do kalendarza (.ics)”,
+  akapit w Pomocy
+- Poprawka przy okazji (znaleziona przez ostrzeżenie w testach):
+  niezamknięty iterator `os.scandir` w kopii automatycznej (ETAP 97)
+- `DECISIONS.md`: D-110
