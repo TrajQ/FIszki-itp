@@ -13,6 +13,7 @@
 {% if filtry.nieruchomosc %}{% set _ = opis_filtrow.append('nieruchomość: ' ~ filtry.nieruchomosc) %}{% endif %}
 {% set dzialki = co == 'dzialki' %}
 {% set odrzucone = plik.odrzucone_dzialki if dzialki else plik.odrzucone %}
+{% if opis_pietra %}{% set _ = opis_filtrow.append(opis_pietra) %}{% endif %}
 {% if filtry.izby %}{% set _ = opis_filtrow.append('izby: ' ~ filtry.izby) %}{% endif %}
 {% if filtry.rodzaj %}{% set _ = opis_filtrow.append('transakcje: ' ~ filtry.rodzaj) %}{% endif %}
 <div class="raport-cen">
@@ -79,6 +80,15 @@
         <table class="tabela">
             <tr><th>{{ 'Przeznaczenie' if dzialki else 'Izby' }}</th><th class="liczba">Transakcji</th><th class="liczba">Mediana za m²</th><th class="liczba">Mediana powierzchni</th></tr>
             {% for i in statystyki.grupy %}<tr><td>{{ i.nazwa }}</td><td class="liczba">{{ i.liczba }}</td><td class="liczba">{{ z(i.mediana_m2) }} zł</td><td class="liczba">{{ z(i.mediana_pow, 1) }} m²</td></tr>{% endfor %}
+        </table>
+        </div>
+        {% endif %}
+        {% if statystyki and statystyki.pietra | selectattr('pietro') | list %}
+        <h2>Według piętra</h2>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Piętro</th><th class="liczba">Transakcji</th><th class="liczba">Mediana za m²</th><th class="liczba">Mediana powierzchni</th></tr>
+            {% for i in statystyki.pietra %}<tr><td>{{ i.nazwa }}</td><td class="liczba">{{ i.liczba }}</td><td class="liczba">{{ z(i.mediana_m2) }} zł</td><td class="liczba">{{ z(i.mediana_pow, 1) }} m²</td></tr>{% endfor %}
         </table>
         </div>
         {% endif %}

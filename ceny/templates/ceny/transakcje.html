@@ -97,6 +97,7 @@
                 <label>Nieruchomość <select name="nieruchomosc"><option value="">wszystkie</option></select></label>
                 {% else %}
                 <label>Izby <select name="izby"><option value="">wszystkie</option>{% for i in ['1', '2', '3', '4+'] %}<option value="{{ i }}">{{ i }}</option>{% endfor %}</select></label>
+                <label>Piętro <select name="pietro"><option value="">wszystkie</option>{% for k, opis in opisy_pieter.items() %}<option value="{{ k }}">{{ opis }}</option>{% endfor %}</select></label>
                 {% endif %}
                 <label>Rodzaj transakcji <select name="rodzaj"><option value="">wszystkie</option></select></label>
                 <a id="link-csv-rcn" class="przycisk przycisk--drugi" href="#">CSV</a>
@@ -166,6 +167,11 @@
         <section class="karta stos">
             <h3>{{ 'Według przeznaczenia w planie' if co == 'dzialki' else 'Według liczby izb' }}</h3>
             <div class="przewijanie-cen"><table class="tabela" id="grupy-rcn"></table></div>
+            {% if co != 'dzialki' %}
+            <h3>Według piętra</h3>
+            <div class="przewijanie-cen"><table class="tabela" id="pietra-rcn"></table></div>
+            <p id="pietra-brak" class="wyciszony opis-cen" hidden>Brak numerów kondygnacji — plik zaimportowany przed ETAPem 112 (zaimportuj go ponownie) albo plik ich nie zawiera.</p>
+            {% endif %}
             <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK), ceny brutto z aktów notarialnych. Statystyki liczy aplikacja.</p>
         </section>
     </div>

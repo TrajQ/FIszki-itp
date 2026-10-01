@@ -105,7 +105,7 @@ def plik_rcn(sciezka, wiersze, tabela="transakcje_lokale"):
     db.execute("CREATE TABLE gpkg_geometry_columns (table_name TEXT, column_name TEXT, srs_id INTEGER)")
     db.execute("INSERT INTO gpkg_geometry_columns VALUES (?, 'geom', 2180)", (tabela,))
     kolumny = ["tran_lokalny_id_iip", "lok_id_lokalu", "dok_data", "tran_rodzaj_trans", "tran_rodzaj_rynku", "nier_udzial",
-               "lok_funkcja", "lok_cena_brutto", "nier_cena_brutto", "tran_cena_brutto", "lok_pow_uzyt", "lok_liczba_izb", "geom"]
+               "lok_funkcja", "lok_cena_brutto", "nier_cena_brutto", "tran_cena_brutto", "lok_pow_uzyt", "lok_liczba_izb", "lok_nr_kond", "geom"]
     db.execute(f"CREATE TABLE {tabela} ({', '.join(kolumny)})")
     for w in wiersze:
         db.execute(f"INSERT INTO {tabela} VALUES ({', '.join('?' * len(kolumny))})", [w.get(k) for k in kolumny])
@@ -554,3 +554,29 @@ def test_trasa_zmiany(client, tmp_path, monkeypatch):
     assert client.get(url.replace("b_od=2024", "b_od=2021")).status_code == 400  # wspólny rok
     assert client.get(url.replace("a_od=2021&a_do=2021", "a_od=2022&a_do=2021")).status_code == 400
     assert client.get(url.replace("&a_od=2021", "")).status_code == 400
+
+
+# ---------- ETAP 112: piętro lokalu ----------
+
+
+def test_kondygnacja():
+    assert [rcn._kondygnacja(w) for w in (3, "3", "parter", "Parter", "-1", "", None, "poddasze", 500)] == [3, 3, 0, 0, -1, None, None, None, None]
+    assert [rcn.przedzial_pietra(k) for k in (-1, 0, 2, 4, 9, 10, None)] == ["parter", "parter", "1-3", "4-9", "4-9", "10+", None]
+
+
+def test_trasy_pietra(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    pietra = ["parter", 1, 2, 5, 11, None, 12, 3]
+    plik_rcn(sciezka, [lokal(i, lok_nr_kond=k, lok_cena_brutto=500000 + 10000 * i) for i, k in enumerate(pietra, start=1)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    st = client.get("/ceny/transakcje/1/dane").get_json()["statystyki"]
+    assert [(p["pietro"], p["liczba"]) for p in st["pietra"]] == [("parter", 1), ("1-3", 3), ("4-9", 1), ("10+", 2), (None, 1)]
+    assert client.get("/ceny/transakcje/1/dane?pietro=10%2B").get_json()["statystyki"]["liczba"] == 2
+    assert client.get("/ceny/transakcje/1/dane?pietro=5").status_code == 400
+    assert ";kondygnacja;" in client.get("/ceny/transakcje/1.csv").get_data(as_text=True)
+    raport = client.get("/ceny/transakcje/1/raport?pietro=1-3").get_data(as_text=True)
+    assert "Według piętra" in raport and "1–3 piętro" in raport
+    assert "Piętro" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)

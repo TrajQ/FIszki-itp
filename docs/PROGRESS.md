@@ -1971,3 +1971,20 @@ Status: zamknięty
   (domyślnie pierwsze i ostatnie dwa lata), legenda z klasami i opisem
 - Sprawdzone w przeglądarce (1400 i 390 px, zły okres, powrót do punktów)
 - `DECISIONS.md`: D-119
+
+## ETAP 112 — Ceny: piętro lokalu (kondygnacja)
+Data: 2026-10-01
+Status: zamknięty
+
+- `ceny/rcn.py`: `_kondygnacja` czyta `lok_nr_kond` (liczba albo
+  „parter”; inne zapisy — brak danych), przedziały `PIETRA` (parter i
+  niżej, 1–3, 4–9, 10+), `przedzial_pietra`, tabela `pietra` w statystykach
+- `ceny/baza.py`: kolumna `kondygnacja` w `rcn_lokale` (dopisywana do
+  starych baz), filtr `pietro` w `lokale_rcn`
+- Filtr „Piętro” na stronie, w danych, CSV (kolumna `kondygnacja`),
+  raporcie, podobnych transakcjach i heksagonach (wspólne `_filtry`)
+- Tabela „Według piętra” na stronie i w raporcie; komunikat, gdy plik nie
+  ma numerów kondygnacji (np. zaimportowany wcześniej)
+- Nazwa kolumny z dwóch otwartych projektów; zapis wartości do
+  potwierdzenia na prawdziwym pliku
+- `DECISIONS.md`: D-120

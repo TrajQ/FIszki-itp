@@ -68,6 +68,7 @@ def transakcje():
         min_w_roku=rcn.MIN_W_ROKU,
         tolerancje=rcn.TOLERANCJE,
         minima=rcn.MINIMA_W_KOMORCE,
+        opisy_pieter=rcn.OPISY_PIETER,
         krawedzie_h3=[(r, rcn.krawedz_h3_m(r)) for r in rcn.ROZDZIELCZOSCI_H3],
     )
 
@@ -111,8 +112,10 @@ def _filtry(co: str) -> dict:
         filtry["nieruchomosc"] = request.args.get("nieruchomosc") or None
     else:
         filtry["izby"] = request.args.get("izby") or None
-        if filtry["izby"] not in (None, "1", "2", "3", "4+"):
+        pietro = request.args.get("pietro") or None
+        if filtry["izby"] not in (None, "1", "2", "3", "4+") or pietro not in (None, *rcn.PIETRA):
             raise ValueError("Niepoprawny filtr.")
+        filtry["pietro"] = rcn.PIETRA[pietro] if pietro else None
     return filtry
 
 
@@ -214,6 +217,7 @@ def raport_transakcji(plik_id):
         statystyki=rcn.statystyki(lokale),
         porownanie=porownanie,
         min_w_roku=rcn.MIN_W_ROKU,
+        opis_pietra=rcn.OPISY_PIETER.get(request.args.get("pietro")),
         wykres_lat=Markup(rcn.wykres_lat_svg(porownanie)),  # ETAP 110; tylko liczby i kolory z kodu
         mapa=Markup(rcn.mapa_svg(lokale, obszary, mapa["progi"], rcn.KOLORY_KLAS)),  # tylko liczby i kolory z kodu
         progi=mapa["progi"],
@@ -338,7 +342,7 @@ def csv_transakcji(plik_id):
     bufor = io.StringIO()
     zapis = csv.writer(bufor, delimiter=";")
     pola = ["data", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2"]
-    pola += ["przeznaczenie", "uzytek", "nieruchomosc", "dzialek"] if co == "dzialki" else ["izby"]
+    pola += ["przeznaczenie", "uzytek", "nieruchomosc", "dzialek"] if co == "dzialki" else ["izby", "kondygnacja"]
     pola += ["lat", "lng"]
     zapis.writerow(pola)
     for l in sorted(lokale, key=lambda l: l["data"]):

@@ -221,7 +221,7 @@
         const kafelki = document.getElementById("kafelki-rcn");
         if (!st) {
             kafelki.replaceChildren(el("p", "wyciszony", "Brak transakcji dla wybranych filtrów."));
-            ["trend-rcn", "histogram-rcn", "grupy-rcn"].forEach((id) => document.getElementById(id).replaceChildren());
+            ["trend-rcn", "histogram-rcn", "grupy-rcn", "pietra-rcn"].filter((id) => document.getElementById(id)).forEach((id) => document.getElementById(id).replaceChildren());
             warstwa.clearLayers();
             return;
         }
@@ -249,6 +249,25 @@
             tabela.appendChild(tr);
         }
         rysujMape(d.mapa);
+        pokazPietra(st.pietra);
+    }
+
+    // ETAP 112: lokale według piętra
+    function pokazPietra(pietra) {
+        const tabela = document.getElementById("pietra-rcn");
+        if (!tabela) return; // działki
+        const znane = pietra.some((p) => p.pietro);
+        document.getElementById("pietra-brak").hidden = znane;
+        tabela.replaceChildren();
+        if (!znane) return;
+        const glowa = el("tr");
+        glowa.append(el("th", "", "Piętro"), el("th", "liczba", "Transakcji"), el("th", "liczba", "Mediana za m²"), el("th", "liczba", "Mediana powierzchni"));
+        tabela.appendChild(glowa);
+        for (const p of pietra) {
+            const tr = el("tr");
+            tr.append(el("td", "", p.nazwa), el("td", "liczba", liczba.format(p.liczba)), el("td", "liczba", `${liczba.format(p.mediana_m2)} zł`), el("td", "liczba", `${liczba.format(p.mediana_pow)} m²`));
+            tabela.appendChild(tr);
+        }
     }
 
     // ---------- obszary do porównania (ETAP 105) ----------

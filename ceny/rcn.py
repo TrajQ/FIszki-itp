@@ -183,6 +183,29 @@ def _na_wgs84(x: float, y: float, srs: int | None) -> tuple[float | None, float 
     return (lat, lng) if w_polsce(lat, lng) else (None, None)
 
 
+# ETAP 112: piętro lokalu (`lok_nr_kond`) w przedziałach do filtra i tabeli
+PIETRA = {"parter": (-5, 0), "1-3": (1, 3), "4-9": (4, 9), "10+": (10, 200)}
+OPISY_PIETER = {"parter": "parter (i niżej)", "1-3": "1–3 piętro", "4-9": "4–9 piętro", "10+": "10 piętro i wyżej"}
+
+
+def _kondygnacja(wartosc) -> int | None:
+    """Numer kondygnacji lokalu: liczba albo „parter”; inne zapisy → brak danych."""
+    tekst = str(wartosc or "").strip().lower()
+    if "parter" in tekst:
+        return 0
+    dopasowanie = re.match(r"-?\d+", tekst)
+    if not dopasowanie:
+        return None
+    numer = int(dopasowanie.group())
+    return numer if -5 <= numer <= 200 else None
+
+
+def przedzial_pietra(kondygnacja: int | None) -> str | None:
+    if kondygnacja is None:
+        return None
+    return next(k for k, (od, do) in PIETRA.items() if od <= kondygnacja <= do)
+
+
 def _lokale(wiersze: list[dict], geometria: str | None, srs: int | None) -> dict:
     lokali_w_transakcji: dict = {}
     for w in wiersze:
@@ -230,6 +253,7 @@ def _lokale(wiersze: list[dict], geometria: str | None, srs: int | None) -> dict
             "cena": round(cena, 2),
             "cena_m2": round(cena_m2, 2),
             "izby": int(_liczba(w.get("lok_liczba_izb")) or 0) or None,
+            "kondygnacja": _kondygnacja(w.get("lok_nr_kond")),
             "lat": lat,
             "lng": lng,
         })
@@ -351,6 +375,20 @@ def _grupy(lokale: list[dict]) -> list[dict]:
     ]
 
 
+def _pietra(lokale: list[dict]) -> list[dict]:
+    """Lokale według piętra (ETAP 112); „brak danych” na końcu."""
+    po_pietrze: dict = {}
+    for l in lokale:
+        po_pietrze.setdefault(przedzial_pietra(l["kondygnacja"]), []).append(l)
+    kolejnosc = [k for k in PIETRA if k in po_pietrze] + ([None] if None in po_pietrze else [])
+    return [
+        {"pietro": k, "nazwa": OPISY_PIETER.get(k, "brak danych"), "liczba": len(po_pietrze[k]),
+         "mediana_m2": statistics.median(x["cena_m2"] for x in po_pietrze[k]),
+         "mediana_pow": statistics.median(x["pow_m2"] for x in po_pietrze[k])}
+        for k in kolejnosc
+    ]
+
+
 def statystyki(lokale: list[dict]) -> dict | None:
     if not lokale:
         return None
@@ -384,6 +422,7 @@ def statystyki(lokale: list[dict]) -> dict | None:
         "do": max(l["data"] for l in lokale),
         "trend": trend,
         "grupy": grupy,
+        "pietra": _pietra(lokale) if "kondygnacja" in lokale[0] else [],
         "histogram": histogram,
     }
 

@@ -771,3 +771,7 @@
 ## ETAP 111 — 2026-10-01
 - Ceny → Transakcje: mapa zmiany cen w heksagonach między dwoma okresami
 - Pomoc: opis mapy zmian
+
+## ETAP 112 — 2026-10-01
+- Ceny → Transakcje: filtr i tabela według piętra lokalu
+- Pomoc: opis

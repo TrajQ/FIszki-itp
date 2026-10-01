@@ -102,6 +102,7 @@ def close_db(exception=None):
 # kolumny dopisane do istniejących baz (jak w module teren)
 KOLUMNY_DODANE = {
     "rcn_pliki": {"liczba_dzialek": "INTEGER NOT NULL DEFAULT 0", "odrzucone_dzialki": "TEXT NOT NULL DEFAULT '{}'"},  # ETAP 106
+    "rcn_lokale": {"kondygnacja": "INTEGER"},  # ETAP 112: pliki zaimportowane wcześniej mają NULL
 }
 
 
@@ -146,7 +147,7 @@ def z_cache(klucz: str, pobierz):
 
 # ---------- pliki RCN (ETAP 104) ----------
 
-POLA_LOKALU = ("data", "rok", "kwartal", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2", "izby", "lat", "lng")
+POLA_LOKALU = ("data", "rok", "kwartal", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2", "izby", "kondygnacja", "lat", "lng")
 POLA_DZIALKI = ("data", "rok", "kwartal", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2", "przeznaczenie", "uzytek",
                 "nieruchomosc", "dzialek", "lat", "lng")
 
@@ -197,8 +198,11 @@ def _transakcje(tabela: str, plik_id: int, rowne: dict, od_roku: int | None, do_
 
 
 def lokale_rcn(plik_id: int, rynek: str | None = None, od_roku: int | None = None, do_roku: int | None = None,
-               izby: str | None = None, rodzaj: str | None = None) -> list[dict]:
+               izby: str | None = None, rodzaj: str | None = None, pietro: tuple[int, int] | None = None) -> list[dict]:
     warunki, parametry = _transakcje("rcn_lokale", plik_id, {"rynek": rynek, "rodzaj": rodzaj}, od_roku, do_roku)
+    if pietro:
+        warunki.append("kondygnacja BETWEEN ? AND ?")
+        parametry.extend(pietro)
     if izby == "4+":
         warunki.append("izby >= 4")
     elif izby:

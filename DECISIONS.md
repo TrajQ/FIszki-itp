@@ -2541,3 +2541,19 @@ hedoniczny) wymagałby modelu i cech, których RCN często nie ma.
   lokal w dwóch transakcjach.
 - Uwzględnianie komórek z transakcjami tylko w jednym okresie — brak
   podstawy do zmiany.
+
+## D-120 — Piętro lokalu: przedziały, „parter” rozpoznawany, inne zapisy jako brak danych
+Data: 2026-10-01
+
+**Decyzja:** `lok_nr_kond` czytamy jako liczbę całkowitą (także ujemną —
+kondygnacje podziemne — do −5) albo słowo „parter” (= 0); inne zapisy
+(np. „poddasze”) to brak danych, widoczny w tabeli jako osobny wiersz.
+Do filtra i tabeli przedziały: parter i niżej, 1–3, 4–9, 10 i wyżej.
+
+**Uzasadnienie:** Format wartości w prawdziwych plikach nie jest
+potwierdzony — lepiej pokazać „brak danych” niż zgadywać piętro z tekstu.
+Przedziały odpowiadają typowej zabudowie: niska, średnia, wysoka.
+
+**Odrzucone alternatywy:**
+- Pojedyncze piętra w tabeli — kilkanaście wierszy z małą liczbą transakcji.
+- Liczby rzymskie i opisy słowne — brak potwierdzenia, że występują.
