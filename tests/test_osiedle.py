@@ -367,3 +367,39 @@ def test_raport_z_cieniem(client):
     assert "Tereny w strefie" not in bez and 'stroke-dasharray="4 3"' not in bez and "Pokaż odległości i cień" in bez
     # porównanie wariantów bez zmian: szkic bez numerów i cienia
     assert 'stroke-dasharray="4 3"' not in client.get(f"/osiedle/porownanie?id={k['id']}&id={k['id']}").get_data(as_text=True)
+
+
+# ---------- ETAP 122: DXF ----------
+
+
+def _pary_dxf(tekst):
+    wiersze = tekst.split("\n")
+    assert wiersze[-1] == ""  # plik kończy się nowym wierszem
+    return list(zip(wiersze[0:-1:2], wiersze[1:-1:2]))
+
+
+def test_dxf_koncepcji(client):
+    from mpzp.uklady import pl2000
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Wariant ąę"}).get_json()
+    client.put(f"/osiedle/koncepcje/{k['id']}", json={"geojson": kolekcja(
+        prostokat(0, 0, 100, 100, "obszar"), prostokat(10, 10, 40, 30, "MW", kondygnacje=5), prostokat(60, 10, 30, 30, "ZP"))})
+    odp = client.get(f"/osiedle/koncepcje/{k['id']}.dxf")
+    assert odp.status_code == 200 and odp.headers["X-Uklad-Wspolrzednych"] == "PL-2000 strefa 6 (EPSG:2177)"
+    assert ".dxf" in odp.headers["Content-Disposition"]
+    pary = _pary_dxf(odp.get_data(as_text=True))
+    assert ("  1", "AC1009") in pary and pary[-1] == ("  0", "EOF")
+    warstwy = [w for k_, w in pary if k_ == "  8"]
+    assert {"OSIEDLE_OBSZAR", "OSIEDLE_MW", "OSIEDLE_ZP", "OSIEDLE_OPISY"} <= set(warstwy)
+    assert [w for k_, w in pary if k_ == "  1"][1:] == ["MW 1", "ZP 2"]  # opisy: symbol i numer jak w raporcie
+    # pierwszy wierzchołek obszaru = (17°E, 52°N) w PL-2000 strefie 6: X = wschód, Y = północ
+    wzor = pl2000(52.0, 17.0)
+    i = next(n for n, p in enumerate(pary) if p == ("  0", "VERTEX"))
+    x, y = float(pary[i + 2][1]), float(pary[i + 3][1])
+    assert x == pytest.approx(wzor["y"], abs=0.01) and y == pytest.approx(wzor["x"], abs=0.01)
+    assert sum(1 for p in pary if p == ("  0", "VERTEX")) == 12  # trzy prostokąty po 4 wierzchołki (bez powtórzenia pierwszego)
+    p92 = _pary_dxf(client.get(f"/osiedle/koncepcje/{k['id']}.dxf?uklad=pl1992").get_data(as_text=True))
+    i = next(n for n, p in enumerate(p92) if p == ("  0", "VERTEX"))
+    assert 300_000 < float(p92[i + 2][1]) < 900_000 and 100_000 < float(p92[i + 3][1]) < 800_000
+    assert client.get(f"/osiedle/koncepcje/{k['id']}.dxf?uklad=wgs84").status_code == 400
+    pusta = client.post("/osiedle/koncepcje", json={"nazwa": "Pusta"}).get_json()
+    assert _pary_dxf(client.get(f"/osiedle/koncepcje/{pusta['id']}.dxf").get_data(as_text=True))[-1] == ("  0", "EOF")

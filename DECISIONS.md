@@ -2723,3 +2723,26 @@ przepis.
 - Linkowanie do innych aktów w bazie — wymagałoby pewnego rozpoznania
   aktu po nazwie; na razie bez.
 - Linki także do ustępów („ust. 2”) — jednostką w bazie jest artykuł.
+
+## D-130 — DXF R12 pisany ręcznie w `dane/dxf.py`, domyślnie PL-2000
+Data: 2026-10-01
+
+**Decyzja:** DXF zapisujemy sami w najprostszej wersji formatu (R12,
+tekst: pary „kod grupy / wartość”) — warstwy, zamknięte polilinie,
+teksty. Moduł jest w `dane/` obok innych warstw dostępu do formatów i
+usług (bdl, uldk), bo używa go osiedle i (ETAP 123) MPZP: to zapis
+formatu pliku, nie wspólna abstrakcja modułów, której CLAUDE.md zabrania.
+Domyślny układ PL-2000 (jedna strefa wg środka rysunku), opcjonalnie
+PL-1992; X = wschód, Y = północ.
+
+**Uzasadnienie:** Studenci i projektanci pracują w CAD na mapie
+zasadniczej w PL-2000; R12 otworzy każdy program. Pola w PL-2000 są
+zgodne z rzeczywistymi do 0,005%, w PL-1992 mniejsze o ok. 0,1%.
+
+**Odrzucone alternatywy:**
+- Biblioteka ezdxf jako zależność — duża (numpy, fonttools) dla kilku
+  typów obiektów; użyta tylko do sprawdzenia plików w testach ręcznych.
+- Nowsze wersje DXF (2000+) — więcej obowiązkowych tabel, a nic nie
+  zyskujemy dla prostych wieloboków.
+- Polskie znaki w opisach — R12 nie ma jednolitego kodowania (strona
+  kodowa zależy od programu).

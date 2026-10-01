@@ -1,10 +1,11 @@
 """Raport koncepcji do druku, szkic SVG i porównanie wariantów (ETAP 60)."""
 
-from flask import Response, render_template, request
+from flask import Response, abort, render_template, request
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
 
 from . import baza, cien
+from .dxf_koncepcji import UKLADY, koncepcja_dxf
 from .bilans import FUNKCJE, OBSZAR, bilans
 from .program import ZALOZENIA
 from .routes import _koncepcja_albo_404, osiedle_bp
@@ -51,6 +52,19 @@ def szkic(koncepcja_id):
         mimetype="image/svg+xml",
         headers={"Content-Disposition": f"attachment; filename={nazwa}"},
     )
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>.dxf")
+def dxf_koncepcji(koncepcja_id):
+    """ETAP 122: koncepcja do programu CAD (?uklad=pl2000 domyślnie albo pl1992)."""
+    k = _koncepcja_albo_404(koncepcja_id)
+    uklad = request.args.get("uklad", "pl2000")
+    if uklad not in UKLADY:
+        abort(400)
+    tekst, opis_ukladu = koncepcja_dxf(k["geojson"], uklad)
+    nazwa = secure_filename(f"koncepcja_{k['id']}_{k['nazwa']}_{uklad}.dxf") or "koncepcja.dxf"
+    return Response(tekst, mimetype="application/dxf",
+                    headers={"Content-Disposition": f"attachment; filename={nazwa}", "X-Uklad-Wspolrzednych": opis_ukladu})
 
 
 @osiedle_bp.route("/porownanie")

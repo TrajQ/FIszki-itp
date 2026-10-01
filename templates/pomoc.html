@@ -123,6 +123,9 @@
     <details><summary>Raport i warianty</summary>
         <p>Raport do druku z rysunkiem i tabelami; <a href="{{ url_for('osiedle.porownanie') }}">Porównaj warianty</a> zestawia kilka koncepcji obok siebie.</p>
     </details>
+    <details><summary>Eksport do AutoCAD (DXF)</summary>
+        <p>Link „DXF” przy koncepcji zapisuje rysunek do programu CAD (AutoCAD, BricsCAD, ZWCAD, LibreCAD): każda funkcja terenu na osobnej warstwie (OSIEDLE_MN, OSIEDLE_MW…), obszar opracowania na OSIEDLE_OBSZAR, opisy „MW 1” na OSIEDLE_OPISY. Współrzędne w metrach w układzie PL-2000 (strefa wg położenia koncepcji) — rysunek pasuje do mapy zasadniczej w tym układzie. PL-1992: dopisz do adresu <code>?uklad=pl1992</code> (pola są tam o ok. 0,1% mniejsze — zniekształcenie odwzorowania).</p>
+    </details>
 </section>
 
 <section id="przepisy" class="karta stos">

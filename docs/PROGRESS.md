@@ -2142,3 +2142,20 @@ Status: zamknięty
 - Błąd złapany w teście: „§ 3” nie było rozpoznawane (`\b` przed „§”) —
   zamiana na lookbehind
 - `DECISIONS.md`: D-129
+
+## ETAP 122 — Osiedle: eksport koncepcji do DXF (AutoCAD)
+Data: 2026-10-01
+Status: zamknięty
+
+- `dane/dxf.py`: zapis DXF R12 (tekstowy, otwiera go każdy program CAD):
+  warstwy z kolorami ACI, zamknięte polilinie, teksty; nazwy ASCII;
+  współrzędne z dokładnością do 1 mm; bez nowej zależności
+- `osiedle/dxf_koncepcji.py`: warstwa na funkcję terenu (OSIEDLE_MN …),
+  OSIEDLE_OBSZAR, OSIEDLE_OPISY („MW 1” — numeracja jak w raporcie),
+  otwory wieloboków jako osobne polilinie; PL-2000 (jedna strefa wg
+  środka koncepcji) albo PL-1992; X = wschód, Y = północ
+- Trasa `/osiedle/koncepcje/<id>.dxf?uklad=`, link „DXF” przy koncepcji
+- Sprawdzone niezależnie biblioteką ezdxf (tylko w środowisku testowym,
+  nie zależność aplikacji): audyt bez błędów, polilinie zamknięte, pola
+  1200,0 m² (PL-2000) i 1198,9 m² (PL-1992 — zniekształcenie 0,9993)
+- `DECISIONS.md`: D-130

@@ -811,3 +811,6 @@
 
 ## ETAP 121 — 2026-10-01
 - Przepisy: odesłania „art. 15 ust. 2” są odnośnikami do artykułu
+
+## ETAP 122 — 2026-10-01
+- Osiedle: eksport koncepcji do DXF (AutoCAD) w PL-2000 albo PL-1992
