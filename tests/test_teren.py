@@ -95,7 +95,8 @@ def test_pelny_obieg(client, tmp_path):
 
     punkty = client.get("/teren/projekty/1/punkty").get_json()
     assert len(punkty) == 3 and punkty[0]["zdjecie"].endswith(f"/zdjecia/{punkty[0]['id']}.jpg")
-    assert client.get(punkty[0]["zdjecie"]).data == JPEG
+    with client.get(punkty[0]["zdjecie"]) as odp:  # plik ze zdjęciem — zamknąć odpowiedź
+        assert odp.data == JPEG
 
     geo = json.loads(client.get("/teren/projekty/1.geojson").data)
     assert len(geo["features"]) == 2 and geo["features"][0]["properties"]["obiekt"] == "drzewo"

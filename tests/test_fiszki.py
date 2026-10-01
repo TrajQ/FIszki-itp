@@ -210,7 +210,8 @@ def test_widok_pdf_uzywa_wektorowanego_workera_i_ma_miejsce_na_blad(client):
     strona = client.get("/fiszki/1/").get_data(as_text=True)
     assert "pdfjs/pdf.worker.min.mjs" in strona
     assert 'id="blad-pdf"' in strona
-    assert client.get("/fiszki/static/pdfjs/pdf.worker.min.mjs").status_code == 200
+    with client.get("/fiszki/static/pdfjs/pdf.worker.min.mjs") as odp:  # plik statyczny — zamknąć odpowiedź
+        assert odp.status_code == 200
 
 
 def test_lista_plikow_pokazuje_liczbe_fiszek(client):

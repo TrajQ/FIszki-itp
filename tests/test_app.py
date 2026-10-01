@@ -89,7 +89,8 @@ def test_kopia_zapasowa_zawiera_dane_i_pomija_cache(czysty_client, tmp_path):
     )
     granice = os.path.join(c.application.instance_path, "atlas", "granice")
     os.makedirs(granice, exist_ok=True)
-    open(os.path.join(granice, "gminy_12.geojson"), "w").write("{}")
+    with open(os.path.join(granice, "gminy_12.geojson"), "w") as plik:
+        plik.write("{}")
 
     odp = c.get("/kopia-zapasowa")
     assert odp.mimetype == "application/zip"

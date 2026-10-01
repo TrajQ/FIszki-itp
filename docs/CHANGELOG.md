@@ -797,3 +797,8 @@
 - Ceny: raport transakcji przy dużym pliku 100× szybszy i 24× mniejszy
   (mapa rysuje 4000 najnowszych punktów, jak opisano); szybsze porównanie
   obszarów i ceny w okolicy
+
+## ETAP 118 — 2026-10-01
+- Narzędzie autora: przegląd wszystkich stron w przeglądarce
+  (`narzedzia/przeglad_stron.py`)
+- Testy bez ostrzeżeń o niezamkniętych plikach

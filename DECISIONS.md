@@ -2651,3 +2651,22 @@ Pomiar przed optymalizacją pokazał, co naprawdę jest wolne.
 - SpatiaLite / indeks przestrzenny — nowa zależność; prostokąt w SQL i
   wektorowe `contains_xy` wystarczają.
 - Jawny import numpy — `contains_xy` przyjmuje zwykłe listy.
+
+## D-126 — Przegląd stron z tablicy tras, Playwright jako narzędzie autora
+Data: 2026-10-01
+
+**Decyzja:** Listę stron do przeglądu bierzemy z `app.url_map` (każda
+trasa GET bez parametrów zwracająca HTML) plus kilka stron z parametrami
+na danych testowych — nowa strona trafia do przeglądu sama. Skrypt jest w
+repo (`narzedzia/`), ale Playwright nie jest zależnością aplikacji (nie
+ma go w `requirements.txt`) — to narzędzie autora, opisane w nagłówku.
+
+**Uzasadnienie:** Ręczna lista stron z ETAPu 96 nie miała stron dodanych
+później (np. całego modułu ceny). Kod HTTP, błędy JS i przewijanie
+poziome to najczęstsze błędy wychwycone w poprzednich ETAPach.
+
+**Odrzucone alternatywy:**
+- Playwright w `requirements.txt` — duża zależność (przeglądarka)
+  niepotrzebna do działania aplikacji.
+- Testy przeglądarkowe w pytest — wolne (ok. 2 min) przy każdym
+  uruchomieniu testów.

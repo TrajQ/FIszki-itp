@@ -2074,3 +2074,22 @@ Status: zamknięty
 - Bez nowej zależności (shapely 2.1 już jest; listy zamiast numpy)
 - Testy: mapa raportu tylko najnowsze, `w_obszarze` wektorowo
 - `DECISIONS.md`: D-125
+
+## ETAP 118 — Przegląd kodu i wszystkich stron
+Data: 2026-10-01
+Status: zamknięty
+
+- `narzedzia/przeglad_stron.py`: przegląd stron w przeglądarce — lista z
+  tablicy tras Flaska (każda strona HTML bez parametrów) + strony z
+  parametrami na danych testowych (projekt terenu, koncepcja, plik RCN z
+  obszarem, raporty, karta wyceny); telefon 390 px ciemny i komputer
+  1300 px jasny; zgłasza kody ≥ 400, błędy JS i przewijanie poziome;
+  sieć zewnętrzna odcięta. Wynik: 61 stron, 0 problemów
+- Lint (pyflakes) całego repozytorium: tylko celowe importy rejestrujące
+  trasy (`noqa`); moduł ceny bez martwego kodu
+- Testy bez ostrzeżeń: zamknięte pliki i odpowiedzi z plikami w trzech
+  testach (ResourceWarning)
+- Sprawdzone: aplikacja nie słucha na 0.0.0.0, brak `debug=True`;
+  ochrona przed CSRF / DNS rebinding / clickjacking jest od wcześniej
+  (`ochrona.py`)
+- `DECISIONS.md`: D-126
