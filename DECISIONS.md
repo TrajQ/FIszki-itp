@@ -2670,3 +2670,18 @@ poziome to najczęstsze błędy wychwycone w poprzednich ETAPach.
   niepotrzebna do działania aplikacji.
 - Testy przeglądarkowe w pytest — wolne (ok. 2 min) przy każdym
   uruchomieniu testów.
+
+## D-127 — Liczby w portfolio liczone z repozytorium przy każdej aktualizacji
+Data: 2026-10-01
+
+**Decyzja:** Liczby w portfolio (wiersze kodu, testy, decyzje, etapy)
+podajemy z policzenia w repozytorium w chwili aktualizacji, z etapem w
+nagłówku („stan: ETAP 119”); wiersze testów osobno od kodu aplikacji;
+biblioteki zewnętrzne (Leaflet, pdf.js) nie są liczone.
+
+**Uzasadnienie:** Portfolio czyta rekruter — liczby muszą dać się
+sprawdzić i nie mogą być „na oko”.
+
+**Odrzucone alternatywy:**
+- Liczenie z testami razem — zawyża „kod aplikacji”.
+- Brak liczb — trudniej pokazać skalę projektu.

@@ -802,3 +802,6 @@
 - Narzędzie autora: przegląd wszystkich stron w przeglądarce
   (`narzedzia/przeglad_stron.py`)
 - Testy bez ostrzeżeń o niezamkniętych plikach
+
+## ETAP 119 — 2026-10-01
+- Portfolio i README zaktualizowane o moduł Ceny (ETAPy 103–118)

@@ -2093,3 +2093,19 @@ Status: zamknięty
   ochrona przed CSRF / DNS rebinding / clickjacking jest od wcześniej
   (`ochrona.py`)
 - `DECISIONS.md`: D-126
+
+## ETAP 119 — Dokumentacja: portfolio i README po rozbudowie modułu ceny
+Data: 2026-10-01
+Status: zamknięty
+
+- `docs/PORTFOLIO.md`: wiersz modułu Ceny (RCN: transakcje mieszkań i
+  działek, dzielnice, heksagony i zmiany cen, wycena porównawcza, ceny w
+  okolicy, QGIS; dostępność cenowa z GUS), liczby policzone z repo
+  (ETAP 119: 14 800 wierszy Pythona, 8 000 JS, 505 testów, 127 decyzji),
+  dwa nowe zrzuty do zrobienia (mapa cen, karta wyceny), streszczenie
+  angielskie
+- README: dostępność cenowa w opisie modułu Ceny
+- Pomoc była uzupełniana w każdym ETAPie 110–117 (sprawdzone: opisuje
+  trend w obszarach, zmiany w heksagonach, piętro, kartę wyceny, QGIS,
+  ceny w raportach, dostępność cenową)
+- `DECISIONS.md`: D-127

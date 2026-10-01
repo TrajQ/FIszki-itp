@@ -22,7 +22,7 @@ do egzaminów.
 | **Osiedle** | Koncepcja rysowana na mapie: bilans terenu, wskaźniki zabudowy, zgodność z ustaleniami planu, program osiedla (mieszkańcy, parkingi, przedszkola, szkoły), porównanie wariantów, raport do druku | wskaźniki urbanistyczne, programowanie osiedla |
 | **Przepisy** | Ustawy z PDF podzielone na artykuły, wyszukiwarka, pytania do modelu językowego z cytatami sprawdzanymi w tekście, porównanie wersji aktu po nowelizacji | praca z prawem planistycznym, kontrola wiarygodności AI |
 | **Teren** | Formularz na telefon działający bez internetu (GPS, zdjęcia, mapa offline z ortofotomapą), import, poprawki punktów, raport i eksport do QGIS | inwentaryzacja urbanistyczna, zbieranie danych w terenie |
-| **Ceny** | Ceny mieszkań w miastach i powiatach z GUS: szeregi w czasie, zmiany (także średnie roczne tempo), porównanie miast, ranking w województwie | rynek nieruchomości, statystyka publiczna |
+| **Ceny** | Ceny mieszkań w miastach i powiatach z GUS (szeregi, zmiany, ranking, dostępność cenowa — m² za przeciętne wynagrodzenie); pojedyncze transakcje mieszkań i działek z Rejestru Cen Nieruchomości: mapa, trend, porównanie narysowanych dzielnic, mapa cen i zmian cen w heksagonach H3, wycena porównawcza z kartą do druku, ceny w okolicy działki i osiedla, eksport do QGIS | rynek nieruchomości, analiza przestrzenna cen, podejście porównawcze, statystyka publiczna |
 | **Fiszki** | Fiszki z PDF-ów z kotwicą w źródle, powtórki metodą pudełek, egzaminy z postępem, nauka na telefonie offline | — (narzędzie do nauki) |
 
 ## Zasady, które wyróżniają projekt
@@ -45,7 +45,7 @@ do egzaminów.
 ## Jak powstał
 
 Projekt powstał w dialogu z asystentem AI do programowania (Claude Code)
-w 97 małych etapach. Moja rola: pomysły i wymagania z perspektywy
+w 119 małych etapach. Moja rola: pomysły i wymagania z perspektywy
 gospodarki przestrzennej, zasady projektu (np. „liczby tylko z
 danych”), akceptacja planów etapów, testowanie na prawdziwych danych i
 decyzje o kierunku. Od etapu 75 asystent za moją zgodą sam proponował i
@@ -56,10 +56,12 @@ Każda decyzja projektowa ma uzasadnienie i odrzucone alternatywy w
 [DECISIONS.md](../DECISIONS.md), a przebieg prac jest w
 [PROGRESS.md](PROGRESS.md).
 
-## Liczby (stan: ETAP 97)
+## Liczby (stan: ETAP 119)
 
-- 8 modułów, 97 etapów, 105 zapisanych decyzji projektowych
-- ok. 12 600 wierszy Pythona, 6 800 JavaScriptu, 465 testów automatycznych
+- 8 modułów, 119 etapów, 127 zapisanych decyzji projektowych
+- ok. 14 800 wierszy Pythona aplikacji (+ 7 000 wierszy testów), 8 000
+  JavaScriptu, 505 testów automatycznych; przegląd wszystkich 61 stron w
+  przeglądarce jednym skryptem (`narzedzia/przeglad_stron.py`)
 - technologie: Python, Flask, SQLite, vanilla JavaScript, Leaflet,
   shapely, H3, pypdf, Gemini API; bez frameworków frontendowych i buildu
 
@@ -82,9 +84,11 @@ są zmyślone — nie nadają się do pokazywania). Zapisz je w
 | `08_przepisy.png` | odpowiedź z cytatami | ustawa o planowaniu i zagospodarowaniu przestrzennym, pytanie o plan ogólny |
 | `09_teren_telefon.jpg` | formularz na telefonie z mapą offline | zrzut z telefonu w terenie |
 | `10_teren_raport.png` | raport inwentaryzacji | kilka punktów ze zdjęciami → Raport do druku |
+| `11_ceny_transakcje.png` | mapa cen w heksagonach i porównanie dzielnic | Ceny → Transakcje (RCN) → plik GeoPackage swojego miasta, 2–3 narysowane dzielnice, widok „heksagony” |
+| `12_ceny_wycena.png` | karta wyceny porównawczej | kliknij miejsce na mapie, powierzchnia → „Karta wyceny do druku” |
 
 Dobrze też dołączyć 2–3 gotowe wydruki PDF (raport gminy, karta działki,
-raport inwentaryzacji) — pokazują efekt, a nie tylko interfejs.
+raport inwentaryzacji, raport cen transakcyjnych) — pokazują efekt, a nie tylko interfejs.
 
 ## English summary
 
@@ -95,9 +99,11 @@ used in planning practice: municipal indicators from Statistics Poland
 plan and cadastral parcel lookup with archival orthophotos, walking
 accessibility on an H3 grid with a maximal covering location model,
 housing estate concept design with land-use balance and zoning
-compliance, legal acts with LLM answers whose quotes are verified
+compliance, housing and land prices from the national transaction price
+register (district comparison, H3 price and price-change maps,
+comparative valuation sheet, export to QGIS), legal acts with LLM answers whose quotes are verified
 against the source text, an offline smartphone field survey form, and
 spaced-repetition flashcards. Numbers always come from data; the
 language model only describes. Built with Python/Flask, SQLite, vanilla
-JavaScript and Leaflet, 465 automated tests, developed iteratively with
+JavaScript and Leaflet, 505 automated tests, developed iteratively with
 an AI coding assistant, with every design decision documented.
