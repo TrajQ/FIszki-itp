@@ -792,3 +792,8 @@
 - Ceny: dostępność cenowa mieszkań — m² za przeciętne wynagrodzenie i
   wynagrodzeń na mieszkanie 50 m², z danych GUS
 - Pomoc: opis
+
+## ETAP 117 — 2026-10-01
+- Ceny: raport transakcji przy dużym pliku 100× szybszy i 24× mniejszy
+  (mapa rysuje 4000 najnowszych punktów, jak opisano); szybsze porównanie
+  obszarów i ceny w okolicy

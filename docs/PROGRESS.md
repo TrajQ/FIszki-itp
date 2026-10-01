@@ -2056,3 +2056,21 @@ Status: zamknięty
 - Sprawdzone w przeglądarce na podstawionym BDL (1300 i 390 px);
   prawdziwych nazw wskaźników wynagrodzeń tu nie widać (API zablokowane)
 - `DECISIONS.md`: D-124
+
+## ETAP 117 — Ceny: wydajność przy dużym pliku RCN (100 tys. lokali, 20 tys. działek)
+Data: 2026-10-01
+Status: zamknięty
+
+- Pomiar na pliku syntetycznym 19 MB (100 000 lokali, 20 000 działek):
+  import 5 s; strony i dane zwykle 0,2–1,4 s
+- Błąd znaleziony pomiarem: mapa w raporcie rysowała WSZYSTKIE punkty
+  (opis mówił „najwyżej 4000 najnowszych”) — raport 180,8 s i 8,8 MB;
+  teraz te same 4000 najnowszych co mapa strony: 1,7 s i 0,37 MB
+- `w_obszarze` i `okolica`: jedno wywołanie `shapely.contains_xy` dla
+  wszystkich punktów zamiast obiektu `Point` na transakcję — dane z 3
+  obszarami 5,1 → 1,4 s, okolica obszaru 2 km 1,4 → 0,56 s
+- `dane`: lata z zapytania `GROUP BY rok` zamiast drugiego wczytania
+  wszystkich transakcji — 1,8 → 1,2 s
+- Bez nowej zależności (shapely 2.1 już jest; listy zamiast numpy)
+- Testy: mapa raportu tylko najnowsze, `w_obszarze` wektorowo
+- `DECISIONS.md`: D-125

@@ -135,13 +135,12 @@ def dane_transakcji(plik_id):
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
     lokale = _rekordy(plik_id, co, filtry)
-    wszystkie = _rekordy(plik_id, co)
     obszary = baza.obszary_rcn(plik_id)
     tabela = "rcn_dzialki" if co == "dzialki" else "rcn_lokale"
     return jsonify({
         "plik": plik,
         "co": co,
-        "lata": sorted({l["rok"] for l in wszystkie}),
+        "lata": [w["wartosc"] for w in baza.wartosci_pola(plik_id, "rok", tabela)],  # bez drugiego wczytania wszystkich transakcji
         "listy": {pole: baza.wartosci_pola(plik_id, pole, tabela)
                   for pole in (("rodzaj", "przeznaczenie", "nieruchomosc") if co == "dzialki" else ("rodzaj",))},
         "statystyki": rcn.statystyki(lokale),

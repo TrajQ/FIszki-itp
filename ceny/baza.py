@@ -234,9 +234,10 @@ def w_prostokacie(tabela: str, lat_min: float, lat_max: float, lng_min: float, l
 def wartosci_pola(plik_id: int, pole: str, tabela: str = "rcn_lokale") -> list[dict]:
     """Wartości pola z liczbą transakcji (do list w filtrach), od najczęstszej."""
     assert (tabela, pole) in {("rcn_lokale", "rodzaj"), ("rcn_dzialki", "rodzaj"), ("rcn_dzialki", "przeznaczenie"),
-                              ("rcn_dzialki", "nieruchomosc")}
+                              ("rcn_dzialki", "nieruchomosc"), ("rcn_lokale", "rok"), ("rcn_dzialki", "rok")}
+    kolejnosc = f"{pole}" if pole == "rok" else "liczba DESC"  # lata rosnąco, reszta od najczęstszej
     return [{"wartosc": w[0], "liczba": w[1]} for w in get_db().execute(
-        f"SELECT {pole}, COUNT(*) AS liczba FROM {tabela} WHERE plik_id = ? GROUP BY {pole} ORDER BY liczba DESC", (plik_id,))]
+        f"SELECT {pole}, COUNT(*) AS liczba FROM {tabela} WHERE plik_id = ? GROUP BY {pole} ORDER BY {kolejnosc}", (plik_id,))]
 
 
 def usun_plik_rcn(plik_id: int) -> bool:

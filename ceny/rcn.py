@@ -41,11 +41,11 @@ from collections import Counter
 from datetime import date
 
 import h3
+import shapely
 from shapely import wkb
-from shapely.geometry import Point, mapping, shape
+from shapely.geometry import mapping, shape
 from shapely.ops import transform as shapely_transform
 from shapely.ops import unary_union
-from shapely.prepared import prep
 from shapely.validation import make_valid
 
 from mpzp.uklady import w_polsce, wgs84_z_pl1992
@@ -465,9 +465,17 @@ def sprawdz_obszar(geometria) -> dict:
     return mapping(g)
 
 
+def _w_ksztalcie(ksztalt, xs: list[float], ys: list[float]) -> list[bool]:
+    """Czy punkty (xs, ys) leżą w kształcie — jedno wywołanie shapely dla
+    wszystkich punktów (ETAP 117: przy 100 tys. transakcji ok. 50 razy
+    szybciej niż osobny `Point` dla każdej)."""
+    return shapely.contains_xy(ksztalt, xs, ys).tolist() if xs else []
+
+
 def w_obszarze(lokale: list[dict], geometria: dict) -> list[dict]:
-    obszar = prep(shape(geometria))
-    return [l for l in lokale if l["lat"] is not None and obszar.contains(Point(l["lng"], l["lat"]))]
+    z_polozeniem = [l for l in lokale if l["lat"] is not None]
+    wewnatrz = _w_ksztalcie(shape(geometria), [l["lng"] for l in z_polozeniem], [l["lat"] for l in z_polozeniem])
+    return [l for l, w in zip(z_polozeniem, wewnatrz) if w]
 
 
 def _mediany_lat(lokale: list[dict]) -> dict[int, float]:
@@ -511,7 +519,10 @@ def mapa_svg(lokale: list[dict], obszary: list[dict], progi: list[float], kolory
     """Schematyczna mapa do raportu: punkty transakcji w klasach ceny i
     obrysy obszarów z numerami, podziałka i strzałka północy. Tylko liczby i
     kolory z kodu (nazwy obszarów są w legendzie raportu, nie w SVG)."""
-    punkty = [(l["lng"], l["lat"], l["cena_m2"]) for l in lokale if l["lat"] is not None]
+    # te same punkty co na mapie strony: najwyżej MAKS_PUNKTOW_MAPY najnowszych (ETAP 117 —
+    # wcześniej rysowało wszystkie, przy 100 tys. transakcji raport miał 9 MB)
+    najnowsze = sorted((l for l in lokale if l["lat"] is not None), key=lambda l: l["data"], reverse=True)[:MAKS_PUNKTOW_MAPY]
+    punkty = [(l["lng"], l["lat"], l["cena_m2"]) for l in najnowsze]
     ksztalty = [shape(o["geometria"]) for o in obszary]
     xs = [p[0] for p in punkty] + [b for k in ksztalty for b in (k.bounds[0], k.bounds[2])]
     ys = [p[1] for p in punkty] + [b for k in ksztalty for b in (k.bounds[1], k.bounds[3])]
@@ -686,16 +697,13 @@ def okolica(rekordy: list[dict], ksztalt, promien_m: float) -> dict | None:
     kx = math.cos(math.radians(srodek.y)) * 111_195
     ky = 111_195
     lokalny = shapely_transform(lambda x, y, z=None: ((x - srodek.x) * kx, (y - srodek.y) * ky), ksztalt)
-    lokalny_prep = prep(lokalny.buffer(promien_m))
-    wewnatrz = prep(lokalny)
-    w_zasiegu, w_srodku = [], 0
-    for r in rekordy:
-        if r["lat"] is None:
-            continue
-        p = Point((r["lng"] - srodek.x) * kx, (r["lat"] - srodek.y) * ky)
-        if lokalny_prep.contains(p):
-            w_zasiegu.append(r)
-            w_srodku += wewnatrz.contains(p)
+    z_polozeniem = [r for r in rekordy if r["lat"] is not None]
+    xs = [(r["lng"] - srodek.x) * kx for r in z_polozeniem]
+    ys = [(r["lat"] - srodek.y) * ky for r in z_polozeniem]
+    w_buforze = _w_ksztalcie(lokalny.buffer(promien_m), xs, ys)
+    wewnatrz = _w_ksztalcie(lokalny, xs, ys)
+    w_zasiegu = [r for r, w in zip(z_polozeniem, w_buforze) if w]
+    w_srodku = sum(wewnatrz)
     if not w_zasiegu:
         return None
     q1, mediana, q3 = _kwartyle(sorted(r["cena_m2"] for r in w_zasiegu))

@@ -211,7 +211,7 @@ def test_obszary_rcn():
     kokarda = {"type": "Polygon", "coordinates": [[[19.9, 50.0], [20.0, 50.1], [20.0, 50.0], [19.9, 50.1], [19.9, 50.0]]]}
     assert rcn.sprawdz_obszar(kokarda)["type"] in ("Polygon", "MultiPolygon")
 
-    lokale = [{"rok": r, "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": lat, "lng": 19.95}
+    lokale = [{"rok": r, "data": f"{r}-06-01", "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": lat, "lng": 19.95}
               for r, c, lat in [(2023, 10000, 50.01), (2024, 12000, 50.02), (2024, 14000, 50.03),
                                 (2023, 20000, 50.11), (2024, 22000, 50.12), (2024, 9000, None)]]
     poludnie = {"id": 1, "nazwa": "Południe", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}
@@ -666,3 +666,20 @@ def test_trasa_dostepnosci(client, monkeypatch):
     strona = client.get("/ceny/").get_data(as_text=True)
     assert "5. Dostępność cenowa" in strona and f'"id": {WYNAGRODZENIE}' in strona
     assert client.get(f"/ceny/szereg/{KRAKOW}").get_json()["szereg"][0]["wartosc"] == 15000  # cena dalej z wskaźnika ceny
+
+
+# ---------- ETAP 117: wydajność ----------
+
+
+def test_mapa_raportu_tylko_najnowsze(monkeypatch):
+    """Mapa raportu rysuje tyle punktów co mapa strony (najnowsze), nie wszystkie transakcje."""
+    monkeypatch.setattr(rcn, "MAKS_PUNKTOW_MAPY", 3)
+    lokale = [{"data": f"2024-0{m}-01", "cena_m2": 10000.0 + m, "lat": 50.0 + m / 1000, "lng": 19.9} for m in range(1, 8)]
+    svg = rcn.mapa_svg(lokale, [], [10002, 10004, 10006, 10007], rcn.KOLORY_KLAS)
+    assert svg.count("<circle") == 3
+
+
+def test_w_obszarze_wektorowo():
+    lokale = [{"lat": 50.0 + i / 100, "lng": 19.95} for i in range(10)] + [{"lat": None, "lng": None}]
+    assert len(rcn.w_obszarze(lokale, prostokat(19.9, 50.0, 20.0, 50.045))) == 4  # 50,01…50,04 (brzeg 50,00 nie wewnątrz)
+    assert rcn.w_obszarze([], prostokat(19.9, 50.0, 20.0, 50.1)) == []

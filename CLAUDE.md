@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 116 (ceny: dostępność cenowa mieszkań — zamknięty)
-Ostatni ZIP: releases/warsztat_etap116_20261001.zip
-Testy: 503 passed / 0 failed
+ETAP: 117 (ceny: wydajność dużego pliku RCN — zamknięty)
+Ostatni ZIP: releases/warsztat_etap117_20261001.zip
+Testy: 505 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

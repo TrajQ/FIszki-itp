@@ -2630,3 +2630,24 @@ zgadywanie.
   kredycie (dane spoza GUS, liczby z założeń).
 - Wynagrodzenie netto — GUS publikuje dla powiatów brutto; przeliczenie
   wymagałoby założeń podatkowych.
+
+## D-125 — Wydajność RCN: mierzyć na dużym pliku, wektorowe sprawdzanie punktów
+Data: 2026-10-01
+
+**Decyzja:** Wydajność modułu ceny mierzymy na syntetycznym pliku
+wielkości dużego miasta (100 tys. lokali, 20 tys. działek). Sprawdzanie,
+czy transakcje leżą w obszarze, robimy jednym wywołaniem
+`shapely.contains_xy` na listach współrzędnych. Mapa raportu rysuje te
+same punkty co mapa strony (najwyżej 4000 najnowszych). Bez cache wyników
+— dane zmieniają się tylko przy imporcie, a czasy są do przyjęcia.
+
+**Uzasadnienie:** Testy na kilkunastu transakcjach nie pokazały, że
+raport rysuje wszystkie punkty — wyszło dopiero przy 100 tys. (180 s).
+Pomiar przed optymalizacją pokazał, co naprawdę jest wolne.
+
+**Odrzucone alternatywy:**
+- Cache odpowiedzi — złożoność (unieważnianie przy filtrach i obszarach)
+  przy czasach ok. 1 s.
+- SpatiaLite / indeks przestrzenny — nowa zależność; prostokąt w SQL i
+  wektorowe `contains_xy` wystarczają.
+- Jawny import numpy — `contains_xy` przyjmuje zwykłe listy.
