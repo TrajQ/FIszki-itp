@@ -2229,3 +2229,19 @@ Status: zamknięty
 - Testy: klucz nie trafia na stronę, wyniki przy timeout / braku
   połączenia / 404, zapytania bez kluczy
 - `DECISIONS.md`: D-134
+
+## ETAP 127 — Dziennik błędów w pliku i podgląd w diagnostyce
+Data: 2026-10-01
+Status: zamknięty
+
+- `dziennik.py`: błędy i ostrzeżenia aplikacji do
+  `instance/logi/warsztat.log` (RotatingFileHandler: 1 MB, 3 kopie,
+  od WARNING), podgląd ostatnich 30 wpisów z tracebackiem, czyszczenie
+- Kolejne `create_app` (testy) zastępują plik dziennika zamiast dokładać
+  drugi uchwyt do wspólnego loggera Flaska
+- `/diagnostyka`: sekcja „Ostatnie błędy” (traceback rozwijany),
+  „Wyczyść dziennik” (POST, chroniony jak inne zapytania — `ochrona.py`)
+- Dziennik nie trafia do kopii zapasowej (`kopia.POMIJANE`)
+- Sprawdzone: nieobsłużony wyjątek strony (500) trafia do pliku z pełnym
+  tracebackiem, a nadal widać go w terminalu
+- `DECISIONS.md`: D-135

@@ -2818,3 +2818,21 @@ używa kod. Strona nadaje się do wysłania przy zgłaszaniu problemu.
 **Odrzucone alternatywy:**
 - Automatyczne sprawdzanie przy otwarciu — zbędny ruch i oczekiwanie.
 - Próbne zapytanie do Gemini z kluczem — koszt i limit zapytań.
+
+## D-135 — Dziennik błędów: plik rotowany w instance/logi, bez kopii zapasowej
+Data: 2026-10-01
+
+**Decyzja:** Logger aplikacji zapisuje WARNING i wyżej do
+`instance/logi/warsztat.log` (1 MB × 4 pliki najwyżej). Podgląd w
+Diagnostyce czyta pliki od najstarszego i pokazuje 30 najnowszych wpisów.
+Dziennik pomijamy w kopii zapasowej.
+
+**Uzasadnienie:** Aplikację uruchamia się ikoną; okno terminala z
+komunikatami znika po zamknięciu — bez pliku nie da się później
+powiedzieć, co się stało. Rotacja chroni dysk.
+
+**Odrzucone alternatywy:**
+- Zapis INFO i niżej — szum (każde zapytanie), szybka rotacja.
+- Dziennik w bazie SQLite — błąd bazy uniemożliwiłby zapis błędu.
+- Dziennik w kopii zapasowej — to nie dane użytkownika, a może zawierać
+  ścieżki z komputera.

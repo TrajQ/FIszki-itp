@@ -828,3 +828,7 @@
 ## ETAP 126 — 2026-10-01
 - Diagnostyka (`/diagnostyka`): czy odpowiadają usługi GUS, GUGiK, Sejmu i
   Gemini, czy są klucze, ile miejsca zajmują dane, wersje
+
+## ETAP 127 — 2026-10-01
+- Błędy aplikacji zapisują się w pliku (`instance/logi/`) i są widoczne w
+  Diagnostyce — zostają po zamknięciu okna terminala

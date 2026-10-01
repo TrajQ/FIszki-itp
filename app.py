@@ -2,6 +2,8 @@ from datetime import datetime
 
 from flask import Flask, Response, jsonify, redirect, render_template, request, url_for
 
+import dziennik
+
 from atlas import atlas_bp
 from mpzp import mpzp_bp
 from fiszki import fiszki_bp
@@ -19,6 +21,7 @@ MAKS_TERMINOW = 6  # kalendarz na stronie głównej: tyle najbliższych terminó
 def create_app(instance_path=None):
     app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
     app.config.from_object(Config)
+    dziennik.wlacz(app)  # ETAP 127: błędy w instance/logi/warsztat.log
 
     # Ochrona przed obcymi stronami w tej samej przeglądarce (ochrona.py).
     app.before_request(sprawdz_zapytanie)
@@ -132,7 +135,12 @@ def create_app(instance_path=None):
         import diagnostyka as d
 
         return render_template("diagnostyka.html", s=d.stan(app.config, app.instance_path),
-                               uslugi=d.USLUGI, limit=d.LIMIT_CZASU_S)
+                               uslugi=d.USLUGI, limit=d.LIMIT_CZASU_S, wpisy=dziennik.ostatnie(app.instance_path))
+
+    @app.route("/diagnostyka/dziennik/wyczysc", methods=["POST"])
+    def wyczysc_dziennik():
+        dziennik.wyczysc(app.instance_path)
+        return redirect(url_for("diagnostyka"))
 
     @app.route("/diagnostyka/uslugi")
     def diagnostyka_uslug():

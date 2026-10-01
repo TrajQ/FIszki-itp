@@ -19,7 +19,7 @@ import zipfile
 from datetime import datetime
 
 # Foldery w instance/, których nie kopiujemy (cache do odtworzenia).
-POMIJANE = {os.path.join("atlas", "granice")}
+POMIJANE = {os.path.join("atlas", "granice"), "logi"}  # logi: dziennik błędów (ETAP 127), nie dane
 
 INSTRUKCJA = """Kopia zapasowa aplikacji Warsztat — {data}
 

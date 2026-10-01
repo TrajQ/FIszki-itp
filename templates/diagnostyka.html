@@ -27,6 +27,26 @@
 </section>
 
 <section class="karta stos">
+    <div class="rzad rzad--miedzy">
+        <h3>Ostatnie błędy</h3>
+        {% if wpisy %}<form method="post" action="{{ url_for('wyczysc_dziennik') }}" onsubmit="return confirm('Wyczyścić dziennik błędów?')"><button type="submit" class="przycisk--tekst">Wyczyść dziennik</button></form>{% endif %}
+    </div>
+    {% if wpisy %}
+    <p class="wyciszony">Najnowsze na górze (najwyżej 30). Pełny dziennik: <code>{{ s.folder_danych }}/logi/warsztat.log</code>.</p>
+    <ul class="dziennik">
+        {% for w in wpisy %}
+        <li class="dziennik__wpis dziennik__wpis--{{ w.poziom | lower }}">
+            <span class="wyciszony">{{ w.czas }} · {{ w.poziom }} · {{ w.zrodlo }}</span>
+            {% if w.szczegoly %}<details><summary>{{ w.tresc }}</summary><pre>{{ w.szczegoly }}</pre></details>{% else %}<div>{{ w.tresc }}</div>{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="wyciszony">Brak błędów w dzienniku.</p>
+    {% endif %}
+</section>
+
+<section class="karta stos">
     <h3>Konfiguracja</h3>
     <table class="tabela">
         <tr><td>Klucz Gemini (opisy, pytania do przepisów, fiszki)</td><td>{{ '✓ ustawiony' if s.klucz_gemini else '✗ brak — funkcje z Gemini będą niedostępne (zmienna GEMINI_API_KEY w pliku .env)' }}{% if s.klucz_gemini %}, model {{ s.model_gemini }}{% endif %}</td></tr>

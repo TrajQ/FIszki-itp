@@ -273,3 +273,34 @@ def test_diagnostyka_uslug(tmp_path, monkeypatch):
     assert not wyniki["GUGiK — ULDK (działki)"]["osiagalna"] and "brak odpowiedzi" in wyniki["GUGiK — ULDK (działki)"]["blad"]
     assert "brak połączenia" in wyniki["Sejm — API Dziennika Ustaw (ELI)"]["blad"]
     assert all(t == diagnostyka.LIMIT_CZASU_S and "key" not in str(h).lower() for _, t, h in wywolane)  # bez kluczy w zapytaniach
+
+
+# ---------- ETAP 127: dziennik błędów ----------
+
+
+def test_dziennik_bledow(tmp_path):
+    import dziennik
+    import kopia
+
+    app = create_app(instance_path=str(tmp_path))
+    try:
+        raise ValueError("zepsuty moduł")
+    except ValueError:
+        app.logger.exception("Nie udało się policzyć podsumowania modułu %s", "atlas")
+    app.logger.warning("Uwaga: usługa wolno odpowiada")
+    app.logger.info("informacja — do pliku nie trafia")
+    wpisy = dziennik.ostatnie(str(tmp_path))
+    assert [w["poziom"] for w in wpisy] == ["WARNING", "ERROR"]  # najnowsze na górze
+    assert wpisy[1]["tresc"] == "Nie udało się policzyć podsumowania modułu atlas"
+    assert "ValueError: zepsuty moduł" in wpisy[1]["szczegoly"] and "Traceback" in wpisy[1]["szczegoly"]
+    with app.test_client() as c:
+        html = c.get("/diagnostyka").get_data(as_text=True)
+        assert "Ostatnie błędy" in html and "zepsuty moduł" in html
+        # dziennik nie trafia do kopii zapasowej
+        nazwy = __import__("zipfile").ZipFile(__import__("io").BytesIO(kopia.utworz_kopie(str(tmp_path)))).namelist()
+        assert not any("logi" in n for n in nazwy)
+        assert c.post("/diagnostyka/dziennik/wyczysc").status_code == 302
+    assert dziennik.ostatnie(str(tmp_path)) == []
+    # kolejna aplikacja (np. w testach) zastępuje plik dziennika, nie dokłada drugiego
+    create_app(instance_path=str(tmp_path / "inna"))
+    assert sum(1 for h in app.logger.handlers if getattr(h, "warsztat", False)) == 1

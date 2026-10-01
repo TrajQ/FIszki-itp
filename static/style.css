@@ -772,3 +772,31 @@ input[type="file"]::file-selector-button {
 .diagnostyka--blad {
     color: var(--blad);
 }
+
+/* ---------- dziennik błędów (ETAP 127) ---------- */
+
+.dziennik {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dziennik__wpis {
+    padding-left: 10px;
+    border-left: 3px solid var(--ostrzezenie);
+    overflow-wrap: anywhere;
+}
+
+.dziennik__wpis--error,
+.dziennik__wpis--critical {
+    border-left-color: var(--blad);
+}
+
+.dziennik__wpis pre {
+    max-height: 260px;
+    overflow: auto;
+    font-size: 12px;
+    white-space: pre-wrap;
+}
