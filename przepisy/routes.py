@@ -10,6 +10,7 @@ from dane import gemini, sejm
 from fiszki import zewnetrzne as fiszki_zewnetrzne
 
 from . import baza, porownanie, pytania
+from .slowniczek import slowniczek
 from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
 
 przepisy_bp = Blueprint(
@@ -133,7 +134,15 @@ def pobierz_z_sejmu():
 @przepisy_bp.route("/akty/<int:akt_id>")
 def widok_aktu(akt_id):
     akt = _akt_albo_404(akt_id)
-    return render_template("przepisy/akt.html", akt=akt, jednostki=baza.jednostki_aktu(akt_id))
+    jednostki = baza.jednostki_aktu(akt_id)
+    return render_template("przepisy/akt.html", akt=akt, jednostki=jednostki, slowniczek=slowniczek(jednostki))
+
+
+@przepisy_bp.route("/akty/<int:akt_id>/slowniczek")
+def slowniczek_aktu(akt_id):
+    """ETAP 120: definicje ustawowe i skróty z tekstu aktu (JSON)."""
+    _akt_albo_404(akt_id)
+    return jsonify(slowniczek(baza.jednostki_aktu(akt_id)))
 
 
 @przepisy_bp.route("/akty/<int:akt_id>/plik")

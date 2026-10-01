@@ -29,6 +29,17 @@
         if (pierwszy) location.hash = pierwszy.getAttribute("href");
     });
 
+    // Słowniczek (ETAP 120): filtr po pojęciu i treści definicji
+    const filtrSlowniczka = document.getElementById("filtr-slowniczka");
+    if (filtrSlowniczka) {
+        filtrSlowniczka.addEventListener("input", () => {
+            const szukany = filtrSlowniczka.value.trim().toLowerCase();
+            document.querySelectorAll(".slowniczek__pozycja").forEach((p) => {
+                p.hidden = Boolean(szukany) && !p.dataset.szukaj.includes(szukany);
+            });
+        });
+    }
+
     async function zapytaj(metoda, cialo) {
         const odpowiedz = await fetch(URL_AKTU, {
             method: metoda,

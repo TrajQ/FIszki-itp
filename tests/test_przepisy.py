@@ -433,3 +433,34 @@ def test_nowszy_tekst_jednolity(client, monkeypatch):
     assert zapytania[-1]["title"] == "o planowaniu i zagospodarowaniu przestrzennym"
     wgraj(client)  # akt wgrany z dysku — bez adresu Dz.U.
     assert client.get("/przepisy/akty/2/aktualnosc").status_code == 422
+
+
+# ---------- ETAP 120: słowniczek definicji ----------
+
+from przepisy import slowniczek as sl  # noqa: E402
+
+
+def test_slowniczek_definicje_i_skroty():
+    tekst = ("Art. 2. Ilekroć w ustawie jest mowa o:\n1) ładzie przestrzennym – należy przez to rozumieć takie ukształtowanie przestrzeni;\n"
+             "2) terenie zamkniętym – należy przez to rozumieć teren:\na) o którym mowa w art. 4,\nb) inny;\n"
+             "3) wyliczenie bez myślnika;\n4a) planie ogólnym – oznacza akt.")
+    d = sl.definicje_w_jednostce(tekst)
+    assert [(x["pojecie"], x["punkt"]) for x in d] == [("ładzie przestrzennym", "1"), ("terenie zamkniętym", "2"), ("planie ogólnym", "4a")]
+    assert d[0]["definicja"] == "takie ukształtowanie przestrzeni" and "a) o którym mowa w art. 4" in d[1]["definicja"]
+    assert d[2]["definicja"] == "akt."
+    assert sl.definicje_w_jednostce("Art. 5. 1) teren – coś.") == []  # bez zdania wprowadzającego to nie słowniczek
+    s = sl.skroty_w_jednostce("Rada gminy uchwala plan ogólny gminy, zwany dalej „planem ogólnym”, w celu …")
+    assert s[0]["pojecie"] == "planem ogólnym" and s[0]["definicja"].endswith("zwany dalej „planem ogólnym”")
+    alfabetycznie = sl.slowniczek([{"id": 1, "oznaczenie": "Art. 2", "tekst": tekst}, {"id": 2, "oznaczenie": "Art. 9", "tekst": "x, zwana dalej „łąką” y"}])
+    # polski alfabet: „ładzie” przed „łąką” (a przed ą), „ł” po „l”
+    assert [p["pojecie"] for p in alfabetycznie] == ["ładzie przestrzennym", "łąką", "planie ogólnym", "terenie zamkniętym"]
+    assert alfabetycznie[0]["miejsce"] == "Art. 2 pkt 1" and alfabetycznie[1]["miejsce"] == "Art. 9"
+
+
+def test_slowniczek_na_stronie_aktu(client):
+    wgraj(client)
+    d = client.get("/przepisy/akty/1/slowniczek").get_json()
+    assert [(p["pojecie"], p["miejsce"]) for p in d] == [("działce budowlanej", "Art. 2 pkt 1"), ("terenie", "Art. 2 pkt 2")]
+    html = client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert "Słowniczek — 2 pojęcia" in html and 'href="#j3"' in html and "nieruchomość gruntową" in html
+    assert client.get("/przepisy/akty/9/slowniczek").status_code == 404

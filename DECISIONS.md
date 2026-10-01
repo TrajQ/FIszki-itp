@@ -2685,3 +2685,23 @@ sprawdzić i nie mogą być „na oko”.
 **Odrzucone alternatywy:**
 - Liczenie z testami razem — zawyża „kod aplikacji”.
 - Brak liczb — trudniej pokazać skalę projektu.
+
+## D-128 — Słowniczek: definicje rozpoznawane po formułach ustawowych, bez odmiany
+Data: 2026-10-01
+
+**Decyzja:** Definicje wyciągamy wyrażeniami regularnymi z typowych
+formuł techniki prawodawczej: zdanie wprowadzające („Ilekroć w ustawie
+jest mowa o:”, „Użyte w ustawie określenia oznaczają:”) i punkty „N)
+pojęcie – definicja”; skróty z „zwany dalej „…””. Pojęcie zostaje w
+formie z tekstu, definicja to dokładny tekst (podgląd 500 znaków) z
+odnośnikiem do artykułu.
+
+**Uzasadnienie:** Zasady techniki prawodawczej narzucają te formuły,
+więc proste reguły wystarczą dla większości ustaw. Odmiana pojęć do
+mianownika wymagałaby słownika fleksyjnego (nowa zależność), a błędna
+odmiana zmieniłaby treść przepisu.
+
+**Odrzucone alternatywy:**
+- Model językowy do wyciągania definicji — liczby i treść mają
+  pochodzić z tekstu; reguły są sprawdzalne.
+- Słownik fleksyjny (np. Morfeusz) — ciężka zależność dla wygody.

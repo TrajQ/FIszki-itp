@@ -2109,3 +2109,20 @@ Status: zamknięty
   trend w obszarach, zmiany w heksagonach, piętro, kartę wyceny, QGIS,
   ceny w raportach, dostępność cenową)
 - `DECISIONS.md`: D-127
+
+## ETAP 120 — Przepisy: słowniczek definicji ustawowych
+Data: 2026-10-01
+Status: zamknięty
+
+- `przepisy/slowniczek.py`: definicje z artykułów „Ilekroć w ustawie
+  jest mowa o: N) pojęcie – należy przez to rozumieć …” (także „Użyte w
+  ustawie określenia oznaczają”), z podpunktami a), b) w treści; skróty
+  „zwany dalej „…””; sortowanie wg polskiego alfabetu bez zależności od
+  locale systemu
+- Strona aktu: rozwijany „Słowniczek — N pojęć” z wyszukiwarką i
+  odnośnikiem do artykułu i punktu; trasa JSON `/akty/<id>/slowniczek`
+- Pojęcia w formie z tekstu (bez odmiany — mogłaby zmienić sens)
+- Sprawdzone na prawdziwym PDF ustawy (pypdf) w przeglądarce: 1300 i
+  390 px, filtr, przejście do artykułu
+- Pomoc: opis
+- `DECISIONS.md`: D-128

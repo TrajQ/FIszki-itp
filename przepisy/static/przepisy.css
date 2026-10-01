@@ -455,3 +455,51 @@ button.przycisk--niebezpieczny-tekst {
 .wynik-sejmu button {
     flex: none;
 }
+
+/* ---------- słowniczek definicji (ETAP 120) ---------- */
+
+.slowniczek {
+    margin-bottom: 16px;
+}
+
+.slowniczek summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.slowniczek[open] summary {
+    margin-bottom: 10px;
+}
+
+.slowniczek__lista {
+    display: grid;
+    gap: 10px;
+    max-height: 420px;
+    margin: 10px 0;
+    overflow-y: auto;
+}
+
+.slowniczek__pozycja dt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+}
+
+.slowniczek__pozycja dd {
+    margin: 2px 0 0;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.slowniczek__znacznik {
+    padding: 0 6px;
+    border-radius: 6px;
+    background: var(--tlo-wyciszone);
+    font-size: 12px;
+}
+
+.opis-slowniczka {
+    margin: 0;
+    font-size: 13px;
+}

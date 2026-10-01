@@ -805,3 +805,6 @@
 
 ## ETAP 119 — 2026-10-01
 - Portfolio i README zaktualizowane o moduł Ceny (ETAPy 103–118)
+
+## ETAP 120 — 2026-10-01
+- Przepisy: słowniczek definicji ustawowych i skrótów na stronie aktu

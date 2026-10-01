@@ -21,6 +21,23 @@
 <p id="komunikat" class="komunikat komunikat--blad" hidden></p>
 <div id="aktualnosc" class="karta stos aktualnosc-aktu" hidden></div>
 
+{% if slowniczek %}
+<details class="karta slowniczek" id="slowniczek">
+    <summary>Słowniczek — {{ slowniczek | length }} {{ 'pojęcie' if slowniczek | length == 1 else ('pojęcia' if slowniczek | length % 10 in [2, 3, 4] and slowniczek | length % 100 not in [12, 13, 14] else 'pojęć') }}</summary>
+    <input id="filtr-slowniczka" type="search" placeholder="Szukaj pojęcia" aria-label="Szukaj w słowniczku">
+    <dl class="slowniczek__lista">
+        {% for p in slowniczek %}
+        <div class="slowniczek__pozycja" data-szukaj="{{ (p.pojecie ~ ' ' ~ p.definicja) | lower }}">
+            <dt><strong>{{ p.pojecie }}</strong>{% if p.rodzaj == 'skrót' %} <span class="slowniczek__znacznik">skrót</span>{% endif %}
+                <a href="#j{{ p.jednostka_id }}" class="wyciszony">{{ p.miejsce }}</a></dt>
+            <dd>{{ p.definicja }}</dd>
+        </div>
+        {% endfor %}
+    </dl>
+    <p class="wyciszony opis-slowniczka">Pojęcia w formie z tekstu ustawy (np. „ładzie przestrzennym” po „mowa o”). Definicje z artykułów „Ilekroć w ustawie jest mowa o…” i skróty „zwany dalej „…””; wiążący jest pełny tekst artykułu.</p>
+</details>
+{% endif %}
+
 <div class="uklad-aktu">
     <nav class="karta spis-aktu" aria-label="Spis jednostek">
         <input id="filtr-spisu" type="search" placeholder="Idź do: 15a" aria-label="Filtruj spis">
