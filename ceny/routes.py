@@ -28,6 +28,8 @@ ceny_bp = Blueprint(
 
 MAKS_MIAST = 6
 FRAZY = ["mediana cen za 1 m2", "średnia cena lokali", "cena 1 m2 powierzchni użytkowej"]
+FRAZY_WYNAGRODZEN = ["przeciętne miesięczne wynagrodzenia brutto", "wynagrodzenia brutto"]  # ETAP 116
+USTAWIENIA_ZMIENNYCH = ("zmienna", "wynagrodzenie")  # wskaźnik ceny i (ETAP 116) wynagrodzenia
 
 
 def _id_bdl(tekst: str) -> str:
@@ -80,7 +82,8 @@ def _obsluz_bledy(funkcja):
 
 @ceny_bp.route("/")
 def index():
-    return render_template("ceny/index.html", zmienna=_zmienna(), frazy=FRAZY, maks_miast=MAKS_MIAST)
+    return render_template("ceny/index.html", zmienna=_zmienna(), frazy=FRAZY, maks_miast=MAKS_MIAST,
+                           wynagrodzenie=baza.ustawienie("wynagrodzenie"), frazy_wynagrodzen=FRAZY_WYNAGRODZEN)
 
 
 @ceny_bp.route("/zmienne")
@@ -94,14 +97,19 @@ def zmienne():
 
 @ceny_bp.route("/zmienna", methods=["PUT"])
 def ustaw_zmienna():
+    """JSON {id, rodzaj}: rodzaj „zmienna” (cena, domyślnie) albo „wynagrodzenie” (ETAP 116)."""
+    dane = request.get_json(silent=True) or {}
+    rodzaj = dane.get("rodzaj") or "zmienna"
     try:
-        zmienna_id = int((request.get_json(silent=True) or {}).get("id"))
+        zmienna_id = int(dane.get("id"))
     except (TypeError, ValueError):
         return jsonify({"blad": "Wymagany numer zmiennej (id)."}), 400
+    if rodzaj not in USTAWIENIA_ZMIENNYCH:
+        return jsonify({"blad": "Nieznany rodzaj wskaźnika."}), 400
 
     def zapisz():
         zmienna = asdict(bdl.pobierz_zmienna(zmienna_id))
-        baza.zapisz_ustawienie("zmienna", zmienna)
+        baza.zapisz_ustawienie(rodzaj, zmienna)
         return jsonify(zmienna)
 
     return _obsluz_bledy(zapisz)
@@ -140,6 +148,20 @@ def ranking():
         if rok is None or not 1995 <= rok <= 2100:
             raise ValueError("Podaj rok.")
         return jsonify({"rok": rok, **analiza.ranking(_wartosci(zmienna["id"], rok, woj_id))})
+
+    return _obsluz_bledy(wynik)
+
+
+@ceny_bp.route("/dostepnosc/<powiat_id>")
+def dostepnosc(powiat_id):
+    """ETAP 116: m² za przeciętne wynagrodzenie — z dwóch szeregów GUS dla powiatu."""
+    def wynik():
+        zmienna = _wymagana_zmienna()
+        wynagrodzenie = baza.ustawienie("wynagrodzenie")
+        if wynagrodzenie is None:
+            raise LookupError("Najpierw wybierz wskaźnik wynagrodzenia z wyszukiwarki GUS.")
+        powiat = _id_bdl(powiat_id)
+        return jsonify(analiza.dostepnosc(_szereg(zmienna["id"], powiat), _szereg(wynagrodzenie["id"], powiat)))
 
     return _obsluz_bledy(wynik)
 

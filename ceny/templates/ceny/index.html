@@ -61,6 +61,29 @@
     <p id="opis-rankingu" class="wyciszony"></p>
     <ol id="ranking" class="ranking-cen"></ol>
 </section>
+
+<section class="karta stos" id="sekcja-dostepnosci" hidden>
+    <h3>5. Dostępność cenowa</h3>
+    <p class="wyciszony opis-cen">Ile m² mieszkania kosztuje tyle, co jedno przeciętne miesięczne wynagrodzenie brutto w tym samym powiecie, i ile takich wynagrodzeń kosztuje mieszkanie 50 m². Z dwóch wskaźników GUS — cena z punktu 1, wynagrodzenie wybierz poniżej.</p>
+    <p id="wybrane-wynagrodzenie" class="{{ '' if wynagrodzenie else 'wyciszony' }}">
+        {% if wynagrodzenie %}Wynagrodzenie: <strong>{{ wynagrodzenie.nazwa }}</strong>{% if wynagrodzenie.jednostka %} [{{ wynagrodzenie.jednostka }}]{% endif %}{% else %}Nie wybrano wskaźnika wynagrodzenia.{% endif %}
+    </p>
+    <details class="wybor-zmiennej" {{ '' if wynagrodzenie else 'open' }}>
+        <summary>{{ 'Zmień wskaźnik wynagrodzenia' if wynagrodzenie else 'Wybierz wskaźnik wynagrodzenia' }}</summary>
+        <form id="formularz-wynagrodzenia" class="rzad">
+            <input id="pole-wynagrodzenia" type="search" placeholder="np. przeciętne miesięczne wynagrodzenia brutto" autocomplete="off" required>
+            <button type="submit" class="przycisk--drugi">Szukaj w GUS</button>
+        </form>
+        <div class="szybki-wybor">
+            {% for fraza in frazy_wynagrodzen %}<button type="button" class="szybki-wybor__fraza" data-fraza-wynagrodzenia="{{ fraza }}">{{ fraza }}</button>{% endfor %}
+        </div>
+        <p class="wyciszony opis-cen">Wybierz przeciętne miesięczne wynagrodzenie brutto (ogółem) w złotych — wskaźnik GUS dla powiatów.</p>
+        <ul id="wyniki-wynagrodzen" class="wyniki-zmiennych"></ul>
+    </details>
+    <div id="wykres-dostepnosci" class="wykres-cen"></div>
+    <div class="przewijanie-cen"><table class="tabela" id="tabela-dostepnosci"></table></div>
+    <p class="wyciszony opis-cen">Uproszczenie do porównań w czasie i między miastami: bez kredytu, podatków i kosztów życia. Dane GUS o wynagrodzeniach w powiatach często pomijają najmniejsze firmy — sprawdź opis wybranego wskaźnika w BDL. Liczy aplikacja z danych GUS.</p>
+</section>
 {% endblock %}
 
 {% block skrypty %}
@@ -68,6 +91,7 @@
     const URL_CENY = "{{ url_for('ceny.index') }}";
     const MAKS_MIAST = {{ maks_miast }};
     let ZMIENNA = {{ zmienna | tojson }};
+    const WYNAGRODZENIE = {{ wynagrodzenie | tojson }}; // ETAP 116
 </script>
 <script src="{{ url_for('ceny.static', filename='ceny.js') }}"></script>
 {% endblock %}

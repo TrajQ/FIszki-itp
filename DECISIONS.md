@@ -2609,3 +2609,24 @@ Inny promień jest na stronie MPZP i w panelu osiedla (ETAP 109).
 - Wybór promienia w raporcie — parametr w adresie, który łatwo zgubić.
 - Liczenie cen po stronie serwera raportu (import modułu ceny w mpzp i
   osiedlu) — zależność między bazami modułów (D-117).
+
+## D-124 — Dostępność cenowa: dwa wskaźniki GUS wybierane przez użytkownika, prosty iloraz
+Data: 2026-10-01
+
+**Decyzja:** Dostępność cenowa = przeciętne miesięczne wynagrodzenie
+brutto / cena 1 m² (m² za wynagrodzenie) i 50 × cena 1 m² / wynagrodzenie
+(wynagrodzeń na mieszkanie 50 m²), tylko w latach, w których GUS ma oba
+wskaźniki dla tego samego powiatu. Wskaźnik wynagrodzenia użytkownik
+wybiera z wyszukiwarki GUS (jak wskaźnik ceny), bez numeru zmiennej w
+kodzie (D-069).
+
+**Uzasadnienie:** Iloraz jest przejrzysty i znany z raportów o
+mieszkalnictwie; student może sam go sprawdzić. Numeru zmiennej BDL nie
+mogę tu zweryfikować (API zablokowane) — wybór z wyszukiwarki usuwa
+zgadywanie.
+
+**Odrzucone alternatywy:**
+- Wskaźnik z ratą kredytu — wymagałby stóp procentowych i założeń o
+  kredycie (dane spoza GUS, liczby z założeń).
+- Wynagrodzenie netto — GUS publikuje dla powiatów brutto; przeliczenie
+  wymagałoby założeń podatkowych.

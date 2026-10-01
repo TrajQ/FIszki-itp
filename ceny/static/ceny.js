@@ -52,8 +52,9 @@
 
     // ---------- 1. wskaźnik ----------
 
-    async function szukajZmiennych(fraza) {
-        const lista = document.getElementById("wyniki-zmiennych");
+    // rodzaj: „zmienna” (cena) albo „wynagrodzenie” (ETAP 116) — ta sama wyszukiwarka GUS
+    async function szukajZmiennych(fraza, rodzaj = "zmienna") {
+        const lista = document.getElementById(rodzaj === "wynagrodzenie" ? "wyniki-wynagrodzen" : "wyniki-zmiennych");
         lista.replaceChildren(el("li", "wyciszony", "Szukam w GUS…"));
         try {
             const zmienne = await zapytaj(`zmienne?${new URLSearchParams({ q: fraza })}`);
@@ -62,7 +63,7 @@
             for (const z of zmienne) {
                 const przycisk = el("button", "wynik-zmiennej", `${z.nazwa}${z.jednostka ? ` [${z.jednostka}]` : ""}`);
                 przycisk.type = "button";
-                przycisk.addEventListener("click", () => wybierzZmienna(z.id));
+                przycisk.addEventListener("click", () => wybierzZmienna(z.id, rodzaj));
                 const li = el("li");
                 li.appendChild(przycisk);
                 lista.appendChild(li);
@@ -72,9 +73,9 @@
         }
     }
 
-    async function wybierzZmienna(id) {
+    async function wybierzZmienna(id, rodzaj = "zmienna") {
         try {
-            ZMIENNA = await zapytaj("zmienna", { method: "PUT", body: JSON.stringify({ id }) });
+            await zapytaj("zmienna", { method: "PUT", body: JSON.stringify({ id, rodzaj }) });
             location.reload(); // nowy wskaźnik — wszystkie szeregi od nowa
         } catch (e) {
             pokazBlad(e.message);
@@ -85,10 +86,20 @@
         e.preventDefault();
         szukajZmiennych(document.getElementById("pole-zmiennej").value);
     });
-    for (const b of document.querySelectorAll(".szybki-wybor__fraza")) {
+    for (const b of document.querySelectorAll(".szybki-wybor__fraza[data-fraza]")) {
         b.addEventListener("click", () => {
             document.getElementById("pole-zmiennej").value = b.dataset.fraza;
             szukajZmiennych(b.dataset.fraza);
+        });
+    }
+    document.getElementById("formularz-wynagrodzenia").addEventListener("submit", (e) => {
+        e.preventDefault();
+        szukajZmiennych(document.getElementById("pole-wynagrodzenia").value, "wynagrodzenie");
+    });
+    for (const b of document.querySelectorAll("[data-fraza-wynagrodzenia]")) {
+        b.addEventListener("click", () => {
+            document.getElementById("pole-wynagrodzenia").value = b.dataset.frazaWynagrodzenia;
+            szukajZmiennych(b.dataset.frazaWynagrodzenia, "wynagrodzenie");
         });
     }
 
@@ -269,6 +280,84 @@
         rysujWykres();
         rysujTabele();
         if (!ustawLata()) wczytajRanking(); // podświetlenie wybranych miast
+        wczytajDostepnosc();
+    }
+
+    // ---------- 5. dostępność cenowa (ETAP 116) — liczy serwer (ceny/analiza.py: dostepnosc) ----------
+
+    const dostepnosc = new Map(); // id → {lata, podsumowanie} albo {blad}
+    const metry = new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // m² za wynagrodzenie: zwykle 0,5–1,5
+    const ulamek = new Intl.NumberFormat("pl-PL", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+    async function wczytajDostepnosc() {
+        const sekcja = document.getElementById("sekcja-dostepnosci");
+        sekcja.hidden = !wybrane.length;
+        if (!wybrane.length || !WYNAGRODZENIE) return;
+        await Promise.all(wybrane.filter((w) => !dostepnosc.has(w.id)).map(async (w) => {
+            try {
+                dostepnosc.set(w.id, await zapytaj(`dostepnosc/${w.id}`));
+            } catch (e) {
+                dostepnosc.set(w.id, { blad: e.message });
+            }
+        }));
+        rysujDostepnosc();
+    }
+
+    function rysujDostepnosc() {
+        const serie = wybrane.map((w, i) => ({ ...w, kolor: KOLORY[i % KOLORY.length], d: dostepnosc.get(w.id) || {} }));
+        const tabela = document.getElementById("tabela-dostepnosci");
+        const glowa = el("tr");
+        for (const [t, k] of [["Miasto / powiat", ""], ["Rok", "liczba"], ["m² za wynagrodzenie", "liczba"], ["Wynagrodzeń na 50 m²", "liczba"], ["Zmiana m² za wynagrodzenie", "liczba"]]) glowa.appendChild(el("th", k, t));
+        tabela.replaceChildren(glowa);
+        for (const s of serie) {
+            const tr = el("tr");
+            const nazwa = el("td");
+            const probka = el("span", "probka-cen");
+            probka.style.background = s.kolor;
+            nazwa.append(probka, s.nazwa);
+            tr.appendChild(nazwa);
+            const p = s.d.podsumowanie;
+            if (!p) {
+                const td = el("td", "wyciszony", s.d.blad || "brak lat, w których GUS ma oba wskaźniki");
+                td.colSpan = 4;
+                tr.appendChild(td);
+            } else {
+                tr.append(el("td", "liczba", p.rok), el("td", "liczba", `${metry.format(p.m2_za_wynagrodzenie)} m²`),
+                    el("td", "liczba", ulamek.format(p.wynagrodzen_na_mieszkanie)),
+                    el("td", "liczba", p.zmiana_m2_proc === null ? "—" : `${procent.format(p.zmiana_m2_proc)}% od ${p.od}`));
+            }
+            tabela.appendChild(tr);
+        }
+        // wykres: m² za wynagrodzenie w latach (oś od zera)
+        const pojemnik = document.getElementById("wykres-dostepnosci");
+        pojemnik.replaceChildren();
+        const zDanymi = serie.filter((s) => (s.d.lata || []).length);
+        if (!zDanymi.length) return;
+        const punkty = zDanymi.flatMap((s) => s.d.lata);
+        const [r0, r1] = [Math.min(...punkty.map((p) => p.rok)), Math.max(...punkty.map((p) => p.rok))];
+        const maks = Math.max(...punkty.map((p) => p.m2_za_wynagrodzenie));
+        const potega = 10 ** Math.floor(Math.log10(maks / 4 || 1));
+        const krokY = [1, 2, 2.5, 5, 10].map((k) => k * potega).find((k) => maks / k <= 5);
+        const w1 = Math.ceil(maks / krokY) * krokY;
+        const SZ = 760, WY = 260, M = { l: 50, p: 16, g: 12, d: 30 };
+        const x = (r) => M.l + (r1 === r0 ? 0.5 : (r - r0) / (r1 - r0)) * (SZ - M.l - M.p);
+        const y = (w) => WY - M.d - (w / (w1 || 1)) * (WY - M.g - M.d);
+        const wykres = svg("svg", { viewBox: `0 0 ${SZ} ${WY}`, role: "img", "aria-label": "Metry kwadratowe za przeciętne wynagrodzenie w czasie" });
+        for (let w = 0; w <= w1 + krokY / 2; w += krokY) {
+            wykres.append(svg("line", { x1: M.l, x2: SZ - M.p, y1: y(w), y2: y(w), class: "wykres-cen__siatka" }),
+                svg("text", { x: M.l - 8, y: y(w) + 4, "text-anchor": "end", class: "wykres-cen__opis" }, metry.format(w)));
+        }
+        const krok = Math.max(1, Math.ceil((r1 - r0) / 10));
+        for (let r = r0; r <= r1; r += krok) wykres.appendChild(svg("text", { x: x(r), y: WY - 8, "text-anchor": "middle", class: "wykres-cen__opis" }, r));
+        for (const s of zDanymi) {
+            wykres.appendChild(svg("polyline", { points: s.d.lata.map((p) => `${x(p.rok).toFixed(1)},${y(p.m2_za_wynagrodzenie).toFixed(1)}`).join(" "), fill: "none", stroke: s.kolor, "stroke-width": 2.5 }));
+            for (const p of s.d.lata) {
+                const kropka = svg("circle", { cx: x(p.rok), cy: y(p.m2_za_wynagrodzenie), r: 3, fill: s.kolor });
+                kropka.appendChild(svg("title", {}, `${s.nazwa}, ${p.rok}: ${metry.format(p.m2_za_wynagrodzenie)} m² (wynagrodzenie ${liczba.format(p.wynagrodzenie)} zł, cena ${liczba.format(p.cena_m2)} zł/m²)`));
+                wykres.appendChild(kropka);
+            }
+        }
+        pojemnik.appendChild(wykres);
     }
 
     // ---------- 4. ranking ----------

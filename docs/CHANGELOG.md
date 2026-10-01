@@ -787,3 +787,8 @@
 ## ETAP 115 — 2026-10-01
 - MPZP: ceny w okolicy na karcie działki do druku
 - Osiedle: ceny w okolicy w raporcie koncepcji
+
+## ETAP 116 — 2026-10-01
+- Ceny: dostępność cenowa mieszkań — m² za przeciętne wynagrodzenie i
+  wynagrodzeń na mieszkanie 50 m², z danych GUS
+- Pomoc: opis

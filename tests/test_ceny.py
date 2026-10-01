@@ -634,3 +634,35 @@ def test_geojson(client, tmp_path, monkeypatch):
     assert client.get("/ceny/transakcje/1/heksagony.geojson?rozdzielczosc=3&minimum=5").status_code == 400
     assert client.get("/ceny/transakcje/9.geojson").status_code == 404
     assert client.get("/ceny/transakcje/1.geojson?co=x").status_code == 400
+
+
+# ---------- ETAP 116: dostępność cenowa ----------
+
+
+def test_dostepnosc_analiza():
+    ceny = [{"rok": 2020, "wartosc": 8000.0}, {"rok": 2021, "wartosc": 9000.0}, {"rok": 2022, "wartosc": 10000.0}]
+    place = [{"rok": 2021, "wartosc": 6300.0}, {"rok": 2022, "wartosc": 8000.0}, {"rok": 2023, "wartosc": 9000.0}]
+    d = analiza.dostepnosc(ceny, place)
+    assert [l["rok"] for l in d["lata"]] == [2021, 2022]  # tylko lata z oboma wskaźnikami
+    assert d["lata"][0]["m2_za_wynagrodzenie"] == pytest.approx(0.7) and d["lata"][1]["wynagrodzen_na_mieszkanie"] == pytest.approx(62.5)
+    p = d["podsumowanie"]
+    assert (p["rok"], p["od"]) == (2022, 2021) and p["zmiana_m2_proc"] == pytest.approx(100 * (0.8 / 0.7 - 1))
+    assert analiza.dostepnosc(ceny, [])["podsumowanie"] is None
+
+
+def test_trasa_dostepnosci(client, monkeypatch):
+    WYNAGRODZENIE = 64428
+    monkeypatch.setattr(bdl, "szereg_gminy", lambda zid, jid: (
+        [{"rok": 2023, "wartosc": 7500.0}, {"rok": 2024, "wartosc": 8250.0}] if zid == WYNAGRODZENIE
+        else [{"rok": 2023, "wartosc": 15000.0}, {"rok": 2024, "wartosc": 16500.0}]))
+    client.put("/ceny/zmienna", json={"id": 633})
+    assert client.get(f"/ceny/dostepnosc/{KRAKOW}").status_code == 409  # wynagrodzenie nie wybrane
+    assert client.put("/ceny/zmienna", json={"id": WYNAGRODZENIE, "rodzaj": "inne"}).status_code == 400
+    assert client.put("/ceny/zmienna", json={"id": WYNAGRODZENIE, "rodzaj": "wynagrodzenie"}).status_code == 200
+    d = client.get(f"/ceny/dostepnosc/{KRAKOW}").get_json()
+    assert d["podsumowanie"]["m2_za_wynagrodzenie"] == pytest.approx(0.5) and d["podsumowanie"]["wynagrodzen_na_mieszkanie"] == pytest.approx(100)
+    assert d["podsumowanie"]["zmiana_m2_proc"] == pytest.approx(0)  # obie wartości +10%
+    assert client.get("/ceny/dostepnosc/123").status_code == 400
+    strona = client.get("/ceny/").get_data(as_text=True)
+    assert "5. Dostępność cenowa" in strona and f'"id": {WYNAGRODZENIE}' in strona
+    assert client.get(f"/ceny/szereg/{KRAKOW}").get_json()["szereg"][0]["wartosc"] == 15000  # cena dalej z wskaźnika ceny

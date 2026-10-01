@@ -61,3 +61,33 @@ def ranking(wartosci: list[dict]) -> dict:
         for w in sorted(wartosci, key=lambda w: (-w["wartosc"], w["nazwa"]))
     ]
     return {"pozycje": pozycje, "mediana": statistics.median(liczby) if liczby else None, "liczba": len(liczby)}
+
+
+# ---------- dostępność cenowa mieszkań (ETAP 116) ----------
+
+POWIERZCHNIA_WZORCOWA_M2 = 50
+
+
+def dostepnosc(ceny: list[dict], wynagrodzenia: list[dict]) -> dict:
+    """Szeregi GUS ceny 1 m² i przeciętnego miesięcznego wynagrodzenia brutto
+    → w latach, w których są oba: ile m² za jedno wynagrodzenie i ile
+    wynagrodzeń za mieszkanie 50 m². Uproszczenie: bez kredytu, kosztów
+    życia i podatków — wskaźnik do porównań w czasie i między miastami."""
+    placa = {p["rok"]: p["wartosc"] for p in wynagrodzenia}
+    lata = [
+        {"rok": p["rok"], "cena_m2": p["wartosc"], "wynagrodzenie": placa[p["rok"]],
+         "m2_za_wynagrodzenie": placa[p["rok"]] / p["wartosc"],
+         "wynagrodzen_na_mieszkanie": POWIERZCHNIA_WZORCOWA_M2 * p["wartosc"] / placa[p["rok"]]}
+        for p in sorted(ceny, key=lambda p: p["rok"]) if placa.get(p["rok"]) and p["wartosc"]
+    ]
+    podsumowanie = None
+    if lata:
+        pierwszy, ostatni = lata[0], lata[-1]
+        podsumowanie = {
+            "rok": ostatni["rok"],
+            "m2_za_wynagrodzenie": ostatni["m2_za_wynagrodzenie"],
+            "wynagrodzen_na_mieszkanie": ostatni["wynagrodzen_na_mieszkanie"],
+            "od": pierwszy["rok"],
+            "zmiana_m2_proc": 100 * (ostatni["m2_za_wynagrodzenie"] / pierwszy["m2_za_wynagrodzenie"] - 1) if len(lata) > 1 else None,
+        }
+    return {"lata": lata, "podsumowanie": podsumowanie, "powierzchnia_m2": POWIERZCHNIA_WZORCOWA_M2}

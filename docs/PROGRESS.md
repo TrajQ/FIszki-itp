@@ -2039,3 +2039,20 @@ Status: zamknięty
   bo ULDK jest tu zablokowane): poprawiona szerokość tabeli na telefonie
   i rozmiar przypisów
 - `DECISIONS.md`: D-123
+
+## ETAP 116 — Ceny: dostępność cenowa mieszkań (m² za przeciętne wynagrodzenie)
+Data: 2026-10-01
+Status: zamknięty
+
+- `ceny/analiza.py`: `dostepnosc` — z szeregów GUS ceny 1 m² i
+  przeciętnego wynagrodzenia brutto, w latach z oboma: m² za jedno
+  wynagrodzenie, wynagrodzeń na 50 m², zmiana od pierwszego wspólnego roku
+- `ceny/routes.py`: drugi wybierany wskaźnik GUS (`wynagrodzenie`) przez
+  tę samą wyszukiwarkę (`PUT /ceny/zmienna` z `rodzaj`), trasa
+  `/ceny/dostepnosc/<powiat>` (409, gdy wskaźnik nie wybrany)
+- Strona Cen: sekcja „5. Dostępność cenowa” — wybór wskaźnika
+  wynagrodzenia, wykres m² za wynagrodzenie w latach, tabela dla wybranych
+  miast, opis uproszczeń
+- Sprawdzone w przeglądarce na podstawionym BDL (1300 i 390 px);
+  prawdziwych nazw wskaźników wynagrodzeń tu nie widać (API zablokowane)
+- `DECISIONS.md`: D-124
