@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask, Response, redirect, render_template, request, url_for
+from flask import Flask, Response, jsonify, redirect, render_template, request, url_for
 
 from atlas import atlas_bp
 from mpzp import mpzp_bp
@@ -125,6 +125,20 @@ def create_app(instance_path=None):
     def pomoc():
         """Krótkie przepisy „jak zrobić…” dla każdego modułu (ETAP 87)."""
         return render_template("pomoc.html")
+
+    @app.route("/diagnostyka")
+    def diagnostyka():
+        """Stan konfiguracji, danych i wersji (ETAP 126); usługi — na żądanie."""
+        import diagnostyka as d
+
+        return render_template("diagnostyka.html", s=d.stan(app.config, app.instance_path),
+                               uslugi=d.USLUGI, limit=d.LIMIT_CZASU_S)
+
+    @app.route("/diagnostyka/uslugi")
+    def diagnostyka_uslug():
+        import diagnostyka as d
+
+        return jsonify(d.sprawdz_uslugi())
 
     @app.route("/kopia-zapasowa")
     def kopia_zapasowa():

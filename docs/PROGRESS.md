@@ -2210,3 +2210,22 @@ Status: zamknięty
   tabela z paskami, kliknięcie (albo Enter) wybiera k i liczy typologię
 - Sprawdzone w przeglądarce (1300 i 390 px)
 - `DECISIONS.md`: D-133
+
+## ETAP 126 — Diagnostyka: stan usług, konfiguracji i danych
+Data: 2026-10-01
+Status: zamknięty
+
+- `diagnostyka.py`: lista usług z adresami ze stałych modułów (GUS BDL,
+  ULDK, KIMPZP, PRG, ortofotomapa, API Sejmu, Gemini), sprawdzenie
+  równoległe jednym GET z limitem 6 s (każda odpowiedź HTTP = serwer
+  osiągalny); stan: klucze Gemini i GUS (tylko czy są), folder danych,
+  rozmiar danych modułów i ich bazy, wolne miejsce, kopia automatyczna,
+  wersje Pythona i bibliotek
+- Strona `/diagnostyka` (link w Pomocy), usługi na żądanie
+  (`/diagnostyka/uslugi`) — samo otwarcie strony nie łączy się z siecią
+- Do Gemini bez klucza i bez zapytania do modelu (bez kosztów)
+- Sprawdzone w przeglądarce w tym środowisku: Gemini odpowiada, usługi
+  polskie zablokowane przez proxy — strona to pokazuje
+- Testy: klucz nie trafia na stronę, wyniki przy timeout / braku
+  połączenia / 404, zapytania bez kluczy
+- `DECISIONS.md`: D-134

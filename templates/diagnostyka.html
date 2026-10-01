@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block tytul %}Diagnostyka — Warsztat{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('pomoc') }}">‹ Pomoc</a>
+        <h1>Diagnostyka</h1>
+        <p>Gdy coś nie działa: czy odpowiadają usługi, z których korzysta Warsztat, czy są klucze, gdzie leżą dane. Tę stronę możesz skopiować i wysłać przy zgłaszaniu problemu — nie ma na niej kluczy ani Twoich danych.</p>
+    </div>
+</div>
+
+<section class="karta stos">
+    <div class="rzad rzad--miedzy">
+        <h3>Usługi zewnętrzne</h3>
+        <button id="sprawdz-uslugi" type="button">Sprawdź usługi</button>
+    </div>
+    <p class="wyciszony">Jedno krótkie zapytanie do każdej usługi (najwyżej {{ limit }} s). Każda odpowiedź serwera — także kod błędu — znaczy, że połączenie działa. Do Gemini nie wysyłamy klucza ani pytań.</p>
+    <div class="przewijanie-poziome"><table class="tabela" id="tabela-uslug">
+        <tr><th>Usługa</th><th>Moduły</th><th>Stan</th><th class="liczba">Czas</th></tr>
+        {% for nazwa, moduly, adres in uslugi %}
+        <tr><td title="{{ adres }}">{{ nazwa }}</td><td class="wyciszony">{{ moduly }}</td><td class="wyciszony">nie sprawdzono</td><td></td></tr>
+        {% endfor %}
+    </table></div>
+    <p id="podsumowanie-uslug" class="wyciszony" hidden></p>
+</section>
+
+<section class="karta stos">
+    <h3>Konfiguracja</h3>
+    <table class="tabela">
+        <tr><td>Klucz Gemini (opisy, pytania do przepisów, fiszki)</td><td>{{ '✓ ustawiony' if s.klucz_gemini else '✗ brak — funkcje z Gemini będą niedostępne (zmienna GEMINI_API_KEY w pliku .env)' }}{% if s.klucz_gemini %}, model {{ s.model_gemini }}{% endif %}</td></tr>
+        <tr><td>Klucz GUS BDL</td><td>{{ '✓ ustawiony' if s.klucz_gus else 'brak — działa, ale z mniejszym limitem zapytań (GUS_BDL_API_KEY)' }}</td></tr>
+        <tr><td>Adres aplikacji</td><td>http://127.0.0.1:{{ config.PORT }} (tylko ten komputer)</td></tr>
+        <tr><td>Kopia automatyczna</td><td>{% if s.auto_kopia_dni %}co {{ s.auto_kopia_dni }} dni do {{ s.auto_kopia_folder }}{% else %}wyłączona (AUTO_KOPIA_DNI=0){% endif %}</td></tr>
+    </table>
+</section>
+
+<section class="karta stos">
+    <h3>Dane</h3>
+    <p class="wyciszony">Folder danych: <code>{{ s.folder_danych }}</code> · razem {{ s.dane_mb }} MB · wolne miejsce na dysku: {{ s.wolne_gb }} GB</p>
+    <div class="przewijanie-poziome"><table class="tabela">
+        <tr><th>Moduł</th><th class="liczba">MB</th><th>Bazy</th></tr>
+        {% for m in s.moduly %}<tr><td>{{ m.nazwa }}</td><td class="liczba">{{ m.mb }}</td><td class="wyciszony">{{ m.bazy | join(', ') or '—' }}</td></tr>{% endfor %}
+    </table></div>
+</section>
+
+<section class="karta stos">
+    <h3>Wersje</h3>
+    <p class="wyciszony">Python {{ s.python }} · {{ s.system }} · {% for b, w in s.biblioteki.items() %}{{ b }} {{ w or 'brak!' }}{{ ', ' if not loop.last }}{% endfor %}</p>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    // ETAP 126: sprawdzenie usług na żądanie — wynik liczy serwer (diagnostyka.py)
+    (function () {
+        const przycisk = document.getElementById("sprawdz-uslugi");
+        const tabela = document.getElementById("tabela-uslug");
+        const podsumowanie = document.getElementById("podsumowanie-uslug");
+        przycisk.addEventListener("click", async () => {
+            przycisk.disabled = true;
+            przycisk.textContent = "Sprawdzam…";
+            try {
+                const odp = await fetch("{{ url_for('diagnostyka_uslug') }}");
+                const uslugi = await odp.json();
+                const wiersze = tabela.querySelectorAll("tr:not(:first-child)");
+                uslugi.forEach((u, i) => {
+                    const [, , stan, czas] = wiersze[i].children;
+                    stan.className = u.osiagalna ? "" : "diagnostyka--blad";
+                    stan.textContent = u.osiagalna ? `✓ odpowiada (HTTP ${u.status})` : `✗ ${u.blad}`;
+                    czas.className = "liczba";
+                    czas.textContent = u.ms === null ? "" : `${u.ms} ms`;
+                });
+                const zle = uslugi.filter((u) => !u.osiagalna).length;
+                podsumowanie.textContent = zle === 0 ? "Wszystkie usługi odpowiadają."
+                    : zle === uslugi.length ? "Żadna usługa nie odpowiada — sprawdź połączenie z internetem."
+                    : "Część usług nie odpowiada — to zwykle przejściowa awaria po ich stronie; moduły korzystające z nich pokażą komunikat błędu.";
+                podsumowanie.hidden = false;
+            } catch (e) {
+                podsumowanie.textContent = "Nie udało się sprawdzić usług.";
+                podsumowanie.hidden = false;
+            } finally {
+                przycisk.disabled = false;
+                przycisk.textContent = "Sprawdź ponownie";
+            }
+        });
+    })();
+</script>
+{% endblock %}

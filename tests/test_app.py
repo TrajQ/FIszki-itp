@@ -220,3 +220,56 @@ def test_trasa_kalendarza(czysty_client):
     assert odp.mimetype == "text/calendar" and "warsztat_terminy.ics" in odp.headers["Content-Disposition"]
     assert "SUMMARY:Egzamin: Egzamin z planowania" in odp.get_data(as_text=True)
     assert 'href="/kalendarz.ics"' in c.get("/").get_data(as_text=True)
+
+
+# ---------- ETAP 126: diagnostyka ----------
+
+
+def test_diagnostyka_strona_bez_kluczy(tmp_path, monkeypatch):
+    from config import Config
+
+    monkeypatch.setattr(Config, "GEMINI_API_KEY", "tajny-klucz-123")
+    app = create_app(instance_path=str(tmp_path))
+    (tmp_path / "fiszki").mkdir(exist_ok=True)
+    (tmp_path / "fiszki" / "fiszki.db").write_bytes(b"x" * 2000)
+    with app.test_client() as c:
+        html = c.get("/diagnostyka").get_data(as_text=True)
+    assert "✓ ustawiony" in html and "tajny-klucz-123" not in html  # klucz nie trafia na stronę
+    assert "fiszki.db" in html and "GUS — Bank Danych Lokalnych" in html and "nie sprawdzono" in html
+
+
+def test_diagnostyka_uslug(tmp_path, monkeypatch):
+    import requests
+
+    import diagnostyka
+
+    wywolane = []
+
+    class Odp:
+        def __init__(self, status):
+            self.status_code = status
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def get(adres, **kw):
+        wywolane.append((adres, kw.get("timeout"), kw.get("headers")))
+        if "uldk" in adres:
+            raise requests.Timeout()
+        if "sejm" in adres:
+            raise requests.ConnectionError()
+        return Odp(404 if "generativelanguage" in adres else 200)
+
+    monkeypatch.setattr(diagnostyka.requests, "get", get)
+    app = create_app(instance_path=str(tmp_path))
+    with app.test_client() as c:
+        wyniki = {u["nazwa"]: u for u in c.get("/diagnostyka/uslugi").get_json()}
+    assert len(wyniki) == len(diagnostyka.USLUGI) == len(wywolane)
+    assert wyniki["GUS — Bank Danych Lokalnych"]["osiagalna"] and wyniki["GUS — Bank Danych Lokalnych"]["status"] == 200
+    assert wyniki["Google — Gemini"]["osiagalna"] and wyniki["Google — Gemini"]["status"] == 404  # serwer odpowiada
+    assert not wyniki["GUGiK — ULDK (działki)"]["osiagalna"] and "brak odpowiedzi" in wyniki["GUGiK — ULDK (działki)"]["blad"]
+    assert "brak połączenia" in wyniki["Sejm — API Dziennika Ustaw (ELI)"]["blad"]
+    assert all(t == diagnostyka.LIMIT_CZASU_S and "key" not in str(h).lower() for _, t, h in wywolane)  # bez kluczy w zapytaniach

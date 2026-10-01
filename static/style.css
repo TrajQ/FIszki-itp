@@ -762,3 +762,13 @@ input[type="file"]::file-selector-button {
     background: var(--pasek-tlo);
     color: var(--tekst-drugi);
 }
+
+/* ---------- diagnostyka (ETAP 126) ---------- */
+
+.przewijanie-poziome {
+    overflow-x: auto;
+}
+
+.diagnostyka--blad {
+    color: var(--blad);
+}

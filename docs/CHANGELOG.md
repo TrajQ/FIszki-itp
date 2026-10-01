@@ -824,3 +824,7 @@
 
 ## ETAP 125 — 2026-10-01
 - Atlas → Typologia: porównanie jakości podziału dla 2–8 typów
+
+## ETAP 126 — 2026-10-01
+- Diagnostyka (`/diagnostyka`): czy odpowiadają usługi GUS, GUGiK, Sejmu i
+  Gemini, czy są klucze, ile miejsca zajmują dane, wersje

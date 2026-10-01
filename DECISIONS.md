@@ -2800,3 +2800,21 @@ decyzja planisty, nie algorytmu.
 - Automatyczny wybór k — ukrywa decyzję metodyczną.
 - Metoda „łokcia” (suma kwadratów) — wymaga odczytu załamania z wykresu,
   mniej jednoznaczna niż sylwetka.
+
+## D-134 — Diagnostyka: sprawdzanie usług na żądanie, bez kluczy
+Data: 2026-10-01
+
+**Decyzja:** Strona diagnostyki pokazuje konfigurację i dane od razu, a
+usługi zewnętrzne sprawdza dopiero po kliknięciu: jedno GET na adres ze
+stałej modułu, limit 6 s, równolegle. Każda odpowiedź HTTP oznacza
+„serwer osiągalny” (sprawdzamy połączenie, nie poprawność danych). Klucze
+tylko jako „ustawiony / brak”; do Gemini nie wysyłamy klucza.
+
+**Uzasadnienie:** Najczęstsze „nie działa” to brak internetu, awaria
+usługi albo brak klucza — strona rozróżnia te przypadki w kilka sekund.
+Adresy ze stałych modułów: diagnostyka sprawdza dokładnie to, czego
+używa kod. Strona nadaje się do wysłania przy zgłaszaniu problemu.
+
+**Odrzucone alternatywy:**
+- Automatyczne sprawdzanie przy otwarciu — zbędny ruch i oczekiwanie.
+- Próbne zapytanie do Gemini z kluczem — koszt i limit zapytań.
