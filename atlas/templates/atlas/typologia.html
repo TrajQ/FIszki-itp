@@ -39,7 +39,11 @@
             <li><label><input type="checkbox" class="wskaznik-typologii" value="{{ w.id }}"> {{ w.nazwa_pelna }}</label></li>
             {% endfor %}
         </ul>
-        <div class="rzad"><button type="submit">Policz</button><span id="stan" class="wyciszony"></span></div>
+        <div class="rzad"><button type="submit">Policz</button><button type="button" id="porownaj-k" class="przycisk--drugi">Porównaj liczbę typów</button><span id="stan" class="wyciszony"></span></div>
+        <div id="sylwetki" class="stos" hidden>
+            <p class="wyciszony opis-raportu">Średnia sylwetka dla każdej liczby typów (od −1 do 1, więcej = typy wyraźniej oddzielone). Kliknij wiersz, żeby wybrać tę liczbę typów. Najwyższa wartość to podpowiedź, nie reguła — liczba typów ma też dać się sensownie opisać.</p>
+            <table class="tabela tabela-sylwetek" id="tabela-sylwetek"></table>
+        </div>
     </section>
 </form>
 
@@ -69,6 +73,7 @@
     const URL_WYNIK = "{{ url_for('atlas.typologia_wynik') }}";
     const URL_MAPA = "{{ url_for('atlas.typologia_mapa') }}";
     const URL_CSV = "{{ url_for('atlas.typologia_csv') }}";
+    const URL_SYLWETKI = "{{ url_for('atlas.typologia_sylwetki') }}";
 </script>
 <script src="{{ url_for('atlas.static', filename='typologia.js') }}"></script>
 {% endblock %}

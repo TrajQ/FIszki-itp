@@ -1141,3 +1141,29 @@ button.przelacznik__opcja--aktywna:hover {
     height: 12px;
     border-radius: 3px;
 }
+
+/* ---------- dobór liczby typów (ETAP 125) ---------- */
+
+.tabela-sylwetek tr:not(:first-child) {
+    cursor: pointer;
+}
+
+.tabela-sylwetek tr:not(:first-child):hover,
+.tabela-sylwetek tr:focus-visible {
+    background: var(--akcent-tlo);
+}
+
+.sylwetka--najlepsza td {
+    font-weight: 600;
+}
+
+.sylwetka__tor {
+    width: 50%;
+}
+
+.sylwetka__pasek {
+    display: block;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--akcent);
+}

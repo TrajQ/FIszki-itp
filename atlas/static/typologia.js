@@ -150,6 +150,47 @@
         }
     }
 
+    // ETAP 125: sylwetka dla k = 2…8 — pomoc w wyborze liczby typów
+    async function porownajK() {
+        pokazBlad("");
+        zapamietaj();
+        const sekcja = document.getElementById("sylwetki");
+        const tabela = document.getElementById("tabela-sylwetek");
+        const numer = ++numerZapytania;
+        stan.textContent = "Liczę podziały dla 2–8 typów…";
+        try {
+            const odpowiedz = await fetch(`${URL_SYLWETKI}?${parametry()}`);
+            const dane = await odpowiedz.json().catch(() => ({}));
+            if (numer !== numerZapytania) return;
+            if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
+            const glowa = element("tr");
+            glowa.append(element("th", "liczba", "Typów"), element("th", "liczba", "Średnia sylwetka"), element("th", "", ""));
+            tabela.replaceChildren(glowa);
+            const maks = Math.max(...dane.map((w) => w.sylwetka || 0), 0.01);
+            for (const w of dane) {
+                const tr = element("tr", w.najlepsza ? "sylwetka--najlepsza" : "");
+                tr.tabIndex = 0;
+                tr.title = `Wybierz ${w.k} typów`;
+                const pasek = element("span", "sylwetka__pasek");
+                pasek.style.width = `${Math.max(0, (100 * (w.sylwetka || 0)) / maks)}%`;
+                const tor = element("td", "sylwetka__tor");
+                tor.appendChild(pasek);
+                tr.append(element("td", "liczba", String(w.k)), element("td", "liczba", (w.sylwetka === null ? "—" : liczba(w.sylwetka, 2)) + (w.najlepsza ? " ★" : "")), tor);
+                const wybierz = () => { poleK.value = String(w.k); zapamietaj(); formularz.requestSubmit(); };
+                tr.addEventListener("click", wybierz);
+                tr.addEventListener("keydown", (e) => { if (e.key === "Enter") wybierz(); });
+                tabela.appendChild(tr);
+            }
+            sekcja.hidden = false;
+            stan.textContent = "";
+        } catch (e) {
+            if (numer !== numerZapytania) return;
+            stan.textContent = "";
+            pokazBlad(e.message);
+        }
+    }
+
+    document.getElementById("porownaj-k").addEventListener("click", porownajK);
     formularz.addEventListener("submit", policz);
     formularz.addEventListener("change", zapamietaj);
     start();

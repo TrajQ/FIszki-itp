@@ -25,18 +25,23 @@ from .trasy_zlozony import _odpowiedz_bledu, _parametry
 KOLORY_TYPOW = ["#0071e3", "#ff9f0a", "#34c759", "#ff375f", "#5e5ce6", "#a2845e", "#30b0c7", "#bf5af2"]
 
 
-def _policz(argumenty) -> dict:
-    p = _parametry(argumenty)
-    try:
-        k = int(argumenty.get("k", 4))
-    except (TypeError, ValueError):
-        raise ValueError("Liczba typów (k) musi być liczbą.")
+def _skladowe(p: dict) -> list[dict]:
     skladowe = []
     for s in p["skladowe"]:
         w = s["wskaznik"]
         gminy = routes._wartosci_wskaznika(w["zmienna_id"], p["rok"], p["woj"], w["mianownik_id"], w["mnoznik"])
         skladowe.append({"nazwa": _nazwa_wskaznika(w),
                          "gminy": [{"teryt": g["teryt"], "nazwa": g["nazwa"], "wartosc": g["wartosc"]} for g in gminy]})
+    return skladowe
+
+
+def _policz(argumenty) -> dict:
+    p = _parametry(argumenty)
+    try:
+        k = int(argumenty.get("k", 4))
+    except (TypeError, ValueError):
+        raise ValueError("Liczba typów (k) musi być liczbą.")
+    skladowe = _skladowe(p)
     wynik = typologia.typologia(skladowe, k)
     wynik.update({"rok": p["rok"], "wojewodztwo": p["wojewodztwo"], "skladowe": [s["nazwa"] for s in skladowe],
                   "kolory": KOLORY_TYPOW[:k]})
@@ -54,6 +59,15 @@ def typologia_wynik():
     try:
         return jsonify(_policz(request.args))
     except (ValueError, BladBDL) as e:  # BladTypologii to też ValueError
+        return _odpowiedz_bledu(e)
+
+
+@atlas_bp.route("/typologia/sylwetki")
+def typologia_sylwetki():
+    """ETAP 125: jakość podziału dla każdej liczby typów — te same wskaźniki i dane."""
+    try:
+        return jsonify(typologia.sylwetki(_skladowe(_parametry(request.args))))
+    except (ValueError, BladBDL) as e:
         return _odpowiedz_bledu(e)
 
 

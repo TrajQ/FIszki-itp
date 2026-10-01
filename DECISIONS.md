@@ -2784,3 +2784,19 @@ Python jest wystarczająco szybki.
   ziarna; trudniej wytłumaczyć.
 - Grupowanie hierarchiczne (Ward) — dobre, ale wymaga dendrogramu do
   wyboru liczby typów; k-średnich z sylwetką prostsze na I roku.
+
+## D-133 — Liczba typów: sylwetka jako podpowiedź, wybór zostaje przy użytkowniku
+Data: 2026-10-01
+
+**Decyzja:** Dla k = 2…8 liczymy średnią sylwetkę tych samych danych i
+pokazujemy tabelę z zaznaczeniem najwyższej wartości; k nie zmienia się
+samo — użytkownik klika wiersz. Przy remisie wskazujemy mniejsze k.
+
+**Uzasadnienie:** Sylwetka często wskazuje 2 typy (najprostszy podział),
+a w analizie regionalnej typy muszą też mieć sens merytoryczny — to
+decyzja planisty, nie algorytmu.
+
+**Odrzucone alternatywy:**
+- Automatyczny wybór k — ukrywa decyzję metodyczną.
+- Metoda „łokcia” (suma kwadratów) — wymaga odczytu załamania z wykresu,
+  mniej jednoznaczna niż sylwetka.

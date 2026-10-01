@@ -82,25 +82,46 @@ def sylwetka(punkty: list[list[float]], przypisanie: list[int]) -> float | None:
     return statistics.fmean(wartosci)
 
 
-def typologia(skladowe: list[dict], k: int) -> dict:
-    """skladowe: [{"nazwa", "gminy": [{"teryt", "nazwa", "wartosc"}]}] → typy i gminy."""
+def _dane(skladowe: list[dict]) -> tuple[dict, list[dict], list[str], list[list[float]]]:
+    """→ (nazwy gmin, wartości surowe, gminy z kompletem danych, punkty z)."""
     if not 2 <= len(skladowe) <= 12:
         raise BladTypologii("Wybierz od 2 do 12 wskaźników.")
-    if not MIN_K <= k <= MAKS_K:
-        raise BladTypologii(f"Liczba typów od {MIN_K} do {MAKS_K}.")
     nazwy_gmin = {g["teryt"]: g["nazwa"] for s in skladowe for g in s["gminy"]}
     wartosci = [{g["teryt"]: g["wartosc"] for g in s["gminy"]} for s in skladowe]
     wspolne = sorted(set.intersection(*(set(w) for w in wartosci)))
-    if len(wspolne) < 2 * k:
-        raise BladTypologii(f"Za mało gmin z danymi wszystkich wskaźników ({len(wspolne)}) na {k} typy — potrzeba co najmniej {2 * k}.")
     z = []
     for s, w in zip(skladowe, wartosci):
         liczby = [w[t] for t in wspolne]
+        if len(liczby) < 2:
+            break  # komunikat o liczbie gmin niżej
         srednia, odchylenie = statistics.fmean(liczby), statistics.pstdev(liczby)
         if odchylenie == 0:
             raise BladTypologii(f"Wskaźnik „{s['nazwa']}” ma tę samą wartość we wszystkich gminach — nic nie różnicuje.")
         z.append([(x - srednia) / odchylenie for x in liczby])
-    punkty = [list(p) for p in zip(*z)]
+    return nazwy_gmin, wartosci, wspolne, [list(p) for p in zip(*z)]
+
+
+def sylwetki(skladowe: list[dict]) -> list[dict]:
+    """ETAP 125: średnia sylwetka dla k = 2…8 (o ile gmin wystarcza) — pomoc w wyborze liczby typów."""
+    _, _, wspolne, punkty = _dane(skladowe)
+    wynik = []
+    for k in range(MIN_K, min(MAKS_K, len(wspolne) // 2) + 1):
+        wynik.append({"k": k, "sylwetka": sylwetka(punkty, k_srednich(punkty, k))})
+    if not wynik:
+        raise BladTypologii(f"Za mało gmin z danymi wszystkich wskaźników ({len(wspolne)}).")
+    najlepsza = max(wynik, key=lambda w: (w["sylwetka"] or -2, -w["k"]))
+    for w in wynik:
+        w["najlepsza"] = w is najlepsza
+    return wynik
+
+
+def typologia(skladowe: list[dict], k: int) -> dict:
+    """skladowe: [{"nazwa", "gminy": [{"teryt", "nazwa", "wartosc"}]}] → typy i gminy."""
+    if not MIN_K <= k <= MAKS_K:
+        raise BladTypologii(f"Liczba typów od {MIN_K} do {MAKS_K}.")
+    nazwy_gmin, wartosci, wspolne, punkty = _dane(skladowe)
+    if len(wspolne) < 2 * k:
+        raise BladTypologii(f"Za mało gmin z danymi wszystkich wskaźników ({len(wspolne)}) na {k} typy — potrzeba co najmniej {2 * k}.")
     przypisanie = k_srednich(punkty, k)
     # typy od najliczniejszego (przy remisie — kolejność skupień)
     licznosc = {c: przypisanie.count(c) for c in set(przypisanie)}

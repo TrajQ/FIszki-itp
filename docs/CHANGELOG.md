@@ -821,3 +821,6 @@
 ## ETAP 124 — 2026-10-01
 - Atlas: typologia gmin (k-średnich) — kartogram typów, profile, CSV
 - Pomoc: opis
+
+## ETAP 125 — 2026-10-01
+- Atlas → Typologia: porównanie jakości podziału dla 2–8 typów

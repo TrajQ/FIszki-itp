@@ -1252,3 +1252,31 @@ def test_typologia_trasy(raport_client, monkeypatch):
         "type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"teryt": "12" + b[-5:], "nazwa": b}, "geometry": granica} for b in bdl_id]})
     svg = c.get(f"/atlas/typologia/mapa.svg?{zapytanie}").get_data(as_text=True)
     assert "Typologia gmin" in svg and ">Typ 1<" in svg and "Typ 1: " in svg and "k-średnich (k = 2)" in svg
+
+
+# ---------- ETAP 125: dobór liczby typów ----------
+
+
+def test_sylwetki_dla_k():
+    from atlas import typologia
+    # trzy wyraźne grupy po 4 gminy → najlepsze k = 3
+    a = [(0.0, 0.0), (0.1, 0.2), (0.2, 0.1), (0.1, 0.0), (5.0, 5.0), (5.1, 5.2), (5.2, 5.1), (5.1, 5.0),
+         (0.0, 9.0), (0.1, 9.2), (0.2, 9.1), (0.1, 9.0)]
+    skladowe = [{"nazwa": n, "gminy": [{"teryt": f"t{i}", "nazwa": f"g{i}", "wartosc": p[j]} for i, p in enumerate(a)]} for j, n in enumerate("AB")]
+    s = typologia.sylwetki(skladowe)
+    assert [w["k"] for w in s] == [2, 3, 4, 5, 6]  # 12 gmin → najwyżej 6 typów
+    assert [w["k"] for w in s if w["najlepsza"]] == [3] and s[1]["sylwetka"] > 0.9
+
+
+def test_trasa_sylwetek(raport_client, monkeypatch):
+    c = raport_client
+    bdl_id = [f"0112121050{i:02d}" for i in range(6)]
+    wartosci = {1: list(zip(bdl_id, (100.0, 110.0, 90.0, 900.0, 950.0, 880.0))), 2: list(zip(bdl_id, (5.0, 6.0, 5.5, 50.0, 52.0, 49.0)))}
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+        {"bdl_id": b, "teryt": "12" + b[-5:], "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
+    w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
+    s = c.get(f"/atlas/typologia/sylwetki?woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1,{w2}:1:1").get_json()
+    assert [w["k"] for w in s] == [2, 3] and s[0]["najlepsza"]
+    assert c.get(f"/atlas/typologia/sylwetki?woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1").status_code == 400
+    assert "Porównaj liczbę typów" in c.get("/atlas/typologia").get_data(as_text=True)

@@ -2198,3 +2198,15 @@ Status: zamknięty
 - Sprawdzone w przeglądarce na 48 gminach z trzema podstawionymi grupami
   (1300 i 390 px)
 - `DECISIONS.md`: D-132
+
+## ETAP 125 — Atlas: dobór liczby typów w typologii (sylwetka)
+Data: 2026-10-01
+Status: zamknięty
+
+- `atlas/typologia.py`: wspólne `_dane` (standaryzacja) dla typologii i
+  `sylwetki` — średnia sylwetka dla k = 2…8 (do połowy liczby gmin),
+  najlepsza oznaczona (remis — mniejsze k)
+- Trasa `/atlas/typologia/sylwetki`; przycisk „Porównaj liczbę typów” —
+  tabela z paskami, kliknięcie (albo Enter) wybiera k i liczy typologię
+- Sprawdzone w przeglądarce (1300 i 390 px)
+- `DECISIONS.md`: D-133
