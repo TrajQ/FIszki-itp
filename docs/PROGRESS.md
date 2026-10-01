@@ -2126,3 +2126,19 @@ Status: zamknięty
   390 px, filtr, przejście do artykułu
 - Pomoc: opis
 - `DECISIONS.md`: D-128
+
+## ETAP 121 — Przepisy: klikalne odesłania do artykułów
+Data: 2026-10-01
+Status: zamknięty
+
+- `przepisy/odeslania.py`: „art. N ust. … pkt … lit. …” i „§ N” w
+  treści → odnośnik do jednostki tego aktu z podglądem jej początku
+  (`title`); bez odesłań do innych aktów („ustawy z dnia …”, „ustawy o
+  …”, „ustawy – Prawo …”, „rozporządzenia Ministra …”, Kodeks,
+  Konstytucja, dyrektywa), bez odesłania do samego siebie i nagłówków
+  „Art. 15.”; tekst zabezpieczony (`markupsafe.escape`)
+- Strona aktu: odnośniki podkreślone kropkami, artykuł docelowy
+  obrysowany (`:target`), także po kliknięciu w słowniczku
+- Błąd złapany w teście: „§ 3” nie było rozpoznawane (`\b` przed „§”) —
+  zamiana na lookbehind
+- `DECISIONS.md`: D-129

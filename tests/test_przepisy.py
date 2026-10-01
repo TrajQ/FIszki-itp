@@ -464,3 +464,27 @@ def test_slowniczek_na_stronie_aktu(client):
     html = client.get("/przepisy/akty/1").get_data(as_text=True)
     assert "Słowniczek — 2 pojęcia" in html and 'href="#j3"' in html and "nieruchomość gruntową" in html
     assert client.get("/przepisy/akty/9/slowniczek").status_code == 404
+
+
+# ---------- ETAP 121: odesłania ----------
+
+from przepisy.odeslania import mapa_jednostek, z_odeslaniami  # noqa: E402
+
+
+def test_odeslania():
+    j = [{"id": 1, "oznaczenie": "Art. 4", "tekst": "Art. 4. Plan <ogólny> jest aktem prawa miejscowego."},
+         {"id": 2, "oznaczenie": "Art. 15", "tekst": "Art. 15. Wójt."}, {"id": 3, "oznaczenie": "§ 3", "tekst": "§ 3. Wchodzi."}]
+    m = mapa_jednostek(j)
+    html = str(z_odeslaniami("Zgodnie z art. 4 ust. 2 pkt 6 lit. a oraz art. 99 i § 3; <script>", m, biezaca_id=2))
+    assert '<a class="odeslanie" href="#j1" title="Art. 4. Plan &lt;ogólny&gt; jest aktem prawa miejscowego.">art. 4 ust. 2 pkt 6 lit. a</a>' in html
+    assert 'href="#j3"' in html and "art. 99" in html and "&lt;script&gt;" in html  # nieznany artykuł bez linku, tekst zabezpieczony
+    for inny in ("art. 4 ustawy z dnia 7 lipca 1994 r.", "art. 4 Kodeksu postępowania", "art. 4 i 5 ustawy o drogach publicznych",
+                 "art. 4 rozporządzenia Ministra Infrastruktury", "art. 4 ustawy – Prawo budowlane"):
+        assert "<a" not in str(z_odeslaniami(inny, m))
+    assert "<a" not in str(z_odeslaniami("Art. 15. Wójt i art. 15", m, biezaca_id=2))  # nagłówek i odesłanie do siebie
+
+
+def test_odeslania_na_stronie(client):
+    wgraj(client)
+    html = client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert 'class="odeslanie" href="#j4"' in html  # „zgodnie z art. 15 ust. 2” w art. 2 → Art. 15

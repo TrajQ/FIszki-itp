@@ -808,3 +808,6 @@
 
 ## ETAP 120 — 2026-10-01
 - Przepisy: słowniczek definicji ustawowych i skrótów na stronie aktu
+
+## ETAP 121 — 2026-10-01
+- Przepisy: odesłania „art. 15 ust. 2” są odnośnikami do artykułu

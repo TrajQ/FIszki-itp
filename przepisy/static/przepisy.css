@@ -503,3 +503,18 @@ button.przycisk--niebezpieczny-tekst {
     margin: 0;
     font-size: 13px;
 }
+
+/* ---------- odesłania w tekście aktu (ETAP 121) ---------- */
+
+.odeslanie {
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+}
+
+/* artykuł, do którego przeszliśmy z odesłania albo słowniczka */
+.jednostka:target {
+    outline: 2px solid var(--akcent);
+    outline-offset: 6px;
+    border-radius: 8px;
+    scroll-margin-top: 80px;
+}

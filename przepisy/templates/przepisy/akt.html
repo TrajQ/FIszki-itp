@@ -60,7 +60,7 @@
                     <a class="wyciszony" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}#page={{ j.strona_od }}" target="_blank" rel="noopener">PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</a>
                 </span>
             </div>
-            <p class="jednostka__tekst">{{ j.tekst }}</p>
+            <p class="jednostka__tekst">{{ j.tekst_html }}</p>
         </section>
         {% endfor %}
     </article>

@@ -2705,3 +2705,21 @@ odmiana zmieniłaby treść przepisu.
 - Model językowy do wyciągania definicji — liczby i treść mają
   pochodzić z tekstu; reguły są sprawdzalne.
 - Słownik fleksyjny (np. Morfeusz) — ciężka zależność dla wygody.
+
+## D-129 — Odesłania: tylko w obrębie aktu, inne akty po nazwie zostają tekstem
+Data: 2026-10-01
+
+**Decyzja:** Linkujemy odesłania „art. N …” i „§ N …” do jednostek tego
+samego aktu. Odesłanie, po którym stoi nazwa innego aktu (ustawa z dnia
+/ o / – Prawo …, rozporządzenie organu, kodeks, konstytucja, dyrektywa),
+zostaje zwykłym tekstem. Samo „ustawy” bez dalszej nazwy traktujemy jak
+odesłanie do tego aktu.
+
+**Uzasadnienie:** Błędny link (do artykułu o tym samym numerze w złej
+ustawie) jest gorszy niż brak linku — student mógłby przeczytać nie ten
+przepis.
+
+**Odrzucone alternatywy:**
+- Linkowanie do innych aktów w bazie — wymagałoby pewnego rozpoznania
+  aktu po nazwie; na razie bez.
+- Linki także do ustępów („ust. 2”) — jednostką w bazie jest artykuł.

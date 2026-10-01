@@ -10,6 +10,7 @@ from dane import gemini, sejm
 from fiszki import zewnetrzne as fiszki_zewnetrzne
 
 from . import baza, porownanie, pytania
+from .odeslania import mapa_jednostek, z_odeslaniami
 from .slowniczek import slowniczek
 from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
 
@@ -135,6 +136,9 @@ def pobierz_z_sejmu():
 def widok_aktu(akt_id):
     akt = _akt_albo_404(akt_id)
     jednostki = baza.jednostki_aktu(akt_id)
+    mapa = mapa_jednostek(jednostki)
+    for j in jednostki:  # ETAP 121: „art. 15 ust. 2” → odnośnik do artykułu tego aktu
+        j["tekst_html"] = z_odeslaniami(j["tekst"], mapa, j["id"])
     return render_template("przepisy/akt.html", akt=akt, jednostki=jednostki, slowniczek=slowniczek(jednostki))
 
 
