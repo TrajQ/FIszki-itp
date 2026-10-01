@@ -2502,3 +2502,21 @@ CLAUDE.md każe unikać.
 - Import `ceny.baza` w mpzp i osiedlu — zależność między bazami modułów.
 - Usługa WMS RCN (ETAP 90) zamiast pliku — daje atrybuty w punkcie, nie
   statystykę okolicy.
+
+## D-118 — Trend w obszarach: mediany roczne, niepewne lata oznaczone, bez wygładzania
+Data: 2026-10-01
+
+**Decyzja:** Trend obszaru to mediany ceny za m² w kolejnych latach (te
+same, co w tabeli raportu), bez wygładzania i bez linii trendu. Rok, w
+którym obszar ma mniej niż 5 transakcji (`MIN_W_ROKU`), ma pusty punkt.
+Wykres na stronie (JS) i w raporcie (SVG z Pythona) rysują te same dane z
+serwera; próg przychodzi z serwera.
+
+**Uzasadnienie:** Mała dzielnica ma czasem kilka transakcji w roku — ich
+mediana skacze. Pokazanie tego wprost jest uczciwsze niż wygładzanie,
+które ukryłoby niepewność.
+
+**Odrzucone alternatywy:**
+- Kwartały zamiast lat — w małych obszarach najczęściej 0–3 transakcje.
+- Średnia krocząca — wygląda pewniej, niż wynika z danych.
+- Ukrywanie lat z małą liczbą transakcji — przerwy w linii mylą bardziej.

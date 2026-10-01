@@ -763,3 +763,7 @@
 - MPZP: ceny mieszkań i działek w okolicy działki z zaimportowanego pliku RCN
 - Osiedle: karta „Ceny w okolicy” obszaru opracowania
 - Pomoc: opis cen w okolicy
+
+## ETAP 110 — 2026-10-01
+- Ceny → Transakcje: wykres mediany ceny za m² w latach dla narysowanych
+  obszarów, także w raporcie do druku

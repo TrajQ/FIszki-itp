@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 109 (ceny: ceny w okolicy w MPZP i osiedlu — zamknięty)
-Ostatni ZIP: releases/warsztat_etap109_20260930.zip
-Testy: 494 passed / 0 failed
+ETAP: 110 (ceny: trend cen w obszarach — zamknięty)
+Ostatni ZIP: releases/warsztat_etap110_20261001.zip
+Testy: 495 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -1939,3 +1939,19 @@ Status: zamknięty
   ULDK jest tu zablokowane): poprawiona szerokość tabel na telefonie; w
   osiedlu kolumna panelu rozpychała stronę — `minmax(0, 1fr)`
 - `DECISIONS.md`: D-117
+
+## ETAP 110 — Ceny: trend cen w narysowanych obszarach
+Data: 2026-10-01
+Status: zamknięty
+
+- `ceny/rcn.py`: `porownanie` podaje też liczbę transakcji w latach
+  (`lata_liczba`); `wykres_lat_svg` — wykres liniowy median w latach do
+  raportu (obszary w ich kolorach, cały plik przerywaną, pusty punkt przy
+  mniej niż 5 transakcjach w roku), `_ladna_os` — „ładne” podziałki osi
+- Strona transakcji: ten sam wykres pod tabelą porównania obszarów
+- Raport do druku: wykres nad tabelą median w latach
+- Sprawdzone w przeglądarce (strona, raport 1300/390 px); poszerzony
+  prawy margines, bo ostatni rok dotykał krawędzi
+- Kod wypchnięty w osobnym commicie przed wpisami w dokumentacji (błąd
+  składni w skrypcie zamykającym ETAP) — wpisy dopisane commitem obok
+- `DECISIONS.md`: D-118
