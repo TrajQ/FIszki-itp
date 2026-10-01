@@ -230,6 +230,10 @@ def test_raport_svg_i_porownanie(client):
     html = r.get_data(as_text=True)
     assert r.status_code == 200 and "Wariant &lt;A&gt;" in html and "<svg" in html and "Program osiedla" in html
     assert "✓ zgodne" in html  # 15% ≤ 20%
+    # ETAP 115: ceny w okolicy obszaru opracowania (geometria obszaru, nie terenu MW)
+    assert 'id="ceny-okolicy"' in html and "/ceny/okolica" in html and html.count('"type": "Polygon"') == 1
+    bez_obszaru = client.post("/osiedle/koncepcje", json={"nazwa": "Bez obszaru"}).get_json()
+    assert "const geometria = null;" in client.get(f"/osiedle/koncepcje/{bez_obszaru['id']}/raport").get_data(as_text=True)
     r = client.get(f"/osiedle/koncepcje/{ids[0]}.svg")
     assert r.mimetype == "image/svg+xml" and "attachment" in r.headers["Content-Disposition"]
     assert client.get("/osiedle/koncepcje/999/raport").status_code == 404

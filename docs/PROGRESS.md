@@ -2022,3 +2022,20 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: pobranie trzech plików, geometrie poprawne
   (shapely), 390 px
 - `DECISIONS.md`: D-122
+
+## ETAP 115 — Ceny w okolicy na karcie działki (MPZP) i w raporcie koncepcji (osiedle)
+Data: 2026-10-01
+Status: zamknięty
+
+- Karta działki do druku (MPZP) i raport koncepcji (osiedle): sekcja
+  „Ceny w okolicy” — mieszkania i działki do 500 m od działki / obszaru
+  opracowania: liczba, mediana za m², przedział połowy transakcji, lata,
+  źródło z nazwą i datą importu pliku
+- Liczby z modułu ceny przez POST `/ceny/okolica` (D-117); raport podaje
+  tylko geometrię (działka, obszar opracowania); bez zaimportowanego
+  pliku albo bez obszaru sekcja jest ukryta
+- Kod sekcji w dwóch raportach celowo osobno (bez wspólnego komponentu)
+- Sprawdzone w przeglądarce (1300 i 390 px; MPZP z podstawioną działką,
+  bo ULDK jest tu zablokowane): poprawiona szerokość tabeli na telefonie
+  i rozmiar przypisów
+- `DECISIONS.md`: D-123

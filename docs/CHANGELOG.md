@@ -783,3 +783,7 @@
 - Ceny → Transakcje: pobieranie transakcji, heksagonów i obszarów jako
   GeoJSON do QGIS
 - Pomoc: opis
+
+## ETAP 115 — 2026-10-01
+- MPZP: ceny w okolicy na karcie działki do druku
+- Osiedle: ceny w okolicy w raporcie koncepcji

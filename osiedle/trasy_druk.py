@@ -5,7 +5,7 @@ from markupsafe import Markup
 from werkzeug.utils import secure_filename
 
 from . import baza, cien
-from .bilans import FUNKCJE, bilans
+from .bilans import FUNKCJE, OBSZAR, bilans
 from .program import ZALOZENIA
 from .routes import _koncepcja_albo_404, osiedle_bp
 from .rysunek_svg import skala_dla, szkic_svg
@@ -37,6 +37,8 @@ def raport(koncepcja_id):
         funkcje=FUNKCJE,
         ustalenia=USTALENIA,
         zalozenia=ZALOZENIA,
+        # ETAP 115: ceny w okolicy obszaru opracowania (moduł ceny); bez obszaru — sekcji nie ma
+        geometria_okolicy=next((f["geometry"] for f in k["geojson"].get("features", []) if f["properties"].get("funkcja") == OBSZAR), None),
     )
 
 

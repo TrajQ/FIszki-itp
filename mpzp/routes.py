@@ -450,6 +450,7 @@ def raport():
         gmina=gmina,
         plan_krajowy=plan,
         zapis=zapisana(dzialka.id),
+        geometria_okolicy=mapping(dzialka.geometria),  # ETAP 115: ceny w okolicy (moduł ceny)
         data=datetime.now().strftime("%d.%m.%Y, %H:%M"),
     )
 

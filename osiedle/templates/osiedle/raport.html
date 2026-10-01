@@ -127,5 +127,65 @@
         </div>
         <p class="wyciszony raport-osiedla__stopka">Szacunek koncepcyjny: wskaźniki z parametrów terenów, program z założeń powyżej. Liczy kod aplikacji, nie model językowy.</p>
     </section>
+
+    <!-- ETAP 115: ceny w okolicy z pliku RCN zaimportowanego w module Ceny (POST /ceny/okolica);
+         bez zaimportowanego pliku sekcja zostaje ukryta -->
+    <section id="ceny-okolicy" class="raport-osiedla__strona" hidden>
+        <h2>Ceny w okolicy</h2>
+        <p class="wyciszony raport-osiedla__stopka">Transakcje do 500 m od obszaru opracowania (także wewnątrz) — mediana ceny za m² i przedział, w którym mieści się połowa transakcji.</p>
+        <div class="tabela-cen-okolicy-wrap"><table class="tabela" id="tabela-cen-okolicy"></table></div>
+        <p class="wyciszony raport-osiedla__stopka" id="zrodlo-cen-okolicy"></p>
+    </section>
 </div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    // ETAP 115: ceny w okolicy — liczby z modułu Ceny (ceny/rcn.py: okolica)
+    (async function () {
+        const geometria = {{ geometria_okolicy | tojson }};
+        if (!geometria) return;
+        let d;
+        try {
+            const odp = await fetch("{{ url_for('ceny.okolica') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ geometria, promien: 500 }),
+            });
+            if (!odp.ok) return;
+            d = await odp.json();
+        } catch (e) {
+            return; // bez cen raport jest kompletny
+        }
+        if (!d.plik) return;
+        const zl = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
+        const tabela = document.getElementById("tabela-cen-okolicy");
+        const komorka = (tag, tekst, klasa) => {
+            const e = document.createElement(tag);
+            e.textContent = tekst;
+            if (klasa) e.className = klasa;
+            return e;
+        };
+        const glowa = document.createElement("tr");
+        glowa.append(komorka("th", ""), komorka("th", "Transakcji", "liczba"), komorka("th", "Mediana za m²", "liczba"),
+            komorka("th", "Połowa transakcji", "liczba"), komorka("th", "Lata"));
+        tabela.appendChild(glowa);
+        for (const [nazwa, s] of [["Mieszkania", d.lokale], ["Działki", d.dzialki]]) {
+            const tr = document.createElement("tr");
+            tr.appendChild(komorka("td", nazwa));
+            if (s) {
+                tr.append(komorka("td", String(s.liczba), "liczba"), komorka("td", `${zl.format(s.mediana_m2)} zł`, "liczba"),
+                    komorka("td", `${zl.format(s.q1_m2)}–${zl.format(s.q3_m2)} zł`, "liczba"), komorka("td", `${s.od.slice(0, 4)}–${s.do.slice(0, 4)}`));
+            } else {
+                const brak = komorka("td", "brak transakcji", "wyciszony");
+                brak.colSpan = 4;
+                tr.appendChild(brak);
+            }
+            tabela.appendChild(tr);
+        }
+        document.getElementById("zrodlo-cen-okolicy").textContent =
+            `Źródło: Rejestr Cen Nieruchomości (GUGiK), plik ${d.plik.nazwa} zaimportowany ${d.plik.data_importu}; ceny brutto z aktów notarialnych. Działki: cena za m² gruntu, przy zabudowanych obejmuje budynek.`;
+        document.getElementById("ceny-okolicy").hidden = false;
+    })();
+</script>
 {% endblock %}

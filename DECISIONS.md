@@ -2591,3 +2591,21 @@ wydrukować mapę w układzie PL-1992 — przeliczenie zrobi QGIS.
 - GeoPackage / Shapefile — wymagałyby GDAL/Fiony (ciężka zależność).
 - Eksport w PL-1992 — RFC 7946 przewiduje tylko WGS84; QGIS przelicza
   „w locie”.
+
+## D-123 — Ceny w raportach: stały promień 500 m, sekcja tylko z danymi
+Data: 2026-10-01
+
+**Decyzja:** Na karcie działki i w raporcie koncepcji ceny w okolicy
+liczymy w stałym promieniu 500 m (bez wyboru na wydruku). Sekcja pojawia
+się tylko, gdy moduł ceny ma zaimportowany plik z transakcjami w
+zasięgu; źródło podaje nazwę pliku i datę importu.
+
+**Uzasadnienie:** Wydruk ma być powtarzalny — ten sam promień w każdym
+raporcie ułatwia porównanie działek i wariantów. Pusta sekcja „brak
+danych” w każdym wydruku byłaby szumem dla osób, które nie używają RCN.
+Inny promień jest na stronie MPZP i w panelu osiedla (ETAP 109).
+
+**Odrzucone alternatywy:**
+- Wybór promienia w raporcie — parametr w adresie, który łatwo zgubić.
+- Liczenie cen po stronie serwera raportu (import modułu ceny w mpzp i
+  osiedlu) — zależność między bazami modułów (D-117).

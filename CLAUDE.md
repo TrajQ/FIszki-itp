@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 114 (ceny: eksport GeoJSON — zamknięty)
-Ostatni ZIP: releases/warsztat_etap114_20261001.zip
+ETAP: 115 (ceny w raportach MPZP i osiedla — zamknięty)
+Ostatni ZIP: releases/warsztat_etap115_20261001.zip
 Testy: 501 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

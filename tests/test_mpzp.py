@@ -145,6 +145,8 @@ def test_raport_gminy_bez_wfs_pokazuje_atrybuty_planu(client, monkeypatch):
 
     assert "1ZP" in html and "XII/34/2019" in html
     assert "krajowej integracji planów" in html
+    # ETAP 115: sekcja cen w okolicy (ukryta, dopóki moduł ceny nie poda danych) z geometrią działki
+    assert 'id="ceny-okolicy"' in html and "/ceny/okolica" in html and '"type": "Polygon"' in html
 
 
 def test_warstwy_krajowe_z_zapasowa_lista(client, monkeypatch):
