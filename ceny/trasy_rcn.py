@@ -304,6 +304,27 @@ def okolica():
     return jsonify(odpowiedz)
 
 
+@ceny_bp.route("/transakcje/<int:plik_id>/zmiana-heksagonow")
+def zmiana_heksagonow(plik_id):
+    """ETAP 111: okresy A i B zastępują filtr lat strony; pozostałe filtry obowiązują."""
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    rozdzielczosc = request.args.get("rozdzielczosc", type=int)
+    minimum = request.args.get("minimum", type=int)
+    okresy = [request.args.get(k, type=int) for k in ("a_od", "a_do", "b_od", "b_do")]
+    try:
+        co = _co()
+        filtry = {**_filtry(co), "od_roku": None, "do_roku": None}
+        if rozdzielczosc not in rcn.ROZDZIELCZOSCI_H3 or minimum not in rcn.MINIMA_W_KOMORCE:
+            raise ValueError("Niepoprawna wielkość heksagonów albo minimum transakcji.")
+        if None in okresy or okresy[0] > okresy[1] or okresy[2] > okresy[3] or okresy[1] >= okresy[2]:
+            raise ValueError("Wybierz dwa okresy: A wcześniejszy, B późniejszy, bez wspólnych lat.")
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify(rcn.zmiana_heksagonow(_rekordy(plik_id, co, filtry), rozdzielczosc, minimum,
+                                         (okresy[0], okresy[1]), (okresy[2], okresy[3])))
+
+
 @ceny_bp.route("/transakcje/<int:plik_id>.csv")
 def csv_transakcji(plik_id):
     plik = baza.plik_rcn(plik_id)

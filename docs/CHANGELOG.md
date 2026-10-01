@@ -767,3 +767,7 @@
 ## ETAP 110 — 2026-10-01
 - Ceny → Transakcje: wykres mediany ceny za m² w latach dla narysowanych
   obszarów, także w raporcie do druku
+
+## ETAP 111 — 2026-10-01
+- Ceny → Transakcje: mapa zmiany cen w heksagonach między dwoma okresami
+- Pomoc: opis mapy zmian

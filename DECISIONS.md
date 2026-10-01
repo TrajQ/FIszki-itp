@@ -2520,3 +2520,24 @@ które ukryłoby niepewność.
 - Kwartały zamiast lat — w małych obszarach najczęściej 0–3 transakcje.
 - Średnia krocząca — wygląda pewniej, niż wynika z danych.
 - Ukrywanie lat z małą liczbą transakcji — przerwy w linii mylą bardziej.
+
+## D-119 — Zmiana cen: różnica median w heksagonach, stałe klasy, minimum w obu okresach
+Data: 2026-10-01
+
+**Decyzja:** Zmiana w heksagonie = mediana ceny za m² w okresie B /
+mediana w okresie A − 1. Pokazujemy tylko komórki z minimum transakcji w
+obu okresach. Klasy kolorów są stałe i symetryczne wokół zera (−10, −2,
++2, +10, +20%), a nie kwantylowe. Opis na mapie mówi wprost, że to nie
+indeks cen (zmienia się też to, co sprzedano).
+
+**Uzasadnienie:** Przy klasach kwantylowych „najciemniejszy” mógłby
+oznaczać +3% albo +40% zależnie od miasta; przy stałych klasach student
+może porównać mapy dwóch miast albo dwóch okresów. Indeks cen (np.
+hedoniczny) wymagałby modelu i cech, których RCN często nie ma.
+
+**Odrzucone alternatywy:**
+- Klasy kwantylowe — nieporównywalne między mapami.
+- Indeks powtórnych sprzedaży — w RCN trudno pewnie połączyć ten sam
+  lokal w dwóch transakcjach.
+- Uwzględnianie komórek z transakcjami tylko w jednym okresie — brak
+  podstawy do zmiany.

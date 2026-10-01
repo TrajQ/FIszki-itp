@@ -4,6 +4,7 @@
 // ETAP 106: ta sama strona dla działek (CO === "dzialki") — inne filtry i tabela grup.
 // ETAP 107: podobne transakcje wokół klikniętego miejsca (wycena porównawcza).
 // ETAP 108: widok mapy „heksagony” — mediana ceny za m² w komórkach H3 (liczy serwer).
+// ETAP 111: widok „zmiana” — zmiana mediany w heksagonach z okresu A do B.
 (function () {
     "use strict";
 
@@ -77,7 +78,7 @@
 
     function rysujMape(m) {
         warstwa.clearLayers();
-        if (widokMapy.elements.widok.value === "heksagony") return; // heksagony rysuje rysujHeksagony()
+        if (widokMapy.elements.widok.value !== "punkty") return; // heksagony i zmianę rysuje rysujHeksagony()
         for (const [lat, lng, cenaM2, data, pow] of m.punkty) {
             L.circleMarker([lat, lng], { radius: 5, weight: 0.6, color: "#3a2a1a", fillColor: KOLORY[klasa(cenaM2, m.progi)], fillOpacity: 0.85 })
                 .bindTooltip(`${liczba.format(cenaM2)} zł/m² · ${pow} m² · ${data}`)
@@ -92,7 +93,10 @@
 
     async function rysujHeksagony() {
         warstwaHeksagonow.clearLayers();
-        if (widokMapy.elements.widok.value !== "heksagony") return;
+        const widok = widokMapy.elements.widok.value;
+        document.getElementById("okresy-zmiany").hidden = widok !== "zmiana";
+        if (widok === "zmiana") return rysujZmiane();
+        if (widok !== "heksagony") return;
         const moj = ++numerHeksagonow;
         const parametry = parametryFiltrow();
         parametry.set("rozdzielczosc", widokMapy.elements.rozdzielczosc.value);
@@ -111,6 +115,57 @@
             dopasujWidok(warstwaHeksagonow);
             const ukryte = h.ukryte ? ` Ukryte heksagony z mniej niż ${h.minimum} transakcjami: ${h.ukryte} (transakcji w nich: ${liczba.format(h.transakcji_w_ukrytych)}).` : "";
             pokazLegende(h.progi, `Heksagony H3 o krawędzi ok. ${liczba.format(h.krawedz_m)} m: mediana ceny za m² transakcji w heksagonie, pięć równolicznych klas.${ukryte}`);
+        } catch (e) {
+            komunikat.textContent = e.message;
+            komunikat.hidden = false;
+        }
+    }
+
+    // ---------- zmiana między okresami (ETAP 111) ----------
+
+    const procent = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
+
+    function ustawOkresy(lata) {
+        const pola = ["a_od", "a_do", "b_od", "b_do"].map((n) => widokMapy.elements[n]);
+        if (pola[0].options.length || lata.length < 2) return;
+        for (const pole of pola) for (const r of lata) pole.appendChild(new Option(r, r));
+        // domyślnie: pierwsze i ostatnie dwa lata (przy 2–3 latach — po jednym)
+        const dl = lata.length >= 4 ? 2 : 1;
+        [lata[0], lata[dl - 1], lata[lata.length - dl], lata[lata.length - 1]].forEach((r, i) => { pola[i].value = r; });
+    }
+
+    async function rysujZmiane() {
+        const moj = ++numerHeksagonow;
+        const parametry = parametryFiltrow();
+        for (const n of ["rozdzielczosc", "minimum", "a_od", "a_do", "b_od", "b_do"]) parametry.set(n, widokMapy.elements[n].value);
+        try {
+            const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/zmiana-heksagonow?${parametry}`);
+            const h = await odp.json();
+            if (!odp.ok) throw new Error(h.blad || `Błąd ${odp.status}`);
+            if (moj !== numerHeksagonow) return;
+            komunikat.hidden = true;
+            warstwaHeksagonow.clearLayers();
+            const okres = (o) => (o[0] === o[1] ? `${o[0]}` : `${o[0]}–${o[1]}`);
+            for (const k of h.komorki) {
+                L.polygon(k.granica, { color: "#ffffff", weight: 0.8, fillColor: h.kolory[klasa(k.zmiana_proc, h.progi)], fillOpacity: 0.8 })
+                    .bindTooltip(`${procent.format(k.zmiana_proc)}% · ${okres(h.okres_a)}: ${liczba.format(k.mediana_a)} zł/m² (${k.liczba_a}) → ${okres(h.okres_b)}: ${liczba.format(k.mediana_b)} zł/m² (${k.liczba_b})`)
+                    .addTo(warstwaHeksagonow);
+            }
+            dopasujWidok(warstwaHeksagonow);
+            const legenda = document.getElementById("legenda-rcn");
+            legenda.replaceChildren();
+            const granice = [null, ...h.progi, null];
+            h.kolory.forEach((kolor, i) => {
+                const opis = granice[i] === null ? `poniżej ${granice[i + 1]}%` : granice[i + 1] === null ? `ponad +${granice[i]}%` : `${procent.format(granice[i])}…${procent.format(granice[i + 1])}%`;
+                const pozycja = el("span", "legenda-rcn__pozycja");
+                const probka = el("span", "legenda-rcn__probka");
+                probka.style.background = kolor;
+                pozycja.append(probka, opis);
+                legenda.appendChild(pozycja);
+            });
+            const srodek = h.mediana_zmian === null ? "" : ` Mediana zmian: ${procent.format(h.mediana_zmian)}%.`;
+            legenda.appendChild(el("span", "wyciszony",
+                `Zmiana mediany ceny za m² z ${okres(h.okres_a)} do ${okres(h.okres_b)} w heksagonach o krawędzi ok. ${liczba.format(h.krawedz_m)} m — tylko tam, gdzie w obu okresach jest co najmniej ${h.minimum} transakcji (pominięte: ${h.pominiete}).${srodek} Filtr lat strony nie działa w tym widoku. Mediana zależy też od tego, co sprzedano — to nie indeks cen.`));
         } catch (e) {
             komunikat.textContent = e.message;
             komunikat.hidden = false;
@@ -353,6 +408,7 @@
     }
 
     function uzupelnijListy(d) {
+        ustawOkresy(d.lata);
         for (const nazwa of ["od", "do"]) {
             const pole = filtry.elements[nazwa];
             if (pole.options.length > 1) continue;

@@ -521,3 +521,36 @@ def test_wykres_lat():
     assert ">10 000<" in svg and ">2023<" in svg
     assert "za mało lat" in rcn.wykres_lat_svg(rcn.porownanie(lokale[:6], [obszar]))
     assert rcn._ladna_os(10234, 13870) == (10000, 14000, 1000)
+
+
+# ---------- ETAP 111: zmiana cen w heksagonach ----------
+
+
+def test_zmiana_heksagonow():
+    def rek(rok, cena, lat=50.06):
+        return {"rok": rok, "cena_m2": float(cena), "lat": lat, "lng": 19.94}
+    rekordy = [rek(2021, c) for c in (10000, 10000, 11000)] + [rek(2024, c) for c in (12000, 12100, 13000)]
+    rekordy += [rek(2021, 9000, 50.2)] * 3 + [rek(2024, 9000, 50.2)]  # druga komórka: za mało w okresie B
+    rekordy += [rek(2022, 99999)] * 5  # rok poza okresami
+    w = rcn.zmiana_heksagonow(rekordy, 8, 3, (2021, 2021), (2024, 2025))
+    assert len(w["komorki"]) == 1 and w["pominiete"] == 1
+    k = w["komorki"][0]
+    assert (k["mediana_a"], k["mediana_b"], k["liczba_a"], k["liczba_b"]) == (10000, 12100, 3, 3)
+    assert k["zmiana_proc"] == pytest.approx(21.0) and w["mediana_zmian"] == pytest.approx(21.0)
+    assert len(rcn.KOLORY_ZMIANY) == len(rcn.PROGI_ZMIANY) + 1
+
+
+def test_trasa_zmiany(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, dok_data=f"{2021 + 3 * (i % 2)}-05-01", lok_cena_brutto=500000 + 100000 * (i % 2)) for i in range(1, 13)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    url = "/ceny/transakcje/1/zmiana-heksagonow?rozdzielczosc=8&minimum=5&a_od=2021&a_do=2021&b_od=2024&b_do=2024"
+    w = client.get(url).get_json()
+    assert len(w["komorki"]) == 1 and w["komorki"][0]["zmiana_proc"] == pytest.approx(20.0)  # 10 000 → 12 000 zł/m²
+    assert client.get(url + "&od=2024").get_json()["komorki"]  # filtr lat strony nie obowiązuje
+    assert client.get(url.replace("b_od=2024", "b_od=2021")).status_code == 400  # wspólny rok
+    assert client.get(url.replace("a_od=2021&a_do=2021", "a_od=2022&a_do=2021")).status_code == 400
+    assert client.get(url.replace("&a_od=2021", "")).status_code == 400

@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 110 (ceny: trend cen w obszarach — zamknięty)
-Ostatni ZIP: releases/warsztat_etap110_20261001.zip
-Testy: 495 passed / 0 failed
+ETAP: 111 (ceny: zmiana cen w heksagonach — zamknięty)
+Ostatni ZIP: releases/warsztat_etap111_20261001.zip
+Testy: 497 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

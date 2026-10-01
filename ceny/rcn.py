@@ -729,3 +729,52 @@ def wykres_lat_svg(por: dict, szerokosc: int = 900, wysokosc: int = 300) -> str:
             czesci.append(f'<text x="{a + 8:.1f}" y="{b + 4:.1f}" font-weight="700" fill="{kolor}">{numer}</text>')
     czesci.append("</svg>")
     return "".join(czesci)
+
+
+# ---------- zmiana cen w heksagonach między dwoma okresami (ETAP 111) ----------
+
+# stałe, symetryczne klasy zmiany mediany [%] — ta sama skala na każdej mapie
+PROGI_ZMIANY = [-10, -2, 2, 10, 20]
+KOLORY_ZMIANY = ["#2b6cb0", "#90cdf4", "#d2d2d7", "#ffc55c", "#ff9f0a", "#a33a00"]
+
+
+def zmiana_heksagonow(rekordy: list[dict], rozdzielczosc: int, minimum: int,
+                      okres_a: tuple[int, int], okres_b: tuple[int, int]) -> dict:
+    """Zmiana mediany ceny za m² w komórkach H3 z okresu A do okresu B (lata
+    włącznie). Pokazane tylko komórki z co najmniej `minimum` transakcjami
+    w OBU okresach. Zmiana mediany to też zmiana tego, co sprzedano (inne
+    mieszkania w każdym okresie) — nie indeks cen."""
+    po_komorce: dict = {}
+    for r in rekordy:
+        if r["lat"] is None:
+            continue
+        okres = "a" if okres_a[0] <= r["rok"] <= okres_a[1] else "b" if okres_b[0] <= r["rok"] <= okres_b[1] else None
+        if okres:
+            komorka = po_komorce.setdefault(h3.latlng_to_cell(r["lat"], r["lng"], rozdzielczosc), {"a": [], "b": []})
+            komorka[okres].append(r["cena_m2"])
+    komorki, pominiete = [], 0
+    for komorka, ceny in sorted(po_komorce.items()):
+        if len(ceny["a"]) < minimum or len(ceny["b"]) < minimum:
+            pominiete += 1
+            continue
+        mediana_a, mediana_b = statistics.median(ceny["a"]), statistics.median(ceny["b"])
+        komorki.append({
+            "h3": komorka,
+            "granica": [[round(a, 6), round(b, 6)] for a, b in h3.cell_to_boundary(komorka)],
+            "liczba_a": len(ceny["a"]), "liczba_b": len(ceny["b"]),
+            "mediana_a": mediana_a, "mediana_b": mediana_b,
+            "zmiana_proc": 100 * (mediana_b / mediana_a - 1),
+        })
+    zmiany = [k["zmiana_proc"] for k in komorki]
+    return {
+        "rozdzielczosc": rozdzielczosc,
+        "krawedz_m": krawedz_h3_m(rozdzielczosc),
+        "minimum": minimum,
+        "okres_a": list(okres_a),
+        "okres_b": list(okres_b),
+        "komorki": komorki,
+        "pominiete": pominiete,
+        "mediana_zmian": statistics.median(zmiany) if zmiany else None,
+        "progi": PROGI_ZMIANY,
+        "kolory": KOLORY_ZMIANY,
+    }

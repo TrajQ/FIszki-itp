@@ -114,6 +114,14 @@
                     <legend>Widok</legend>
                     <label><input type="radio" name="widok" value="punkty" checked> punkty</label>
                     <label><input type="radio" name="widok" value="heksagony"> heksagony (mediana)</label>
+                    <label><input type="radio" name="widok" value="zmiana"> zmiana między okresami</label>
+                </fieldset>
+                <fieldset id="okresy-zmiany" class="przelacznik-widoku" hidden>
+                    <legend>Okresy</legend>
+                    <label>A od <select name="a_od"></select></label>
+                    <label>do <select name="a_do"></select></label>
+                    <label>B od <select name="b_od"></select></label>
+                    <label>do <select name="b_do"></select></label>
                 </fieldset>
                 <label>Wielkość heksagonu <select name="rozdzielczosc">{% for r, krawedz in krawedzie_h3 %}<option value="{{ r }}" {{ 'selected' if r == 8 }}>krawędź ≈ {{ krawedz }} m</option>{% endfor %}</select></label>
                 <label>Najmniej transakcji w heksagonie <select name="minimum">{% for m in minima %}<option value="{{ m }}" {{ 'selected' if m == 5 }}>{{ m }}</option>{% endfor %}</select></label>

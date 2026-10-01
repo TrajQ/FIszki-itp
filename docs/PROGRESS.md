@@ -1955,3 +1955,19 @@ Status: zamknięty
 - Kod wypchnięty w osobnym commicie przed wpisami w dokumentacji (błąd
   składni w skrypcie zamykającym ETAP) — wpisy dopisane commitem obok
 - `DECISIONS.md`: D-118
+
+## ETAP 111 — Ceny: zmiana cen w heksagonach między dwoma okresami
+Data: 2026-10-01
+Status: zamknięty
+
+- `ceny/rcn.py`: `zmiana_heksagonow` — mediana ceny za m² w komórce H3 w
+  okresie A i B, zmiana w %, tylko komórki z minimum transakcji w obu
+  okresach; stałe klasy `PROGI_ZMIANY` / `KOLORY_ZMIANY` (niebieskie —
+  spadek, szare — bez zmian, pomarańczowe — wzrost); mediana zmian
+- Trasa `/ceny/transakcje/<id>/zmiana-heksagonow`: okresy A i B zastępują
+  filtr lat, pozostałe filtry strony obowiązują; walidacja (A przed B,
+  bez wspólnych lat)
+- Strona: trzeci widok mapy „zmiana między okresami”, wybór okresów
+  (domyślnie pierwsze i ostatnie dwa lata), legenda z klasami i opisem
+- Sprawdzone w przeglądarce (1400 i 390 px, zły okres, powrót do punktów)
+- `DECISIONS.md`: D-119
