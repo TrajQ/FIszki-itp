@@ -2177,3 +2177,24 @@ Status: zamknięty
 - Sprawdzone ezdxf: audyt bez błędów, suma części = pole działki
   (7573,6 vs 7573,7 m²)
 - `DECISIONS.md`: D-131
+
+## ETAP 124 — Atlas: typologia gmin metodą k-średnich
+Data: 2026-10-01
+Status: zamknięty
+
+- `atlas/typologia.py`: standaryzacja (z, odchylenie populacyjne),
+  k-średnich (Lloyd) ze startem deterministycznym (najbliższa średniej,
+  potem maximin), puste skupienie przejmuje punkt najdalszy; typy od
+  najliczniejszego; profil (średnie surowe i z), opis z profilu
+  („wysoki/niski: …” od |z| ≥ 0,5); średnia sylwetka; gminy bez danych
+  pominięte
+- `atlas/trasy_typologia.py`: strona `/atlas/typologia`, wynik JSON,
+  kartogram SVG (kolory kategorii, w legendzie „Typ N”, opisy typów w
+  przypisach), CSV; parametry jak we wskaźniku złożonym (`_parametry`)
+- `atlas/mapa_svg.py`: arkusz rośnie, gdy przypisów jest więcej niż 3
+  (po sprawdzeniu: opisy typów ucinały źródło)
+- Strona: wybór wskaźników i k (2–8), jakość podziału słownie, profile,
+  lista gmin; link z Atlasu
+- Sprawdzone w przeglądarce na 48 gminach z trzema podstawionymi grupami
+  (1300 i 390 px)
+- `DECISIONS.md`: D-132

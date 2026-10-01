@@ -67,10 +67,12 @@ def kartogram_svg(
     def punkt(lon: float, lat: float) -> str:
         return f"{przesun_x + (lon - min_lon) * wsp_dlugosci * skala:.1f},{przesun_y + (max_lat - lat) * skala:.1f}"
 
+    # ponad trzy wiersze przypisów (np. opisy typów, ETAP 124) — arkusz rośnie w dół
+    wysokosc = WYSOKOSC + 16 * max(0, len(przypisy) - 3)
     czesci = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{SZEROKOSC}" height="{WYSOKOSC}" '
-        f'viewBox="0 0 {SZEROKOSC} {WYSOKOSC}" font-family="Helvetica, Arial, sans-serif">',
-        f'<rect width="{SZEROKOSC}" height="{WYSOKOSC}" fill="#ffffff"/>',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{SZEROKOSC}" height="{wysokosc}" '
+        f'viewBox="0 0 {SZEROKOSC} {wysokosc}" font-family="Helvetica, Arial, sans-serif">',
+        f'<rect width="{SZEROKOSC}" height="{wysokosc}" fill="#ffffff"/>',
         f'<text x="{MARGINES}" y="52" font-size="24" font-weight="700" fill="#1d1d1f">{escape(tytul)}</text>',
         f'<text x="{MARGINES}" y="80" font-size="15" fill="#6e6e73">{escape(podtytul)}</text>',
         '<g stroke="#ffffff" stroke-width="0.6" stroke-linejoin="round">',

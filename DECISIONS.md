@@ -2762,3 +2762,25 @@ wyłączać przeznaczenia jak w QGIS.
 **Odrzucone alternatywy:**
 - Osobne zapytania do usług dla DXF — rozjechałyby się z GeoJSON.
 - Kreskowanie (HATCH) przeznaczeń — R12 go nie ma; kolor warstwy wystarcza.
+
+## D-132 — Typologia gmin: k-średnich bez losowania, opisy typów z profilu
+Data: 2026-10-01
+
+**Decyzja:** Typologię liczymy metodą k-średnich na wskaźnikach
+standaryzowanych, z deterministycznym startem (gmina najbliższa średniej,
+potem kolejno najdalsza od wybranych). Typy numerujemy od
+najliczniejszego. Opis typu powstaje regułą z profilu (|z| ≥ 0,5 →
+„wysoki/niski: wskaźnik”). Jakość — średnia sylwetka. Własna
+implementacja (ok. 60 wierszy), bez scikit-learn.
+
+**Uzasadnienie:** Student musi móc powtórzyć wynik — losowy start
+k-średnich daje różne typy przy każdym kliknięciu. Opis z reguły jest
+sprawdzalny i nie pochodzi od modelu językowego. Dla ~200 gmin czysty
+Python jest wystarczająco szybki.
+
+**Odrzucone alternatywy:**
+- scikit-learn — duża zależność dla jednego algorytmu.
+- Wielokrotny losowy start i wybór najlepszego — wynik też zależny od
+  ziarna; trudniej wytłumaczyć.
+- Grupowanie hierarchiczne (Ward) — dobre, ale wymaga dendrogramu do
+  wyboru liczby typów; k-średnich z sylwetką prostsze na I roku.

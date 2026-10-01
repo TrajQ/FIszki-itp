@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 123 (mpzp: eksport DXF działki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap123_20261001.zip
-Testy: 512 passed / 0 failed
+ETAP: 124 (atlas: typologia gmin k-średnich — zamknięty)
+Ostatni ZIP: releases/warsztat_etap124_20261001.zip
+Testy: 514 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

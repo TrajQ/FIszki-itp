@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block tytul %}Typologia gmin — Atlas — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
+        <h1>Typologia gmin</h1>
+        <p>Podział gmin województwa na typy o podobnym profilu kilku wskaźników GUS — metodą k-średnich na wskaźnikach standaryzowanych. Wynik: kartogram typów, profil każdego typu i lista gmin.</p>
+    </div>
+</div>
+
+<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+
+{% if wskazniki | length < 2 %}
+<section class="karta stos">
+    <p>Wskaźniki wybierasz z zestawu wskaźników raportu gminy — potrzebne są co najmniej dwa. Teraz w zestawie: {{ wskazniki | length }}.</p>
+    <p><a class="przycisk" href="{{ url_for('atlas.raport_gminy_wybor') }}">Ułóż zestaw wskaźników</a></p>
+</section>
+{% else %}
+<form id="formularz-typologii" class="stos">
+    <section class="karta stos">
+        <h3>1. Obszar i liczba typów</h3>
+        <div class="rzad">
+            <label>Województwo <select id="pole-woj" required><option value="">Wczytywanie…</option></select></label>
+            <label>Rok <input id="pole-rok" type="number" min="1995" max="2100" value="2023" required></label>
+            <label>Liczba typów <select id="pole-k">{% for k in range(min_k, maks_k + 1) %}<option value="{{ k }}" {{ 'selected' if k == 4 }}>{{ k }}</option>{% endfor %}</select></label>
+        </div>
+        <p class="wyciszony opis-raportu">Każdy wskaźnik jest standaryzowany (odchylenie od średniej województwa w odchyleniach standardowych), więc wszystkie ważą tyle samo. Gminy o podobnych wartościach trafiają do jednego typu. Wynik nie zależy od losowania — te same dane dają zawsze ten sam podział.</p>
+    </section>
+
+    <section class="karta stos">
+        <h3>2. Wskaźniki</h3>
+        <p class="wyciszony opis-raportu">Od 2 do 12 wskaźników. Lepiej wskaźniki względne (na 1000 mieszkańców, %) niż liczby bezwzględne — inaczej typy pokażą głównie wielkość gminy.</p>
+        <ul class="lista-wskaznikow-typologii">
+            {% for w in wskazniki %}
+            <li><label><input type="checkbox" class="wskaznik-typologii" value="{{ w.id }}"> {{ w.nazwa_pelna }}</label></li>
+            {% endfor %}
+        </ul>
+        <div class="rzad"><button type="submit">Policz</button><span id="stan" class="wyciszony"></span></div>
+    </section>
+</form>
+
+<section id="wynik" class="karta stos" hidden>
+    <div class="rzad rzad--miedzy">
+        <h3>3. Typy gmin</h3>
+        <div class="rzad">
+            <a id="link-mapy" class="przycisk przycisk--drugi" target="_blank" rel="noopener">Kartogram SVG ↗</a>
+            <a id="link-csv" class="przycisk przycisk--drugi">CSV</a>
+        </div>
+    </div>
+    <p id="jakosc" class="wyciszony"></p>
+    <p id="pominiete" class="wyciszony" hidden></p>
+    <figure class="zlozony__mapa"><img id="mapa" alt="Kartogram typów gmin"><figcaption id="mapa-stan" class="wyciszony"></figcaption></figure>
+    <h4>Profile typów</h4>
+    <p class="wyciszony opis-raportu">Średnia wartość wskaźnika w typie; w nawiasie — odchylenie od średniej województwa w odchyleniach standardowych (od +0,5 „wysoki”, do −0,5 „niski”).</p>
+    <div class="zlozony__przewijanie"><table class="tabela" id="profile"></table></div>
+    <h4>Gminy</h4>
+    <div class="zlozony__przewijanie zlozony__ranking"><table class="tabela" id="gminy"></table></div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
+    const URL_WYNIK = "{{ url_for('atlas.typologia_wynik') }}";
+    const URL_MAPA = "{{ url_for('atlas.typologia_mapa') }}";
+    const URL_CSV = "{{ url_for('atlas.typologia_csv') }}";
+</script>
+<script src="{{ url_for('atlas.static', filename='typologia.js') }}"></script>
+{% endblock %}

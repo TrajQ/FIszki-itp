@@ -817,3 +817,7 @@
 
 ## ETAP 123 — 2026-10-01
 - MPZP: eksport działki i jej części w przeznaczeniach do DXF (AutoCAD)
+
+## ETAP 124 — 2026-10-01
+- Atlas: typologia gmin (k-średnich) — kartogram typów, profile, CSV
+- Pomoc: opis

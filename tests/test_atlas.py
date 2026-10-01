@@ -1200,3 +1200,55 @@ def test_prognoza_trendu():
     stala = [{"rok": r, "wartosc": 5} for r in range(2015, 2024)]
     assert raport.prognoza_trendu(stala)["r2"] == 1.0
     assert raport.podsumuj(rosnacy, [], GMINA)["prognoza"]["rok"] == 2028
+
+
+# ---------- ETAP 124: typologia gmin ----------
+
+
+def test_typologia_k_srednich():
+    from atlas import typologia
+    # dwie wyraźne grupy po 3 gminy
+    a = [(1.0, 10.0), (1.2, 11.0), (0.9, 9.5), (5.0, 50.0), (5.2, 52.0), (4.9, 49.0)]
+    skladowe = [{"nazwa": n, "gminy": [{"teryt": f"t{i}", "nazwa": f"g{i}", "wartosc": p[j]} for i, p in enumerate(a)]}
+                for j, n in enumerate(["mieszkania", "dochody"])]
+    skladowe[0]["gminy"].append({"teryt": "t9", "nazwa": "bez danych", "wartosc": 3.0})
+    w = typologia.typologia(skladowe, 2)
+    assert [t["liczba"] for t in w["typy"]] == [3, 3] and w["pominiete"] == ["bez danych"]
+    typ = {g["nazwa"]: g["typ"] for g in w["gminy"]}
+    assert typ["g0"] == typ["g1"] == typ["g2"] != typ["g3"] == typ["g4"] == typ["g5"]
+    wysoki = next(t for t in w["typy"] if t["profil_z"][0] > 0)
+    assert wysoki["opis"] == "wysoki: mieszkania; wysoki: dochody" and wysoki["srednie"][1] == pytest.approx(151 / 3)
+    assert w["sylwetka"] > 0.9
+    assert typologia.typologia(skladowe, 2) == w  # deterministycznie
+    with pytest.raises(typologia.BladTypologii):
+        typologia.typologia(skladowe, 4)  # 6 gmin na 4 typy — za mało
+    with pytest.raises(typologia.BladTypologii):
+        typologia.typologia(skladowe[:1], 2)
+    stala = [skladowe[0], {"nazwa": "stała", "gminy": [{"teryt": f"t{i}", "nazwa": "x", "wartosc": 1.0} for i in range(6)]}]
+    with pytest.raises(typologia.BladTypologii, match="nic nie różnicuje"):
+        typologia.typologia(stala, 2)
+
+
+def test_typologia_trasy(raport_client, monkeypatch):
+    c = raport_client
+    bdl_id = [f"0112121050{i:02d}" for i in range(6)]
+    wartosci = {1: [(b, v) for b, v in zip(bdl_id, (100.0, 110.0, 90.0, 900.0, 950.0, 880.0))],
+                2: [(b, v) for b, v in zip(bdl_id, (5.0, 6.0, 5.5, 50.0, 52.0, 49.0))]}
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+        {"bdl_id": b, "teryt": "12" + b[-5:], "nazwa": "gmina " + b[-2:], "wartosc": w} for b, w in wartosci[zid]])
+    assert "co najmniej dwa" in c.get("/atlas/typologia").get_data(as_text=True)
+    w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
+    assert f'value="{w2}"' in c.get("/atlas/typologia").get_data(as_text=True)
+    zapytanie = f"woj={WOJ_RAPORTU}&rok=2023&k=2&s={w1}:1:1,{w2}:1:1"
+    d = c.get(f"/atlas/typologia/wynik?{zapytanie}").get_json()
+    assert d["k"] == 2 and [t["liczba"] for t in d["typy"]] == [3, 3] and len(d["kolory"]) == 2
+    assert c.get(f"/atlas/typologia/wynik?{zapytanie.replace('k=2', 'k=9')}").status_code == 400
+    assert c.get(f"/atlas/typologia/wynik?{zapytanie.replace('k=2', 'k=x')}").status_code == 400
+    csv_tekst = c.get(f"/atlas/typologia.csv?{zapytanie}").get_data(as_text=True)
+    assert csv_tekst.startswith("﻿typ;teryt;gmina;") and "Typ 1 (3 gmin)" in csv_tekst
+    granica = {"type": "Polygon", "coordinates": [[[19.9, 50.0], [20.0, 50.0], [20.0, 50.1], [19.9, 50.0]]]}
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {
+        "type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"teryt": "12" + b[-5:], "nazwa": b}, "geometry": granica} for b in bdl_id]})
+    svg = c.get(f"/atlas/typologia/mapa.svg?{zapytanie}").get_data(as_text=True)
+    assert "Typologia gmin" in svg and ">Typ 1<" in svg and "Typ 1: " in svg and "k-średnich (k = 2)" in svg

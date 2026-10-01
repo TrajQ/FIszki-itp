@@ -1111,3 +1111,33 @@ button.przelacznik__opcja--aktywna:hover {
 .raport-gminy__prognoza--niestabilny {
     font-style: italic;
 }
+
+/* ---------- typologia gmin (ETAP 124) ---------- */
+
+.lista-wskaznikow-typologii {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lista-wskaznikow-typologii label {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.typ-gminy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.probka-typu {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
