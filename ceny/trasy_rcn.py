@@ -229,28 +229,61 @@ def raport_transakcji(plik_id):
 # ---------- podobne transakcje (ETAP 107) ----------
 
 
+def _parametry_wyceny() -> dict:
+    """Filtry strony + miejsce, powierzchnia, promień i tolerancja; ValueError, gdy złe."""
+    p = {k: request.args.get(k, type=float) for k in ("lat", "lng", "pow", "tolerancja")}
+    p["promien"] = request.args.get("promien", type=int)
+    p["co"] = _co()
+    p["filtry"] = _filtry(p["co"])
+    if p["lat"] is None or p["lng"] is None or not w_polsce(p["lat"], p["lng"]):
+        raise ValueError("Wskaż miejsce na mapie (kliknij).")
+    if p["pow"] is None or not 1 <= p["pow"] <= 2_000_000:
+        raise ValueError("Podaj powierzchnię w m².")
+    if p["promien"] not in rcn.PROMIENIE_M or p["tolerancja"] not in rcn.TOLERANCJE:
+        raise ValueError("Niepoprawny promień albo tolerancja.")
+    return p
+
+
+def _wynik_wyceny(plik_id: int, p: dict) -> dict:
+    return rcn.podobne(_rekordy(plik_id, p["co"], p["filtry"]), p["lat"], p["lng"], p["promien"], p["pow"], p["tolerancja"])
+
+
 @ceny_bp.route("/transakcje/<int:plik_id>/podobne")
 def podobne_transakcje(plik_id):
     """Filtry strony (rynek, lata, izby, przeznaczenie…) + miejsce i powierzchnia."""
     if baza.plik_rcn(plik_id) is None:
         abort(404)
-    lat = request.args.get("lat", type=float)
-    lng = request.args.get("lng", type=float)
-    pow_m2 = request.args.get("pow", type=float)
-    promien = request.args.get("promien", type=int)
-    tolerancja = request.args.get("tolerancja", type=float)
     try:
-        co = _co()
-        filtry = _filtry(co)
-        if lat is None or lng is None or not w_polsce(lat, lng):
-            raise ValueError("Wskaż miejsce na mapie (kliknij).")
-        if pow_m2 is None or not 1 <= pow_m2 <= 2_000_000:
-            raise ValueError("Podaj powierzchnię w m².")
-        if promien not in rcn.PROMIENIE_M or tolerancja not in rcn.TOLERANCJE:
-            raise ValueError("Niepoprawny promień albo tolerancja.")
+        p = _parametry_wyceny()
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
-    return jsonify(rcn.podobne(_rekordy(plik_id, co, filtry), lat, lng, promien, pow_m2, tolerancja))
+    return jsonify(_wynik_wyceny(plik_id, p))
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/wycena")
+def karta_wyceny(plik_id):
+    """ETAP 113: karta wyceny porównawczej do druku — te same parametry co /podobne."""
+    plik = baza.plik_rcn(plik_id)
+    if plik is None:
+        abort(404)
+    try:
+        p = _parametry_wyceny()
+    except ValueError:
+        abort(400)
+    wynik = _wynik_wyceny(plik_id, p)
+    opis_filtrow = [f"rynek {p['filtry']['rynek']}"] if p["filtry"].get("rynek") else []
+    if p["filtry"].get("od_roku") or p["filtry"].get("do_roku"):
+        opis_filtrow.append(f"lata {p['filtry'].get('od_roku') or '…'}–{p['filtry'].get('do_roku') or '…'}")
+    for klucz, etykieta in (("izby", "izby"), ("rodzaj", "transakcje"), ("przeznaczenie", "przeznaczenie"), ("nieruchomosc", "nieruchomość")):
+        if p["filtry"].get(klucz):
+            opis_filtrow.append(f"{etykieta}: {p['filtry'][klucz]}")
+    if request.args.get("pietro") in rcn.OPISY_PIETER:
+        opis_filtrow.append(rcn.OPISY_PIETER[request.args["pietro"]])
+    return render_template(
+        "ceny/wycena.html", plik=plik, p=p, wynik=wynik, opis_filtrow=opis_filtrow,
+        mapa=Markup(rcn.mapa_wyceny_svg(wynik, p["lat"], p["lng"])),  # tylko liczby i kolory z kodu
+        powrot=url_for("ceny.transakcje", plik=plik_id, co=p["co"]), dzis=date.today().isoformat(),
+    )
 
 
 # ---------- mapa cen w heksagonach (ETAP 108) ----------

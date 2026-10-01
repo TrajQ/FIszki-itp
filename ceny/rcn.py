@@ -602,7 +602,7 @@ def podobne(rekordy: list[dict], lat: float, lng: float, promien_m: float, pow_m
         "od": min(r["data"] for r in kandydaci),
         "do": max(r["data"] for r in kandydaci),
         "transakcje": [
-            {k: r.get(k) for k in ("data", "rynek", "pow_m2", "cena", "cena_m2", "izby", "przeznaczenie", "lat", "lng", "odleglosc_m")}
+            {k: r.get(k) for k in ("data", "rynek", "pow_m2", "cena", "cena_m2", "izby", "kondygnacja", "przeznaczenie", "lat", "lng", "odleglosc_m")}
             for r in kandydaci[:MAKS_NA_LISCIE]
         ],
     }
@@ -817,3 +817,36 @@ def zmiana_heksagonow(rekordy: list[dict], rozdzielczosc: int, minimum: int,
         "progi": PROGI_ZMIANY,
         "kolory": KOLORY_ZMIANY,
     }
+
+
+# ---------- karta wyceny porównawczej do druku (ETAP 113) ----------
+
+
+def mapa_wyceny_svg(wynik: dict, lat: float, lng: float, szerokosc: int = 640, wysokosc: int = 640) -> str:
+    """Schemat: okrąg promienia, wskazane miejsce i podobne transakcje z
+    numerami jak w tabeli karty (od najbliższej), podziałka, strzałka północy."""
+    promien = wynik["promien_m"]
+    margines = 36
+    skala = (min(szerokosc, wysokosc) / 2 - margines) / promien  # piksele na metr
+    kx = math.cos(math.radians(lat)) * 111_195
+
+    def px(la, ln):
+        return szerokosc / 2 + (ln - lng) * kx * skala, wysokosc / 2 - (la - lat) * 111_195 * skala
+
+    czesci = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc} {wysokosc}" width="{szerokosc}" height="{wysokosc}" font-family="sans-serif" font-size="11"><rect width="100%" height="100%" fill="#ffffff"/>',
+              f'<circle cx="{szerokosc / 2}" cy="{wysokosc / 2}" r="{promien * skala:.1f}" fill="#0071e3" fill-opacity="0.04" stroke="#0071e3" stroke-width="1.5" stroke-dasharray="6 5"/>']
+    for nr, t in reversed(list(enumerate(wynik["transakcje"], start=1))):  # najbliższe rysowane na wierzchu
+        x, y = px(t["lat"], t["lng"])
+        czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8" fill="#ff9f0a" stroke="#a33a00" stroke-width="1"/>'
+                      f'<text x="{x:.1f}" y="{y + 3.5:.1f}" text-anchor="middle" font-weight="700" fill="#1d1d1f">{nr}</text>')
+    srodek_x, srodek_y = szerokosc / 2, wysokosc / 2
+    czesci.append(f'<path d="M{srodek_x},{srodek_y} l-7,-18 a7,7 0 1,1 14,0 z" fill="#0071e3" stroke="#ffffff" stroke-width="1.5"/>')
+    _, _, krok = _ladna_os(0, promien / 2, 1)
+    dlugosc = krok * skala
+    opis = f"{krok / 1000:g} km".replace(".", ",") if krok >= 1000 else f"{krok:g} m"
+    czesci.append(f'<path d="M{margines},{wysokosc - 18} v6 h{dlugosc:.1f} v-6" fill="none" stroke="#1d1d1f" stroke-width="1.5"/>'
+                  f'<text x="{margines + dlugosc + 6:.1f}" y="{wysokosc - 12}" fill="#1d1d1f">{opis}</text>')
+    x = szerokosc - margines + 10
+    czesci.append(f'<path d="M{x},{margines - 22} L{x + 6},{margines - 6} L{x},{margines - 10} L{x - 6},{margines - 6} Z" fill="#1d1d1f"/><text x="{x}" y="{margines + 6}" text-anchor="middle" fill="#1d1d1f">N</text>')
+    czesci.append("</svg>")
+    return "".join(czesci)

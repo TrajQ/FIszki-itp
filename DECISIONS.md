@@ -2557,3 +2557,20 @@ Przedziały odpowiadają typowej zabudowie: niska, średnia, wysoka.
 **Odrzucone alternatywy:**
 - Pojedyncze piętra w tabeli — kilkanaście wierszy z małą liczbą transakcji.
 - Liczby rzymskie i opisy słowne — brak potwierdzenia, że występują.
+
+## D-121 — Karta wyceny: ta sama wycena co na stronie, schemat bez podkładu
+Data: 2026-10-01
+
+**Decyzja:** Karta wyceny powstaje z tych samych parametrów URL i tej
+samej funkcji co wynik na stronie (`rcn.podobne`), więc liczby na
+wydruku i na ekranie są identyczne. Schemat to SVG z Pythona bez
+podkładu mapowego (jak raport, D-113), z numerami transakcji zgodnymi z
+tabelą. Karta mówi wprost, że to nie operat szacunkowy, i opisuje metodę.
+
+**Uzasadnienie:** Student może dołączyć kartę do pracy z wyceny albo
+analizy rynku; musi być jasne, skąd liczby i czego nie uwzględniają.
+
+**Odrzucone alternatywy:**
+- Zrzut mapy Leaflet — zależny od sieci i kafelków OSM.
+- Zapisywanie wycen w bazie — nikt o to nie prosił; adres karty wystarcza,
+  żeby wrócić do tej samej wyceny.

@@ -580,3 +580,26 @@ def test_trasy_pietra(client, tmp_path, monkeypatch):
     raport = client.get("/ceny/transakcje/1/raport?pietro=1-3").get_data(as_text=True)
     assert "Według piętra" in raport and "1–3 piętro" in raport
     assert "Piętro" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)
+
+
+# ---------- ETAP 113: karta wyceny do druku ----------
+
+
+def test_karta_wyceny(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_pow_uzyt=50 + i, lok_nr_kond="parter" if i == 1 else i, lok_cena_brutto=(50 + i) * 10000,
+                             geom=geometria_gpkg(50.06 + i / 10000, 19.94)) for i in range(1, 8)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    url = "/ceny/transakcje/1/wycena?lat=50.06&lng=19.94&pow=55&promien=500&tolerancja=0.2&rynek=wtórny"
+    strona = client.get(url).get_data(as_text=True)
+    assert "Wycena porównawcza mieszkania" in strona and "To nie jest operat szacunkowy" in strona
+    assert "rynek wtórny" in strona and "550 000 zł" in strona  # 10 000 zł/m² × 55 m²
+    assert strona.count("<circle") == 1 + 7 and ">parter<" in strona  # okrąg + 7 transakcji
+    assert "Tylko" not in strona  # 7 ≥ 5
+    pusto = client.get(url.replace("lat=50.06&lng=19.94", "lat=52.2&lng=21.0")).get_data(as_text=True)
+    assert "Brak podobnych transakcji" in pusto
+    assert client.get(url.replace("promien=500", "promien=7")).status_code == 400
+    assert client.get("/ceny/transakcje/9/wycena").status_code == 404

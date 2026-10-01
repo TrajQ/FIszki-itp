@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% macro z(x, miejsca=0) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
+
+{% block tytul %}Wycena porównawcza — {{ plik.nazwa }} — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-cen{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">{% endblock %}
+
+{% block tresc %}
+{% set dzialki = p.co == 'dzialki' %}
+<div class="raport-cen">
+    <div class="raport-cen__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ powrot }}">‹ Transakcje</a>
+        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+    </div>
+
+    <section class="raport-cen__strona">
+        <h1>Wycena porównawcza {{ 'działki' if dzialki else 'mieszkania' }}</h1>
+        <p class="wyciszony">Miejsce {{ '%.5f' | format(p.lat) }}, {{ '%.5f' | format(p.lng) }} · powierzchnia {{ z(p.pow, 1) }} m² (± {{ (p.tolerancja * 100) | round | int }}%) · promień {{ z(p.promien) }} m{% if opis_filtrow %} · {{ opis_filtrow | join(', ') }}{% endif %}</p>
+
+        {% if wynik.liczba %}
+        {% if not wynik.wystarczy %}<p class="komunikat">Tylko {{ wynik.liczba }} podobnych transakcji (mniej niż {{ wynik.min_podobnych }}) — mediana jest niepewna.</p>{% endif %}
+        <div class="kafelki-rcn">
+            <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Podobnych transakcji</span><span class="kafelek-rcn__wartosc">{{ wynik.liczba }}</span><span class="wyciszony kafelek-rcn__dopisek">{{ wynik.od }} – {{ wynik.do }}</span></div>
+            <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Mediana ceny za m²</span><span class="kafelek-rcn__wartosc">{{ z(wynik.mediana_m2) }} zł</span><span class="wyciszony kafelek-rcn__dopisek">połowa: {{ z(wynik.q1_m2) }}–{{ z(wynik.q3_m2) }} zł</span></div>
+            <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Orientacyjnie za {{ z(p.pow, 1) }} m²</span><span class="kafelek-rcn__wartosc">{{ z(wynik.szacunek) }} zł</span><span class="wyciszony kafelek-rcn__dopisek">połowa: {{ z(wynik.szacunek_od) }}–{{ z(wynik.szacunek_do) }} zł</span></div>
+        </div>
+        <div class="raport-cen__mapa raport-cen__mapa--kwadrat">{{ mapa }}</div>
+        <p class="wyciszony opis-cen">Schemat: przerywany okrąg — promień {{ z(p.promien) }} m od wskazanego miejsca (niebieski znacznik), numery — podobne transakcje jak w tabeli (od najbliższej).</p>
+        {% else %}
+        <p class="komunikat">Brak podobnych transakcji w tym promieniu — zwiększ promień albo tolerancję powierzchni.</p>
+        {% endif %}
+    </section>
+
+    {% if wynik.liczba %}
+    <section class="raport-cen__strona">
+        <h2>Podobne transakcje</h2>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th class="liczba">Nr</th><th class="liczba">Odległość</th><th>Data</th><th class="liczba">Powierzchnia</th>
+                {% if dzialki %}<th>Przeznaczenie</th>{% else %}<th class="liczba">Izby</th><th class="liczba">Piętro</th>{% endif %}
+                <th class="liczba">Cena</th><th class="liczba">Za m²</th></tr>
+            {% for t in wynik.transakcje %}
+            <tr><td class="liczba">{{ loop.index }}</td><td class="liczba">{{ z(t.odleglosc_m) }} m</td><td>{{ t.data }}</td><td class="liczba">{{ z(t.pow_m2, 1) }} m²</td>
+                {% if dzialki %}<td>{{ t.przeznaczenie or '—' }}</td>{% else %}<td class="liczba">{{ t.izby or '—' }}</td><td class="liczba">{{ '—' if t.kondygnacja is none else ('parter' if t.kondygnacja == 0 else t.kondygnacja) }}</td>{% endif %}
+                <td class="liczba">{{ z(t.cena) }} zł</td><td class="liczba">{{ z(t.cena_m2) }} zł</td></tr>
+            {% endfor %}
+        </table>
+        </div>
+        {% if wynik.liczba > wynik.transakcje | length %}<p class="wyciszony opis-cen">W tabeli {{ wynik.transakcje | length }} najbliższych z {{ wynik.liczba }}; mediana ze wszystkich.</p>{% endif %}
+        <p class="wyciszony opis-cen"><strong>To nie jest operat szacunkowy.</strong> Cena orientacyjna = mediana ceny za m² podobnych transakcji × powierzchnia, bez korekt na stan, piętro, standard ani datę transakcji. Przedział „połowa” — od pierwszego do trzeciego kwartyla. Źródło: Rejestr Cen Nieruchomości (GUGiK), plik {{ plik.nazwa }}, ceny brutto z aktów notarialnych. Opracowanie: Warsztat, {{ dzis }}.</p>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

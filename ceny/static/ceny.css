@@ -480,3 +480,10 @@
     align-items: center;
     gap: 6px;
 }
+
+/* ETAP 113: karta wyceny — kwadratowy schemat nie rozciąga się na całą szerokość */
+.raport-cen__mapa--kwadrat svg {
+    max-width: 560px;
+    display: block;
+    margin: 0 auto;
+}

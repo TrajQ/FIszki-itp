@@ -1988,3 +1988,21 @@ Status: zamknięty
 - Nazwa kolumny z dwóch otwartych projektów; zapis wartości do
   potwierdzenia na prawdziwym pliku
 - `DECISIONS.md`: D-120
+
+## ETAP 113 — Ceny: karta wyceny porównawczej do druku
+Data: 2026-10-01
+Status: zamknięty
+
+- Trasa `/ceny/transakcje/<id>/wycena` — te same parametry i liczby co
+  `/podobne` (wspólne `_parametry_wyceny`, `_wynik_wyceny`)
+- `ceny/templates/ceny/wycena.html`: parametry i filtry, kafelki (liczba,
+  mediana za m² z przedziałem, cena orientacyjna), schemat SVG, tabela
+  podobnych transakcji z piętrem (lokale) albo przeznaczeniem (działki),
+  wprost „To nie jest operat szacunkowy” i opis metody
+- `ceny/rcn.py`: `mapa_wyceny_svg` — okrąg promienia, miejsce, numery
+  transakcji jak w tabeli, podziałka, strzałka północy; lista podobnych
+  ma też `kondygnacja`
+- Strona transakcji: przycisk „Karta wyceny do druku ↗” przy wyniku
+- Sprawdzone w przeglądarce (1300 i 390 px, PDF A4): odległości na
+  schemacie zgadzają się z tabelą
+- `DECISIONS.md`: D-121

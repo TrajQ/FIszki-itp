@@ -775,3 +775,6 @@
 ## ETAP 112 — 2026-10-01
 - Ceny → Transakcje: filtr i tabela według piętra lokalu
 - Pomoc: opis
+
+## ETAP 113 — 2026-10-01
+- Ceny → Transakcje: karta wyceny porównawczej do druku / PDF

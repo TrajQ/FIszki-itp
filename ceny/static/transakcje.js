@@ -481,6 +481,13 @@
             const w = await odp.json();
             if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
             pokazPodobne(w);
+            if (w.liczba) { // ETAP 113: ta sama wycena jako karta do druku
+                const karta = el("a", "przycisk przycisk--drugi", "Karta wyceny do druku ↗");
+                karta.href = `${URL_TRANSAKCJE}/${PLIK_ID}/wycena?${parametry}`;
+                karta.target = "_blank";
+                karta.rel = "noopener";
+                wynikPodobnych.appendChild(karta);
+            }
         } catch (e) {
             wynikPodobnych.replaceChildren(el("p", "komunikat komunikat--blad", e.message));
         }
