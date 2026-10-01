@@ -2006,3 +2006,19 @@ Status: zamknięty
 - Sprawdzone w przeglądarce (1300 i 390 px, PDF A4): odległości na
   schemacie zgadzają się z tabelą
 - `DECISIONS.md`: D-121
+
+## ETAP 114 — Ceny: eksport GeoJSON do QGIS
+Data: 2026-10-01
+Status: zamknięty
+
+- Trasy `/ceny/transakcje/<id>.geojson` (punkty, atrybuty jak w CSV;
+  działki z przeznaczeniem i rodzajem nieruchomości, lokale z izbami i
+  piętrem), `/heksagony.geojson` (wielokąty H3 z liczbą i medianą),
+  `/obszary.geojson` (narysowane obszary ze statystykami porównania)
+- Filtry strony obowiązują; GeoJSON wg RFC 7946 (WGS84, lon, lat),
+  `application/geo+json`, nazwy plików z rodzajem i numerem pliku
+- Strona: linki „Pobierz do QGIS” pod mapą, aktualizowane z filtrami i
+  wielkością heksagonów
+- Sprawdzone w przeglądarce: pobranie trzech plików, geometrie poprawne
+  (shapely), 390 px
+- `DECISIONS.md`: D-122

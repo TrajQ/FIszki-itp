@@ -10,6 +10,7 @@ mniejszych plików (limit wgrywania aplikacji). Wskazać można tylko plik
 import csv
 import glob
 import io
+import json
 import os
 import tempfile
 from datetime import date
@@ -387,6 +388,71 @@ def csv_transakcji(plik_id):
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename=rcn_{co}_{plik_id}.csv"},
     )
+
+
+# ---------- eksport GeoJSON do QGIS (ETAP 114) ----------
+
+
+def _geojson(cechy: list[dict], nazwa_pliku: str) -> Response:
+    """FeatureCollection (RFC 7946: WGS84, kolejność lon, lat) do pobrania."""
+    return Response(
+        json.dumps({"type": "FeatureCollection", "features": cechy}, ensure_ascii=False),
+        mimetype="application/geo+json",
+        headers={"Content-Disposition": f"attachment; filename={nazwa_pliku}"},
+    )
+
+
+def _filtry_eksportu(plik_id: int) -> tuple[dict, str, dict]:
+    plik = baza.plik_rcn(plik_id)
+    if plik is None:
+        abort(404)
+    try:
+        co = _co()
+        return plik, co, _filtry(co)
+    except ValueError:
+        abort(400)
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>.geojson")
+def geojson_transakcji(plik_id):
+    _, co, filtry = _filtry_eksportu(plik_id)
+    pola = ["data", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2"]
+    pola += ["przeznaczenie", "uzytek", "nieruchomosc", "dzialek"] if co == "dzialki" else ["izby", "kondygnacja"]
+    cechy = [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [round(r["lng"], 6), round(r["lat"], 6)]},
+         "properties": {p: r[p] for p in pola}}
+        for r in sorted(_rekordy(plik_id, co, filtry), key=lambda r: r["data"]) if r["lat"] is not None
+    ]
+    return _geojson(cechy, f"rcn_{co}_{plik_id}.geojson")
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/heksagony.geojson")
+def geojson_heksagonow(plik_id):
+    _, co, filtry = _filtry_eksportu(plik_id)
+    rozdzielczosc = request.args.get("rozdzielczosc", type=int)
+    minimum = request.args.get("minimum", type=int)
+    if rozdzielczosc not in rcn.ROZDZIELCZOSCI_H3 or minimum not in rcn.MINIMA_W_KOMORCE:
+        abort(400)
+    h = rcn.heksagony(_rekordy(plik_id, co, filtry), rozdzielczosc, minimum)
+    cechy = []
+    for k in h["komorki"]:
+        pierscien = [[b, a] for a, b in k["granica"]]  # h3: (lat, lng) → GeoJSON: [lng, lat]
+        cechy.append({"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [pierscien + pierscien[:1]]},
+                      "properties": {"h3": k["h3"], "liczba": k["liczba"], "mediana_m2": k["mediana_m2"]}})
+    return _geojson(cechy, f"rcn_{co}_{plik_id}_h3_{rozdzielczosc}.geojson")
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/obszary.geojson")
+def geojson_obszarow(plik_id):
+    _, co, filtry = _filtry_eksportu(plik_id)
+    obszary = baza.obszary_rcn(plik_id)
+    por = rcn.porownanie(_rekordy(plik_id, co, filtry), obszary)
+    cechy = []
+    for nr, (o, w) in enumerate(zip(obszary, por["obszary"]), start=1):
+        wlasciwosci = {"nr": nr, "nazwa": o["nazwa"], "liczba": w["liczba"]}
+        wlasciwosci.update({k: w.get(k) for k in ("mediana_m2", "q1_m2", "q3_m2", "mediana_pow", "wobec_calosci_proc")})
+        cechy.append({"type": "Feature", "geometry": o["geometria"], "properties": wlasciwosci})
+    return _geojson(cechy, f"rcn_{co}_{plik_id}_obszary.geojson")
 
 
 @ceny_bp.route("/transakcje/<int:plik_id>/usun", methods=["POST"])

@@ -778,3 +778,8 @@
 
 ## ETAP 113 — 2026-10-01
 - Ceny → Transakcje: karta wyceny porównawczej do druku / PDF
+
+## ETAP 114 — 2026-10-01
+- Ceny → Transakcje: pobieranie transakcji, heksagonów i obszarów jako
+  GeoJSON do QGIS
+- Pomoc: opis

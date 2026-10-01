@@ -2574,3 +2574,20 @@ analizy rynku; musi być jasne, skąd liczby i czego nie uwzględniają.
 - Zrzut mapy Leaflet — zależny od sieci i kafelków OSM.
 - Zapisywanie wycen w bazie — nikt o to nie prosił; adres karty wystarcza,
   żeby wrócić do tej samej wyceny.
+
+## D-122 — Eksport do QGIS jako GeoJSON w WGS84, bez nowej zależności
+Data: 2026-10-01
+
+**Decyzja:** Transakcje, heksagony i obszary eksportujemy jako GeoJSON
+(RFC 7946: WGS84, kolejność lon, lat) budowany zwykłym `json` — z
+filtrami strony i tymi samymi atrybutami co CSV. Pierścienie heksagonów
+zamknięte (pierwszy punkt = ostatni).
+
+**Uzasadnienie:** QGIS czyta GeoJSON bez konfiguracji; student może
+zrobić własny kartogram, połączyć ceny z innymi warstwami (np. MPZP) i
+wydrukować mapę w układzie PL-1992 — przeliczenie zrobi QGIS.
+
+**Odrzucone alternatywy:**
+- GeoPackage / Shapefile — wymagałyby GDAL/Fiony (ciężka zależność).
+- Eksport w PL-1992 — RFC 7946 przewiduje tylko WGS84; QGIS przelicza
+  „w locie”.

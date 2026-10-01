@@ -540,6 +540,13 @@
         const parametry = parametryFiltrow();
         document.getElementById("link-csv-rcn").href = `${URL_TRANSAKCJE}/${PLIK_ID}.csv?${parametry}`;
         document.getElementById("link-raport-rcn").href = `${URL_TRANSAKCJE}/${PLIK_ID}/raport?${parametry}`;
+        // ETAP 114: GeoJSON do QGIS — heksagony w wielkości i minimum wybranych nad mapą
+        const hex = new URLSearchParams(parametry);
+        hex.set("rozdzielczosc", widokMapy.elements.rozdzielczosc.value);
+        hex.set("minimum", widokMapy.elements.minimum.value);
+        document.getElementById("geojson-transakcje").href = `${URL_TRANSAKCJE}/${PLIK_ID}.geojson?${parametry}`;
+        document.getElementById("geojson-heksagony").href = `${URL_TRANSAKCJE}/${PLIK_ID}/heksagony.geojson?${hex}`;
+        document.getElementById("geojson-obszary").href = `${URL_TRANSAKCJE}/${PLIK_ID}/obszary.geojson?${parametry}`;
         try {
             const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/dane?${parametry}`);
             const d = await odp.json();

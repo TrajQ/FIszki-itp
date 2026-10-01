@@ -603,3 +603,34 @@ def test_karta_wyceny(client, tmp_path, monkeypatch):
     assert "Brak podobnych transakcji" in pusto
     assert client.get(url.replace("promien=500", "promien=7")).status_code == 400
     assert client.get("/ceny/transakcje/9/wycena").status_code == 404
+
+
+# ---------- ETAP 114: GeoJSON ----------
+
+
+def test_geojson(client, tmp_path, monkeypatch):
+    import json as js
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_nr_kond=i, tran_rodzaj_rynku="pierwotny" if i < 3 else "wtorny") for i in range(1, 7)])
+    dodaj_dzialki(sciezka, [dzialka("T1", 1, dzi_cena_brutto=100000)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    client.post("/ceny/transakcje/1/obszary", json={"nazwa": "Stare Miasto", "geometria": prostokat(19.9, 50.0, 20.0, 50.1)})
+    odp = client.get("/ceny/transakcje/1.geojson?rynek=pierwotny")
+    assert odp.mimetype == "application/geo+json" and "rcn_lokale_1.geojson" in odp.headers["Content-Disposition"]
+    g = js.loads(odp.get_data(as_text=True))
+    assert len(g["features"]) == 2 and g["features"][0]["properties"]["kondygnacja"] == 1
+    lng, lat = g["features"][0]["geometry"]["coordinates"]
+    assert lng == pytest.approx(19.94, abs=1e-5) and lat == pytest.approx(50.06, abs=1e-5)  # kolejność lon, lat
+    dz = js.loads(client.get("/ceny/transakcje/1.geojson?co=dzialki").get_data(as_text=True))
+    assert dz["features"][0]["properties"]["przeznaczenie"] == "budownictwo mieszkaniowe jednorodzinne"
+    hx = js.loads(client.get("/ceny/transakcje/1/heksagony.geojson?rozdzielczosc=8&minimum=5").get_data(as_text=True))
+    ring = hx["features"][0]["geometry"]["coordinates"][0]
+    assert len(ring) == 7 and ring[0] == ring[-1] and 19 < ring[0][0] < 21 and hx["features"][0]["properties"]["liczba"] == 6
+    ob = js.loads(client.get("/ceny/transakcje/1/obszary.geojson").get_data(as_text=True))
+    assert ob["features"][0]["properties"] == {**ob["features"][0]["properties"], "nr": 1, "nazwa": "Stare Miasto", "liczba": 6}
+    assert client.get("/ceny/transakcje/1/heksagony.geojson?rozdzielczosc=3&minimum=5").status_code == 400
+    assert client.get("/ceny/transakcje/9.geojson").status_code == 404
+    assert client.get("/ceny/transakcje/1.geojson?co=x").status_code == 400
