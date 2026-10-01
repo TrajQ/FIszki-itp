@@ -2746,3 +2746,19 @@ zgodne z rzeczywistymi do 0,005%, w PL-1992 mniejsze o ok. 0,1%.
   zyskujemy dla prostych wieloboków.
 - Polskie znaki w opisach — R12 nie ma jednolitego kodowania (strona
   kodowa zależy od programu).
+
+## D-131 — DXF działki z tych samych obiektów co GeoJSON
+Data: 2026-10-01
+
+**Decyzja:** Eksport DXF działki korzysta z tej samej funkcji co eksport
+GeoJSON (`_cechy_eksportu`): działka z ULDK, części w przeznaczeniach z
+WFS gminy albo przeznaczenie z KIMPZP. Zapis DXF przez `dane/dxf.py`
+(D-130); nazwa warstwy części to PRZEZN_ + symbol z planu.
+
+**Uzasadnienie:** Oba eksporty zawsze pokazują to samo i tak samo
+reagują na błędy usług. Warstwa na przeznaczenie pozwala w CAD włączać i
+wyłączać przeznaczenia jak w QGIS.
+
+**Odrzucone alternatywy:**
+- Osobne zapytania do usług dla DXF — rozjechałyby się z GeoJSON.
+- Kreskowanie (HATCH) przeznaczeń — R12 go nie ma; kolor warstwy wystarcza.

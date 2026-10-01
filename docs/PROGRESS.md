@@ -2159,3 +2159,21 @@ Status: zamknięty
   nie zależność aplikacji): audyt bez błędów, polilinie zamknięte, pola
   1200,0 m² (PL-2000) i 1198,9 m² (PL-1992 — zniekształcenie 0,9993)
 - `DECISIONS.md`: D-130
+
+## ETAP 123 — MPZP: działka i części w przeznaczeniach do DXF
+Data: 2026-10-01
+Status: zamknięty
+
+- `mpzp/dxf_dzialki.py`: obrys działki (DZIALKA), części w
+  przeznaczeniach z WFS gminy (PRZEZN_<symbol>, kolory jak w raporcie),
+  opisy (numer działki jak w raporcie — po jednostce i obrębie — z
+  powierzchnią, symbole przeznaczeń, przeznaczenie z KIMPZP); PL-2000
+  albo PL-1992
+- `mpzp/routes.py`: wspólne `_cechy_eksportu` dla GeoJSON i DXF (ta sama
+  obsługa błędów ULDK/WFS); trasa `/mpzp/eksport.dxf?id=&uklad=`; link
+  „DXF” przy wyniku działki
+- `dane/dxf.py`: osobne czyszczenie nazw warstw (bez spacji i nawiasów)
+  i tekstów opisów (drukowalne ASCII) — błąd złapany w teście
+- Sprawdzone ezdxf: audyt bez błędów, suma części = pole działki
+  (7573,6 vs 7573,7 m²)
+- `DECISIONS.md`: D-131

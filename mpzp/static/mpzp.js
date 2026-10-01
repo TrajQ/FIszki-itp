@@ -181,6 +181,9 @@
         const geojson = element("a", "przycisk przycisk--tekst", "GeoJSON");
         geojson.href = `${URL_GEOJSON}?id=${encodeURIComponent(dzialka.id)}`;
         geojson.title = "Działka i jej części w przeznaczeniach — do QGIS";
+        const dxf = element("a", "przycisk przycisk--tekst", "DXF"); // ETAP 123
+        dxf.href = `${URL_GEOJSON.replace(/geojson$/, "dxf")}?id=${encodeURIComponent(dzialka.id)}`;
+        dxf.title = "Działka i jej części w przeznaczeniach — do AutoCAD (PL-2000)";
         // Geoportal otwiera działkę po identyfikatorze (parametr identifyParcel).
         const geoportal = element("a", "przycisk przycisk--tekst", "Geoportal ↗");
         geoportal.href = `https://mapy.geoportal.gov.pl/imap/Imgp_2.html?identifyParcel=${encodeURIComponent(dzialka.id)}`;
@@ -191,7 +194,7 @@
         kronika.href = `${URL_KRONIKA}?id=${encodeURIComponent(dzialka.id)}`;
         kronika.title = "Ortofotomapy z różnych lat w miejscu tej działki";
         const linki = element("div", "rzad");
-        linki.append(kalkulator, raport, kronika, geojson, geoportal);
+        linki.append(kalkulator, raport, kronika, geojson, dxf, geoportal);
         naglowek.append(element("h3", "", "Działka"), linki);
         sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
         sekcja.appendChild(sekcjaZapisu(dzialka));

@@ -12,7 +12,7 @@ from dane.uldk import szukaj_dzialek as _szukaj_dzialek
 from dane.uldk import znajdz_dzialke_po_id as _znajdz_dzialke_po_id
 from .baza import historia, zapisana, zapisane, zapisz_w_historii
 from .gminy import GMINA_PILOTAZOWA, znajdz_gmine
-from . import karta, krajowe, uklady, uslugi
+from . import dxf_dzialki, karta, krajowe, uklady, uslugi
 from .symbole import opisz_symbol
 from .wfs import BladWFS, Wydzielenie
 from .wfs import odswiez as _odswiez
@@ -304,18 +304,23 @@ def usluga_w_punkcie(klucz):
     return jsonify({"nazwa": uslugi.USLUGI[klucz]["nazwa"], "obiekty": obiekty, "linki": uslugi.linki(obiekty)})
 
 
-@mpzp_bp.route("/eksport.geojson")
-def eksport_geojson():
-    """Działka i jej części w przeznaczeniach planu — do QGIS."""
-    dzialka_id = request.args.get("id", "")
+class _BladEksportu(Exception):
+    def __init__(self, tresc: str, kod: int):
+        super().__init__(tresc)
+        self.kod = kod
+
+
+def _cechy_eksportu(dzialka_id: str):
+    """Działka i jej części w przeznaczeniach (WFS gminy) albo przeznaczenie
+    z KIMPZP — wspólne dla GeoJSON i (ETAP 123) DXF."""
     try:
         dzialka = znajdz_dzialke_po_id(dzialka_id)
     except ValueError as e:
-        return jsonify({"blad": str(e)}), 400
+        raise _BladEksportu(str(e), 400) from e
     except BladULDK as e:
-        return jsonify({"blad": str(e)}), 502
+        raise _BladEksportu(str(e), 502) from e
     if dzialka is None:
-        return jsonify({"blad": "ULDK nie zna tej działki."}), 404
+        raise _BladEksportu("ULDK nie zna tej działki.", 404)
 
     cechy = [
         {
@@ -343,7 +348,7 @@ def eksport_geojson():
         try:
             pary = znajdz_wydzielenia_dzialki(gmina, dzialka.geometria)
         except BladWFS as e:
-            return jsonify({"blad": str(e)}), 502
+            raise _BladEksportu(str(e), 502) from e
         calosc = powierzchnia_m2(dzialka.geometria)
         szerokosc = dzialka.geometria.centroid.y
         for wydzielenie, czesc in pary:
@@ -362,12 +367,40 @@ def eksport_geojson():
                     "geometry": mapping(czesc),
                 }
             )
-    nazwa = "dzialka_" + dzialka.id.replace("/", "-").replace(".", "_") + ".geojson"
+    return dzialka, cechy
+
+
+def _nazwa_pliku(dzialka_id: str, rozszerzenie: str) -> str:
+    return "dzialka_" + dzialka_id.replace("/", "-").replace(".", "_") + rozszerzenie
+
+
+@mpzp_bp.route("/eksport.geojson")
+def eksport_geojson():
+    """Działka i jej części w przeznaczeniach planu — do QGIS."""
+    try:
+        dzialka, cechy = _cechy_eksportu(request.args.get("id", ""))
+    except _BladEksportu as e:
+        return jsonify({"blad": str(e)}), e.kod
     return Response(
         json.dumps({"type": "FeatureCollection", "features": cechy}, ensure_ascii=False),
         mimetype="application/geo+json",
-        headers={"Content-Disposition": f"attachment; filename={nazwa}"},
+        headers={"Content-Disposition": f"attachment; filename={_nazwa_pliku(dzialka.id, '.geojson')}"},
     )
+
+
+@mpzp_bp.route("/eksport.dxf")
+def eksport_dxf():
+    """ETAP 123: to samo co GeoJSON, do programu CAD (PL-2000 albo ?uklad=pl1992)."""
+    uklad = request.args.get("uklad", "pl2000")
+    if uklad not in dxf_dzialki.UKLADY:
+        return jsonify({"blad": "Układ: pl2000 albo pl1992."}), 400
+    try:
+        dzialka, cechy = _cechy_eksportu(request.args.get("id", ""))
+    except _BladEksportu as e:
+        return jsonify({"blad": str(e)}), e.kod
+    tekst, opis_ukladu = dxf_dzialki.dzialka_dxf(cechy, uklad)
+    return Response(tekst, mimetype="application/dxf", headers={
+        "Content-Disposition": f"attachment; filename={_nazwa_pliku(dzialka.id, f'_{uklad}.dxf')}", "X-Uklad-Wspolrzednych": opis_ukladu})
 
 
 # Kolory części działki w raporcie — stała kolejność, żeby ten sam

@@ -72,6 +72,9 @@
     <details><summary>Kalkulatory</summary>
         <p><a href="{{ url_for('mpzp.kalkulator') }}">Kalkulator zabudowy</a> (wskaźniki działki, zgodność z ustaleniami planu, ile jeszcze można zabudować), <a href="{{ url_for('mpzp.skala_strona') }}">Skala mapy</a> i <a href="{{ url_for('mpzp.symbole') }}">Symbole planu</a>.</p>
     </details>
+    <details><summary>Działka do AutoCAD (DXF)</summary>
+        <p>Przy wyniku działki link „DXF” zapisuje obrys działki (warstwa DZIALKA) i — gdzie gmina ma usługę WFS — części działki w przeznaczeniach planu (warstwy PRZEZN_1MN itd.) z opisami: numer działki z powierzchnią i symbole przeznaczeń. Gdzie jest tylko krajowa integracja planów, opis działki ma przeznaczenie z KIMPZP. Współrzędne w PL-2000 (strefa wg położenia działki); PL-1992 — dopisz <code>&amp;uklad=pl1992</code> do adresu.</p>
+    </details>
 </section>
 
 <section id="fiszki" class="karta stos">

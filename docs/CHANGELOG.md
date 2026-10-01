@@ -814,3 +814,6 @@
 
 ## ETAP 122 — 2026-10-01
 - Osiedle: eksport koncepcji do DXF (AutoCAD) w PL-2000 albo PL-1992
+
+## ETAP 123 — 2026-10-01
+- MPZP: eksport działki i jej części w przeznaczeniach do DXF (AutoCAD)

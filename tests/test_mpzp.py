@@ -895,3 +895,40 @@ def test_ceny_transakcyjne_w_punkcie(client, monkeypatch):
     assert odp["nazwa"] == "Rejestr Cen Nieruchomości"
     assert odp["obiekty"] == [{"warstwa": "", "atrybuty": {"cena_transakcji": "420000", "data_transakcji": "2025-06-11"}}]
     assert set(adresy) == {"https://mapy.geoportal.gov.pl/wss/service/rcn"}
+
+
+# ---------- ETAP 123: DXF działki ----------
+
+
+def test_eksport_dxf_dzialki(client, monkeypatch):
+    wydzielenia = _dwa_wydzielenia()
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_kwadrat())
+    monkeypatch.setattr(
+        mpzp_routes,
+        "znajdz_wydzielenia_dzialki",
+        lambda g, geom: [(w, w.geometria.intersection(geom)) for w in wydzielenia if w.geometria.intersects(geom)],
+    )
+    odp = client.get("/mpzp/eksport.dxf?id=306401_1.0051.AR_18.14")
+    assert odp.status_code == 200 and odp.mimetype == "application/dxf"
+    assert "dzialka_306401_1_0051_AR_18_14_pl2000.dxf" in odp.headers["Content-Disposition"]
+    assert odp.headers["X-Uklad-Wspolrzednych"].startswith("PL-2000 strefa")
+    wiersze = odp.get_data(as_text=True).split("\n")
+    pary = list(zip(wiersze[0:-1:2], wiersze[1:-1:2]))
+    warstwy = {w for k, w in pary if k == "  8"}
+    assert {"DZIALKA", "PRZEZN_1MN", "PRZEZN_2KDD", "OPISY"} <= warstwy
+    teksty = [w for k, w in pary if k == "  1"][1:]
+    assert "1MN" in teksty and any(t.startswith("AR_18.14 (") and t.endswith("m2)") for t in teksty)
+    assert pary[-1] == ("  0", "EOF")
+    assert client.get("/mpzp/eksport.dxf?id=306401_1.0051.AR_18.14&uklad=wgs84").status_code == 400
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: None)
+    assert client.get("/mpzp/eksport.dxf?id=306401_1.0051.AR_18.14").status_code == 404
+    assert client.get("/mpzp/eksport.geojson?id=306401_1.0051.AR_18.14").status_code == 404  # wspólna obsługa błędów
+
+
+def test_eksport_dxf_bez_wfs_z_kimpzp(client, monkeypatch):
+    from mpzp.krajowe import ObiektPlanu
+
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_warszawa())
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: [ObiektPlanu("w", {"symbol": "U", "tytul": "Plan X"})])
+    tekst = client.get("/mpzp/eksport.dxf?id=146501_1.0001.AR_1.1&uklad=pl1992").get_data(as_text=True)
+    assert "\nAR_1.1 (" in tekst and " m2) U\n" in tekst  # numer działki, pole i przeznaczenie z KIMPZP

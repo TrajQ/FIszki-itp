@@ -18,10 +18,17 @@ KOLORY_ACI = {"czerwony": 1, "zolty": 2, "zielony": 3, "cyjan": 4, "niebieski": 
               "bialy": 7, "szary": 8, "jasnoszary": 9, "pomaranczowy": 30, "brazowy": 34}
 
 
+_BEZ_OGONKOW = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
+
+
 def nazwa_ascii(tekst: str) -> str:
-    """Nazwa warstwy / tekst bez polskich znaków i znaków specjalnych (R12)."""
-    zamiany = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
-    return re.sub(r"[^A-Za-z0-9_\-. ]", "_", tekst.translate(zamiany))[:200]
+    """Nazwa warstwy: litery, cyfry, _ - . (R12 nie dopuszcza spacji i innych znaków)."""
+    return re.sub(r"[^A-Za-z0-9_\-.]", "_", tekst.translate(_BEZ_OGONKOW))[:200]
+
+
+def tekst_ascii(tekst: str) -> str:
+    """Tekst opisu: bez polskich znaków (kodowanie R12 zależy od programu), drukowalne ASCII."""
+    return re.sub(r"[^\x20-\x7e]", "_", tekst.translate(_BEZ_OGONKOW))[:250]
 
 
 def _para(kod: int, wartosc) -> str:
@@ -51,7 +58,7 @@ def dxf(warstwy: dict[str, int], obiekty: list[dict]) -> str:
         else:
             x, y = o["punkt"]
             czesci += [_para(0, "TEXT"), _para(8, warstwa), _para(10, float(x)), _para(20, float(y)), _para(30, 0.0),
-                       _para(40, float(o.get("wysokosc", 2.5))), _para(1, nazwa_ascii(o["tekst"])), _para(72, 1),
+                       _para(40, float(o.get("wysokosc", 2.5))), _para(1, tekst_ascii(o["tekst"])), _para(72, 1),
                        _para(11, float(x)), _para(21, float(y)), _para(31, 0.0)]
     czesci += [_para(0, "ENDSEC"), _para(0, "EOF")]
     return "".join(czesci)
