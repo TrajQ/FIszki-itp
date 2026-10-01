@@ -65,6 +65,7 @@ def transakcje():
         rynki=RYNKI,
         maks_obszarow=rcn.MAKS_OBSZAROW,
         promienie=rcn.PROMIENIE_M,
+        min_w_roku=rcn.MIN_W_ROKU,
         tolerancje=rcn.TOLERANCJE,
         minima=rcn.MINIMA_W_KOMORCE,
         krawedzie_h3=[(r, rcn.krawedz_h3_m(r)) for r in rcn.ROZDZIELCZOSCI_H3],
@@ -204,13 +205,16 @@ def raport_transakcji(plik_id):
     lokale = _rekordy(plik_id, co, filtry)
     obszary = baza.obszary_rcn(plik_id)
     mapa = rcn.punkty_mapy(lokale)
+    porownanie = rcn.porownanie(lokale, obszary)
     return render_template(
         "ceny/raport.html",
         plik=plik,
         co=co,
         filtry=filtry,
         statystyki=rcn.statystyki(lokale),
-        porownanie=rcn.porownanie(lokale, obszary),
+        porownanie=porownanie,
+        min_w_roku=rcn.MIN_W_ROKU,
+        wykres_lat=Markup(rcn.wykres_lat_svg(porownanie)),  # ETAP 110; tylko liczby i kolory z kodu
         mapa=Markup(rcn.mapa_svg(lokale, obszary, mapa["progi"], rcn.KOLORY_KLAS)),  # tylko liczby i kolory z kodu
         progi=mapa["progi"],
         kolory=rcn.KOLORY_KLAS,

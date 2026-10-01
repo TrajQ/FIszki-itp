@@ -247,6 +247,55 @@
         return znak;
     }
 
+    // ETAP 110: mediana w latach dla obszarów (ta sama logika co rcn.wykres_lat_svg w raporcie);
+    // MIN_W_ROKU przychodzi z serwera (rcn.MIN_W_ROKU)
+
+    function wykresLatObszarow(por) {
+        const pojemnik = document.getElementById("trend-obszarow");
+        const opis = document.getElementById("opis-trendu-obszarow");
+        pojemnik.replaceChildren();
+        const lata = por.lata;
+        const serie = por.obszary.map((o, i) => ({ kolor: o.kolor, med: o.lata || {}, n: o.lata_liczba || {}, numer: String(i + 1), przerywana: false }));
+        serie.push({ kolor: "#8e8e93", med: por.calosc.lata || {}, n: por.calosc.lata_liczba || {}, numer: "", przerywana: true });
+        const wartosci = serie.flatMap((s) => Object.values(s.med));
+        const widoczny = por.obszary.length > 0 && lata.length >= 2 && wartosci.length > 0;
+        pojemnik.hidden = opis.hidden = !widoczny;
+        if (!widoczny) return;
+        const SZ = 720, WY = 240, M = { l: 64, p: 40, g: 12, d: 28 };
+        let lo = Math.min(...wartosci), hi = Math.max(...wartosci);
+        const rozp = hi - lo || hi || 1;
+        const potega = 10 ** Math.floor(Math.log10(rozp / 5));
+        const krok = [1, 2, 2.5, 5, 10].map((k) => k * potega).find((k) => rozp / k <= 5);
+        lo = Math.floor(lo / krok) * krok;
+        hi = Math.ceil(hi / krok) * krok;
+        const x = (rok) => M.l + lata.indexOf(rok) * (SZ - M.l - M.p) / (lata.length - 1);
+        const y = (v) => WY - M.d - ((v - lo) / (hi - lo || 1)) * (WY - M.g - M.d);
+        const s = svg("svg", { viewBox: `0 0 ${SZ} ${WY}`, role: "img", "aria-label": "Mediana ceny za m² w latach w obszarach" });
+        for (let v = lo; v <= hi + krok / 2; v += krok) {
+            s.append(svg("line", { x1: M.l, x2: SZ - M.p, y1: y(v), y2: y(v), class: "wykres-cen__siatka" }),
+                svg("text", { x: M.l - 6, y: y(v) + 4, "text-anchor": "end", class: "wykres-cen__opis" }, liczba.format(v)));
+        }
+        for (const rok of lata) s.appendChild(svg("text", { x: x(rok), y: WY - 8, "text-anchor": "middle", class: "wykres-cen__opis" }, rok));
+        for (const sr of serie) {
+            const punkty = lata.filter((r) => String(r) in sr.med).map((r) => ({ r, a: x(r), b: y(sr.med[String(r)]), n: sr.n[String(r)] || 0 }));
+            if (!punkty.length) continue;
+            const linia = { points: punkty.map((p) => `${p.a.toFixed(1)},${p.b.toFixed(1)}`).join(" "), fill: "none", stroke: sr.kolor, "stroke-width": 2.5 };
+            if (sr.przerywana) linia["stroke-dasharray"] = "6 4";
+            s.appendChild(svg("polyline", linia));
+            for (const p of punkty) {
+                const kropka = svg("circle", { cx: p.a, cy: p.b, r: 4, fill: sr.kolor, stroke: sr.kolor, "stroke-width": 2 });
+                if (p.n < MIN_W_ROKU) kropka.style.fill = "var(--tlo-karty)"; // pusty punkt: mediana niepewna
+                kropka.appendChild(svg("title", {}, `${sr.numer ? `Obszar ${sr.numer}` : "Cały plik"}, ${p.r}: ${liczba.format(sr.med[String(p.r)])} zł/m² (${p.n} transakcji)`));
+                s.appendChild(kropka);
+            }
+            if (sr.numer) {
+                const ostatni = punkty[punkty.length - 1];
+                s.appendChild(svg("text", { x: ostatni.a + 7, y: ostatni.b + 4, "font-weight": 700, fill: sr.kolor }, sr.numer));
+            }
+        }
+        pojemnik.appendChild(s);
+    }
+
     function pokazObszary(d) {
         const kolory = Object.fromEntries(d.porownanie.obszary.map((o) => [o.id, o.kolor]));
         warstwaObszarow.clearLayers();
@@ -275,6 +324,7 @@
 
         const tabela = document.getElementById("porownanie-rcn");
         tabela.replaceChildren();
+        wykresLatObszarow(d.porownanie);
         if (!d.obszary.length) return;
         const glowa = el("tr");
         glowa.append(el("th", "", "Obszar"), el("th", "liczba", "Transakcji"), el("th", "liczba", "Mediana za m²"),

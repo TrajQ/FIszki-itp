@@ -37,6 +37,7 @@ import re
 import sqlite3
 import statistics
 import struct
+from collections import Counter
 from datetime import date
 
 import h3
@@ -452,6 +453,7 @@ def porownanie(lokale: list[dict], obszary: list[dict]) -> dict:
             "mediana_pow": statistics.median(l["pow_m2"] for l in zbior),
             "mediana_ceny": statistics.median(l["cena"] for l in zbior),
             "lata": _mediany_lat(zbior),
+            "lata_liczba": {r: n for r, n in sorted(Counter(l["rok"] for l in zbior).items())},
         }
 
     calosc = wiersz("cały plik", lokale)
@@ -669,3 +671,61 @@ def okolica(rekordy: list[dict], ksztalt, promien_m: float) -> dict | None:
         "do": max(r["data"] for r in w_zasiegu),
         "lata": _mediany_lat(w_zasiegu),
     }
+
+
+# ---------- trend cen w obszarach (ETAP 110) ----------
+
+MIN_W_ROKU = 5  # rok z mniejszą liczbą transakcji: punkt pusty (mediana niepewna)
+
+
+def _ladna_os(lo: float, hi: float, podzialek: int = 5) -> tuple[float, float, float]:
+    """Zakres osi zaokrąglony do „ładnego” kroku 1/2/2,5/5 × 10^n."""
+    rozpietosc = (hi - lo) or abs(hi) or 1
+    potega = 10 ** math.floor(math.log10(rozpietosc / podzialek))
+    krok = next(k * potega for k in (1, 2, 2.5, 5, 10) if rozpietosc / (k * potega) <= podzialek)
+    return math.floor(lo / krok) * krok, math.ceil(hi / krok) * krok, krok
+
+
+def wykres_lat_svg(por: dict, szerokosc: int = 900, wysokosc: int = 300) -> str:
+    """Wykres liniowy median ceny za m² w latach: obszary w ich kolorach,
+    cały plik linią przerywaną. Rok z mniej niż MIN_W_ROKU transakcjami —
+    pusty punkt. Tylko liczby i kolory z kodu (nazwy są w legendzie raportu)."""
+    lata = por["lata"]
+    serie = [(o["kolor"], o.get("lata", {}), o.get("lata_liczba", {}), str(nr), False) for nr, o in enumerate(por["obszary"], start=1)]
+    serie.append(("#6e6e73", por["calosc"].get("lata", {}), por["calosc"].get("lata_liczba", {}), "", True))
+    wartosci = [v for _, med, _, _, _ in serie for v in med.values()]
+    otwarcie = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc} {wysokosc}" width="{szerokosc}" height="{wysokosc}" font-family="sans-serif" font-size="12"><rect width="100%" height="100%" fill="#ffffff"/>'
+    if len(lata) < 2 or not wartosci:
+        return otwarcie + f'<text x="{szerokosc / 2}" y="{wysokosc / 2}" text-anchor="middle" fill="#6e6e73">za mało lat do wykresu</text></svg>'
+    lo, hi, krok = _ladna_os(min(wartosci), max(wartosci))
+    m = {"l": 70, "p": 40, "g": 14, "d": 30}
+
+    def x(rok):
+        return m["l"] + (lata.index(rok)) * (szerokosc - m["l"] - m["p"]) / (len(lata) - 1)
+
+    def y(v):
+        return wysokosc - m["d"] - (v - lo) / ((hi - lo) or 1) * (wysokosc - m["g"] - m["d"])
+
+    czesci = [otwarcie]
+    v = lo
+    while v <= hi + krok / 2:
+        etykieta = f"{v:,.0f}".replace(",", " ")
+        czesci.append(f'<line x1="{m["l"]}" x2="{szerokosc - m["p"]}" y1="{y(v):.1f}" y2="{y(v):.1f}" stroke="#e8e8ed"/>'
+                      f'<text x="{m["l"] - 8}" y="{y(v) + 4:.1f}" text-anchor="end" fill="#6e6e73">{etykieta}</text>')
+        v += krok
+    for rok in lata:
+        czesci.append(f'<text x="{x(rok):.1f}" y="{wysokosc - 10}" text-anchor="middle" fill="#6e6e73">{rok}</text>')
+    for kolor, mediany, liczby, numer, przerywana in serie:
+        punkty = [(x(r), y(mediany[r]), liczby.get(r, 0)) for r in lata if r in mediany]
+        if not punkty:
+            continue
+        kreska = ' stroke-dasharray="6 4"' if przerywana else ""
+        czesci.append(f'<polyline points="{" ".join(f"{a:.1f},{b:.1f}" for a, b, _ in punkty)}" fill="none" stroke="{kolor}" stroke-width="2.5"{kreska}/>')
+        for a, b, n in punkty:
+            wypelnienie = kolor if n >= MIN_W_ROKU else "#ffffff"
+            czesci.append(f'<circle cx="{a:.1f}" cy="{b:.1f}" r="4" fill="{wypelnienie}" stroke="{kolor}" stroke-width="2"/>')
+        if numer:
+            a, b, _ = punkty[-1]
+            czesci.append(f'<text x="{a + 8:.1f}" y="{b + 4:.1f}" font-weight="700" fill="{kolor}">{numer}</text>')
+    czesci.append("</svg>")
+    return "".join(czesci)

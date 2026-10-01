@@ -127,6 +127,8 @@
             <p class="wyciszony opis-cen">Narysuj na mapie dzielnicę, osiedle albo okolicę (wielobok lub prostokąt w lewym górnym rogu mapy) — do {{ maks_obszarow }} obszarów. Porównanie liczy się z tych samych filtrów co reszta strony.</p>
             <ul id="obszary-rcn" class="obszary-rcn"></ul>
             <div class="przewijanie-cen"><table class="tabela" id="porownanie-rcn"></table></div>
+            <div id="trend-obszarow" class="wykres-cen" hidden></div>
+            <p id="opis-trendu-obszarow" class="wyciszony opis-cen" hidden>Mediana ceny za m² w latach. Linia przerywana — cały plik; pusty punkt — w tym roku mniej niż {{ min_w_roku }} transakcji w obszarze (mediana niepewna).</p>
         </section>
 
         <section class="karta stos" id="karta-podobnych">
@@ -167,6 +169,7 @@
     const URL_TRANSAKCJE = "{{ url_for('ceny.transakcje') }}";
     const PLIK_ID = {{ plik_id | tojson }};
     const CO = {{ co | tojson }};
+    const MIN_W_ROKU = {{ min_w_roku }};
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('static', filename='leaflet-draw/leaflet.draw.js') }}"></script>

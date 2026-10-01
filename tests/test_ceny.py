@@ -504,3 +504,20 @@ def test_trasa_okolicy(client, tmp_path, monkeypatch):
     # MPZP i osiedle wołają tę trasę
     for strona in ("/mpzp/", "/osiedle/"):
         assert 'URL_CENY_OKOLICA = "/ceny/okolica"' in client.get(strona).get_data(as_text=True)
+
+
+# ---------- ETAP 110: trend cen w obszarach ----------
+
+
+def test_wykres_lat():
+    lokale = [{"rok": r, "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": 50.01, "lng": 19.95}
+              for r, c in [(2022, 10000)] * 6 + [(2023, 11000)] * 2 + [(2024, 13000)] * 5]
+    obszar = {"id": 1, "nazwa": "A", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}
+    por = rcn.porownanie(lokale, [obszar])
+    assert por["obszary"][0]["lata_liczba"] == {2022: 6, 2023: 2, 2024: 5}
+    svg = rcn.wykres_lat_svg(por)
+    assert svg.count("<polyline") == 2 and 'stroke-dasharray="6 4"' in svg  # obszar + cały plik
+    assert svg.count('fill="#ffffff" stroke="#0071e3"') == 1  # 2023: dwie transakcje — pusty punkt
+    assert ">10 000<" in svg and ">2023<" in svg
+    assert "za mało lat" in rcn.wykres_lat_svg(rcn.porownanie(lokale[:6], [obszar]))
+    assert rcn._ladna_os(10234, 13870) == (10000, 14000, 1000)
