@@ -152,13 +152,26 @@ POLA_DZIALKI = ("data", "rok", "kwartal", "rynek", "rodzaj", "pow_m2", "cena", "
                 "nieruchomosc", "dzialek", "lat", "lng")
 
 
-def zapisz_plik_rcn(nazwa: str, lokale: list[dict], odrzucone: dict, dzialki: list[dict] = (), odrzucone_dzialki: dict | None = None) -> int:
+def zapisz_plik_rcn(nazwa: str, lokale: list[dict], odrzucone: dict, dzialki: list[dict] = (), odrzucone_dzialki: dict | None = None,
+                    zastap: int | None = None) -> int:
+    """Zapisuje transakcje z pliku. ETAP 136: `zastap` = id pliku, którego
+    transakcje podmieniamy nowymi — id i narysowane obszary zostają."""
     db = get_db()
-    plik_id = db.execute(
-        "INSERT INTO rcn_pliki (nazwa, data_importu, liczba, odrzucone, liczba_dzialek, odrzucone_dzialki) VALUES (?, ?, ?, ?, ?, ?)",
-        (nazwa, datetime.now().isoformat(timespec="seconds"), len(lokale), json.dumps(odrzucone, ensure_ascii=False),
-         len(dzialki), json.dumps(odrzucone_dzialki or {}, ensure_ascii=False)),
-    ).lastrowid
+    wartosci = (nazwa, datetime.now().isoformat(timespec="seconds"), len(lokale), json.dumps(odrzucone, ensure_ascii=False),
+                len(dzialki), json.dumps(odrzucone_dzialki or {}, ensure_ascii=False))
+    if zastap is None:
+        plik_id = db.execute(
+            "INSERT INTO rcn_pliki (nazwa, data_importu, liczba, odrzucone, liczba_dzialek, odrzucone_dzialki) VALUES (?, ?, ?, ?, ?, ?)",
+            wartosci,
+        ).lastrowid
+    else:
+        plik_id = zastap
+        db.execute(
+            "UPDATE rcn_pliki SET nazwa = ?, data_importu = ?, liczba = ?, odrzucone = ?, liczba_dzialek = ?, odrzucone_dzialki = ? WHERE id = ?",
+            (*wartosci, plik_id),
+        )
+        db.execute("DELETE FROM rcn_lokale WHERE plik_id = ?", (plik_id,))
+        db.execute("DELETE FROM rcn_dzialki WHERE plik_id = ?", (plik_id,))
     for tabela, pola, wiersze in (("rcn_lokale", POLA_LOKALU, lokale), ("rcn_dzialki", POLA_DZIALKI, dzialki)):
         db.executemany(
             f"INSERT INTO {tabela} (plik_id, {', '.join(pola)}) VALUES (?, {', '.join('?' * len(pola))})",

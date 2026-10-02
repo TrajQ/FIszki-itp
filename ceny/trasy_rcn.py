@@ -42,15 +42,32 @@ def pliki_gpkg() -> list[dict]:
     ]
 
 
+def _do_zastapienia() -> dict | None:
+    """ETAP 136: plik wskazany w polu „zastap” formularza importu (albo None)."""
+    zastap = request.form.get("zastap", type=int)
+    if not zastap:
+        return None
+    stary = baza.plik_rcn(zastap)
+    if stary is None:
+        abort(404)
+    return stary
+
+
 def _importuj(sciezka: str, nazwa: str):
+    stary = _do_zastapienia()
     try:
         wynik = rcn.czytaj_plik(sciezka)
     except rcn.BladPliku as e:
         return redirect(url_for("ceny.transakcje", blad=str(e)))
     if not wynik["lokale"] and not wynik["dzialki"]:
         return redirect(url_for("ceny.transakcje", blad="W pliku nie ma transakcji lokali mieszkalnych ani działek, które dałoby się policzyć."))
-    plik_id = baza.zapisz_plik_rcn(nazwa, wynik["lokale"], wynik["odrzucone"], wynik["dzialki"], wynik["odrzucone_dzialki"])
-    return redirect(url_for("ceny.transakcje", plik=plik_id, co="lokale" if wynik["lokale"] else "dzialki"))
+    plik_id = baza.zapisz_plik_rcn(nazwa, wynik["lokale"], wynik["odrzucone"], wynik["dzialki"], wynik["odrzucone_dzialki"],
+                                   zastap=stary["id"] if stary else None)
+    info = None
+    if stary:
+        info = (f"Zastąpiono „{stary['nazwa']}”: lokale {stary['liczba']} → {len(wynik['lokale'])}, "
+                f"działki {stary['liczba_dzialek']} → {len(wynik['dzialki'])}. Narysowane obszary zostały.")
+    return redirect(url_for("ceny.transakcje", plik=plik_id, co="lokale" if wynik["lokale"] else "dzialki", info=info))
 
 
 @ceny_bp.route("/transakcje")
@@ -63,6 +80,7 @@ def transakcje():
         wybrany=request.args.get("plik", type=int),
         co=request.args.get("co") if request.args.get("co") in CO else "lokale",
         blad=request.args.get("blad"),
+        info=request.args.get("info"),
         rynki=RYNKI,
         maks_obszarow=rcn.MAKS_OBSZAROW,
         promienie=rcn.PROMIENIE_M,

@@ -268,6 +268,32 @@ def test_trasy_obszarow_i_raport(client, tmp_path, monkeypatch):
         assert baza.obszary_rcn(1) == []
 
 
+def test_zastapienie_pliku_rcn(client, tmp_path, monkeypatch):
+    """ETAP 136: nowsza wersja pliku podmienia transakcje, id i obszary zostają."""
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    plik_rcn(str(pobrane / "stary.gpkg"), [lokal(i) for i in range(1, 11)])
+    plik_rcn(str(pobrane / "nowy.gpkg"), [lokal(i, dok_data="2025-03-01") for i in range(1, 16)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / "stary.gpkg")})
+    client.post("/ceny/transakcje/1/obszary", json={"nazwa": "Centrum", "geometria": prostokat(19.0, 49.0, 21.0, 51.0)})
+    strona = client.get("/ceny/transakcje").get_data(as_text=True)
+    assert "nowsza wersja: stary.gpkg" in strona
+    assert client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / "nowy.gpkg"), "zastap": "9"}).status_code == 404
+    odp = client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / "nowy.gpkg"), "zastap": "1"})
+    assert odp.status_code == 302 and "plik=1" in odp.headers["Location"] and "info=" in odp.headers["Location"]
+    d = client.get("/ceny/transakcje/1/dane").get_json()
+    assert d["statystyki"]["liczba"] == 15 and d["lata"] == [2025]
+    assert [o["nazwa"] for o in d["obszary"]] == ["Centrum"]
+    from ceny import baza
+    with client.application.app_context():
+        assert [p["nazwa"] for p in baza.pliki_rcn()] == ["nowy.gpkg"]
+    komunikat = client.get(odp.headers["Location"]).get_data(as_text=True)
+    assert "lokale 10 → 15" in komunikat and "obszary zostały" in komunikat
+    # bez „zastap” — nowy plik, jak dotąd
+    assert "plik=2" in client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / "stary.gpkg"), "zastap": ""}).headers["Location"]
+
+
 # ---------- ETAP 106: działki ----------
 
 

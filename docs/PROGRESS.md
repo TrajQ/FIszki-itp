@@ -2381,3 +2381,17 @@ Status: zamknięty
 - Test premii; fikstury z polem `rynek`
 - Sprawdzone w przeglądarce 1300/390 px: tabela, raport bez przelewania
 - `DECISIONS.md`: D-143
+
+## ETAP 136 — Ceny: zastąpienie pliku RCN nowszym z zachowaniem obszarów
+Data: 2026-10-02
+Status: zamknięty
+
+- `baza.zapisz_plik_rcn(..., zastap=id)`: aktualizuje wiersz pliku i
+  podmienia transakcje lokali i działek w jednej transakcji bazy; id
+  pliku i narysowane obszary zostają
+- Formularze importu (z Pobranych i wgrywanie): wybór „jako: nowy plik /
+  nowsza wersja: <nazwa>”; nieistniejący plik do zastąpienia → 404
+- Komunikat po zastąpieniu: liczba lokali i działek przed i po
+- Test: obszar zostaje, nowe lata, jedna pozycja na liście, komunikat
+- Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
+- `DECISIONS.md`: D-144

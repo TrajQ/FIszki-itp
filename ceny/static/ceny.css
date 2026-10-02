@@ -216,6 +216,21 @@
     overflow-wrap: anywhere;
 }
 
+/* ETAP 136: import jako nowy plik albo nowsza wersja zaimportowanego */
+.wybor-zastapienia {
+    flex: 1 1 12rem;
+    flex-direction: row;
+    align-items: center;
+    min-width: 0;
+}
+
+.wybor-zastapienia select {
+    flex: 1;
+    min-width: 0;
+    padding-block: 4px;
+    font-size: 0.85rem;
+}
+
 .pliki-rcn li {
     display: grid;
     gap: 2px;

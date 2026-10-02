@@ -10,6 +10,15 @@
 <link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">
 {% endblock %}
 
+{# ETAP 136: import jako nowy plik albo w miejsce zaimportowanego (obszary zostają) #}
+{% macro wybor_zastapienia() %}{% if pliki %}
+<label class="wybor-zastapienia">jako
+    <select name="zastap">
+        <option value="">nowy plik</option>
+        {% for p in pliki %}<option value="{{ p.id }}">nowsza wersja: {{ p.nazwa }}</option>{% endfor %}
+    </select>
+</label>{% endif %}{% endmacro %}
+
 {% block tresc %}
 <div class="naglowek-strony">
     <div>
@@ -20,6 +29,7 @@
 </div>
 
 {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+{% if info %}<p class="komunikat komunikat--sukces">{{ info }}</p>{% endif %}
 <p id="komunikat" class="komunikat komunikat--blad" hidden></p>
 
 <div class="uklad-rcn">
@@ -37,12 +47,14 @@
                     <form method="post" action="{{ url_for('ceny.importuj_transakcje') }}" class="rzad rzad--miedzy">
                         <span>{{ p.nazwa }} <span class="wyciszony">{{ p.mb }} MB</span></span>
                         <input type="hidden" name="sciezka" value="{{ p.sciezka }}">
+                        {{ wybor_zastapienia() }}
                         <button type="submit" class="przycisk--drugi">Importuj</button>
                     </form>
                 </li>
                 {% endfor %}
             </ul>
-            <p class="wyciszony opis-cen">Duży plik czyta się chwilę (wszystkie transakcje lokali w powiecie).</p>
+            <p class="wyciszony opis-cen">Duży plik czyta się chwilę (wszystkie transakcje lokali w powiecie).
+            {% if pliki %}Nowszy plik tego samego powiatu zaimportuj „jako nowsza wersja” — zastąpi transakcje, a narysowane obszary zostaną.{% endif %}</p>
             {% else %}
             <p class="wyciszony opis-cen">W {{ katalogi | join(' ani w ') }} nie ma plików .gpkg.</p>
             {% endif %}
@@ -50,6 +62,7 @@
                 <summary>Wgraj plik z innego miejsca</summary>
                 <form method="post" action="{{ url_for('ceny.importuj_transakcje') }}" enctype="multipart/form-data" class="rzad">
                     <input type="file" name="plik" accept=".gpkg" required aria-label="Plik GeoPackage z Rejestru Cen Nieruchomości">
+                    {{ wybor_zastapienia() }}
                     <button type="submit" class="przycisk--drugi">Wgraj</button>
                 </form>
                 <p class="wyciszony opis-cen">Do 50 MB — większy plik wskaż z katalogu Pobrane.</p>

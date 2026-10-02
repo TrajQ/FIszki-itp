@@ -862,3 +862,6 @@
 
 ## ETAP 135 — 2026-10-02
 - Ceny: premia rynku pierwotnego w porównaniu obszarów i w raporcie
+
+## ETAP 136 — 2026-10-02
+- Ceny: import „jako nowsza wersja” — nowe transakcje, te same obszary

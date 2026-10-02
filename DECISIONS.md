@@ -2983,3 +2983,23 @@ i liczenia w pamięci. Próg 5 jest ten sam co w medianach rocznych (D-118).
   przypadkowy, a wyglądałby jak wskaźnik.
 - Osobny przełącznik „porównaj rynki” — tabela pojawia się sama, gdy
   w danych są oba rynki.
+
+## D-144 — Nowsza wersja pliku RCN pod tym samym id
+Data: 2026-10-02
+
+**Decyzja:** Import może zastąpić transakcje istniejącego pliku zamiast
+tworzyć nowy. Wiersz `rcn_pliki` zostaje (nowa nazwa, data importu,
+liczby), transakcje są usuwane i wstawiane od nowa, obszary (`rcn_obszary`)
+są nietknięte. Wybór robi użytkownik; domyślnie „nowy plik”.
+
+**Uzasadnienie:** RCN aktualizuje się co kwartał. Bez tej opcji nowy plik
+oznaczał ponowne rysowanie wszystkich dzielnic, a stary plik zostawał w bazie
+(kilkaset MB przy dużym mieście po kilku kwartałach).
+
+**Odrzucone alternatywy:**
+- Automatyczne zastępienie pliku o tej samej nazwie — pliki z geoportalu
+  mają różne nazwy, a zgadywanie „to ten sam powiat” byłoby kruche.
+- Dokładanie tylko nowych transakcji — RCN poprawia też stare rekordy;
+  pełna podmiana jest prostsza i zgodna ze źródłem.
+- Kopiowanie obszarów do nowego pliku — zmieniałoby adresy (numer pliku)
+  zapisane np. w zakładkach.
