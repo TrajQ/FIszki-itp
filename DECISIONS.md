@@ -3489,3 +3489,22 @@ ościennym” bez nowego modelu danych (jak w cenach w okolicy, D-117, gdzie pli
 **Odrzucone alternatywy:**
 - Obszar rysowany ponad granicą plików — wymagałby łączenia transakcji
   i podwójnych wierszy przy nakładających się plikach.
+
+## D-174 — Reguły pól Teren pilnuje telefon, import tylko oznacza braki
+Data: 2026-10-02
+
+**Decyzja:** „Wymagane” i zakres liczby sprawdza formularz na telefonie
+przed zapisem punktu. Import pliku (z telefonu albo GeoJSON) przyjmuje
+punkty niezgodne z regułami, a strona projektu oznacza je ⚠ z opisem.
+
+**Uzasadnienie:** Błąd najtaniej poprawić w terenie, przy obiekcie.
+Punkt już zebrany jest cenniejszy niż reguła — reguły zmienia się po
+pobraniu formularza, a dane z QGIS nie znały ich wcale; odrzucenie całego
+pliku (import „cały plik albo nic”, D-071) kazałoby wracać w teren. Klucze
+`wymagane` / `min` / `max` są w definicji pola tylko, gdy ustawione — bez
+migracji zapisanych projektów.
+
+**Odrzucone alternatywy:**
+- Odrzucanie punktów z brakami przy imporcie — utrata danych z terenu.
+- Domyślne zakresy dla wzorów (np. kondygnacje 1–30) — Warsztat nie
+  zgaduje reguł za użytkownika.

@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 165 (Ceny: zestawienie plików RCN różnych powiatów — zamknięty)
-Ostatni ZIP: releases/warsztat_etap165_20261002.zip
-Testy: 575 passed / 0 failed
+ETAP: 166 (Teren: pola wymagane i zakres liczb — zamknięty)
+Ostatni ZIP: releases/warsztat_etap166_20261002.zip
+Testy: 577 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

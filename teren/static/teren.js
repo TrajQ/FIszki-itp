@@ -145,7 +145,15 @@
         tabela.replaceChildren();
         for (const p of punkty) {
             const wiersz = element("tr");
-            wiersz.append(element("td", "", new Date(p.czas).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })));
+            const czas = element("td", "", new Date(p.czas).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }));
+            if (p.braki.length) {
+                // ETAP 166: punkt niezgodny z regułami pól (np. zebrany starszym formularzem)
+                const znak = element("span", "znak-brakow", " ⚠");
+                znak.title = p.braki.join("; ");
+                czas.append(znak);
+                wiersz.classList.add("wiersz-z-brakami");
+            }
+            wiersz.append(czas);
             for (const pole of PROJEKT.pola) wiersz.append(element("td", "", tekstWartosci(p.wartosci[pole.nazwa])));
             wiersz.append(element("td", "komorka-uwag", p.uwagi));
             const polozenie = element("td");
@@ -203,6 +211,10 @@
         document.getElementById("podsumowanie").textContent = punkty.length
             ? `${punkty.length} pkt (na mapie: ${zPolozeniem}, ze zdjęciem: ${zdjec})`
             : "Brak punktów — pobierz formularz na telefon i zaimportuj plik z punktami.";
+        const zBrakami = punkty.filter((p) => p.braki.length).length;
+        const braki = document.getElementById("braki-punktow");
+        braki.hidden = !zBrakami;
+        braki.textContent = `${zBrakami} pkt nie spełnia reguł pól (brak wymaganej wartości albo liczba poza zakresem) — oznaczone ⚠ w tabeli; „Popraw” uzupełnia wartości.`;
         rysuj();
         rysujTabele();
         if (dopasuj && warstwaPunktow.getLayers().length) mapa.fitBounds(warstwaPunktow.getBounds(), { padding: [40, 40], maxZoom: 18 });
@@ -429,15 +441,38 @@
         skalaPole.dataset.rola = "skala";
         skala.append(skalaPole, " skala: opcje od najlepszej do najgorszej (kolory od zielonego do czerwonego)");
         skala.hidden = pole.typ !== "wybor";
+        // ETAP 166: pole wymagane i zakres liczby — pilnuje ich formularz na telefonie
+        const reguly = element("div", "edytor-pol__reguly");
+        const wymagane = element("label");
+        const wymaganePole = element("input");
+        wymaganePole.type = "checkbox";
+        wymaganePole.checked = Boolean(pole.wymagane);
+        wymaganePole.dataset.rola = "wymagane";
+        wymagane.append(wymaganePole, " wymagane");
+        const zakres = element("span", "edytor-pol__zakres");
+        const granica = (rola, opis) => {
+            const input = element("input");
+            input.type = "number";
+            input.step = "any";
+            input.dataset.rola = rola;
+            input.value = pole[rola] ?? "";
+            input.placeholder = opis;
+            input.setAttribute("aria-label", `${opis} — ${pole.nazwa || "nowe pole"}`);
+            return input;
+        };
+        zakres.append("od", granica("min", "min"), "do", granica("max", "max"));
+        zakres.hidden = pole.typ !== "liczba";
+        reguly.append(wymagane, zakres);
         typ.addEventListener("change", () => {
             opcje.hidden = typ.value !== "wybor" && typ.value !== "wiele";
             skala.hidden = typ.value !== "wybor";
+            zakres.hidden = typ.value !== "liczba";
         });
         const usun = element("button", "przycisk--tekst", "✕");
         usun.type = "button";
         usun.title = "Usuń pole";
         usun.addEventListener("click", () => li.remove());
-        li.append(nazwa, typ, usun, opcje, skala);
+        li.append(nazwa, typ, usun, opcje, skala, reguly);
         return li;
     }
 
@@ -453,6 +488,10 @@
             typ: li.querySelector("[data-rola=typ]").value,
             opcje: li.querySelector("[data-rola=opcje]").value.split(",").map((o) => o.trim()).filter(Boolean),
             skala: li.querySelector("[data-rola=skala]").checked,
+            wymagane: li.querySelector("[data-rola=wymagane]").checked,
+            ...(li.querySelector("[data-rola=typ]").value === "liczba"
+                ? { min: li.querySelector("[data-rola=min]").value, max: li.querySelector("[data-rola=max]").value }
+                : {}),
         }));
         try {
             const projekt = await zapytaj(URL_PROJEKTU, {
@@ -465,8 +504,7 @@
             document.getElementById("nazwa-projektu").textContent = projekt.nazwa;
             rysujEdytor();
             wypelnijFiltr();
-            rysuj();
-            rysujTabele();
+            await wczytaj(false); // braki punktów (ETAP 166) zależą od nowych reguł pól
             komunikat("Zapisano pola. Pobierz formularz na telefon jeszcze raz.", false);
         } catch (e) {
             komunikat(e.message, true);

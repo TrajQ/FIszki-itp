@@ -391,6 +391,44 @@ button.przycisk--niebezpieczny-tekst {
     display: none;
 }
 
+/* ETAP 166: pole wymagane i zakres liczby */
+.edytor-pol__reguly {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    font-size: 12px;
+    color: var(--tekst-drugi);
+}
+
+.edytor-pol__reguly label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
+.edytor-pol__zakres {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.edytor-pol__zakres[hidden] {
+    display: none;
+}
+
+.edytor-pol__zakres input {
+    width: 90px;
+    padding: 4px 8px;
+}
+
+.znak-brakow {
+    color: var(--ostrzezenie);
+    cursor: help;
+}
+
 /* ETAP 72: poprawianie punktu */
 .panel-poprawki {
     border: 2px solid var(--akcent);

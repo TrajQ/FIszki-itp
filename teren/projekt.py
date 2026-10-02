@@ -7,6 +7,12 @@ opcje są uporządkowane od najlepszej do najgorszej, więc mapa i raport
 kolorują je od zielonego do czerwonego (ETAP 70). Wartości punktu to słownik
 {nazwa pola: wartość}.
 
+ETAP 166: „wymagane” (formularz na telefonie nie zapisze punktu bez tej
+wartości) i dla liczby „min” / „max”. Klucze są w polu tylko wtedy, gdy
+ustawione — projekty sprzed ETAPu 166 się nie zmieniają. Import pliku nie
+odrzuca punktów z brakami (zebrane dane są cenniejsze niż reguła dopisana
+później) — `braki` opisuje je w tabeli punktów.
+
 Plik z telefonu (eksport formularza terenowego) to JSON:
 {"format": "warsztat-teren", "wersja": 1, "projekt_klucz", "punkty": [
   {"uid", "lat", "lng", "dokladnosc_m", "czas", "wartosci", "uwagi", "zdjecie"}]}
@@ -115,7 +121,33 @@ def sprawdz_pola(pola) -> list[dict]:
                 raise BladDanych(f"Pole „{nazwa}”: opcje się powtarzają.")
             if len(opcje) > MAKS_OPCJI:
                 raise BladDanych(f"Pole „{nazwa}”: najwyżej {MAKS_OPCJI} opcji.")
-        wynik.append({"nazwa": nazwa, "typ": typ, "opcje": opcje, "skala": typ == "wybor" and p.get("skala") is True})
+        pole = {"nazwa": nazwa, "typ": typ, "opcje": opcje, "skala": typ == "wybor" and p.get("skala") is True}
+        if p.get("wymagane") is True:
+            pole["wymagane"] = True
+        if typ == "liczba":
+            for granica in ("min", "max"):
+                if p.get(granica) not in (None, ""):
+                    pole[granica] = _liczba(p.get(granica), f"Pole „{nazwa}”, {granica}")
+            if pole.get("min", -math.inf) > pole.get("max", math.inf):
+                raise BladDanych(f"Pole „{nazwa}”: minimum większe niż maksimum.")
+        wynik.append(pole)
+    return wynik
+
+
+def braki(wartosci: dict, pola: list[dict]) -> list[str]:
+    """Opis wartości niezgodnych z regułami pól (ETAP 166): brak wymaganej,
+    liczba spoza zakresu. Pusta lista — punkt w porządku."""
+    wynik = []
+    for p in pola:
+        w = wartosci.get(p["nazwa"])
+        if w in (None, "", []):
+            if p.get("wymagane"):
+                wynik.append(f"brak: {p['nazwa']}")
+        elif p["typ"] == "liczba" and isinstance(w, (int, float)):
+            if w < p.get("min", -math.inf) or w > p.get("max", math.inf):
+                zakres = f"{p['min']:g}" if "min" in p else "…"
+                zakres += f"–{p['max']:g}" if "max" in p else "–…"
+                wynik.append(f"{p['nazwa']} poza zakresem {zakres}")
     return wynik
 
 

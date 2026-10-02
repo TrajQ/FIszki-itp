@@ -526,3 +526,37 @@ def test_pary_z_siatki_jak_kazdy_z_kazdym():
         return wynik
     z_siatki = {(x["nr"], y["nr"]) for x, y, _ in porownanie.pary(a, b)}
     assert z_siatki == kazdy_z_kazdym() and len(z_siatki) > 50
+
+
+# ---------- ETAP 166: pola wymagane i zakresy liczb ----------
+
+
+def test_reguly_pol():
+    from teren.projekt import braki
+
+    pola = sprawdz_pola([{"nazwa": "obwód", "typ": "liczba", "min": "10", "max": 900, "wymagane": True},
+                         {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "zły"], "wymagane": True, "min": 5},
+                         {"nazwa": "uwaga", "typ": "tekst", "wymagane": "tak"}])
+    assert pola[0] == {"nazwa": "obwód", "typ": "liczba", "opcje": [], "skala": False, "wymagane": True, "min": 10.0, "max": 900.0}
+    assert "min" not in pola[1] and pola[1]["wymagane"] is True  # zakres tylko dla liczby
+    assert "wymagane" not in pola[2]  # tylko wartość true
+    for zle in ({"min": 5, "max": 1}, {"min": "dużo"}, {"max": float("inf")}):
+        with pytest.raises(BladDanych):
+            sprawdz_pola([{"nazwa": "x", "typ": "liczba", **zle}])
+    assert braki({"obwód": 120, "stan": "dobry"}, pola) == []
+    assert braki({"obwód": 5}, pola) == ["obwód poza zakresem 10–900", "brak: stan"]
+    bez_minimum = {k: v for k, v in pola[0].items() if k != "min"}
+    assert braki({"stan": "zły", "obwód": 1000}, [bez_minimum, pola[1]]) == ["obwód poza zakresem …–900"]
+
+
+def test_braki_w_liscie_punktow(client):
+    client.post("/teren/projekty", data={"nazwa": "Drzewa"})
+    pola = [{"nazwa": "obwód", "typ": "liczba", "opcje": [], "min": 10, "max": 900}, {"nazwa": "gatunek", "typ": "tekst", "opcje": [], "wymagane": True}]
+    assert client.put("/teren/projekty/1", json={"nazwa": "Drzewa", "pola": pola}).status_code == 200
+    dane = json.dumps(_geojson(([16.93, 52.40], {"obwód": 1200, "gatunek": "lipa"}), ([16.94, 52.41], {"obwód": 80}))).encode()
+    wynik = client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(dane), "punkty.geojson")}, content_type="multipart/form-data").get_json()
+    assert wynik["dodane"] == 2  # import nie odrzuca punktów z brakami
+    punkty = sorted(client.get("/teren/projekty/1/punkty").get_json(), key=lambda p: p["lng"])
+    assert [p["braki"] for p in punkty] == [["obwód poza zakresem 10–900"], ["brak: gatunek"]]
+    formularz = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert '"wymagane": true' in formularz and '"max": 900.0' in formularz and "problemPol" in formularz

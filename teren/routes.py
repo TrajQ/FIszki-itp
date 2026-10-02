@@ -18,7 +18,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 from markupsafe import Markup
 
 from . import baza, podklad, porownanie, raport
-from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, odczytaj_geojson, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
+from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, braki, odczytaj_geojson, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
     "teren",
@@ -207,8 +207,9 @@ def importuj(projekt_id):
     return jsonify(wynik)
 
 
-def _punkt_dla_strony(projekt_id: int, pt: dict) -> dict:
+def _punkt_dla_strony(projekt_id: int, pt: dict, pola: list[dict]) -> dict:
     wynik = {k: pt[k] for k in ("id", "lat", "lng", "dokladnosc_m", "czas", "wartosci", "uwagi", "data_poprawki")}
+    wynik["braki"] = braki(pt["wartosci"], pola)  # ETAP 166
     wynik["polozenie_reczne"] = bool(pt["polozenie_reczne"])
     wynik["zdjecie"] = url_for("teren.zdjecie", projekt_id=projekt_id, punkt_id=pt["id"]) if pt["zdjecie"] else None
     return wynik
@@ -216,8 +217,8 @@ def _punkt_dla_strony(projekt_id: int, pt: dict) -> dict:
 
 @teren_bp.route("/projekty/<int:projekt_id>/punkty")
 def lista_punktow(projekt_id):
-    _projekt_albo_404(projekt_id)
-    return jsonify([_punkt_dla_strony(projekt_id, pt) for pt in baza.punkty(projekt_id)])
+    p = _projekt_albo_404(projekt_id)
+    return jsonify([_punkt_dla_strony(projekt_id, pt, p["pola"]) for pt in baza.punkty(projekt_id)])
 
 
 @teren_bp.route("/projekty/<int:projekt_id>/punkty/<int:punkt_id>", methods=["PUT"])
@@ -231,7 +232,7 @@ def popraw_punkt(projekt_id, punkt_id):
     if not baza.popraw_punkt(projekt_id, punkt_id, poprawka):
         abort(404)
     pt = next(pt for pt in baza.punkty(projekt_id) if pt["id"] == punkt_id)
-    return jsonify(_punkt_dla_strony(projekt_id, pt))
+    return jsonify(_punkt_dla_strony(projekt_id, pt, p["pola"]))
 
 
 @teren_bp.route("/projekty/<int:projekt_id>/punkty/<int:punkt_id>", methods=["DELETE"])

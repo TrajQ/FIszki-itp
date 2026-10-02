@@ -952,3 +952,6 @@
 
 ## ETAP 165 — 2026-10-02
 - Ceny: zestawienie 2–4 plików RCN (powiatów) obok siebie, z wykresem w latach
+
+## ETAP 166 — 2026-10-02
+- Teren: pola wymagane i zakresy liczb — pilnuje ich formularz na telefonie

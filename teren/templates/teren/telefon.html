@@ -230,8 +230,9 @@
         const pojemnik = $("pola");
         PROJEKT.pola.forEach((pole, i) => {
             const id = `pole-${i}`;
+            const nazwa = pole.wymagane ? `${pole.nazwa} *` : pole.nazwa; // ETAP 166
             if (pole.typ === "wybor" || pole.typ === "tak_nie") {
-                pojemnik.appendChild(element("label", {}, pole.nazwa));
+                pojemnik.appendChild(element("label", { id: `etykieta-${id}` }, nazwa));
                 const opcje = element("div", { className: "opcje", role: "radiogroup" });
                 const wartosci = pole.typ === "wybor" ? pole.opcje.map((o) => [o, o]) : [["tak", "tak"], ["nie", "nie"]];
                 for (const [wartosc, napis] of wartosci) {
@@ -250,7 +251,7 @@
                 pojemnik.appendChild(opcje);
             } else if (pole.typ === "wiele") {
                 // ETAP 93: wielokrotny wybór — pola zaznaczania
-                pojemnik.appendChild(element("label", {}, `${pole.nazwa} (można kilka)`));
+                pojemnik.appendChild(element("label", { id: `etykieta-${id}` }, `${nazwa} (można kilka)`));
                 const opcje = element("div", { className: "opcje" });
                 for (const o of pole.opcje) {
                     const l = element("label", {});
@@ -261,15 +262,37 @@
                 }
                 pojemnik.appendChild(opcje);
             } else {
-                pojemnik.appendChild(element("label", { htmlFor: id }, pole.nazwa));
+                const zakres = pole.typ === "liczba" && ("min" in pole || "max" in pole)
+                    ? ` (${"min" in pole ? pole.min : "…"}–${"max" in pole ? pole.max : "…"})` : "";
+                pojemnik.appendChild(element("label", { htmlFor: id }, nazwa + zakres));
                 const input = element("input", { id, type: pole.typ === "liczba" ? "number" : "text" });
                 if (pole.typ === "liczba") {
                     input.step = "any";
                     input.inputMode = "decimal";
+                    if ("min" in pole) input.min = pole.min;
+                    if ("max" in pole) input.max = pole.max;
                 }
                 pojemnik.appendChild(input);
             }
         });
+    }
+
+    // ETAP 166: reguły pól — pierwszy problem (opis i element do przewinięcia) albo null
+    function problemPol(wartosci) {
+        for (const [i, pole] of PROJEKT.pola.entries()) {
+            const id = `pole-${i}`;
+            const cel = $(id) || $(`etykieta-${id}`);
+            if (pole.typ === "liczba" && $(id).value.trim() !== "" && $(id).validity.badInput) return [`„${pole.nazwa}”: to nie jest liczba.`, cel];
+            const w = wartosci[pole.nazwa];
+            if (w === undefined) {
+                if (pole.wymagane) return [`Uzupełnij pole „${pole.nazwa}”.`, cel];
+                continue;
+            }
+            if (pole.typ === "liczba" && !Number.isFinite(w)) return [`„${pole.nazwa}”: to nie jest liczba.`, cel];
+            if (pole.typ === "liczba" && "min" in pole && w < pole.min) return [`„${pole.nazwa}”: najmniej ${pole.min}.`, cel];
+            if (pole.typ === "liczba" && "max" in pole && w > pole.max) return [`„${pole.nazwa}”: najwięcej ${pole.max}.`, cel];
+        }
+        return null;
     }
 
     function wartosciPol() {
@@ -319,6 +342,14 @@
     }
 
     $("zapisz").addEventListener("click", async () => {
+        const wartosci = wartosciPol();
+        const problem = problemPol(wartosci);
+        if (problem) {
+            komunikat(problem[0], "blad");
+            problem[1].scrollIntoView({ behavior: "smooth", block: "center" });
+            if (problem[1].focus) problem[1].focus({ preventScroll: true });
+            return;
+        }
         let lat = polozenie && polozenie.lat, lng = polozenie && polozenie.lng, dokladnosc = polozenie && polozenie.dokladnosc_m;
         if ($("lat").value && $("lng").value) {
             lat = Number($("lat").value);
@@ -332,7 +363,7 @@
         }
         const punkt = {
             uid: nowyUid(), lat, lng, dokladnosc_m: dokladnosc, czas: new Date().toISOString(),
-            wartosci: wartosciPol(), uwagi: $("uwagi").value.trim(), zdjecie,
+            wartosci, uwagi: $("uwagi").value.trim(), zdjecie,
         };
         try {
             await transakcja("readwrite", (s) => s.add(punkt));

@@ -2865,3 +2865,24 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Kilka powiatów obok siebie”
 - `DECISIONS.md`: D-173
+
+## ETAP 166 — Teren: pola wymagane i zakresy liczb w formularzu na telefon
+Data: 2026-10-02
+Status: zamknięty
+
+- `teren/projekt.py`: pole może mieć `wymagane` (każdy typ) i `min` / `max`
+  (liczba); klucze zapisywane tylko, gdy ustawione — stare projekty bez
+  zmian; min > max albo nie-liczba → błąd; `braki(wartosci, pola)` —
+  opis braków wymaganych i liczb poza zakresem
+- Formularz na telefon: gwiazdka przy polu wymaganym, zakres w etykiecie,
+  atrybuty min/max; „Zapisz punkt” sprawdza reguły i przewija do pola
+  z komunikatem
+- Strona projektu: edytor pól — „wymagane” i „od / do” dla liczby; lista
+  punktów ma `braki`, tabela oznacza punkt ⚠ z opisem, nad tabelą liczba
+  punktów niezgodnych z regułami; po zapisie pól punkty liczone od nowa
+- Import nie odrzuca punktów z brakami
+- Testy: definicja pól, `braki`, trasa listy punktów, formularz;
+  sprawdzone w przeglądarce (edytor 1300 px, tabela 1300/390 px, formularz
+  telefonu 390 px ciemny: brak wymaganego, liczba za duża, zapis poprawny)
+- Pomoc: „Pola wymagane i zakres liczb”
+- `DECISIONS.md`: D-174
