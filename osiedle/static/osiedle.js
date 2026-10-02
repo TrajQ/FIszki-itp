@@ -618,6 +618,23 @@
             td.title = stan === undefined ? "" : stan ? "zgodne z planem" : "niezgodne z planem";
             td.className = `stan ${stan === undefined ? "" : stan ? "stan--ok" : "stan--zle"}`;
         });
+        // ETAP 174: kolumna z narysowanych budynków — wartość i zgodność przy niej
+        const wb = b.wskazniki_budynkow;
+        sekcjaWskaznikow.querySelectorAll(".kolumna-budynkow").forEach((el) => (el.hidden = !wb));
+        document.getElementById("naglowek-koncepcji").textContent = wb ? "Tereny" : "Koncepcja"; // z parametrów terenów
+        if (!wb) return;
+        const stanyBudynkow = {};
+        for (const z of b.zgodnosc_budynkow) {
+            const klucz = { max_zabudowa_proc: "zabudowa_proc", min_intensywnosc: "intensywnosc", max_intensywnosc: "intensywnosc", max_kondygnacje: "max_kondygnacje" }[z.ustalenie];
+            stanyBudynkow[klucz] = (stanyBudynkow[klucz] ?? true) && z.spelnione;
+        }
+        sekcjaWskaznikow.querySelectorAll("[data-wskaznik-budynkow]").forEach((td) => {
+            const klucz = td.dataset.wskaznikBudynkow;
+            const wartosc = wb[klucz];
+            td.replaceChildren(wartosc === null || wartosc === undefined ? "—" : formatWsk.format(wartosc));
+            const stan = stanyBudynkow[klucz];
+            if (stan !== undefined) td.append(" ", element("span", stan ? "stan--ok" : "stan--zle", stan ? "✓" : "✗"));
+        });
     }
 
     // ---------- koncepcje ----------

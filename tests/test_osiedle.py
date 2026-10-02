@@ -50,7 +50,7 @@ def test_bilans_bez_obszaru_procent_od_sumy_i_pusty():
     b = bilans(kolekcja(prostokat(0, 0, 30, 10, "MN"), prostokat(40, 0, 10, 10, "ZP")))
     assert b["obszar_m2"] is None and [f["procent"] for f in b["funkcje"]] == [75.0, 25.0]
     assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None,
-                                     "budynki": None}
+                                     "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": []}
 
 
 def test_teren_poza_obszarem():
@@ -572,3 +572,28 @@ def test_budynki_na_szkicu_i_w_eksporcie(client):
     eksport = client.get(f"/osiedle/koncepcje/{k}.geojson").get_json()
     assert [c["properties"].get("nazwa_funkcji") for c in eksport["features"]][-1] == "budynek"
     assert 'value="budynek"' in client.get("/osiedle/").get_data(as_text=True)
+
+
+# ---------- ETAP 174: wskaźniki z budynków ----------
+
+
+def test_wskazniki_z_budynkow(client):
+    rysunek = kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 60, 100, "MW", zabudowa_proc=30, kondygnacje=5),
+                       prostokat(10, 10, 20, 10, "budynek", kondygnacje=5), prostokat(10, 40, 30, 10, "budynek", kondygnacje=8))
+    b = bilans(rysunek, {"plan": {"max_zabudowa_proc": 10, "max_kondygnacje": 6, "min_pbc_proc": 20}})
+    wb = b["wskazniki_budynkow"]
+    assert wb["powierzchnia_zabudowy_m2"] == pytest.approx(500, rel=1e-3) and wb["zabudowa_proc"] == pytest.approx(5.0, abs=0.05)
+    assert wb["intensywnosc"] == pytest.approx((200 * 5 + 300 * 8) / 10000, abs=0.005) and wb["max_kondygnacje"] == 8 and wb["pbc_proc"] is None
+    assert b["wskazniki"]["zabudowa_proc"] == pytest.approx(18.0, abs=0.05)  # z terenu: 60% obszaru × 30%
+    stany = {z["ustalenie"]: z["spelnione"] for z in b["zgodnosc_budynkow"]}
+    assert stany == {"max_zabudowa_proc": True, "max_kondygnacje": False}  # PBC nie z budynków
+    assert {z["ustalenie"]: z["spelnione"] for z in b["zgodnosc"]}["max_zabudowa_proc"] is False  # z terenów 18% > 10%
+    assert bilans(kolekcja(prostokat(0, 0, 10, 10, "MN")))["wskazniki_budynkow"] is None
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "B"}).get_json()["id"]
+    client.put(f"/osiedle/koncepcje/{k}", json={"geojson": rysunek, "ustawienia": {"plan": {"max_kondygnacje": 6}}})
+    raport = client.get(f"/osiedle/koncepcje/{k}/raport").get_data(as_text=True)
+    assert "z budynków" in raport and "— z budynków" in raport
+    k2 = client.post("/osiedle/koncepcje", json={"nazwa": "C"}).get_json()["id"]
+    client.put(f"/osiedle/koncepcje/{k2}", json={"geojson": kolekcja(prostokat(0, 0, 100, 100, "MN"))})
+    porownanie = client.get(f"/osiedle/porownanie?id={k}&id={k2}").get_data(as_text=True)
+    assert "z budynków: intensywność" in porownanie

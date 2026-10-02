@@ -976,3 +976,6 @@
 
 ## ETAP 173 — 2026-10-02
 - Osiedle: budynki jako obrysy z kondygnacjami (rzut, powierzchnia całkowita, kontrole)
+
+## ETAP 174 — 2026-10-02
+- Osiedle: wskaźniki zabudowy z budynków obok wskaźników z terenów, ze zgodnością z planem

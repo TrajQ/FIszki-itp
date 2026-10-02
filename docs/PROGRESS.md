@@ -3022,3 +3022,21 @@ Status: zamknięty
   kondygnacji)
 - Pomoc: „Budynki”
 - `DECISIONS.md`: D-181
+
+## ETAP 174 — Osiedle: wskaźniki zabudowy z narysowanych budynków
+Data: 2026-10-02
+Status: zamknięty
+
+- `osiedle/wskazniki.py`: `wskazniki_budynkow` — powierzchnia zabudowy
+  i całkowita, wskaźnik zabudowy, intensywność, najwyższa zabudowa z
+  obrysów budynków (PBC tylko z terenów); `bilans()` zwraca
+  `wskazniki_budynkow` i `zgodnosc_budynkow` (te same ustalenia planu)
+- Panel: kolumna „Budynki” w tabeli wskaźników z ✓/✗ przy wartości,
+  nagłówek „Tereny” zamiast „Koncepcja”, gdy obie kolumny są widoczne;
+  tabela w przewijanym kontenerze (bez poziomego przewijania strony)
+- Raport: kolumny „z terenów / z budynków” i zgodność „— z budynków”;
+  porównanie wariantów: wiersze „z budynków: …”, gdy wariant ma budynki
+- Testy: wskaźniki i zgodność z budynków, raport, porównanie;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Budynki”
+- `DECISIONS.md`: D-182

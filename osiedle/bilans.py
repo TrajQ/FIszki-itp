@@ -167,7 +167,7 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     wszystko = [t["geometria"] for t in tereny] + [b["geometria"] for b in budynki] + ([obszar] if obszar is not None else [])
     if not wszystko:
         return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None,
-                "budynki": None}
+                "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": []}
     szerokosc = unary_union(wszystko).centroid.y
 
     def pole(geometria):
@@ -215,6 +215,8 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     )
     wskazniki = wsk.wskazniki(tereny, podstawa)
     program = prog.program(tereny, obszar_m2, ustawienia)
+    zestawienie_budynkow = _budynki(budynki, tereny, obszar, pole)
+    wskazniki_budynkow = wsk.wskazniki_budynkow(zestawienie_budynkow, podstawa)  # ETAP 174
     return {
         "obszar_m2": round(obszar_m2, 1) if obszar_m2 is not None else None,
         "funkcje": funkcje,
@@ -224,5 +226,7 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
         "zgodnosc": wsk.zgodnosc(wskazniki, plan),
         "program": program,
         "koszty": kosz.koszty(tereny, obszar_m2, ustawienia, program),
-        "budynki": _budynki(budynki, tereny, obszar, pole),
+        "budynki": zestawienie_budynkow,
+        "wskazniki_budynkow": wskazniki_budynkow,
+        "zgodnosc_budynkow": wsk.zgodnosc(wskazniki_budynkow, plan) if wskazniki_budynkow else [],
     }

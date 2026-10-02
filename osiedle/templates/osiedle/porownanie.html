@@ -44,6 +44,11 @@
         {% for klucz, nazwa, miejsca in [('zabudowa_proc', 'wskaźnik zabudowy [%]', 1), ('intensywnosc', 'intensywność', 2), ('pbc_proc', 'biologicznie czynna [%]', 1), ('max_kondygnacje', 'najwyższa zabudowa [kond.]', 1)] %}
         <tr><th>{{ nazwa }}</th>{% for w in warianty %}<td class="liczba">{{ m(w.b.wskazniki[klucz], miejsca) if w.b.wskazniki else '—' }}</td>{% endfor %}</tr>
         {% endfor %}
+        {% if warianty | selectattr('b.wskazniki_budynkow') | list %}{# ETAP 174 #}
+        {% for klucz, nazwa, miejsca in [('zabudowa_proc', 'z budynków: wskaźnik zabudowy [%]', 1), ('intensywnosc', 'z budynków: intensywność', 2), ('max_kondygnacje', 'z budynków: najwyższa [kond.]', 1)] %}
+        <tr><th>{{ nazwa }}</th>{% for w in warianty %}<td class="liczba">{{ m(w.b.wskazniki_budynkow[klucz], miejsca) if w.b.wskazniki_budynkow else '—' }}</td>{% endfor %}</tr>
+        {% endfor %}
+        {% endif %}
         <tr><th>zgodność z planem</th>{% for w in warianty %}{% set z = w.b.zgodnosc %}
             <td class="liczba {{ '' if not z else ('stan--ok' if z | selectattr('spelnione') | list | length == z | length else 'stan--zle') }}">{{ '—' if not z else (z | selectattr('spelnione') | list | length) ~ ' z ' ~ (z | length) }}</td>{% endfor %}</tr>
 

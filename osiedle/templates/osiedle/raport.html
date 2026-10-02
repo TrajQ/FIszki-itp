@@ -78,14 +78,17 @@
                 {% if w %}
                 <h3>Wskaźniki zabudowy</h3>
                 <p class="wyciszony">Liczone od {{ 'powierzchni obszaru opracowania' if b.obszar_m2 is not none else 'sumy terenów' }}.</p>
+                {% set wb = b.wskazniki_budynkow %}
                 <table class="tabela">
-                    <tr><td>powierzchnia zabudowy</td><td class="liczba">{{ m(w.powierzchnia_zabudowy_m2, 0) }} m²</td></tr>
-                    <tr><td>powierzchnia całkowita</td><td class="liczba">{{ m(w.powierzchnia_calkowita_m2, 0) }} m²</td></tr>
-                    <tr><td>wskaźnik zabudowy</td><td class="liczba">{{ m(w.zabudowa_proc) }}%</td></tr>
-                    <tr><td>intensywność zabudowy</td><td class="liczba">{{ m(w.intensywnosc, 2) }}</td></tr>
-                    <tr><td>powierzchnia biologicznie czynna</td><td class="liczba">{{ m(w.pbc_proc) }}%</td></tr>
-                    <tr><td>najwyższa zabudowa</td><td class="liczba">{{ m(w.max_kondygnacje) }} kond.</td></tr>
+                    {% if wb %}<tr><th></th><th class="liczba">z terenów</th><th class="liczba">z budynków</th></tr>{% endif %}
+                    <tr><td>powierzchnia zabudowy</td><td class="liczba">{{ m(w.powierzchnia_zabudowy_m2, 0) }} m²</td>{% if wb %}<td class="liczba">{{ m(wb.powierzchnia_zabudowy_m2, 0) }} m²</td>{% endif %}</tr>
+                    <tr><td>powierzchnia całkowita</td><td class="liczba">{{ m(w.powierzchnia_calkowita_m2, 0) }} m²</td>{% if wb %}<td class="liczba">{{ m(wb.powierzchnia_calkowita_m2, 0) }} m²</td>{% endif %}</tr>
+                    <tr><td>wskaźnik zabudowy</td><td class="liczba">{{ m(w.zabudowa_proc) }}%</td>{% if wb %}<td class="liczba">{{ m(wb.zabudowa_proc) }}%</td>{% endif %}</tr>
+                    <tr><td>intensywność zabudowy</td><td class="liczba">{{ m(w.intensywnosc, 2) }}</td>{% if wb %}<td class="liczba">{{ m(wb.intensywnosc, 2) }}</td>{% endif %}</tr>
+                    <tr><td>powierzchnia biologicznie czynna</td><td class="liczba">{{ m(w.pbc_proc) }}%</td>{% if wb %}<td class="liczba wyciszony">—</td>{% endif %}</tr>
+                    <tr><td>najwyższa zabudowa</td><td class="liczba">{{ m(w.max_kondygnacje) }} kond.</td>{% if wb %}<td class="liczba">{{ m(wb.max_kondygnacje) }} kond.</td>{% endif %}</tr>
                 </table>
+                {% if wb %}<p class="wyciszony">Z budynków: {{ b.budynki.liczba }} narysowanych obrysów, rzut × kondygnacje każdego budynku; powierzchnia biologicznie czynna tylko z terenów.</p>{% endif %}
                 {% endif %}
 
                 {% if b.zgodnosc %}
@@ -94,6 +97,11 @@
                     <tr><th>Ustalenie</th><th class="liczba">Plan</th><th class="liczba">Koncepcja</th><th></th></tr>
                     {% for z in b.zgodnosc %}
                     <tr><td>{{ z.nazwa }}</td><td class="liczba">{{ z.rodzaj }} {{ m(z.granica, 2) }}{{ z.jednostka }}</td><td class="liczba">{{ m(z.wartosc, 2) }}{{ z.jednostka }}</td>
+                        <td class="{{ 'stan--ok' if z.spelnione else 'stan--zle' }}">{{ '✓ zgodne' if z.spelnione else '✗ niezgodne' }}</td></tr>
+                    {% endfor %}
+                    {# ETAP 174: te same ustalenia sprawdzone na narysowanych budynkach #}
+                    {% for z in b.zgodnosc_budynkow %}
+                    <tr><td>{{ z.nazwa }} <span class="wyciszony">— z budynków</span></td><td class="liczba">{{ z.rodzaj }} {{ m(z.granica, 2) }}{{ z.jednostka }}</td><td class="liczba">{{ m(z.wartosc, 2) }}{{ z.jednostka }}</td>
                         <td class="{{ 'stan--ok' if z.spelnione else 'stan--zle' }}">{{ '✓ zgodne' if z.spelnione else '✗ niezgodne' }}</td></tr>
                     {% endfor %}
                 </table>

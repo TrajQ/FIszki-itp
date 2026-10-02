@@ -120,26 +120,28 @@
         <section id="sekcja-wskaznikow" class="karta stos" hidden>
             <h3>Wskaźniki zabudowy</h3>
             <p id="podstawa-wskaznikow" class="wyciszony opis-panelu"></p>
+            <div class="przewijanie-osiedla">
             <table class="tabela tabela-wskaznikow">
-                <thead><tr><th>Wskaźnik</th><th class="liczba">Koncepcja</th><th>Plan</th><th></th></tr></thead>
+                <thead><tr><th>Wskaźnik</th><th class="liczba" id="naglowek-koncepcji">Koncepcja</th><th class="liczba kolumna-budynkow" title="Z narysowanych budynków: rzut × kondygnacje (ETAP 174)" hidden>Budynki</th><th>Plan</th><th></th></tr></thead>
                 <tbody>
-                    <tr><td>powierzchnia zabudowy</td><td class="liczba" data-wskaznik="powierzchnia_zabudowy_m2"></td><td class="wyciszony">m²</td><td></td></tr>
-                    <tr><td>powierzchnia całkowita</td><td class="liczba" data-wskaznik="powierzchnia_calkowita_m2"></td><td class="wyciszony">m²</td><td></td></tr>
-                    <tr><td>wskaźnik zabudowy [%]</td><td class="liczba" data-wskaznik="zabudowa_proc"></td>
+                    <tr><td>powierzchnia zabudowy</td><td class="liczba" data-wskaznik="powierzchnia_zabudowy_m2"></td><td class="liczba kolumna-budynkow" data-wskaznik-budynkow="powierzchnia_zabudowy_m2" hidden></td><td class="wyciszony">m²</td><td></td></tr>
+                    <tr><td>powierzchnia całkowita</td><td class="liczba" data-wskaznik="powierzchnia_calkowita_m2"></td><td class="liczba kolumna-budynkow" data-wskaznik-budynkow="powierzchnia_calkowita_m2" hidden></td><td class="wyciszony">m²</td><td></td></tr>
+                    <tr><td>wskaźnik zabudowy [%]</td><td class="liczba" data-wskaznik="zabudowa_proc"></td><td class="liczba kolumna-budynkow" data-wskaznik-budynkow="zabudowa_proc" hidden></td>
                         <td><label class="granica">max <input data-ustalenie="max_zabudowa_proc" type="number" min="0" step="any" aria-label="Plan: maksymalny wskaźnik zabudowy"></label></td>
                         <td class="stan" data-stan="zabudowa_proc"></td></tr>
-                    <tr><td>intensywność</td><td class="liczba" data-wskaznik="intensywnosc"></td>
+                    <tr><td>intensywność</td><td class="liczba" data-wskaznik="intensywnosc"></td><td class="liczba kolumna-budynkow" data-wskaznik-budynkow="intensywnosc" hidden></td>
                         <td><label class="granica">min <input data-ustalenie="min_intensywnosc" type="number" min="0" step="any" aria-label="Plan: minimalna intensywność"></label>
                             <label class="granica">max <input data-ustalenie="max_intensywnosc" type="number" min="0" step="any" aria-label="Plan: maksymalna intensywność"></label></td>
                         <td class="stan" data-stan="intensywnosc"></td></tr>
-                    <tr><td>biologicznie czynna [%]</td><td class="liczba" data-wskaznik="pbc_proc"></td>
+                    <tr><td>biologicznie czynna [%]</td><td class="liczba" data-wskaznik="pbc_proc"></td><td class="liczba kolumna-budynkow" data-wskaznik-budynkow="pbc_proc" hidden></td>
                         <td><label class="granica">min <input data-ustalenie="min_pbc_proc" type="number" min="0" step="any" aria-label="Plan: minimalna powierzchnia biologicznie czynna"></label></td>
                         <td class="stan" data-stan="pbc_proc"></td></tr>
-                    <tr><td>najwyższa zabudowa [kond.]</td><td class="liczba" data-wskaznik="max_kondygnacje"></td>
+                    <tr><td>najwyższa zabudowa [kond.]</td><td class="liczba" data-wskaznik="max_kondygnacje"></td><td class="liczba kolumna-budynkow" data-wskaznik-budynkow="max_kondygnacje" hidden></td>
                         <td><label class="granica">max <input data-ustalenie="max_kondygnacje" type="number" min="0" step="1" aria-label="Plan: maksymalna liczba kondygnacji"></label></td>
                         <td class="stan" data-stan="max_kondygnacje"></td></tr>
                 </tbody>
             </table>
+            </div>
             <p class="wyciszony opis-panelu">Wpisz ustalenia planu (np. z modułu MPZP) — zgodność sprawdza się od razu. Parametry terenów ustawisz, klikając teren na mapie.</p>
         </section>
 

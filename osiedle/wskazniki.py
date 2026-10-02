@@ -136,6 +136,27 @@ def wskazniki(tereny: list[dict], podstawa_m2: float) -> dict:
     }
 
 
+def wskazniki_budynkow(budynki: dict | None, podstawa_m2: float) -> dict | None:
+    """ETAP 174: te same wskaźniki z narysowanych budynków (rzut i
+    kondygnacje każdego budynku) zamiast z procentów zabudowy terenów.
+    PBC zostaje z terenów — budynki o nim nie mówią."""
+    if not budynki:
+        return None
+
+    def udzial(m2):
+        return m2 / podstawa_m2 if podstawa_m2 else None
+
+    return {
+        "powierzchnia_zabudowy_m2": budynki["zabudowa_m2"],
+        "powierzchnia_calkowita_m2": budynki["calkowita_m2"],
+        "pbc_m2": None,
+        "zabudowa_proc": _zaokraglij(udzial(budynki["zabudowa_m2"]), 100, 1),
+        "intensywnosc": _zaokraglij(udzial(budynki["calkowita_m2"]), 1, 2),
+        "pbc_proc": None,
+        "max_kondygnacje": max(b["kondygnacje"] for b in budynki["lista"]),
+    }
+
+
 def _zaokraglij(wartosc, mnoznik, miejsca):
     return None if wartosc is None else round(wartosc * mnoznik, miejsca)
 

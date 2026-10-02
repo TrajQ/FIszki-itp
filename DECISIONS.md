@@ -3647,3 +3647,23 @@ budynków obok wskaźników z parametrów terenów — w następnym ETAPie.
   rysunkiem.
 - Budynek jako „podteren” z hierarchią — komplikuje rysowanie w
   Leaflet.draw bez zysku na tym etapie.
+
+## D-182 — Wskaźniki z budynków obok, nie zamiast wskaźników z terenów
+Data: 2026-10-02
+
+**Decyzja:** Gdy koncepcja ma budynki, wskaźniki z obrysów (rzut ×
+kondygnacje) są pokazywane w osobnej kolumnie obok wskaźników z
+parametrów terenów, a zgodność z planem jest sprawdzana dla obu.
+Program osiedla i koszty liczą się dalej z terenów.
+
+**Uzasadnienie:** Koncepcja zwykle zaczyna się od terenów z procentami
+(szybki szkic), a budynki dochodzą tylko w części terenów — zastąpienie
+jednych drugimi dawałoby skok wskaźników przy pierwszym narysowanym
+budynku. Dwie kolumny pokazują, czy rysunek budynków dogonił założenia
+terenów. PBC zostaje z terenów: obrys budynku nie mówi nic o zieleni.
+
+**Odrzucone alternatywy:**
+- Automatyczne przełączenie na budynki, gdy jest ich „dość” — próg
+  arbitralny, wynik niejasny dla czytającego raport.
+- Program (mieszkania) z powierzchni całkowitej budynków — w kolejnych
+  ETAPach, gdy budynki dostaną funkcję.

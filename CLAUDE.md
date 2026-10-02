@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 173 (Osiedle: budynki jako obrysy z kondygnacjami — zamknięty)
-Ostatni ZIP: releases/warsztat_etap173_20261002.zip
-Testy: 587 passed / 0 failed
+ETAP: 174 (Osiedle: wskaźniki z budynków — zamknięty)
+Ostatni ZIP: releases/warsztat_etap174_20261002.zip
+Testy: 588 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).
