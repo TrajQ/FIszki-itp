@@ -3021,3 +3021,21 @@ wszystkie punkty pełne).
 - Druk strony modułu (window.print) — formularze, ranking i wybór
   województwa na wydruku, wykres zależny od JS.
 - Osobna funkcja wykresu dla GUS — duplikat ~40 linii.
+
+## D-146 — Obszar z GeoJSON: układ z „crs” albo z zakresu liczb, bez pyproj
+Data: 2026-10-02
+
+**Decyzja:** Plik z granicą opracowania przyjmujemy w WGS84, PL-1992
+i PL-2000. Układ bierzemy z pola `crs` (QGIS je zapisuje dla układów innych
+niż 4326), a gdy go nie ma — z zakresu współrzędnych, które dla tych trzech
+układów na obszarze Polski są rozłączne. Przeliczenie: własne szeregi
+Krügera z `mpzp/uklady.py` (dołożona odwrotność PL-2000).
+
+**Uzasadnienie:** Granica opracowania zwykle powstaje w QGIS na mapie
+zasadniczej w PL-2000 albo na ortofotomapie w PL-1992; wymaganie
+przeliczenia do WGS84 przed importem byłoby zbędnym krokiem.
+
+**Odrzucone alternatywy:**
+- pyproj — ciężka zależność (biblioteka PROJ) dla trzech układów, które
+  i tak już liczymy.
+- Tylko WGS84 — najczęstszy błąd studenta to plik w układzie projektu QGIS.

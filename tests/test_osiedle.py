@@ -297,6 +297,62 @@ def test_obszar_z_dzialek(client, monkeypatch):
     assert client.post(url + "/obszar-z-dzialek", json={"dzialki": []}).status_code == 400
 
 
+# ---------- ETAP 138: obszar opracowania z pliku GeoJSON ----------
+
+
+def _plik(dane, nazwa="granica.geojson"):
+    import io
+    import json
+    tekst = dane if isinstance(dane, str) else json.dumps(dane)
+    return {"plik": (io.BytesIO(tekst.encode()), nazwa)}
+
+
+def test_obszar_z_pliku_geojson(client):
+    from mpzp.uklady import pl1992, pl2000
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Z pliku"}).get_json()
+    url = f"/osiedle/koncepcje/{k['id']}/obszar-z-pliku"
+    client.put(url.replace("/obszar-z-pliku", ""), json={"geojson": kolekcja(prostokat(0, 0, 30, 100, "MW"))})
+
+    # WGS84, dwa przyległe wieloboki → jeden obszar 100 × 100 m; teren MW zostaje
+    odp = client.post(url, data=_plik(kolekcja(prostokat(0, 0, 50, 100, "x"), prostokat(50, 0, 50, 100, "x"))), content_type="multipart/form-data")
+    d = odp.get_json()
+    assert odp.status_code == 200 and d["bilans"]["obszar_m2"] == pytest.approx(10_000, rel=1e-3)
+    obszar = [c for c in d["geojson"]["features"] if c["properties"]["funkcja"] == "obszar"]
+    assert len(obszar) == 1 and obszar[0]["properties"]["uklad_pliku"] == "WGS84" and obszar[0]["geometry"]["type"] == "Polygon"
+    assert any(c["properties"]["funkcja"] == "MW" for c in d["geojson"]["features"])
+
+    # PL-1992 bez „crs” (rozpoznany po liczbach): prostokąt 100 × 200 m w Krakowie;
+    # osobna koncepcja — bilans liczy skalę z szerokości wszystkich terenów (MW leży na 52°N)
+    url = f"/osiedle/koncepcje/{client.post('/osiedle/koncepcje', json={'nazwa': 'Kraków'}).get_json()['id']}/obszar-z-pliku"
+    s = pl1992(50.06, 19.94)
+    e, n = s["y"], s["x"]
+    pierscien = [[e, n], [e + 100, n], [e + 100, n + 200], [e, n + 200], [e, n]]
+    d = client.post(url, data=_plik({"type": "Polygon", "coordinates": [pierscien]}), content_type="multipart/form-data").get_json()
+    assert d["bilans"]["obszar_m2"] == pytest.approx(20_000, rel=2e-3)  # zniekształcenie PL-1992 ok. 0,1%
+    assert d["geojson"]["features"][0]["properties"]["uklad_pliku"] == "PL-1992"
+
+    # PL-2000 z „crs” jak z QGIS
+    s = pl2000(50.06, 19.94)
+    e, n = s["y"], s["x"]
+    plik = {"type": "FeatureCollection", "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::2178"}},
+            "features": [{"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": [[[e, n], [e + 100, n], [e + 100, n + 100], [e, n + 100], [e, n]]]}}]}
+    d = client.post(url, data=_plik(plik), content_type="multipart/form-data").get_json()
+    assert d["bilans"]["obszar_m2"] == pytest.approx(10_000, rel=1e-3) and d["geojson"]["features"][0]["properties"]["uklad_pliku"] == "PL-2000"
+
+    def blad(dane):
+        odp = client.post(url, data=_plik(dane), content_type="multipart/form-data")
+        assert odp.status_code == 400
+        return odp.get_json()["blad"]
+
+    assert "wieloboków" in blad(kolekcja({"type": "Feature", "properties": {}, "geometry": {"type": "Point", "coordinates": [17, 52]}}))
+    assert "poza Polską" in blad({"type": "Polygon", "coordinates": [[[2, 48], [2.01, 48], [2.01, 48.01], [2, 48]]]})
+    assert "EPSG:3857" in blad({**plik, "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::3857"}}})
+    assert "Nie rozpoznaję" in blad({"type": "Polygon", "coordinates": [[[1e7, 1e7], [1e7 + 1, 1e7], [1e7, 1e7 + 1], [1e7, 1e7]]]})
+    assert "JSON" in blad("to nie json")
+    assert client.post(url, data={}, content_type="multipart/form-data").status_code == 400
+    assert client.post("/osiedle/koncepcje/999/obszar-z-pliku", data=_plik(plik), content_type="multipart/form-data").status_code == 404
+
+
 # ---------- ETAP 81: plan miejscowy pod rysunkiem ----------
 
 

@@ -65,6 +65,12 @@
                 <textarea id="dzialki-obszaru" rows="3" aria-label="Identyfikatory działek"></textarea>
                 <button id="obszar-z-dzialek" type="button" class="przycisk--drugi">Ustaw obszar z działek</button>
             </details>
+            <details class="obszar-z-dzialek">
+                <summary>Obszar opracowania z pliku GeoJSON</summary>
+                <p class="wyciszony opis-panelu">Granica narysowana w QGIS (Eksportuj → Zapisz obiekty jako… → GeoJSON) w układzie WGS84, PL-1992 albo PL-2000. Wieloboki z pliku zostaną połączone i zastąpią obecny obszar.</p>
+                <input id="plik-obszaru" type="file" accept=".geojson,.json,application/geo+json" aria-label="Plik GeoJSON z granicą obszaru opracowania">
+                <button id="obszar-z-pliku" type="button" class="przycisk--drugi">Ustaw obszar z pliku</button>
+            </details>
             <div id="wybrany-teren" class="wybrany-teren" hidden>
                 <h4>Zaznaczony teren</h4>
                 <select id="funkcja-terenu" aria-label="Funkcja zaznaczonego terenu">

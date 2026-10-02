@@ -49,7 +49,7 @@
     async function zapytaj(url, opcje = {}) {
         const odpowiedz = await fetch(url, {
             ...opcje,
-            headers: opcje.body ? { "Content-Type": "application/json" } : undefined,
+            headers: typeof opcje.body === "string" ? { "Content-Type": "application/json" } : undefined, // FormData: nagłówek ustawia przeglądarka
         });
         const dane = await odpowiedz.json().catch(() => ({}));
         if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
@@ -680,6 +680,28 @@
             await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}/obszar-z-dzialek`, { method: "POST", body: JSON.stringify({ dzialki }) });
             await otworz(koncepcja.id); // przerysowanie z nowym obszarem i przybliżenie do niego
             stanZapisu.textContent = "Zapisano";
+        } catch (err) {
+            stanZapisu.textContent = "";
+            pokazKomunikat(err.message);
+        } finally {
+            e.target.disabled = false;
+        }
+    });
+
+    // Obszar z pliku GeoJSON (ETAP 138): układ współrzędnych rozpoznaje i przelicza serwer.
+    document.getElementById("obszar-z-pliku").addEventListener("click", async (e) => {
+        if (!koncepcja) return;
+        const plik = document.getElementById("plik-obszaru").files[0];
+        if (!plik) return pokazKomunikat("Wybierz plik GeoJSON z granicą obszaru.");
+        const formularz = new FormData();
+        formularz.append("plik", plik);
+        e.target.disabled = true;
+        try {
+            await dokonczZapis();
+            const wynik = await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}/obszar-z-pliku`, { method: "POST", body: formularz });
+            await otworz(koncepcja.id);
+            const obszar = wynik.geojson.features.find((c) => c.properties.funkcja === OBSZAR);
+            stanZapisu.textContent = `Zapisano obszar z pliku (układ ${obszar.properties.uklad_pliku})`;
         } catch (err) {
             stanZapisu.textContent = "";
             pokazKomunikat(err.message);

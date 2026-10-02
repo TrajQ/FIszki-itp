@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from dane import uldk
 
 from . import baza, cien
+from .obszar_z_pliku import obszar_z_geojson
 from .bilans import FUNKCJE, OBSZAR, BladKoncepcji, bilans
 from .program import ZALOZENIA
 from .wskazniki import DOMYSLNE, BladParametru
@@ -127,16 +128,39 @@ def obszar_z_dzialek(koncepcja_id):
         if dzialka is None:
             return jsonify({"blad": f"ULDK nie zna działki {dzialka_id}."}), 404
         geometrie.append(dzialka.geometria)
-    obszar = unary_union(geometrie)
+    return _zastap_obszar(k, unary_union(geometrie), {"dzialki": identyfikatory})
+
+
+def _zastap_obszar(k: dict, obszar, wlasciwosci: dict):
+    """Nowy obszar opracowania w miejsce dotychczasowego; tereny zostają."""
     cechy = [c for c in k["geojson"]["features"] if (c.get("properties") or {}).get("funkcja") != OBSZAR]
-    cechy.insert(0, {"type": "Feature", "properties": {"funkcja": OBSZAR, "dzialki": identyfikatory}, "geometry": mapping(obszar)})
+    cechy.insert(0, {"type": "Feature", "properties": {"funkcja": OBSZAR, **wlasciwosci}, "geometry": mapping(obszar)})
     geojson = {"type": "FeatureCollection", "features": cechy}
     try:
         wynik = bilans(geojson, k["ustawienia"])
     except BladKoncepcji as e:
         return jsonify({"blad": str(e)}), 400
-    baza.zapisz(koncepcja_id, geojson=geojson)
-    return jsonify({**baza.pobierz(koncepcja_id), "bilans": wynik})
+    baza.zapisz(k["id"], geojson=geojson)
+    return jsonify({**baza.pobierz(k["id"]), "bilans": wynik})
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>/obszar-z-pliku", methods=["POST"])
+def obszar_z_pliku(koncepcja_id):
+    """Obszar opracowania z pliku GeoJSON, np. granica narysowana w QGIS
+    (ETAP 138). WGS84, PL-1992 albo PL-2000; zastępuje obecny obszar."""
+    k = _koncepcja_albo_404(koncepcja_id)
+    plik = request.files.get("plik")
+    if plik is None or not plik.filename:
+        return jsonify({"blad": "Wybierz plik GeoJSON."}), 400
+    try:
+        dane = json.loads(plik.read().decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return jsonify({"blad": "To nie jest plik GeoJSON (JSON) — w QGIS: Eksportuj → Zapisz obiekty jako… → GeoJSON."}), 400
+    try:
+        obszar, uklad = obszar_z_geojson(dane)
+    except BladKoncepcji as e:
+        return jsonify({"blad": str(e)}), 400
+    return _zastap_obszar(k, obszar, {"plik": secure_filename(plik.filename) or "obszar.geojson", "uklad_pliku": uklad})
 
 
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>/cien")

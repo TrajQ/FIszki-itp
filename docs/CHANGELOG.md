@@ -868,3 +868,6 @@
 
 ## ETAP 137 — 2026-10-02
 - Ceny: raport porównania miast (GUS) do druku
+
+## ETAP 138 — 2026-10-02
+- Osiedle: obszar opracowania z pliku GeoJSON (WGS84, PL-1992, PL-2000)

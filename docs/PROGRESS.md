@@ -2411,3 +2411,20 @@ Status: zamknięty
 - Testy: liczby, wykres, dostępność, błąd BDL, 400/302
 - Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny, PDF
 - `DECISIONS.md`: D-145
+
+## ETAP 138 — Osiedle: import obszaru opracowania z GeoJSON
+Data: 2026-10-02
+Status: zamknięty
+
+- `osiedle/obszar_z_pliku.py`: FeatureCollection / Feature / geometria →
+  suma wieloboków w WGS84; układ z pola `crs` (EPSG:4326, 2180, 2176–2179)
+  albo z zakresu liczb; inne EPSG → czytelny błąd; kontrola „w Polsce”
+- `mpzp/uklady.wgs84_z_pl2000` (odwrotność PL-2000, strefa z numeru)
+- Trasa POST `/osiedle/koncepcje/<id>/obszar-z-pliku` (multipart);
+  wspólna z obszarem z działek funkcja `_zastap_obszar`
+- Panel: „Obszar opracowania z pliku GeoJSON”; `zapytaj` w osiedle.js
+  wysyła FormData bez nagłówka JSON
+- Test: WGS84 (dwa wieloboki → jeden), PL-1992 bez crs, PL-2000 z crs,
+  błędy (punkty, Paryż, EPSG:3857, nie-JSON, brak pliku, 404)
+- Sprawdzone w przeglądarce 1300/390 px: pole jak z obliczenia ręcznego
+- `DECISIONS.md`: D-146

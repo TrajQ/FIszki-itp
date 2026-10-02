@@ -114,3 +114,12 @@ def odwrotne_gauss_kruger(polnoc: float, wschod: float, poludnik: float, skala: 
 def wgs84_z_pl1992(x: float, y: float) -> tuple[float, float]:
     """PL-1992 (x — północ, y — wschód, jak w geodezji) → (szerokość, długość)."""
     return odwrotne_gauss_kruger(x + 5_300_000, y - 500_000, 19.0, 0.9993)
+
+
+def wgs84_z_pl2000(x: float, y: float) -> tuple[float, float]:
+    """PL-2000 (x — północ, y — wschód z numerem strefy na początku, np.
+    7 4xx xxx) → (szerokość, długość). ETAP 138."""
+    strefa = int(y // 1_000_000)
+    if strefa not in (5, 6, 7, 8):
+        raise ValueError("Współrzędna wschodnia nie zaczyna się od numeru strefy PL-2000 (5–8).")
+    return odwrotne_gauss_kruger(x, y - strefa * 1_000_000 - 500_000, 3.0 * strefa, 0.999923)
