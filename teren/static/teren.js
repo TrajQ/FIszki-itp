@@ -389,7 +389,8 @@
         dane.append("plik", plik);
         try {
             const wynik = await zapytaj(`${URL_PROJEKTU}/import`, { method: "POST", body: dane });
-            komunikat(`Zaimportowano punkty: ${wynik.dodane}${wynik.pominiete ? `, pominięte (już były): ${wynik.pominiete}` : ""}.`, false);
+            const reszta = (wynik.niedopasowane || []).length ? ` Atrybuty bez pola w projekcie (zapisane w uwagach): ${wynik.niedopasowane.join(", ")}.` : "";
+            komunikat(`Zaimportowano punkty: ${wynik.dodane}${wynik.pominiete ? `, pominięte (już były): ${wynik.pominiete}` : ""}.${reszta}`, false);
             e.target.reset();
             await wczytaj(true);
         } catch (err) {

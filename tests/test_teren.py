@@ -397,3 +397,46 @@ def test_heksagony_terenu():
     svg = raport.heksagony_svg(w)
     assert svg.count("<polygon") == 2 and ">8<" in svg and ">nr 2<" in svg
     assert raport.kolor_gestosci(8, 8) == raport.KOLORY_GESTOSCI[-1] and raport.kolor_gestosci(1, 8) == raport.KOLORY_GESTOSCI[0]
+
+
+# ---------- ETAP 133: import z GeoJSON ----------
+
+
+def _geojson(*cechy):
+    return {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": wsp}, "properties": atr} for wsp, atr in cechy]}
+
+
+def test_odczytaj_geojson():
+    from teren.projekt import BladDanych, odczytaj_geojson
+
+    pola = [{"nazwa": "Stan", "typ": "wybor", "opcje": ["dobry", "zły"]}, {"nazwa": "liczba miejsc", "typ": "liczba", "opcje": []},
+            {"nazwa": "oświetlenie", "typ": "tak_nie", "opcje": []}, {"nazwa": "wyposażenie", "typ": "wiele", "opcje": ["kosz", "stojak"]}]
+    dane = _geojson(([16.93, 52.40], {"stan": "dobry", "Liczba miejsc": "4,5", "OŚWIETLENIE": "tak", "wyposażenie": "kosz; stojak",
+                                      "opis": "przy fontannie", "id_qgis": 17, "czas": "2026-09-30T10:00:00"}),
+                    ([16.94, 52.41], {"Stan": "zły", "oświetlenie": 0}))
+    punkty, niedopasowane = odczytaj_geojson(dane, pola)
+    p1, p2 = punkty
+    assert (p1["lat"], p1["lng"]) == (52.40, 16.93) and p1["czas"] == "2026-09-30T10:00:00"
+    assert p1["wartosci"] == {"Stan": "dobry", "liczba miejsc": 4.5, "oświetlenie": True, "wyposażenie": ["kosz", "stojak"]}
+    assert p1["uwagi"] == "przy fontannie; id_qgis: 17" and niedopasowane == ["id_qgis"]
+    assert p2["wartosci"] == {"Stan": "zły", "oświetlenie": False}
+    assert odczytaj_geojson(dane, pola)[0][0]["uid"] == p1["uid"] and p1["uid"] != p2["uid"]  # stały identyfikator
+    with pytest.raises(BladDanych, match="EPSG:4326"):
+        odczytaj_geojson(_geojson(([357000.0, 506000.0], {})), pola)  # metry PL-1992
+    with pytest.raises(BladDanych, match="nie ma na liście opcji"):
+        odczytaj_geojson(_geojson(([16.9, 52.4], {"stan": "średni"})), pola)
+    with pytest.raises(BladDanych, match="tylko punkty"):
+        odczytaj_geojson({"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "LineString", "coordinates": []}, "properties": {}}]}, pola)
+
+
+def test_import_geojson_przez_trase(client):
+    import io
+    import json
+
+    client.post("/teren/projekty", data={"nazwa": "Ławki", "wzor": "lawki"})
+    dane = json.dumps(_geojson(([16.93, 52.40], {"nazwa_z_qgis": "A"}), ([16.94, 52.41], {}))).encode()
+    wynik = client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(dane), "punkty.geojson")}, content_type="multipart/form-data").get_json()
+    assert (wynik["dodane"], wynik["pominiete"], wynik["niedopasowane"]) == (2, 0, ["nazwa_z_qgis"])
+    ponownie = client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(dane), "punkty.geojson")}, content_type="multipart/form-data").get_json()
+    assert (ponownie["dodane"], ponownie["pominiete"]) == (0, 2)

@@ -2929,3 +2929,23 @@ najczęstsza z udziałem jest zrozumiała bez statystyki.
 - Wybór wielkości przez użytkownika — raport ma działać bez ustawień.
 - Mapa ciepła (gęstość jądrowa) — wymaga parametru wygładzania i trudniej
   ją opisać w raporcie.
+
+## D-141 — Import GeoJSON do terenu: dopasowanie po nazwie, reszta w uwagach
+Data: 2026-10-02
+
+**Decyzja:** Atrybuty GeoJSON przypisujemy do pól projektu po nazwie
+(bez wielkości liter), z łagodnym przeliczeniem typów, a następnie
+sprawdzamy tak samo jak dane z telefonu. Atrybuty bez pola nie giną —
+trafiają do uwag z nazwą, a użytkownik dostaje ich listę. Identyfikator
+punktu wynika z treści (położenie + atrybuty), więc ponowny import nie
+dubluje punktów.
+
+**Uzasadnienie:** Punkty z innych źródeł (QGIS, dane miejskie) rzadko
+mają dokładnie nasze nazwy i typy; utrata atrybutu bez informacji byłaby
+gorsza niż zapis w uwagach.
+
+**Odrzucone alternatywy:**
+- Kreator mapowania atrybutów na pola — więcej kroków dla rzadkiej
+  operacji; zmiana nazwy atrybutu w QGIS jest prosta.
+- Przeliczanie z PL-1992/PL-2000 — GeoJSON (RFC 7946) jest w WGS84;
+  QGIS zapisuje go tak domyślnie.

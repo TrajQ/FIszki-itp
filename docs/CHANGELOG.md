@@ -852,3 +852,7 @@
 ## ETAP 132 — 2026-10-02
 - Teren: raport pokazuje rozmieszczenie punktów w heksagonach z najczęstszą
   wartością wybranego pola
+
+## ETAP 133 — 2026-10-02
+- Teren: import punktów z GeoJSON (np. z QGIS) — atrybuty do pól projektu
+- Pomoc: opis

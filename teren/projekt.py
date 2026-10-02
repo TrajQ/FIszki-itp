@@ -15,6 +15,8 @@ zewnątrz (plik przeniesiony z telefonu), więc sprawdzamy każde pole.
 """
 
 import base64
+import hashlib
+import json
 import math
 import re
 from datetime import datetime
@@ -240,3 +242,84 @@ def odczytaj_plik(dane, klucz_projektu: str, pola: list[dict]) -> list[dict]:
             "zdjecie": _zdjecie(p.get("zdjecie"), opis),
         })
     return wynik
+
+
+# ---------- import punktów z GeoJSON, np. z QGIS (ETAP 133) ----------
+
+POLA_UWAG = ("uwagi", "opis", "notatka", "notes", "description")
+POLA_CZASU = ("czas", "data", "time", "date", "timestamp")
+
+
+def _wartosc_z_geojson(w, pole: dict):
+    """Wartość atrybutu z innego programu → typ pola projektu (dalej _wartosci)."""
+    if w is None or w == "":
+        return None
+    if pole["typ"] == "tak_nie" and not isinstance(w, bool):
+        tekst = str(w).strip().casefold()
+        if tekst in ("tak", "t", "1", "true", "yes", "y"):
+            return True
+        if tekst in ("nie", "n", "0", "false", "no"):
+            return False
+        return w  # _wartosci zgłosi błąd
+    if pole["typ"] == "wiele" and isinstance(w, str):
+        return [x.strip() for x in re.split(r"[;|,]", w) if x.strip()]
+    if pole["typ"] == "liczba" and isinstance(w, str):
+        return w.strip().replace(" ", "").replace(",", ".")
+    if pole["typ"] in ("tekst", "wybor") and not isinstance(w, str):
+        return str(w)
+    return w
+
+
+def odczytaj_geojson(dane, pola: list[dict]) -> tuple[list[dict], list[str]]:
+    """FeatureCollection punktów (WGS84) → (punkty do zapisania, nazwy
+    atrybutów bez pasującego pola). Atrybuty dopasowujemy do pól projektu po
+    nazwie (bez wielkości liter); niedopasowane trafiają do uwag. Identyfikator
+    punktu z położenia i atrybutów — ponowny import tego samego pliku pomija
+    punkty, które już są."""
+    if not isinstance(dane, dict) or dane.get("type") != "FeatureCollection" or not isinstance(dane.get("features"), list):
+        raise BladDanych("To nie jest GeoJSON z kolekcją obiektów (FeatureCollection).")
+    cechy = dane["features"]
+    if len(cechy) > MAKS_PUNKTOW:
+        raise BladDanych(f"Najwyżej {MAKS_PUNKTOW} punktów w jednym pliku.")
+    po_nazwie = {p["nazwa"].strip().casefold(): p for p in pola}
+    niedopasowane: set[str] = set()
+    wynik = []
+    for i, c in enumerate(cechy, start=1):
+        opis = f"Obiekt {i}"
+        geometria = (c or {}).get("geometry") or {}
+        if geometria.get("type") != "Point":
+            raise BladDanych(f"{opis}: tylko punkty (Point) — w QGIS zapisz warstwę punktową.")
+        wsp = geometria.get("coordinates") or []
+        if len(wsp) < 2:
+            raise BladDanych(f"{opis}: brak współrzędnych.")
+        lng, lat = _liczba(wsp[0], f"{opis}, długość"), _liczba(wsp[1], f"{opis}, szerokość")
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            raise BladDanych(f"{opis}: współrzędne nie wyglądają na stopnie (WGS84) — w QGIS zapisz plik w układzie EPSG:4326.")
+        atrybuty = (c.get("properties") or {})
+        if not isinstance(atrybuty, dict):
+            raise BladDanych(f"{opis}: zły format atrybutów.")
+        surowe, reszta, uwagi, czas = {}, [], "", None
+        for klucz, w in atrybuty.items():
+            k = str(klucz).strip().casefold()
+            if k in po_nazwie:
+                surowe[po_nazwie[k]["nazwa"]] = _wartosc_z_geojson(w, po_nazwie[k])
+            elif k in POLA_UWAG and w not in (None, ""):
+                uwagi = str(w)
+            elif k in POLA_CZASU and w not in (None, ""):
+                try:
+                    czas = datetime.fromisoformat(str(w).replace("Z", "+00:00")).isoformat(timespec="seconds")
+                except ValueError:
+                    reszta.append(f"{klucz}: {w}")
+            elif w not in (None, ""):
+                niedopasowane.add(str(klucz))
+                reszta.append(f"{klucz}: {w}")
+        tekst_uwag = "; ".join(x for x in [uwagi, *reszta] if x)[:MAKS_UWAGI]
+        uid = "gj_" + hashlib.sha1(json.dumps([round(lng, 7), round(lat, 7), atrybuty], sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:24]
+        wynik.append({
+            "uid": uid, "lat": lat, "lng": lng, "dokladnosc_m": None,
+            "czas": czas or datetime.now().isoformat(timespec="seconds"),
+            "wartosci": _wartosci(surowe, pola, opis),
+            "uwagi": sprawdz_tekst(tekst_uwag, f"{opis}, uwagi", MAKS_UWAGI, wymagany=False),
+            "zdjecie": None,
+        })
+    return wynik, sorted(niedopasowane)

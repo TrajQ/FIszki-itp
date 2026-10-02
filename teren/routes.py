@@ -18,7 +18,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 from markupsafe import Markup
 
 from . import baza, podklad, raport
-from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
+from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, odczytaj_geojson, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
     "teren",
@@ -179,13 +179,20 @@ def importuj(projekt_id):
     try:
         dane = json.loads(plik.read().decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return jsonify({"blad": "To nie jest plik JSON z formularza terenowego."}), 400
+        return jsonify({"blad": "To nie jest plik JSON z formularza terenowego ani GeoJSON."}), 400
+    geojson = isinstance(dane, dict) and dane.get("type") == "FeatureCollection"  # ETAP 133: GeoJSON, np. z QGIS
     try:
-        punkty = odczytaj_plik(dane, p["klucz"], p["pola"])
+        if geojson:
+            punkty, niedopasowane = odczytaj_geojson(dane, p["pola"])
+        else:
+            punkty = odczytaj_plik(dane, p["klucz"], p["pola"])
     except BladDanych as e:
         return jsonify({"blad": str(e)}), 400
     dodane, pominiete = baza.zapisz_punkty(projekt_id, punkty)
-    return jsonify({"dodane": dodane, "pominiete": pominiete})
+    wynik = {"dodane": dodane, "pominiete": pominiete}
+    if geojson:
+        wynik["niedopasowane"] = niedopasowane
+    return jsonify(wynik)
 
 
 def _punkt_dla_strony(projekt_id: int, pt: dict) -> dict:

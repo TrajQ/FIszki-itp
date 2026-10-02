@@ -2335,3 +2335,21 @@ Status: zamknięty
 - Sprawdzone w przeglądarce (40 punktów w trzech skupiskach); tabela
   przewija się na telefonie (poprawione po sprawdzeniu)
 - `DECISIONS.md`: D-140
+
+## ETAP 133 — Teren: import punktów z GeoJSON (QGIS)
+Data: 2026-10-02
+Status: zamknięty
+
+- `teren/projekt.py`: `odczytaj_geojson` — FeatureCollection punktów
+  WGS84; atrybuty dopasowane do pól projektu po nazwie bez wielkości
+  liter, przeliczenie typów (tak/nie z tak/1/true, wielokrotny wybór z
+  „a; b”, liczba z przecinkiem), walidacja jak dla pliku z telefonu
+  (`_wartosci`); „opis/uwagi” i atrybuty bez pola do uwag; czas z
+  atrybutu „czas/data” albo chwila importu; identyfikator z położenia i
+  atrybutów — ponowny import pomija istniejące; czytelny błąd dla
+  współrzędnych w metrach (zapisz w EPSG:4326) i obiektów innych niż punkt
+- Trasa importu rozpoznaje GeoJSON po zawartości; odpowiedź z listą
+  atrybutów bez pola (format odpowiedzi dla pliku z telefonu bez zmian)
+- Strona projektu: opis importu, komunikat z niedopasowanymi atrybutami
+- Sprawdzone w przeglądarce (5 punktów, ponowny import w teście)
+- `DECISIONS.md`: D-141

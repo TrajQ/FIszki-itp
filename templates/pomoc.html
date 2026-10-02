@@ -180,6 +180,9 @@
     <details><summary>Rozmieszczenie punktów w heksagonach</summary>
         <p>Raport projektu z co najmniej 10 punktami z położeniem ma sekcję „Rozmieszczenie punktów”: siatkę heksagonów (krawędź ok. 30, 75 albo 200 m — dobrana tak, żeby w heksagonie były średnio co najmniej 2 punkty), w każdym liczbę punktów, a w tabeli numery punktów i najczęstszą wartość pola wybranego do kolorowania mapy (z udziałem).</p>
     </details>
+    <details><summary>Import punktów z QGIS (GeoJSON)</summary>
+        <p>W projekcie „Import z telefonu albo QGIS” przyjmuje też warstwę punktową GeoJSON (w QGIS: Eksportuj → Zapisz obiekty jako… → GeoJSON, układ EPSG:4326). Atrybuty o nazwach jak pola projektu (bez względu na wielkość liter) trafiają do pól — tak/nie można zapisać jako tak/nie, 1/0 albo true/false, wielokrotny wybór jako „kosz; stojak”. Atrybut „opis” albo „uwagi” trafia do uwag, pozostałe też (z nazwą) — Warsztat wypisze, które to były. Ponowny import tego samego pliku nie dubluje punktów.</p>
+    </details>
 </section>
 
 <section id="ceny" class="karta stos">
