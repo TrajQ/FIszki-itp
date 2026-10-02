@@ -57,11 +57,11 @@ Każda decyzja projektowa ma uzasadnienie i odrzucone alternatywy w
 [DECISIONS.md](../DECISIONS.md), a przebieg prac jest w
 [PROGRESS.md](PROGRESS.md).
 
-## Liczby (stan: ETAP 149)
+## Liczby (stan: ETAP 169)
 
-- 8 modułów, 149 etapów, 157 zapisanych decyzji projektowych
-- ok. 16 500 wierszy Pythona aplikacji (+ 8 000 wierszy testów, pokrycie
-  95%), 8 400 JavaScriptu, 554 testy automatyczne; przegląd 75 stron
+- 8 modułów, 169 etapów, 177 zapisanych decyzji projektowych
+- ok. 17 800 wierszy Pythona aplikacji (+ 8 600 wierszy testów, pokrycie
+  ok. 95%), 9 000 JavaScriptu, 582 testy automatyczne; przegląd 84 stron
   (z danymi) w przeglądarce jednym skryptem (`narzedzia/przeglad_stron.py`),
   kontrast kolorów wg WCAG pilnowany testem
 - architektura opisana w [ARCHITEKTURA.md](ARCHITEKTURA.md)

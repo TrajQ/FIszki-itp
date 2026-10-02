@@ -3549,3 +3549,20 @@ pendrive'ów; data z deklaracji wystarcza do przypomnienia. Porównanie
   komputera, a klucze i zgody to nowa zależność.
 - Sprawdzanie wszystkich kopii przy każdym starcie — przy dużych kopiach
   wydłużyłoby start bez potrzeby.
+
+## D-177 — Dokumentacja zbiorczo co ~20 ETAPów, Pomoc na bieżąco
+Data: 2026-10-02
+
+**Decyzja:** Wpis w Pomocy powstaje w tym samym ETAPie co funkcja
+(użytkownik widzi go od razu), a README, ARCHITEKTURA i PORTFOLIO są
+uzupełniane zbiorczo w ETAPie dokumentacyjnym po każdej serii (tu
+151–168), razem z przeglądem stron.
+
+**Uzasadnienie:** README i ARCHITEKTURA opisują całość — dopisywane po
+jednym zdaniu w każdym ETAPie rozjeżdżały się stylem i powtarzały. Jeden
+przegląd po serii pozwala sprawdzić je z kodem (nowe pliki, haki,
+powiązania) i odświeżyć liczby w PORTFOLIO naraz.
+
+**Odrzucone alternatywy:**
+- Generowanie tabeli plików z kodu — opis „co robi plik” i tak pisze
+  człowiek; skrypt dla jednej tabeli to zbędna abstrakcja.

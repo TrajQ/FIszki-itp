@@ -961,3 +961,6 @@
 
 ## ETAP 168 — 2026-10-02
 - Kopia zapasowa: sprawdzanie spójności i przypomnienie o kopii poza komputerem
+
+## ETAP 169 — 2026-10-02
+- Dokumentacja (README, ARCHITEKTURA, PORTFOLIO) po ETAPach 151–168

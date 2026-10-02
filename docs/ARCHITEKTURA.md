@@ -15,12 +15,13 @@ ikona na pulpicie
              ├─ 8 blueprintów   /atlas /mpzp /fiszki /dostepnosc /osiedle /przepisy /teren /ceny
              │    każdy: routes.py (+ trasy_*.py), baza.py, logika, templates/, static/
              ├─ dane/           klienci usług zewnętrznych i formaty plików
-             └─ strony wspólne  /, /szukaj, /pomoc, /diagnostyka, /kopia-zapasowa, /kalendarz.ics
+             └─ strony wspólne  /, /szukaj, /pomoc, /co-nowego, /diagnostyka, /kopia-zapasowa, /kalendarz.ics
 
 instance/                       DANE UŻYTKOWNIKA (poza repozytorium)
-   ├─ atlas/atlas.db  mpzp/mpzp.db  fiszki/fiszki.db + pliki/  osiedle/osiedle.db
+   ├─ atlas/atlas.db  mpzp/mpzp.db  fiszki/fiszki.db + pliki/ + obrazy/  osiedle/osiedle.db
    ├─ przepisy/przepisy.db + pliki/  teren/teren.db + zdjęcia  ceny/ceny.db
    ├─ dostepnosc/wyniki/        wgrane CSV z wynikami
+   ├─ widziana_wersja.txt, kopia_poza_dyskiem.txt   „Co nowego” i data kopii poza komputerem
    └─ logi/                     dziennik (nie trafia do kopii)
 ```
 
@@ -85,6 +86,8 @@ Moduły nie sięgają nawzajem do swoich baz. Wyjątki są nieliczne i jawne:
 - Ceny w okolicy w MPZP i Osiedlu: przeglądarka pyta `POST /ceny/okolica`
   (D-117) — przez trasę, nie przez import.
 - Osiedle pokazuje punkty projektu z Terenu, pytając trasy Terenu (D-073).
+- Osiedle podpowiada stawkę gruntu z tej samej trasy `/ceny/okolica`
+  (tylko działki niezabudowane, D-172).
 
 ## Warstwa `dane/`
 
@@ -118,7 +121,8 @@ bazie jako cache (np. `cache_bdl`).
   tekst użytkownika zawsze przechodzi przez escapowanie Jinja.
 - **Dane użytkownika są nietykalne przy aktualizacji** (`aktualizacja.py`
   nie rusza `instance/`, `.env`, `.venv/`) i trafiają do kopii zapasowej
-  (`kopia.py`, kopia spójna przez `sqlite3.backup`).
+  (`kopia.py`, kopia spójna przez `sqlite3.backup`); kopia automatyczna
+  jest sprawdzana jak przed przywróceniem, zanim zostanie w folderze (D-176).
 
 ## Frontend
 
@@ -128,7 +132,8 @@ bazie jako cache (np. `cache_bdl`).
   `--tekst-drugi`…) z wersją ciemną (`prefers-color-scheme`); kontrast
   liczony wg WCAG i pilnowany testem (D-139). CSS modułów używa tokenów.
   Motyw można wybrać ręcznie (`static/motyw.js`, atrybut `data-motyw` na
-  `<html>`, D-159).
+  `<html>`, D-159). Skróty wspólne (`?`, `/`, `m`) — `static/skroty.js`,
+  lista w oknie z bloku `skroty` szablonu strony (D-175).
 - Leaflet i Leaflet.draw lokalnie w `static/`; pdf.js lokalnie w Fiszkach.
 - Tekst spoza kodu (nazwy od użytkownika, z wgranych plików, z usług) trafia
   do DOM przez `textContent`; dymki Leaflet dostają węzeł, nie napis —

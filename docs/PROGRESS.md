@@ -2929,3 +2929,22 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: „Czy kopia jest dobra i gdzie ją trzymać?”
 - `DECISIONS.md`: D-176
+
+## ETAP 169 — Dokumentacja po ETAPach 151–168
+Data: 2026-10-02
+Status: zamknięty
+
+- README: tabela modułów uzupełniona o funkcje z ETAPów 151–168 (Gi*, LQ,
+  małe mapy, zestawienie działek, obraz w fiszce, koszty i stawka gruntu,
+  druk aktu, pola wymagane, porównanie projektów Terenu, regresja i
+  zestawienie plików RCN, dzielnice w Dostępności), wspólne: motyw, Co
+  nowego, skróty, sprawdzanie kopii; tabela „Gdzie co jest w kodzie” —
+  nowe pliki (`obrazy.py`, `koszty.py`, `zestawienie.py`, `porownanie.py`,
+  `obszary.py`, `nowosci.py`, `motyw.js`, `skroty.js`)
+- ARCHITEKTURA: `/co-nowego`, pliki w `instance/`, sprawdzanie kopii
+  (D-176), skróty (D-175), stawka gruntu przez `/ceny/okolica` (D-172)
+- PORTFOLIO: liczby na ETAP 169 (17 800 wierszy Pythona, 8 600 testów,
+  9 000 JS, 582 testy, 84 strony w przeglądzie)
+- Przegląd stron w Chromium: 84 strony, 0 problemów
+- Pomoc: wpisy dodawane na bieżąco w ETAPach 151–168 — sprawdzone
+- `DECISIONS.md`: D-177
