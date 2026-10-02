@@ -14,6 +14,7 @@ const numerStronyEl = document.getElementById("numer-strony");
 const przyciskPoprzednia = document.getElementById("strona-poprzednia");
 const przyciskNastepna = document.getElementById("strona-nastepna");
 const przyciskZaproponuj = document.getElementById("przycisk-zaproponuj");
+const akcjeZaznaczenia = document.getElementById("akcje-zaznaczenia"); // ETAP 139: „Zaproponuj” i „Z luką”
 const formularzFiszki = document.getElementById("formularz-fiszki");
 
 // Temat nowych fiszek (ETAP 50) — zapamiętany osobno dla każdego pliku,
@@ -95,7 +96,7 @@ function tekstZaznaczenia() {
 }
 
 function ukryjPrzyciskZaproponuj() {
-    przyciskZaproponuj.hidden = true;
+    akcjeZaznaczenia.hidden = true;
     zaznaczonyFragment = null;
 }
 
@@ -109,9 +110,9 @@ warstwaTekstu.addEventListener("mouseup", () => {
 
     const prostokat = wynik.zakres.getBoundingClientRect();
     const kontener = document.getElementById("warstwa-pdf").getBoundingClientRect();
-    przyciskZaproponuj.style.left = `${prostokat.left - kontener.left}px`;
-    przyciskZaproponuj.style.top = `${prostokat.bottom - kontener.top + 4}px`;
-    przyciskZaproponuj.hidden = false;
+    akcjeZaznaczenia.style.left = `${prostokat.left - kontener.left}px`;
+    akcjeZaznaczenia.style.top = `${prostokat.bottom - kontener.top + 4}px`;
+    akcjeZaznaczenia.hidden = false;
 });
 
 przyciskPoprzednia.addEventListener("click", () => renderujStrone(numerStrony - 1));
@@ -126,7 +127,8 @@ przyciskZaproponuj.addEventListener("click", async () => {
     polePytanie.value = "";
     poleOdpowiedz.value = "";
     statusGemini.textContent = "Generowanie szkicu przez Gemini…";
-    przyciskZaproponuj.hidden = true;
+    akcjeZaznaczenia.hidden = true;
+    formularzLuk.hidden = true;
 
     try {
         const odpowiedz = await fetch(URL_SZKIC, {
@@ -187,6 +189,86 @@ przyciskZapisz.addEventListener("click", async () => {
 
     formularzFiszki.hidden = true;
     ukryjPrzyciskZaproponuj();
+    await odswiezListeFiszek();
+});
+
+// ---------- fiszki z luką (ETAP 139) — fiszki tworzy serwer (fiszki/luki.py) ----------
+
+const formularzLuk = document.getElementById("formularz-luk");
+const poleLuk = document.getElementById("pole-luk");
+const podgladLuk = document.getElementById("podglad-luk");
+const statusLuk = document.getElementById("status-luk");
+let fragmentLuk = null; // kotwica: {tekst, strona} z chwili otwarcia formularza
+
+// Podgląd jak w fiszki/luki.py: jedna fiszka na każdą lukę, pozostałe odsłonięte.
+function pokazPodgladLuk() {
+    const tekst = poleLuk.value.replace(/\s+/g, " ").trim();
+    const luki = [...tekst.matchAll(/\[\[(.*?)\]\]/g)];
+    podgladLuk.replaceChildren();
+    for (const luka of luki) {
+        const li = document.createElement("li");
+        li.textContent = tekst.slice(0, luka.index).replace(/\[\[(.*?)\]\]/g, "$1") + "[…]" +
+            tekst.slice(luka.index + luka[0].length).replace(/\[\[(.*?)\]\]/g, "$1") + " → ";
+        const odpowiedz = document.createElement("span");
+        odpowiedz.className = "podglad-luk__odpowiedz";
+        odpowiedz.textContent = luka[1].trim();
+        li.appendChild(odpowiedz);
+        podgladLuk.appendChild(li);
+    }
+    statusLuk.textContent = luki.length ? "" : "Jeszcze nie ma luk.";
+}
+
+document.getElementById("przycisk-luka").addEventListener("click", () => {
+    if (!zaznaczonyFragment) return;
+    fragmentLuk = { ...zaznaczonyFragment };
+    poleLuk.value = fragmentLuk.tekst.replace(/\s+/g, " ");
+    formularzFiszki.hidden = true;
+    formularzLuk.hidden = false;
+    akcjeZaznaczenia.hidden = true;
+    pokazPodgladLuk();
+    poleLuk.focus();
+});
+
+poleLuk.addEventListener("input", pokazPodgladLuk);
+
+document.getElementById("ukryj-zaznaczone").addEventListener("click", () => {
+    const [od, do_] = [poleLuk.selectionStart, poleLuk.selectionEnd];
+    const zaznaczone = poleLuk.value.slice(od, do_);
+    if (!zaznaczone.trim()) {
+        statusLuk.textContent = "Najpierw zaznacz w polu „Tekst” słowa do ukrycia.";
+        return;
+    }
+    // spacje z brzegów zaznaczenia zostają poza luką
+    const [lewa, srodek, prawa] = [zaznaczone.match(/^\s*/)[0], zaznaczone.trim(), zaznaczone.match(/\s*$/)[0]];
+    poleLuk.setRangeText(`${lewa}[[${srodek}]]${prawa}`, od, do_, "end");
+    pokazPodgladLuk();
+    poleLuk.focus();
+});
+
+document.getElementById("anuluj-luki").addEventListener("click", () => {
+    formularzLuk.hidden = true;
+    fragmentLuk = null;
+});
+
+document.getElementById("zapisz-luki").addEventListener("click", async () => {
+    if (!fragmentLuk) return;
+    try {
+        const odpowiedz = await fetch(URL_LUKI, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ strona: fragmentLuk.strona, fragment_tekstu: fragmentLuk.tekst, tekst: poleLuk.value, tematy: poleTematowNowych.value }),
+        });
+        const dane = await odpowiedz.json().catch(() => ({}));
+        if (!odpowiedz.ok) {
+            statusLuk.textContent = `Nie zapisano: ${dane.blad || `błąd ${odpowiedz.status}`}`;
+            return;
+        }
+    } catch (e) {
+        statusLuk.textContent = "Błąd połączenia z serwerem — fiszki nie zostały zapisane.";
+        return;
+    }
+    formularzLuk.hidden = true;
+    fragmentLuk = null;
     await odswiezListeFiszek();
 });
 

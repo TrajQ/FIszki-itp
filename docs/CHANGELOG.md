@@ -871,3 +871,6 @@
 
 ## ETAP 138 — 2026-10-02
 - Osiedle: obszar opracowania z pliku GeoJSON (WGS84, PL-1992, PL-2000)
+
+## ETAP 139 — 2026-10-02
+- Fiszki: fiszki z luką — zaznacz słowa, każda luka to fiszka

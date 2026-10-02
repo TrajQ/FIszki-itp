@@ -278,10 +278,29 @@ mark {
     border-radius: 8px;
 }
 
-#przycisk-zaproponuj {
+.akcje-zaznaczenia {
     position: absolute;
     z-index: 10;
+    display: flex;
+    gap: 6px;
+}
+
+.akcje-zaznaczenia button {
     box-shadow: var(--cien-mocny);
+}
+
+/* ETAP 139: podgląd fiszek z luką */
+.podglad-luk {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding-left: 1.4em;
+    font-size: 0.9rem;
+}
+
+.podglad-luk__odpowiedz {
+    color: var(--akcent);
+    font-weight: 600;
 }
 
 /* Panel boczny przykleja się przy przewijaniu długiej strony. */
@@ -1005,4 +1024,12 @@ button.przycisk--ocena-trudne:hover {
 .na-telefon input[type="file"] {
     flex: 1;
     min-width: 0;
+}
+
+.bez-lamania {
+    white-space: nowrap;
+}
+
+#formularz-luk .podpowiedz {
+    text-align: left;
 }

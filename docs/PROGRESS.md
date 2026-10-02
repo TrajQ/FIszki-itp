@@ -2428,3 +2428,18 @@ Status: zamknięty
   błędy (punkty, Paryż, EPSG:3857, nie-JSON, brak pliku, 404)
 - Sprawdzone w przeglądarce 1300/390 px: pole jak z obliczenia ręcznego
 - `DECISIONS.md`: D-146
+
+## ETAP 139 — Fiszki: fiszki z luką (cloze)
+Data: 2026-10-02
+Status: zamknięty
+
+- `fiszki/luki.py`: tekst z `[[lukami]]` → po jednej fiszce na lukę
+  (pytanie z „[…]”, pozostałe luki odsłonięte); walidacja: brak luk,
+  pusta / niedomknięta / zagnieżdżona luka, tekst tylko z luk, limity
+- Trasa POST `/fiszki/<pdf>/luki`: zapis wszystkich fiszek z tą samą
+  kotwicą (strona, fragment) i tematami; wspólna funkcja `_wstaw_fiszke`
+- Przy zaznaczeniu w PDF obok „✦ Zaproponuj fiszkę” przycisk „[…] Z
+  luką”; formularz z „Ukryj zaznaczone” i podglądem fiszek
+- Bez zmian w bazie: to zwykłe fiszki (powtórki, telefon, quiz, druk)
+- Testy: funkcja i trasa; sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-147

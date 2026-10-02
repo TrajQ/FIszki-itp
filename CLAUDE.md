@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 138 (osiedle: obszar z pliku GeoJSON — zamknięty)
-Ostatni ZIP: releases/warsztat_etap138_20261002.zip
-Testy: 532 passed / 0 failed
+ETAP: 139 (fiszki: fiszki z luką — zamknięty)
+Ostatni ZIP: releases/warsztat_etap139_20261002.zip
+Testy: 534 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

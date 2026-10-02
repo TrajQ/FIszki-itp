@@ -41,7 +41,10 @@
             <div id="warstwa-pdf">
                 <canvas id="canvas-pdf"></canvas>
                 <div id="warstwa-tekstu" class="textLayer"></div>
-                <button id="przycisk-zaproponuj" type="button" hidden>✦ Zaproponuj fiszkę</button>
+                <div id="akcje-zaznaczenia" class="akcje-zaznaczenia" hidden>
+                    <button id="przycisk-zaproponuj" type="button">✦ Zaproponuj fiszkę</button>
+                    <button id="przycisk-luka" type="button" class="przycisk--drugi" title="Fiszka z luką: ukryjesz wybrane słowa fragmentu">[…] Z luką</button>
+                </div>
             </div>
         </div>
     </section>
@@ -66,6 +69,21 @@
             <div class="rzad">
                 <button id="zapisz-fiszke" type="button">Zapisz</button>
                 <button id="anuluj-fiszke" type="button" class="przycisk--drugi">Anuluj</button>
+            </div>
+        </div>
+
+        <div id="formularz-luk" class="karta stos" hidden>
+            <h3>Fiszka z luką</h3>
+            <p class="podpowiedz wyciszony">Zaznacz w polu poniżej słowa do zapamiętania i kliknij „Ukryj zaznaczone” (albo wpisz wokół nich <code class="bez-lamania">[[ ]]</code>). Każda luka to osobna fiszka.</p>
+            <label>Tekst <textarea id="pole-luk" rows="6"></textarea></label>
+            <div class="rzad">
+                <button id="ukryj-zaznaczone" type="button" class="przycisk--drugi">Ukryj zaznaczone</button>
+            </div>
+            <ol id="podglad-luk" class="podglad-luk"></ol>
+            <p id="status-luk" class="wyciszony"></p>
+            <div class="rzad">
+                <button id="zapisz-luki" type="button">Zapisz</button>
+                <button id="anuluj-luki" type="button" class="przycisk--drugi">Anuluj</button>
             </div>
         </div>
 
@@ -107,6 +125,7 @@
     const URL_IMPORT = "{{ url_for('fiszki.importuj', pdf_id=pdf['id']) }}";
     const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
     const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
+    const URL_LUKI = "{{ url_for('fiszki.zapisz_luki', pdf_id=pdf['id']) }}"; // ETAP 139
     const URL_SZKICE_STRONY = "{{ url_for('fiszki.szkice_strony', pdf_id=pdf['id']) }}";
     const URL_WORKER = "{{ url_for('fiszki.static', filename='pdfjs/pdf.worker.min.mjs') }}";
 </script>

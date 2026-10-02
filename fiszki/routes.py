@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import egzaminy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
+from . import egzaminy, luki, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
 from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
@@ -246,16 +246,42 @@ def zapisz_fiszke(pdf_id):
         abort(400, str(e))
 
     db = get_db()
+    fiszka_id = _wstaw_fiszke(db, pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, lista_tematow)
+    db.commit()
+
+    nowa = db.execute("SELECT * FROM fiszki WHERE id = ?", (fiszka_id,)).fetchone()
+    return jsonify({**dict(nowa), "tematy": tematy.tematy_fiszek(db).get(fiszka_id, [])}), 201
+
+
+def _wstaw_fiszke(db, pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, lista_tematow) -> int:
     cursor = db.execute(
         """INSERT INTO fiszki (pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, data_utworzenia)
            VALUES (?, ?, ?, ?, ?, ?)""",
         (pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, datetime.now().isoformat()),
     )
     tematy.ustaw(db, cursor.lastrowid, lista_tematow)
-    db.commit()
+    return cursor.lastrowid
 
-    nowa = db.execute("SELECT * FROM fiszki WHERE id = ?", (cursor.lastrowid,)).fetchone()
-    return jsonify({**dict(nowa), "tematy": tematy.tematy_fiszek(db).get(cursor.lastrowid, [])}), 201
+
+@fiszki_bp.route("/<int:pdf_id>/luki", methods=["POST"])
+def zapisz_luki(pdf_id):
+    """ETAP 139: fiszki z luką — po jednej na każde [[słowa]] w tekście.
+    Kotwica (strona, fragment) ta sama dla wszystkich."""
+    _pobierz_pdf_albo_404(pdf_id)
+    dane = request.get_json(silent=True) or {}
+    strona = dane.get("strona")
+    fragment_tekstu = (dane.get("fragment_tekstu") or "").strip()
+    if not isinstance(strona, int) or not fragment_tekstu:
+        return jsonify({"blad": "Brak strony albo fragmentu źródła."}), 400
+    try:
+        nowe = luki.fiszki_z_luk(dane.get("tekst"))
+        lista_tematow = tematy.normalizuj(dane.get("tematy"))
+    except (luki.BladLuk, tematy.BladTematow) as e:
+        return jsonify({"blad": str(e)}), 400
+    db = get_db()
+    identyfikatory = [_wstaw_fiszke(db, pdf_id, strona, fragment_tekstu, f["pytanie"], f["odpowiedz"], lista_tematow) for f in nowe]
+    db.commit()
+    return jsonify({"liczba": len(identyfikatory), "id": identyfikatory}), 201
 
 
 @fiszki_bp.route("/<int:pdf_id>/fiszki/<int:fiszka_id>", methods=["DELETE"])

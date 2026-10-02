@@ -3039,3 +3039,23 @@ przeliczenia do WGS84 przed importem byłoby zbędnym krokiem.
 - pyproj — ciężka zależność (biblioteka PROJ) dla trzech układów, które
   i tak już liczymy.
 - Tylko WGS84 — najczęstszy błąd studenta to plik w układzie projektu QGIS.
+
+## D-147 — Luki rozpisane na zwykłe fiszki, bez nowego typu w bazie
+Data: 2026-10-02
+
+**Decyzja:** Fiszka z luką nie jest osobnym typem. Tekst z `[[lukami]]`
+serwer zamienia na N zwykłych fiszek (pytanie z „[…]”, odpowiedź = ukryte
+słowa), każda z kotwicą w tym samym fragmencie PDF-a. Luki wybiera
+użytkownik, nie Gemini.
+
+**Uzasadnienie:** Definicje i wyliczenia z wykładów najlepiej uczyć się
+z luką, a cała reszta (pudełka Leitnera, plik na telefon, quiz, druk,
+eksport do Anki) działa na parach pytanie–odpowiedź. Nowy typ wymagałby
+zmian w siedmiu miejscach, w tym w samodzielnym pliku na telefon.
+
+**Odrzucone alternatywy:**
+- Kolumna `rodzaj` i renderowanie luk przy powtórce — edycja jednej
+  fiszki zmieniałaby wszystkie z tego tekstu, a telefon wymagałby nowej
+  wersji formatu.
+- Luki proponowane przez Gemini — wybór, co jest ważne, to część nauki;
+  propozycje pytań z modelu już są.
