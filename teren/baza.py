@@ -234,3 +234,14 @@ def popraw_punkt(projekt_id: int, punkt_id: int, poprawka: dict) -> bool:
         )
     db.commit()
     return True
+
+
+def ostatnio_zmienione(limit: int) -> list[dict]:
+    """ETAP 141: projekty od ostatniej zmiany (utworzenie, import punktów)."""
+    wiersze = get_db().execute(
+        """SELECT projekty.id, projekty.nazwa, COUNT(punkty.id) AS liczba_punktow,
+                  MAX(projekty.data_utworzenia, COALESCE(MAX(punkty.data_importu), '')) AS kiedy
+           FROM projekty LEFT JOIN punkty ON punkty.projekt_id = projekty.id
+           GROUP BY projekty.id ORDER BY kiedy DESC LIMIT ?""", (limit,)
+    ).fetchall()
+    return [dict(w) for w in wiersze]

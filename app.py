@@ -17,6 +17,23 @@ from config import Config
 from ochrona import dodaj_naglowki, sprawdz_zapytanie
 
 MAKS_TERMINOW = 6  # kalendarz na stronie głównej: tyle najbliższych terminów
+MAKS_OSTATNICH = 6  # ETAP 141: „Wróć do pracy” — tyle ostatnio używanych rzeczy
+
+
+def kiedy_opis(kiedy: str, teraz: datetime) -> str:
+    """ISO → „dziś, 14:05” / „wczoraj, 9:12” / „3 dni temu” / „12.09.2026”."""
+    try:
+        chwila = datetime.fromisoformat(kiedy)
+    except (TypeError, ValueError):
+        return ""
+    dni = (teraz.date() - chwila.date()).days
+    if dni == 0:
+        return f"dziś, {chwila.hour}:{chwila.minute:02d}"
+    if dni == 1:
+        return f"wczoraj, {chwila.hour}:{chwila.minute:02d}"
+    if 2 <= dni <= 6:
+        return f"{dni} dni temu"
+    return chwila.strftime("%d.%m.%Y")
 
 
 def create_app(instance_path=None):
@@ -96,9 +113,32 @@ def create_app(instance_path=None):
 
         return render_template(
             "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
+            ostatnie=ostatnio_uzywane(),
             kopia_auto=ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
             auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
         )
+
+    def ostatnio_uzywane() -> list[dict]:
+        """ETAP 141: każdy moduł podaje swoje ostatnio używane rzeczy (funkcja
+        ostatnie w routes), tu łączymy je od najświeższej. Błąd modułu nie
+        blokuje strony głównej."""
+        from ceny.routes import ostatnie as w_cenach
+        from fiszki.routes import ostatnie as w_fiszkach
+        from mpzp.routes import ostatnie as w_mpzp
+        from osiedle.routes import ostatnie as w_osiedlu
+        from przepisy.routes import ostatnie as w_przepisach
+        from teren.routes import ostatnie as w_terenie
+
+        wszystkie = []
+        for modul, funkcja in [("Fiszki", w_fiszkach), ("Przepisy", w_przepisach), ("MPZP", w_mpzp),
+                               ("Osiedle", w_osiedlu), ("Teren", w_terenie), ("Ceny", w_cenach)]:
+            try:
+                wszystkie += [{**w, "modul": modul} for w in funkcja()]
+            except Exception:
+                app.logger.exception("Ostatnio używane: błąd w module %s", modul)
+        teraz = datetime.now()
+        wszystkie.sort(key=lambda w: w["kiedy"] or "", reverse=True)
+        return [{**w, "kiedy_opis": kiedy_opis(w["kiedy"], teraz)} for w in wszystkie[:MAKS_OSTATNICH]]
 
     def wszystkie_terminy() -> list[dict]:
         """Kalendarz (ETAP 86): egzaminy z Fiszek i wyjścia w teren, od najbliższego.

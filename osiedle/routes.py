@@ -213,3 +213,10 @@ def wyszukaj(fraza: str) -> list[dict]:
          "url": url_for("osiedle.index", koncepcja=k["id"])}
         for k in baza.lista() if szukane in k["nazwa"].casefold()
     ][:10]
+
+# ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
+
+
+def ostatnie(limit: int = 3) -> list[dict]:
+    return [{"tytul": k["nazwa"], "opis": "koncepcja osiedla", "kiedy": k["data_zmiany"], "url": url_for("osiedle.index", koncepcja=k["id"])}
+            for k in baza.lista()[:limit]]

@@ -336,3 +336,12 @@ def wyszukaj(fraza: str) -> list[dict]:
          "url": url_for("teren.widok_projektu", projekt_id=p["id"])}
         for p in baza.projekty() if szukane in p["nazwa"].casefold()
     ][:10]
+
+# ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
+
+
+def ostatnie(limit: int = 3) -> list[dict]:
+    """Projekty od ostatnio zmienionego (utworzenie albo import punktów)."""
+    return [{"tytul": p["nazwa"], "opis": f"projekt terenowy · punktów: {p['liczba_punktow']}", "kiedy": p["kiedy"],
+             "url": url_for("teren.widok_projektu", projekt_id=p["id"])}
+            for p in baza.ostatnio_zmienione(limit)]

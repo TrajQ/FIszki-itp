@@ -647,6 +647,69 @@ input[type="file"]::file-selector-button {
     }
 }
 
+/* ---------- Wróć do pracy: ostatnio używane (ETAP 141) ---------- */
+
+.ostatnie {
+    margin-bottom: 20px;
+}
+
+.ostatnie h3 {
+    margin: 0;
+}
+
+.ostatnie__lista {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ostatnie__pozycja {
+    display: grid;
+    grid-template-columns: 5.4em minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.ostatnie__pozycja:hover {
+    background: var(--linia-slaba);
+}
+
+.ostatnie__pozycja .etykieta {
+    justify-self: start;
+}
+
+.ostatnie__co {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.ostatnie__co .wyciszony,
+.ostatnie__kiedy {
+    font-size: 13px;
+}
+
+.ostatnie__kiedy {
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .ostatnie__pozycja {
+        grid-template-columns: 5.4em minmax(0, 1fr);
+        gap: 4px 10px;
+        padding-inline: 4px;
+    }
+
+    .ostatnie__kiedy {
+        grid-column: 2;
+    }
+}
+
 /* ---------- Pomoc (ETAP 86) ---------- */
 
 .pomoc__spis {

@@ -415,3 +415,37 @@ def test_przywracanie_odrzuca_zle_kopie(tmp_path):
     assert (folder / "plik.txt").read_text() == "obecne"  # nic nie ruszone
     assert not (tmp_path / "zlo.txt").exists()
     assert not [n for n in os.listdir(tmp_path) if n.startswith((".przywracanie_", "instance_stary_"))]  # sprzątnięte
+
+
+# ---------- ETAP 141: „Wróć do pracy” — ostatnio używane ----------
+
+
+def test_kiedy_opis():
+    from datetime import datetime
+
+    from app import kiedy_opis
+    teraz = datetime(2026, 10, 2, 15, 0)
+    assert kiedy_opis("2026-10-02T09:05:00", teraz) == "dziś, 9:05"
+    assert kiedy_opis("2026-10-01T23:59:59.123456", teraz) == "wczoraj, 23:59"
+    assert kiedy_opis("2026-09-28T10:00:00", teraz) == "4 dni temu"
+    assert kiedy_opis("2026-09-01T10:00:00", teraz) == "01.09.2026"
+    assert kiedy_opis("", teraz) == "" and kiedy_opis(None, teraz) == ""
+
+
+def test_wroc_do_pracy(czysty_client, monkeypatch):
+    c = czysty_client
+    assert "Wróć do pracy" not in c.get("/").get_data(as_text=True)  # pusta instalacja — bez sekcji
+    c.post("/fiszki/upload", data={"plik": (io.BytesIO(b"%PDF-1.4\n"), "wyklad.pdf")}, content_type="multipart/form-data")
+    c.post("/osiedle/koncepcje", json={"nazwa": "Wariant B"})
+    c.post("/teren/projekty", data={"nazwa": "Inwentaryzacja zieleni"})
+    strona = c.get("/").get_data(as_text=True)
+    assert "Wróć do pracy" in strona and "wyklad.pdf" in strona and "Wariant B" in strona and "dziś," in strona
+    assert "/osiedle/?koncepcja=1" in strona and "/fiszki/1/" in strona
+
+    import osiedle.routes
+
+    def zepsute(limit=3):
+        raise RuntimeError("symulowany błąd")
+    monkeypatch.setattr(osiedle.routes, "ostatnie", zepsute)
+    strona = c.get("/").get_data(as_text=True)
+    assert "wyklad.pdf" in strona and "/osiedle/?koncepcja=1" not in strona  # błąd jednego modułu nie psuje reszty

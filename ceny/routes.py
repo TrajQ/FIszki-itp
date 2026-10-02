@@ -261,4 +261,14 @@ def wyszukaj(fraza: str) -> list[dict]:
     return wyniki[:10]
 
 
+# ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
+
+
+def ostatnie(limit: int = 3) -> list[dict]:
+    """Zaimportowane pliki RCN od najnowszego importu."""
+    pliki = sorted(baza.pliki_rcn(), key=lambda p: p["data_importu"], reverse=True)[:limit]
+    return [{"tytul": p["nazwa"], "opis": f"transakcje RCN · {p['liczba']} lokali, {p['liczba_dzialek']} działek",
+             "kiedy": p["data_importu"], "url": url_for("ceny.transakcje", plik=p["id"])} for p in pliki]
+
+
 from . import trasy_rcn  # noqa: E402, F401

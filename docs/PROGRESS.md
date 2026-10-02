@@ -2458,3 +2458,19 @@ Status: zamknięty
 - Pasek jednostki na wąskim ekranie: numer bez łamania
 - Test; sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
 - `DECISIONS.md`: D-148
+
+## ETAP 141 — Strona główna: ostatnio używane („Wróć do pracy”)
+Data: 2026-10-02
+Status: zamknięty
+
+- Funkcja `ostatnie(limit)` w routes modułów fiszki, przepisy, mpzp,
+  osiedle, teren i ceny (jak `wyszukaj`, D-136); w fiszkach i przepisach
+  „ostatnio” = także nowa fiszka / powtórka / notatka, w terenie — import
+  punktów (`teren.baza.ostatnio_zmienione`, `przepisy.baza.ostatnio_uzywane`)
+- `app.ostatnio_uzywane`: łączy i sortuje, najwyżej 6; błąd modułu nie
+  psuje strony; `kiedy_opis`: „dziś, 9:05” / „wczoraj” / „4 dni temu” / data
+- Sekcja „Wróć do pracy” nad kalendarzem (pusta instalacja — bez sekcji)
+- Testy: opis czasu, sekcja, odporność na błąd modułu; test kalendarza
+  w Terenie zawężony do sekcji terminów
+- Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
+- `DECISIONS.md`: D-149

@@ -311,7 +311,8 @@ def test_kalendarz_egzaminy_i_teren(client):
     assert "wszystkie fiszki: brak fiszek w zakresie" in kalendarz and "bez obszaru prac" in kalendarz
 
     client.post("/teren/projekty/1/termin", data={"termin": dzien(1), "usun": "1"})
-    assert "Park Wilsona" not in client.get("/").get_data(as_text=True).split('class="siatka-kart"')[0]
+    html = client.get("/").get_data(as_text=True)
+    assert "Park Wilsona" not in html[html.index("Najbliższe terminy"):html.index('class="siatka-kart"')]  # „Wróć do pracy” go pokazuje — to nie termin
 
 
 # ---------- ETAP 93: tryb ankiety i wielokrotny wybór ----------

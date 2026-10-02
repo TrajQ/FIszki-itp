@@ -6,6 +6,21 @@
     <p>Osiem niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
 </section>
 
+{% if ostatnie %}
+<section class="karta stos ostatnie" aria-labelledby="naglowek-ostatnich">
+    <h3 id="naglowek-ostatnich">Wróć do pracy</h3>
+    <ol class="ostatnie__lista">
+        {% for o in ostatnie %}
+        <li><a class="ostatnie__pozycja" href="{{ o.url }}">
+            <span class="etykieta">{{ o.modul }}</span>
+            <span class="ostatnie__co"><strong>{{ o.tytul }}</strong> <span class="wyciszony">{{ o.opis }}</span></span>
+            <span class="wyciszony ostatnie__kiedy">{{ o.kiedy_opis }}</span>
+        </a></li>
+        {% endfor %}
+    </ol>
+</section>
+{% endif %}
+
 {% if terminy %}
 <section class="karta stos kalendarz">
     <h3>Najbliższe terminy</h3>

@@ -346,3 +346,11 @@ def wyszukaj(fraza: str) -> list[dict]:
          "url": url_for("przepisy.widok_aktu", akt_id=n["akt_id"]) + f"#j{n['jednostka_id']}"}
         for n in baza.szukaj_w_notatkach(fraza)[:5]
     ]
+
+# ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
+
+
+def ostatnie(limit: int = 3) -> list[dict]:
+    """Akty od ostatniej pracy: wgranie albo notatka."""
+    return [{"tytul": a["nazwa"], "opis": "akt prawny", "kiedy": a["kiedy"], "url": url_for("przepisy.widok_aktu", akt_id=a["id"])}
+            for a in baza.ostatnio_uzywane(limit)]

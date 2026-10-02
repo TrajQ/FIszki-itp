@@ -559,6 +559,16 @@ def porownanie():
 
 # Pozostałe trasy modułu — w osobnych plikach, rejestrują się na mpzp_bp.
 # Import na końcu, bo tamte pliki importują mpzp_bp z tego modułu.
+# ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
+
+
+def ostatnie(limit: int = 3) -> list[dict]:
+    """Ostatnio sprawdzone działki (historia wyszukiwania)."""
+    return [{"tytul": f"Działka {d['dzialka_id']}", "opis": d["przeznaczenie"] or "bez planu w danych",
+             "kiedy": d["data_sprawdzenia"], "url": url_for("mpzp.raport", id=d["dzialka_id"])}
+            for d in historia()[:limit]]
+
+
 from . import trasy_kronika, trasy_narzedzia, trasy_zapisane  # noqa: E402, F401
 
 

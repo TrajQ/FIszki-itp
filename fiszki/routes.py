@@ -361,6 +361,21 @@ def usun_pdf(pdf_id):
 
 # Pozostałe trasy modułu — w osobnych plikach, rejestrują się na fiszki_bp.
 # Import na końcu, bo tamte pliki importują fiszki_bp z tego modułu.
+# ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
+
+
+def ostatnie(limit: int = 3) -> list[dict]:
+    """PDF-y od ostatniej pracy: dodanie pliku, nowa fiszka, powtórka."""
+    wiersze = get_db().execute(
+        """SELECT pdfy.id, pdfy.nazwa_oryginalna, COUNT(fiszki.id) AS liczba,
+                  MAX(pdfy.data_dodania, COALESCE(MAX(fiszki.data_utworzenia), ''), COALESCE(MAX(powtorki.ostatnia_powtorka), '')) AS kiedy
+           FROM pdfy LEFT JOIN fiszki ON fiszki.pdf_id = pdfy.id LEFT JOIN powtorki ON powtorki.fiszka_id = fiszki.id
+           GROUP BY pdfy.id ORDER BY kiedy DESC LIMIT ?""", (limit,)
+    ).fetchall()
+    return [{"tytul": w["nazwa_oryginalna"], "opis": f"PDF z fiszkami · fiszek: {w['liczba']}", "kiedy": w["kiedy"],
+             "url": url_for("fiszki.widok_pdf", pdf_id=w["id"])} for w in wiersze]
+
+
 from . import trasy_nauka, trasy_telefon, trasy_wymiana  # noqa: E402, F401
 
 

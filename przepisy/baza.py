@@ -373,3 +373,13 @@ def usun_pytanie(pytanie_id: int) -> bool:
     usuniete = db.execute("DELETE FROM pytania WHERE id = ?", (pytanie_id,)).rowcount
     db.commit()
     return bool(usuniete)
+
+
+def ostatnio_uzywane(limit: int) -> list[dict]:
+    """ETAP 141: akty od ostatniej pracy (wgranie, notatka)."""
+    wiersze = get_db().execute(
+        """SELECT akty.id, akty.nazwa, MAX(akty.data_dodania, COALESCE(MAX(notatki.data_zmiany), '')) AS kiedy
+           FROM akty LEFT JOIN notatki ON notatki.akt_id = akty.id
+           GROUP BY akty.id ORDER BY kiedy DESC LIMIT ?""", (limit,)
+    ).fetchall()
+    return [dict(w) for w in wiersze]

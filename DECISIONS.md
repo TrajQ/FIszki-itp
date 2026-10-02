@@ -3077,3 +3077,20 @@ notatka opisywałaby inny tekst.
   potrafią się powtarzać.
 - Notatki jako fiszki — fiszka to pytanie i odpowiedź do powtórek,
   notatka to komentarz do czytania; inne użycie.
+
+## D-149 — „Ostatnio używane” z danych modułów, bez dziennika odwiedzin
+Data: 2026-10-02
+
+**Decyzja:** Sekcja „Wróć do pracy” powstaje z dat, które moduły już
+zapisują (zmiana koncepcji, import punktów, nowa fiszka, powtórka,
+notatka, import pliku RCN, sprawdzenie działki). Każdy moduł podaje swoje
+pozycje funkcją `ostatnie`, strona główna je łączy.
+
+**Uzasadnienie:** Praca nad projektem semestralnym wraca do tych samych
+kilku rzeczy; dotąd trzeba było wejść w moduł i wybrać z listy.
+
+**Odrzucone alternatywy:**
+- Dziennik odwiedzanych stron — samo otwarcie to nie praca; zapis przy
+  każdym wejściu oznaczałby nową tabelę i zapisy przy odczycie.
+- Atlas i Dostępność w sekcji — nie przechowują dat zmian (cache GUS i
+  pliki wyników); dodawanie ich tylko dla tej sekcji to zbędna zmiana schematu.

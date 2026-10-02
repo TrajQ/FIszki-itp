@@ -877,3 +877,6 @@
 
 ## ETAP 140 — 2026-10-02
 - Przepisy: własne notatki przy artykułach, w wyszukiwarce
+
+## ETAP 141 — 2026-10-02
+- Strona główna: „Wróć do pracy” — ostatnio używane ze wszystkich modułów
