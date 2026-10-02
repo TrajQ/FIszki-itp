@@ -3003,3 +3003,21 @@ oznaczał ponowne rysowanie wszystkich dzielnic, a stary plik zostawał w bazie
   pełna podmiana jest prostsza i zgodna ze źródłem.
 - Kopiowanie obszarów do nowego pliku — zmieniałoby adresy (numer pliku)
   zapisane np. w zakładkach.
+
+## D-145 — Raport miast z serwera, wykres wspólny z raportem transakcji
+Data: 2026-10-02
+
+**Decyzja:** Raport porównania miast renderuje serwer (Jinja + SVG z
+`rcn.wykres_lat_svg`), z tych samych szeregów BDL i funkcji
+`analiza.podsumuj` / `analiza.dostepnosc` co strona modułu. Kolory miast
+są skopiowane z `ceny.js` (stała `KOLORY_MIAST`).
+
+**Uzasadnienie:** Wydruk ma wyglądać tak samo bez JavaScriptu i w PDF;
+wykres liniowy w latach już istniał dla obszarów RCN, więc zamiast drugiej
+funkcji rysującej przekazujemy mu szeregi GUS (jedna wartość na rok =
+wszystkie punkty pełne).
+
+**Odrzucone alternatywy:**
+- Druk strony modułu (window.print) — formularze, ranking i wybór
+  województwa na wydruku, wykres zależny od JS.
+- Osobna funkcja wykresu dla GUS — duplikat ~40 linii.

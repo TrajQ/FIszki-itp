@@ -2395,3 +2395,19 @@ Status: zamknięty
 - Test: obszar zostaje, nowe lata, jedna pozycja na liście, komunikat
 - Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
 - `DECISIONS.md`: D-144
+
+## ETAP 137 — Ceny: raport porównania miast GUS do druku
+Data: 2026-10-02
+Status: zamknięty
+
+- Trasa `/ceny/raport?id=…&nazwa=…` (te same parametry co CSV): tabela
+  zmian (rok do roku, w 5 lat, od początku, średnio rocznie), wykres w
+  latach (SVG z serwera, ten sam co w raporcie transakcji), dane rok po
+  roku, dostępność cenowa, gdy wybrano wskaźnik wynagrodzenia
+- Błąd GUS dla jednego miasta → komunikat w jego wierszu, reszta raportu
+  działa; bez wybranego wskaźnika → przekierowanie na stronę modułu
+- `rcn.wykres_lat_svg`: najwyżej ~12 podpisów lat (długie szeregi GUS)
+- Link „Raport do druku ↗” obok CSV
+- Testy: liczby, wykres, dostępność, błąd BDL, 400/302
+- Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny, PDF
+- `DECISIONS.md`: D-145

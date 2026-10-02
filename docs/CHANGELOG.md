@@ -865,3 +865,6 @@
 
 ## ETAP 136 — 2026-10-02
 - Ceny: import „jako nowsza wersja” — nowe transakcje, te same obszary
+
+## ETAP 137 — 2026-10-02
+- Ceny: raport porównania miast (GUS) do druku

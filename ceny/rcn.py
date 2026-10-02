@@ -776,8 +776,10 @@ def wykres_lat_svg(por: dict, szerokosc: int = 900, wysokosc: int = 300) -> str:
         czesci.append(f'<line x1="{m["l"]}" x2="{szerokosc - m["p"]}" y1="{y(v):.1f}" y2="{y(v):.1f}" stroke="#e8e8ed"/>'
                       f'<text x="{m["l"] - 8}" y="{y(v) + 4:.1f}" text-anchor="end" fill="#6e6e73">{etykieta}</text>')
         v += krok
-    for rok in lata:
-        czesci.append(f'<text x="{x(rok):.1f}" y="{wysokosc - 10}" text-anchor="middle" fill="#6e6e73">{rok}</text>')
+    co_ile = math.ceil(len(lata) / 12)  # najwyżej ~12 podpisów lat; ostatni rok zawsze podpisany
+    for i, rok in enumerate(lata):
+        if (len(lata) - 1 - i) % co_ile == 0:
+            czesci.append(f'<text x="{x(rok):.1f}" y="{wysokosc - 10}" text-anchor="middle" fill="#6e6e73">{rok}</text>')
     for kolor, mediany, liczby, numer, przerywana in serie:
         punkty = [(x(r), y(mediany[r]), liczby.get(r, 0)) for r in lata if r in mediany]
         if not punkty:

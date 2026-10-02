@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% macro z(x, miejsca=0) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
+{% macro proc(x) %}{{ ('%+.1f' % x) | replace('.', ',') }}%{% endmacro %}
+{% macro zmiana(c) %}{% if not c %}—{% elif c.zmiana_proc is none %}{{ z(c.zmiana) }}{% else %}{{ proc(c.zmiana_proc) }}{% endif %}{% endmacro %}
+{% macro nazwa_miasta(m) %}<span class="probka-cen" style="background: {{ m.kolor }}"></span>{{ m.nazwa }}{% endmacro %}
+
+{% block tytul %}Porównanie cen mieszkań w miastach — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-cen{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">{% endblock %}
+
+{% block tresc %}
+{% set jednostka = ' [' ~ zmienna.jednostka ~ ']' if zmienna.jednostka else '' %}
+{% set z_dostepnoscia = miasta | selectattr('dostepnosc') | list %}
+<div class="raport-cen">
+    <div class="raport-cen__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('ceny.index') }}">‹ Ceny</a>
+        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+    </div>
+
+    <section class="raport-cen__strona">
+        <h1>Ceny mieszkań — porównanie miast</h1>
+        <p class="wyciszony">{{ zmienna.nazwa }}{{ jednostka }}{% if lata %} · lata {{ lata[0] }}–{{ lata[-1] }}{% endif %}</p>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Miasto / powiat</th><th class="liczba">Rok</th><th class="liczba">Wartość{{ jednostka }}</th><th class="liczba">Rok do roku</th><th class="liczba">W 5 lat</th><th class="liczba">Od początku</th><th class="liczba">Średnio rocznie</th></tr>
+            {% for m in miasta %}{% set s = m.podsumowanie %}
+            <tr><td>{{ nazwa_miasta(m) }}</td>
+                {% if s %}<td class="liczba">{{ s.rok }}</td><td class="liczba">{{ z(s.wartosc) }}</td><td class="liczba">{{ zmiana(s.rok_do_roku) }}</td><td class="liczba">{{ zmiana(s.w_5_lat) }}</td>
+                <td class="liczba">{% if s.od_poczatku %}{{ zmiana(s.od_poczatku) }} od {{ s.od_poczatku.od }}{% else %}—{% endif %}</td>
+                <td class="liczba">{% if s.srednio_rocznie_proc is none %}—{% else %}{{ proc(s.srednio_rocznie_proc) }}{% endif %}</td>
+                {% else %}<td colspan="6" class="wyciszony">{{ m.blad or 'brak danych GUS' }}</td>{% endif %}</tr>
+            {% endfor %}
+        </table>
+        </div>
+        {% if lata | length > 1 %}
+        <h3>Wartość w latach{{ jednostka }}</h3>
+        <div class="raport-cen__mapa">{{ wykres }}</div>
+        <ul class="legenda-rcn">
+            {% for m in miasta %}{% if m.szereg %}<li class="legenda-rcn__pozycja"><strong style="color: {{ m.kolor }}">{{ loop.index }}</strong> {{ m.nazwa }}</li>{% endif %}{% endfor %}
+        </ul>
+        {% endif %}
+        <p class="wyciszony opis-cen">Zmiany i średnie roczne tempo (od pierwszego roku z danymi) liczy aplikacja z danych GUS. Rok do roku i w 5 lat — tylko gdy GUS ma wartość w tamtym roku.</p>
+    </section>
+
+    <section class="raport-cen__strona">
+        {% if lata %}
+        <h2>Dane rok po roku{{ jednostka }}</h2>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th class="liczba">Rok</th>{% for m in miasta %}<th class="liczba">{{ nazwa_miasta(m) }}</th>{% endfor %}</tr>
+            {% for r in lata | reverse %}<tr><td class="liczba">{{ r }}</td>{% for m in miasta %}<td class="liczba">{{ z(m.po_roku.get(r)) }}</td>{% endfor %}</tr>{% endfor %}
+        </table>
+        </div>
+        {% endif %}
+
+        {% if z_dostepnoscia %}
+        <h2>Dostępność cenowa</h2>
+        <p class="wyciszony">Wynagrodzenie: {{ wynagrodzenie.nazwa }}{% if wynagrodzenie.jednostka %} [{{ wynagrodzenie.jednostka }}]{% endif %}</p>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Miasto / powiat</th><th class="liczba">Rok</th><th class="liczba">m² za wynagrodzenie</th><th class="liczba">Wynagrodzeń na {{ powierzchnia_m2 }} m²</th><th class="liczba">Zmiana m² za wynagrodzenie</th></tr>
+            {% for m in miasta %}{% set p = m.dostepnosc.podsumowanie if m.dostepnosc else none %}
+            <tr><td>{{ nazwa_miasta(m) }}</td>
+                {% if p %}<td class="liczba">{{ p.rok }}</td><td class="liczba">{{ z(p.m2_za_wynagrodzenie, 2) }} m²</td><td class="liczba">{{ z(p.wynagrodzen_na_mieszkanie, 1) }}</td>
+                <td class="liczba">{% if p.zmiana_m2_proc is none %}—{% else %}{{ proc(p.zmiana_m2_proc) }} od {{ p.od }}{% endif %}</td>
+                {% else %}<td colspan="4" class="wyciszony">{{ m.blad or 'brak lat, w których GUS ma oba wskaźniki' }}</td>{% endif %}</tr>
+            {% endfor %}
+        </table>
+        </div>
+        <p class="wyciszony opis-cen">Ile m² mieszkania kosztuje tyle, co jedno przeciętne miesięczne wynagrodzenie brutto w tym samym powiecie. Uproszczenie do porównań: bez kredytu, podatków i kosztów życia.</p>
+        {% endif %}
+        <p class="wyciszony opis-cen">Źródło: GUS, Bank Danych Lokalnych. Raport z modułu Ceny aplikacji Warsztat.</p>
+    </section>
+</div>
+{% endblock %}

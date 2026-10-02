@@ -12,12 +12,13 @@ import csv
 import io
 from dataclasses import asdict
 
-from flask import Blueprint, Response, jsonify, render_template, request, url_for
+from flask import Blueprint, Response, abort, jsonify, redirect, render_template, request, url_for
+from markupsafe import Markup
 
 from dane import bdl
 from dane.bdl import BladBDL
 
-from . import analiza, baza
+from . import analiza, baza, rcn
 
 ceny_bp = Blueprint(
     "ceny",
@@ -30,6 +31,7 @@ MAKS_MIAST = 6
 FRAZY = ["mediana cen za 1 m2", "średnia cena lokali", "cena 1 m2 powierzchni użytkowej"]
 FRAZY_WYNAGRODZEN = ["przeciętne miesięczne wynagrodzenia brutto", "wynagrodzenia brutto"]  # ETAP 116
 USTAWIENIA_ZMIENNYCH = ("zmienna", "wynagrodzenie")  # wskaźnik ceny i (ETAP 116) wynagrodzenia
+KOLORY_MIAST = ["#0071e3", "#ff9f0a", "#34c759", "#ff375f", "#5e5ce6", "#8e6e4e"]  # jak KOLORY w ceny.js
 
 
 def _id_bdl(tekst: str) -> str:
@@ -193,6 +195,53 @@ def porownanie_csv():
         )
 
     return _obsluz_bledy(plik)
+
+
+# ---------- raport porównania miast do druku (ETAP 137) ----------
+
+
+def _wybrane_miasta() -> list[tuple[str, str]]:
+    """Parametry id/nazwa jak w CSV → [(bdl_id, nazwa)]; 400 przy złym id."""
+    try:
+        identyfikatory = [_id_bdl(i) for i in request.args.getlist("id")[:MAKS_MIAST]]
+    except ValueError:
+        abort(400)
+    if not identyfikatory:
+        abort(400)
+    nazwy = [" ".join(n.split())[:80] for n in request.args.getlist("nazwa")]
+    return [(i, nazwy[k] if k < len(nazwy) and nazwy[k] else i) for k, i in enumerate(identyfikatory)]
+
+
+@ceny_bp.route("/raport")
+def raport_miast():
+    """Szeregi, zmiany i (gdy wybrano wynagrodzenie) dostępność cenowa
+    wybranych miast na jednej stronie do druku. Wszystkie liczby z GUS
+    i z ceny/analiza.py; błąd BDL dla jednego miasta nie psuje raportu."""
+    zmienna = _zmienna()
+    if zmienna is None:
+        return redirect(url_for("ceny.index"))
+    wynagrodzenie = baza.ustawienie("wynagrodzenie")
+    miasta = []
+    for k, (bdl_id, nazwa) in enumerate(_wybrane_miasta()):
+        miasto = {"id": bdl_id, "nazwa": nazwa, "kolor": KOLORY_MIAST[k % len(KOLORY_MIAST)], "szereg": [], "blad": None, "dostepnosc": None}
+        try:
+            miasto["szereg"] = _szereg(zmienna["id"], bdl_id)
+            if wynagrodzenie:
+                miasto["dostepnosc"] = analiza.dostepnosc(miasto["szereg"], _szereg(wynagrodzenie["id"], bdl_id))
+        except BladBDL as e:
+            miasto["blad"] = str(e)
+        miasto["po_roku"] = {p["rok"]: p["wartosc"] for p in miasto["szereg"]}
+        miasto["podsumowanie"] = analiza.podsumuj(miasto["szereg"])
+        miasta.append(miasto)
+    lata = sorted({rok for m in miasta for rok in m["po_roku"]})
+    # wykres ten sam co w raporcie transakcji; GUS podaje jedną wartość na rok,
+    # więc wszystkie punkty pełne (liczba „transakcji” = próg)
+    wykres = rcn.wykres_lat_svg({
+        "lata": lata, "calosc": {},
+        "obszary": [{"kolor": m["kolor"], "lata": m["po_roku"], "lata_liczba": dict.fromkeys(m["po_roku"], rcn.MIN_W_ROKU)} for m in miasta],
+    })
+    return render_template("ceny/raport_miast.html", zmienna=zmienna, wynagrodzenie=wynagrodzenie, miasta=miasta, lata=lata,
+                           wykres=Markup(wykres), powierzchnia_m2=analiza.POWIERZCHNIA_WZORCOWA_M2)  # tylko liczby i kolory z kodu
 
 
 # ---------- wyszukiwarka globalna (ETAP 128) ----------

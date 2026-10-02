@@ -43,6 +43,7 @@ def test_analiza():
 def test_obieg_modulu(client):
     c = client
     assert "Nie wybrano" in c.get("/ceny/").get_data(as_text=True)
+    assert c.get(f"/ceny/raport?id={KRAKOW}").status_code == 302  # raport miast: najpierw wskaźnik
     assert c.get("/ceny/szereg/" + KRAKOW).status_code == 409  # najpierw wskaźnik
     assert c.get("/ceny/zmienne?q=mediana").get_json()[0]["nazwa"].endswith("(poziom 5)")  # szukamy dla powiatów
     assert c.put("/ceny/zmienna", json={"id": 633}).get_json()["jednostka"] == "zł"
@@ -58,6 +59,12 @@ def test_obieg_modulu(client):
     assert csv.startswith("﻿rok;Kraków;wielicki") and "2023;10000;7000.0" in csv and "2015;6000;" in csv
     assert c.get("/ceny/szereg/123").status_code == 400
     assert c.get(f"/ceny/ranking?woj={WOJ}").status_code == 400
+    # ETAP 137: raport porównania miast do druku
+    raport = c.get(f"/ceny/raport?id={KRAKOW}&nazwa=Kraków&id={WIELICKI}&nazwa=wielicki").get_data(as_text=True)
+    assert "porównanie miast" in raport and "Kraków" in raport and "wielicki" in raport and "<svg" in raport
+    assert "10 500" in raport and "+5,0%" in raport and "Dostępność cenowa" not in raport  # 10500/10000 r/r; wynagrodzenie nie wybrane
+    assert raport.count("<polyline") == 2 and "2015–2024" in raport
+    assert c.get("/ceny/raport").status_code == 400 and c.get("/ceny/raport?id=123").status_code == 400
     assert c.get("/ceny/zmienne?q=a").status_code == 400
 
 
@@ -691,6 +698,17 @@ def test_trasa_dostepnosci(client, monkeypatch):
     assert client.get("/ceny/dostepnosc/123").status_code == 400
     strona = client.get("/ceny/").get_data(as_text=True)
     assert "5. Dostępność cenowa" in strona and f'"id": {WYNAGRODZENIE}' in strona
+    # ETAP 137: dostępność w raporcie do druku; błąd GUS dla jednego miasta nie psuje raportu
+    raport = client.get(f"/ceny/raport?id={KRAKOW}&nazwa=Kraków").get_data(as_text=True)
+    assert "Dostępność cenowa" in raport and "0,50 m²" in raport and "100,0" in raport
+
+    def szereg(zid, jid):
+        if jid == WIELICKI:
+            raise bdl.BladBDL("GUS nie odpowiada")
+        return [{"rok": 2024, "wartosc": 16500.0}]
+    monkeypatch.setattr(bdl, "szereg_gminy", szereg)
+    raport = client.get(f"/ceny/raport?id={WIELICKI}&nazwa=wielicki&id={KRAKOW}&nazwa=Kraków").get_data(as_text=True)
+    assert "GUS nie odpowiada" in raport and "16 500" in raport
     assert client.get(f"/ceny/szereg/{KRAKOW}").get_json()["szereg"][0]["wartosc"] == 15000  # cena dalej z wskaźnika ceny
 
 

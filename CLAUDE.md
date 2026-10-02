@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 136 (ceny: nowsza wersja pliku RCN — zamknięty)
-Ostatni ZIP: releases/warsztat_etap136_20261002.zip
+ETAP: 137 (ceny: raport porównania miast — zamknięty)
+Ostatni ZIP: releases/warsztat_etap137_20261002.zip
 Testy: 531 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

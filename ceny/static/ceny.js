@@ -263,6 +263,7 @@
             parametry.append("nazwa", w.nazwa);
         }
         link.href = `${URL_CENY}porownanie.csv?${parametry}`;
+        document.getElementById("link-raport-miast").href = `${URL_CENY}raport?${parametry}`; // ETAP 137
     }
 
     async function odswiez() {
