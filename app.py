@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from flask import Flask, Response, jsonify, redirect, render_template, request, url_for
@@ -184,6 +185,35 @@ def create_app(instance_path=None):
             mimetype="application/zip",
             headers={"Content-Disposition": f"attachment; filename={nazwa}"},
         )
+
+    @app.route("/kopia-zapasowa/przywroc", methods=["GET", "POST"])
+    def przywroc_kopie():
+        """Przywracanie danych z kopii (ETAP 129): wgrany ZIP albo kopia z folderu kopii."""
+        from kopia import BladKopii, kopie_do_przywrocenia, przywroc_kopie as przywroc
+
+        folder_kopii = app.config["AUTO_KOPIA_FOLDER"]
+        dostepne = kopie_do_przywrocenia(folder_kopii)
+        if request.method == "GET":
+            return render_template("przywracanie.html", kopie=dostepne, folder_kopii=folder_kopii, wynik=None, blad=None)
+        if request.form.get("potwierdzam") != "tak":
+            blad = "Zaznacz, że rozumiesz, że obecne dane zostaną zastąpione (zostaną zachowane w kopii i w folderze instance_stary)."
+            return render_template("przywracanie.html", kopie=dostepne, folder_kopii=folder_kopii, wynik=None, blad=blad), 400
+        nazwa = request.form.get("z_folderu")
+        if nazwa:
+            if nazwa not in {k["nazwa"] for k in dostepne}:  # tylko pliki z listy — żadnych dowolnych ścieżek
+                return render_template("przywracanie.html", kopie=dostepne, folder_kopii=folder_kopii, wynik=None, blad="Nie ma takiej kopii."), 400
+            zrodlo = os.path.join(folder_kopii, nazwa)
+        else:
+            plik = request.files.get("plik")
+            if plik is None or not plik.filename:
+                return render_template("przywracanie.html", kopie=dostepne, folder_kopii=folder_kopii, wynik=None, blad="Wybierz plik ZIP z kopią."), 400
+            zrodlo = plik.stream
+        try:
+            wynik = przywroc(app.instance_path, zrodlo, folder_kopii)
+        except BladKopii as e:
+            return render_template("przywracanie.html", kopie=dostepne, folder_kopii=folder_kopii, wynik=None, blad=str(e)), 400
+        app.logger.warning("Przywrócono dane z kopii (%s plików); poprzednie w %s", wynik["plikow"], wynik["stary_folder"])
+        return render_template("przywracanie.html", kopie=kopie_do_przywrocenia(folder_kopii), folder_kopii=folder_kopii, wynik=wynik, blad=None)
 
     @app.route("/favicon.ico")
     def favicon():

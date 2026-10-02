@@ -338,3 +338,80 @@ def test_wyszukiwarka_globalna(tmp_path, monkeypatch):
         html = c.get("/szukaj?q=kazimier").get_data(as_text=True)
         assert "Nie udało się przeszukać: Teren" in html and "Kazimierz — wariant A" in html
         assert 'href="/szukaj"' in c.get("/pomoc").get_data(as_text=True)  # link w nawigacji
+
+
+# ---------- ETAP 129: przywracanie kopii ----------
+
+
+def _kopia_z_danymi(tmp_path):
+    import kopia
+
+    app = create_app(instance_path=str(tmp_path / "instance"))
+    with app.app_context():
+        from osiedle import baza as ob
+        ob.utworz("Koncepcja z kopii")
+    return app, kopia.utworz_kopie(str(tmp_path / "instance"))
+
+
+def test_przywracanie_kopii(tmp_path, monkeypatch):
+    import io
+    import os
+
+    app, dane = _kopia_z_danymi(tmp_path)
+    app.config["AUTO_KOPIA_FOLDER"] = str(tmp_path / "kopie")
+    with app.app_context():
+        from osiedle import baza as ob
+        ob.utworz("Koncepcja po kopii")  # zmiana po zrobieniu kopii — zniknie po przywróceniu
+    with app.test_client() as c:
+        assert c.post("/kopia-zapasowa/przywroc", data={"plik": (io.BytesIO(dane), "k.zip")}, content_type="multipart/form-data").status_code == 400  # bez potwierdzenia
+        odp = c.post("/kopia-zapasowa/przywroc", data={"plik": (io.BytesIO(dane), "k.zip"), "potwierdzam": "tak"}, content_type="multipart/form-data")
+        assert odp.status_code == 200 and "Przywrócono dane z kopii" in odp.get_data(as_text=True)
+        with app.app_context():
+            from osiedle import baza as ob
+            assert [k["nazwa"] for k in ob.lista()] == ["Koncepcja z kopii"]
+        stare = [n for n in os.listdir(tmp_path) if n.startswith("instance_stary_")]
+        assert len(stare) == 1 and os.path.exists(tmp_path / stare[0] / "osiedle")  # poprzednie dane przeniesione, nie usunięte
+        przed = [n for n in os.listdir(tmp_path / "kopie") if n.startswith("warsztat_przed_przywroceniem_")]
+        assert len(przed) == 1
+        assert os.path.isdir(tmp_path / "instance" / "logi")  # dziennik zostaje
+        # przywrócenie z listy kopii w folderze (tylko nazwy z listy)
+        assert przed[0] in c.get("/kopia-zapasowa/przywroc").get_data(as_text=True)
+        assert c.post("/kopia-zapasowa/przywroc", data={"z_folderu": "../../etc/passwd", "potwierdzam": "tak"}).status_code == 400
+        odp = c.post("/kopia-zapasowa/przywroc", data={"z_folderu": przed[0], "potwierdzam": "tak"})
+        assert odp.status_code == 200
+        with app.app_context():
+            from osiedle import baza as ob
+            assert {k["nazwa"] for k in ob.lista()} == {"Koncepcja z kopii", "Koncepcja po kopii"}
+
+
+def test_przywracanie_odrzuca_zle_kopie(tmp_path):
+    import io
+    import os
+    import zipfile
+
+    import kopia
+
+    folder = tmp_path / "instance"
+    folder.mkdir()
+    (folder / "plik.txt").write_text("obecne")
+
+    def zip_z(pliki):
+        b = io.BytesIO()
+        with zipfile.ZipFile(b, "w") as z:
+            for n, t in pliki.items():
+                z.writestr(n, t)
+        b.seek(0)
+        return b
+
+    for zle, komunikat in [
+        (io.BytesIO(b"to nie zip"), "nie jest plik ZIP"),
+        (zip_z({"instance/a.txt": "x"}), "PRZYWRACANIE.txt"),
+        (zip_z({"PRZYWRACANIE.txt": "", "instance/../../zlo.txt": "x"}), "Niedozwolona ścieżka"),
+        (zip_z({"PRZYWRACANIE.txt": "", "inne/a.txt": "x"}), "Niedozwolona ścieżka"),
+        (zip_z({"PRZYWRACANIE.txt": "", "instance/fiszki/fiszki.db": "nie baza"}), "uszkodzona"),
+    ]:
+        with pytest.raises(kopia.BladKopii, match=komunikat):
+            kopia.przywroc_kopie(str(folder), zle, str(tmp_path / "kopie"))
+    assert (folder / "plik.txt").read_text() == "obecne"  # nic nie ruszone
+    assert not (tmp_path / "zlo.txt").exists()
+    assert not [n for n in os.listdir(tmp_path) if n.startswith((".przywracanie_", "instance_stary_"))]  # sprzątnięte

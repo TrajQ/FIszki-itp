@@ -12,6 +12,7 @@ pliku — kopia jest spójna nawet wtedy, gdy aplikacja akurat zapisuje.
 import glob
 import io
 import os
+import shutil
 import sqlite3
 import tempfile
 import time
@@ -29,7 +30,8 @@ koncepcje osiedli, akty prawne i historia pytań, projekty i punkty
 terenowe, wybrany wskaźnik cen), wgrane PDF-y (fiszki, przepisy), zdjęcia z terenu i pliki
 wyników dostępności.
 
-Przywracanie:
+Przywracanie: w aplikacji — strona główna → „Przywróć z kopii”
+(ETAP 129). Ręcznie:
 1. Zamknij aplikację (zamknij okno terminala z serwerem).
 2. W katalogu projektu (np. ~/warsztat) zmień nazwę obecnego folderu
    instance/ na instance_stary/ (na wszelki wypadek).
@@ -107,3 +109,99 @@ def kopia_automatyczna(folder_instance: str, folder_kopii: str, co_ile_dni: int 
     for stara in sorted(glob.glob(os.path.join(folder_kopii, WZOR_AUTO)), key=os.path.getmtime)[:-zostaw]:
         os.remove(stara)
     return sciezka
+
+
+# ---------- przywracanie kopii w aplikacji (ETAP 129) ----------
+
+MAKS_ROZPAKOWANE_B = 4_000_000_000  # zabezpieczenie przed „bombą zip”
+MAKS_PLIKOW = 100_000
+WZOR_PRZED = "warsztat_przed_przywroceniem_{:%Y%m%d_%H%M%S}.zip"
+
+
+class BladKopii(ValueError):
+    """Plik nie jest poprawną kopią Warsztatu albo jest uszkodzony."""
+
+
+def _sprawdz_i_rozpakuj(zip_: zipfile.ZipFile, cel: str) -> int:
+    """Rozpakowuje tylko instance/… do `cel`; BladKopii przy obcym albo
+    niebezpiecznym pliku. Zwraca liczbę plików."""
+    nazwy = zip_.namelist()
+    if "PRZYWRACANIE.txt" not in nazwy:
+        raise BladKopii("To nie jest kopia Warsztatu (brak pliku PRZYWRACANIE.txt).")
+    pliki = [i for i in zip_.infolist() if not i.is_dir() and i.filename != "PRZYWRACANIE.txt"]
+    if not pliki or len(pliki) > MAKS_PLIKOW or sum(i.file_size for i in pliki) > MAKS_ROZPAKOWANE_B:
+        raise BladKopii("Kopia jest pusta albo podejrzanie duża.")
+    for i in pliki:
+        czesci = i.filename.replace("\\", "/").split("/")
+        if czesci[0] != "instance" or len(czesci) < 2 or any(c in ("", ".", "..") for c in czesci[1:]) or i.filename.startswith("/"):
+            raise BladKopii(f"Niedozwolona ścieżka w kopii: {i.filename[:80]}")
+        if czesci[1] == "logi":
+            continue  # dziennik błędów zostaje bieżący
+        sciezka = os.path.join(cel, *czesci[1:])
+        os.makedirs(os.path.dirname(sciezka), exist_ok=True)
+        with zip_.open(i) as zrodlo, open(sciezka, "wb") as plik:
+            shutil.copyfileobj(zrodlo, plik)
+    for katalog, _, nazwy_plikow in os.walk(cel):
+        for nazwa in nazwy_plikow:
+            if nazwa.endswith(".db"):
+                try:
+                    with sqlite3.connect(f"file:{os.path.join(katalog, nazwa)}?mode=ro", uri=True) as db:
+                        wynik = db.execute("PRAGMA integrity_check").fetchone()[0]
+                except sqlite3.DatabaseError as e:
+                    raise BladKopii(f"Baza {nazwa} w kopii jest uszkodzona ({e}).") from e
+                if wynik != "ok":
+                    raise BladKopii(f"Baza {nazwa} w kopii jest uszkodzona ({wynik}).")
+    return len(pliki)
+
+
+def _wolna_nazwa(sciezka: str) -> str:
+    """Ścieżka, która jeszcze nie istnieje (…_2, …_3 przy dwóch przywróceniach w tej samej sekundzie)."""
+    rdzen, rozszerzenie = os.path.splitext(sciezka)
+    nr = 1
+    while os.path.exists(sciezka):
+        nr += 1
+        sciezka = f"{rdzen}_{nr}{rozszerzenie}"
+    return sciezka
+
+
+def przywroc_kopie(folder_instance: str, zrodlo, folder_kopii: str, teraz: datetime | None = None) -> dict:
+    """Przywraca dane z kopii (ścieżka albo plik-obiekt ZIP).
+
+    Kolejność chroni obecne dane: najpierw rozpakowanie i sprawdzenie kopii
+    w folderze tymczasowym, potem kopia bezpieczeństwa obecnych danych,
+    potem obecne pliki przenoszone (nie usuwane) do instance_stary_<data>/,
+    a na ich miejsce pliki z kopii. Folder logi/ zostaje bez zmian."""
+    teraz = teraz or datetime.now()
+    rodzic = os.path.dirname(os.path.abspath(folder_instance))
+    tymczasowy = tempfile.mkdtemp(prefix=".przywracanie_", dir=rodzic)
+    try:
+        try:
+            with zipfile.ZipFile(zrodlo) as zip_:
+                plikow = _sprawdz_i_rozpakuj(zip_, tymczasowy)
+        except zipfile.BadZipFile as e:
+            raise BladKopii("To nie jest plik ZIP albo jest uszkodzony.") from e
+        os.makedirs(folder_kopii, exist_ok=True)
+        przed = _wolna_nazwa(os.path.join(folder_kopii, WZOR_PRZED.format(teraz)))
+        os.makedirs(folder_instance, exist_ok=True)
+        if any(n != "logi" for n in os.listdir(folder_instance)):
+            with open(przed, "wb") as plik:
+                plik.write(utworz_kopie(folder_instance))
+        else:
+            przed = None
+        stary = _wolna_nazwa(os.path.join(rodzic, f"instance_stary_{teraz:%Y%m%d_%H%M%S}"))
+        os.makedirs(stary)
+        for nazwa in os.listdir(folder_instance):
+            if nazwa != "logi":
+                shutil.move(os.path.join(folder_instance, nazwa), os.path.join(stary, nazwa))
+        for nazwa in os.listdir(tymczasowy):
+            shutil.move(os.path.join(tymczasowy, nazwa), os.path.join(folder_instance, nazwa))
+        return {"plikow": plikow, "kopia_bezpieczenstwa": przed, "stary_folder": stary}
+    finally:
+        shutil.rmtree(tymczasowy, ignore_errors=True)
+
+
+def kopie_do_przywrocenia(folder_kopii: str) -> list[dict]:
+    """Kopie automatyczne i sprzed przywrócenia z folderu kopii, od najnowszej."""
+    pliki = glob.glob(os.path.join(folder_kopii, "warsztat_*.zip"))
+    return [{"nazwa": os.path.basename(p), "data": datetime.fromtimestamp(os.path.getmtime(p)), "mb": round(os.path.getsize(p) / 1e6, 1)}
+            for p in sorted(pliki, key=os.path.getmtime, reverse=True)]

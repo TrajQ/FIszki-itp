@@ -835,3 +835,8 @@
 
 ## ETAP 128 — 2026-10-02
 - Wyszukiwarka globalna (⌕ Szukaj w menu) — wszystkie moduły naraz
+
+## ETAP 129 — 2026-10-02
+- Przywracanie danych z kopii zapasowej w aplikacji (z kopią
+  bezpieczeństwa i zachowaniem poprzednich danych)
+- Pomoc: opis

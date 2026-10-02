@@ -2261,3 +2261,23 @@ Status: zamknięty
 - Menu: „⌕ Szukaj”; pole z fokusem; fraza od 2 znaków
 - Sprawdzone w przeglądarce (1300 i 390 px): wynik → otwarta koncepcja
 - `DECISIONS.md`: D-136
+
+## ETAP 129 — Przywracanie kopii zapasowej w aplikacji
+Data: 2026-10-02
+Status: zamknięty
+
+- `kopia.py`: `przywroc_kopie` — rozpakowanie do folderu tymczasowego,
+  sprawdzenie (PRZYWRACANIE.txt, tylko `instance/…`, bez `..` i ścieżek
+  bezwzględnych, limit rozmiaru i liczby plików, `PRAGMA integrity_check`
+  każdej bazy), kopia bezpieczeństwa obecnych danych
+  (`warsztat_przed_przywroceniem_…zip`), przeniesienie obecnych danych do
+  `instance_stary_…` (nic nie usuwamy), wstawienie danych z kopii; logi/
+  zostaje; nazwy unikalne przy dwóch przywróceniach w tej samej sekundzie
+  (błąd złapany w teście); `kopie_do_przywrocenia` — lista z folderu kopii
+- Strona `/kopia-zapasowa/przywroc` (link przy kopii na stronie głównej):
+  kopia z listy (tylko nazwy z listy) albo wgrany ZIP, obowiązkowe
+  potwierdzenie; wpis w dzienniku
+- Instrukcja w ZIP wskazuje przywracanie w aplikacji
+- Sprawdzone w przeglądarce: pobranie kopii → zmiana → przywrócenie;
+  poprawione łamanie długich ścieżek na telefonie
+- `DECISIONS.md`: D-137

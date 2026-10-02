@@ -2854,3 +2854,23 @@ przegląd jest natychmiastowy.
 - Wspólny indeks FTS dla wszystkich modułów — synchronizacja przy każdej
   zmianie w każdym module.
 - Wyszukiwanie gmin w BDL — wymaga sieci; Atlas ma własny wybór gminy.
+
+## D-137 — Przywracanie kopii: sprawdzenie przed zmianą, poprzednie dane przenoszone
+Data: 2026-10-02
+
+**Decyzja:** Przywracanie najpierw rozpakowuje i sprawdza kopię w folderze
+tymczasowym (struktura, ścieżki, rozmiar, integralność baz), potem robi
+kopię bieżących danych, przenosi je do `instance_stary_<data>` i dopiero
+wstawia dane z kopii. Źródło: wgrany ZIP (limit 50 MB) albo plik z
+folderu kopii wybrany z listy. Wymagane potwierdzenie.
+
+**Uzasadnienie:** Przywracanie jest jedyną operacją, która zastępuje
+wszystkie dane naraz — każdy błąd (zły plik, uszkodzona baza, przerwanie)
+musi zostawić obecne dane nietknięte albo zachowane w dwóch miejscach.
+Ręczne przywracanie z instrukcji było dla studenta zbyt ryzykowne.
+
+**Odrzucone alternatywy:**
+- Usuwanie poprzednich danych po przywróceniu — nieodwracalne.
+- Restart aplikacji po przywróceniu — połączenia z bazami otwierane są na
+  zapytanie, więc nie jest potrzebny.
+- Dowolna ścieżka pliku do przywrócenia — tylko pliki z listy (jak RCN).

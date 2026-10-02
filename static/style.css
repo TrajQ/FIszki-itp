@@ -820,3 +820,28 @@ input[type="file"]::file-selector-button {
     font-size: 14px;
     overflow-wrap: anywhere;
 }
+
+/* ---------- przywracanie kopii (ETAP 129) ---------- */
+
+.lista-kopii,
+.potwierdzenie {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.lista-kopii label,
+.potwierdzenie {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    overflow-wrap: anywhere;
+}
+
+/* długie ścieżki plików (przywracanie, diagnostyka) łamią się na telefonie */
+.komunikat-przywracania code,
+.lista-kopii code,
+.karta li code,
+.karta p code {
+    overflow-wrap: anywhere;
+}
