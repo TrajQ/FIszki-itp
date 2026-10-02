@@ -3566,3 +3566,22 @@ powiązania) i odświeżyć liczby w PORTFOLIO naraz.
 **Odrzucone alternatywy:**
 - Generowanie tabeli plików z kodu — opis „co robi plik” i tak pisze
   człowiek; skrypt dla jednej tabeli to zbędna abstrakcja.
+
+## D-178 — Plan 171–250 w czterech seriach z przeglądem co 20 ETAPów
+Data: 2026-10-02
+
+**Decyzja:** ETAPy 171–250 idą czterema seriami po 20; ostatni ETAP
+serii to przegląd (testy, pokrycie, pyflakes, przegląd stron) i
+dokumentacja zbiorcza. Plan jest kierunkiem: ETAP można zastąpić, gdy
+przegląd kodu pokaże, że funkcja już jest albo inna potrzeba jest
+ważniejsza — z uzasadnieniem w rekordzie decyzji.
+
+**Uzasadnienie:** Seria 151–170 pokazała, że przegląd po ~20 ETAPach
+łapie rzeczy, których nie widać w pojedynczym ETAPie (przepełnienia
+szerokich tabel, powielony CSS, wolne parowanie punktów). Plan rozkłada
+pracę równo na moduły i kończy się porządkami (podział dużych plików,
+samouczek), żeby projekt dało się dalej czytać po trzech miesiącach.
+
+**Odrzucone alternatywy:**
+- Plan tylko do 200 i nowy plan potem — mniej spójne serie, dwa razy
+  ta sama praca przeglądowa.

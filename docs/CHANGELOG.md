@@ -964,3 +964,6 @@
 
 ## ETAP 169 — 2026-10-02
 - Dokumentacja (README, ARCHITEKTURA, PORTFOLIO) po ETAPach 151–168
+
+## ETAP 170 — 2026-10-02
+- Przegląd po ETAPach 151–169 i plan ETAPów 171–250

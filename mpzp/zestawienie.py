@@ -49,7 +49,7 @@ def schemat_svg(dzialki: list[dict], szerokosc: int = 900, wysokosc: int = 420) 
     skala = min((szerokosc - 2 * margines) / max(max(xs) - min(xs), rozpietosc * 0.2), (wysokosc - 2 * margines - 30) / max(max(ys) - min(ys), rozpietosc * 0.2))
     srodek_x, srodek_y = (max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2
     czesci = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc} {wysokosc}" width="{szerokosc}" height="{wysokosc}" font-family="sans-serif">',
-              f'<rect width="100%" height="100%" fill="#ffffff" stroke="#d2d2d7"/>']
+              '<rect width="100%" height="100%" fill="#ffffff" stroke="#d2d2d7"/>']
     for d, x, y in zip(dzialki, xs, ys):
         px = szerokosc / 2 + (x - srodek_x) * skala
         py = (wysokosc - 30) / 2 - (y - srodek_y) * skala

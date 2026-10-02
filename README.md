@@ -25,7 +25,7 @@ Aktualizacja z pobranego ZIP-a: `./aktualizuj.sh` (kopia zapasowa, dane
 i klucze bez zmian).
 Opis projektu do portfolio: [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
 Jak aplikacja jest poskładana: [docs/ARCHITEKTURA.md](docs/ARCHITEKTURA.md).
-Podsumowanie ETAPów 110–150 i plan dalszych: [docs/PODSUMOWANIE_110-150.md](docs/PODSUMOWANIE_110-150.md).
+Podsumowanie ETAPów 110–150: [docs/PODSUMOWANIE_110-150.md](docs/PODSUMOWANIE_110-150.md); przegląd po 151–169 i plan ETAPów 171–250: [docs/PLAN_171-250.md](docs/PLAN_171-250.md).
 Postęp prac: [docs/PROGRESS.md](docs/PROGRESS.md), decyzje:
 [DECISIONS.md](DECISIONS.md), zasady pracy: [CLAUDE.md](CLAUDE.md).
 

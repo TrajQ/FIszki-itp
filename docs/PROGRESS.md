@@ -2948,3 +2948,17 @@ Status: zamknięty
 - Przegląd stron w Chromium: 84 strony, 0 problemów
 - Pomoc: wpisy dodawane na bieżąco w ETAPach 151–168 — sprawdzone
 - `DECISIONS.md`: D-177
+
+## ETAP 170 — Przegląd po ETAPach 151–169 i plan ETAPów 171–250
+Data: 2026-10-02
+Status: zamknięty
+
+- Przegląd: testy 582/0, pokrycie 95% (najsłabsze `dane/uldk.py`,
+  `atlas/granice.py` — gałęzie błędów usług), pyflakes — jedno ostrzeżenie
+  (f-string bez pola w `mpzp/zestawienie.py`) poprawione, przegląd stron
+  w Chromium: 84 strony, 0 problemów
+- `docs/PLAN_171-250.md`: wyniki przeglądu, uwagi (podział `osiedle.js`,
+  arkusz ODS bez zależności, luka w trybie pisania) i plan czterech serii
+  po 20 ETAPów z przeglądem i dokumentacją na końcu każdej
+- README: odnośnik do planu
+- `DECISIONS.md`: D-178
