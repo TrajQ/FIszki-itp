@@ -158,6 +158,9 @@
     const KOLORY_GI = { H99: "#b2182b", H95: "#ef8a62", H90: "#fddbc7", ns: "#e5e5ea", C90: "#d1e5f0", C95: "#67a9cf", C99: "#2166ac" };
     const KOLEJNOSC_GI = ["H99", "H95", "H90", "ns", "C90", "C95", "C99"];
     let giPoTeryt = new Map();
+    // Iloraz lokalizacji (ETAP 153): stałe klasy z serwera, kolory od niebieskiego do czerwonego
+    const KOLORY_LQ = ["#2166ac", "#92c5de", "#e5e5ea", "#f4a582", "#b2182b"];
+    let lqPoTeryt = new Map();
 
     // Kolor dla gminy w bieżącym trybie.
     function kolorGminy(gmina) {
@@ -169,6 +172,10 @@
         if (tryb === "gi") {
             const gi = giPoTeryt.get(gmina.teryt);
             return gi ? KOLORY_GI[gi.kategoria] : KOLOR_BRAK;
+        }
+        if (tryb === "lq") {
+            const lq = lqPoTeryt.get(gmina.teryt);
+            return lq ? KOLORY_LQ[lq.klasa] : KOLOR_BRAK;
         }
         if (tryb === "zmiana") {
             if (gmina.zmiana_proc === null || gmina.zmiana_proc === undefined) return KOLOR_BRAK;
@@ -362,8 +369,11 @@
             if (dane.porownanie && !jestPorownanie) {
                 pokazKomunikat(`Brak danych z roku ${dane.porownanie.rok_bazowy} do porównania — pokazuję same wartości.`);
             }
-            przelacznik.hidden = !jestPorownanie;
+            // ETAP 153: iloraz lokalizacji — tylko dla wskaźnika względnego (z mianownikiem)
+            lqPoTeryt = new Map(((dane.lq && dane.lq.gminy) || []).map((g) => [g.teryt, g]));
+            przelacznik.hidden = !jestPorownanie && !lqPoTeryt.size;
             przelacznik.querySelector('[data-tryb="zmiana"]').hidden = !jestPorownanie;
+            przelacznik.querySelector('[data-tryb="lq"]').hidden = !lqPoTeryt.size;
             ustawTryb(jestPorownanie ? "zmiana" : "wartosc", false);
             wynikiEl.hidden = false;
             profilEl.hidden = true;
@@ -749,6 +759,10 @@
                     if (tryb === "lisa") {
                         tresc += lisa ? ` · ${wynikMorana.kategorie[lisa.kategoria]} (p = ${formatLiczby.format(lisa.p)})` : " · bez sąsiadów z danymi";
                     }
+                    if (tryb === "lq") {
+                        const lq = lqPoTeryt.get(gmina.teryt);
+                        tresc += lq ? ` · iloraz lokalizacji ${formatLiczby.format(lq.lq)}` : " · brak mianownika";
+                    }
                     if (tryb === "gi") {
                         const gi = giPoTeryt.get(gmina.teryt);
                         tresc += gi ? ` · ${wynikMorana.kategorie_gi[gi.kategoria]} (z = ${formatLiczby.format(gi.z)})` : " · bez sąsiadów z danymi";
@@ -782,6 +796,17 @@
 
     function pokazLegende() {
         legendaEl.replaceChildren();
+        if (tryb === "lq") {
+            legendaEl.appendChild(element("div", "legenda__tytul", "iloraz lokalizacji (1 = jak w województwie)"));
+            const ile = [0, 0, 0, 0, 0];
+            for (const g of biezaceDane.lq.gminy) ile[g.klasa] += 1;
+            biezaceDane.lq.opisy.forEach((opis, i) => {
+                const wiersz = wierszLegendy(KOLORY_LQ[i], opis);
+                wiersz.appendChild(element("span", "legenda__liczebnosc", `${ile[i]}`));
+                legendaEl.appendChild(wiersz);
+            });
+            return;
+        }
         if (tryb === "gi") {
             legendaEl.appendChild(element("div", "legenda__tytul", "gorące i zimne punkty Gi*"));
             const ile = {};

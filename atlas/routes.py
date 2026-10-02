@@ -316,6 +316,8 @@ def _policz_dane(
         "progi_klas": statystyki.progi_klas([g["wartosc"] for g in gminy]),
         "klasyfikacja": statystyki.klasyfikuj([g["wartosc"] for g in gminy]),
     }
+    if mianownik is not None:  # ETAP 153: iloraz lokalizacji z surowych wartości, nie ze średniej wskaźników
+        wynik["lq"] = statystyki.iloraz_lokalizacji(_wartosci(zmienna_id, rok, woj_bdl_id), _wartosci(mianownik, rok, woj_bdl_id))
     if rok_bazowy is not None:
         porownanie = statystyki.porownaj(
             gminy, _wartosci_wskaznika(zmienna_id, rok_bazowy, woj_bdl_id, mianownik, mnoznik)

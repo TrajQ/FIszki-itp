@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 152 (Atlas: gorące punkty Gi* — zamknięty)
-Ostatni ZIP: releases/warsztat_etap152_20261002.zip
-Testy: 556 passed / 0 failed
+ETAP: 153 (Atlas: iloraz lokalizacji — zamknięty)
+Ostatni ZIP: releases/warsztat_etap153_20261002.zip
+Testy: 557 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

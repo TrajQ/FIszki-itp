@@ -22,7 +22,8 @@ from .routes import _parametry_klasyfikacji, _parametry_zapytania, _policz_dane,
 KOLORY_KLAS = ["#e3efff", "#b9d8ff", "#86bbff", "#4f97f5", "#1f73de", "#0b53ab", "#06336e"]
 KOLORY_ZMIANY = ["#c2410c", "#fb923c", "#d1d1d6", "#60a5fa", "#1d4ed8"]
 KOLORY_LISA = {"HH": "#d7191c", "LL": "#2c7bb6", "HL": "#fdae61", "LH": "#abd9e9", "ns": "#e5e5ea"}
-TRYBY_MAPY = ("wartosc", "zmiana", "lisa", "gi")
+TRYBY_MAPY = ("wartosc", "zmiana", "lisa", "gi", "lq")
+KOLORY_LQ = ["#2166ac", "#92c5de", "#e5e5ea", "#f4a582", "#b2182b"]  # ETAP 153, jak w atlas.js
 # ETAP 152: jak KOLORY_GI w atlas.js
 KOLORY_GI = {"H99": "#b2182b", "H95": "#ef8a62", "H90": "#fddbc7", "ns": "#e5e5ea", "C90": "#d1e5f0", "C95": "#67a9cf", "C99": "#2166ac"}
 
@@ -51,7 +52,9 @@ def _mapa_do_druku(argumenty) -> tuple[str, dict]:
     metoda, liczba_klas = _parametry_klasyfikacji(argumenty)
     tryb = argumenty.get("tryb") or "wartosc"
     if tryb not in TRYBY_MAPY:
-        raise ValueError("Tryb mapy: wartosc, zmiana, lisa albo gi.")
+        raise ValueError("Tryb mapy: wartosc, zmiana, lisa, gi albo lq.")
+    if tryb == "lq" and parametry["mianownik"] is None:
+        raise ValueError("Iloraz lokalizacji wymaga wskaźnika względnego (mianownik).")
     if tryb == "zmiana" and parametry["rok_bazowy"] is None:
         raise ValueError("Mapa zmiany wymaga roku porównania (rok_bazowy).")
 
@@ -83,6 +86,17 @@ def _mapa_do_druku(argumenty) -> tuple[str, dict]:
         )
         legenda = [(KOLORY_ZMIANY[i], opis, liczebnosci[i]) for i, opis in enumerate(opisy)]
         tytul_legendy = "Zmiana wartości"
+    elif tryb == "lq":
+        lq = wynik["lq"]
+        if lq is None:
+            raise LookupError("Brak danych do ilorazu lokalizacji.")
+        kolory = {g["teryt"]: KOLORY_LQ[g["klasa"]] for g in lq["gminy"]}
+        ile = [sum(1 for g in lq["gminy"] if g["klasa"] == i) for i in range(len(KOLORY_LQ))]
+        legenda = [(KOLORY_LQ[i], opis, ile[i]) for i, opis in enumerate(lq["opisy"])]
+        tytul_legendy = "Iloraz lokalizacji"
+        podtytul = f"Iloraz lokalizacji, gminy województwa {wynik['wojewodztwo']['nazwa']}, {wynik['rok']}"
+        udzial = statystyki.format_liczby(round(lq["udzial_wojewodztwa"] * zmienna.get("mnoznik", 1), 3))
+        przypisy.append(f"LQ = wskaźnik gminy / wskaźnik województwa ({udzial}); 1 — jak w województwie.")
     elif tryb == "gi":
         teryt_sasiedzi = _sasiedzi_wojewodztw.get(teryt_woj) or autokorelacja.sasiedzi(kolekcja)
         _sasiedzi_wojewodztw[teryt_woj] = teryt_sasiedzi

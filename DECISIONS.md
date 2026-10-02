@@ -3275,3 +3275,18 @@ analityczny to jedna pętla, bez kosztu 999 permutacji na gminę.
 - esda/libpysal jako zależność — numpy, scipy i pandas dla jednego wzoru.
 - Permutacyjna istotność jak w LISA — dla Gi* praktyka (ArcGIS, QGIS)
   opiera się na z-score; wynik byłby nieporównywalny z tymi narzędziami.
+
+## D-161 — LQ z sum województwa i ze stałymi klasami
+Data: 2026-10-02
+
+**Decyzja:** Udział województwa w ilorazie lokalizacji liczymy z sum
+(Σx/ΣX gmin z danymi), nie jako średnią wskaźników gmin. Klasy LQ są
+stałe (0,5 / 0,8 / 1,2 / 2), wspólne dla wszystkich map.
+
+**Uzasadnienie:** Średnia wskaźników dawałaby małym gminom tę samą wagę co
+miastom i zawyżała lub zaniżała punkt odniesienia; definicja podręcznikowa
+używa sum. Stałe klasy pozwalają porównać mapy różnych branż i lat.
+
+**Odrzucone alternatywy:**
+- Klasy z kwantyli jak na mapie wartości — „1 = jak w województwie”
+  straciłoby znaczenie.

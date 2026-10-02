@@ -913,3 +913,6 @@
 
 ## ETAP 152 — 2026-10-02
 - Atlas: gorące i zimne punkty Getisa-Orda Gi* na mapie i na wydruku
+
+## ETAP 153 — 2026-10-02
+- Atlas: iloraz lokalizacji dla wskaźników względnych, na mapie i na wydruku

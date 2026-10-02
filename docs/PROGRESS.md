@@ -2656,3 +2656,18 @@ Status: zamknięty
   mapa do druku `tryb=gi`
 - Sprawdzone w przeglądarce (jasny i ciemny)
 - `DECISIONS.md`: D-160
+
+## ETAP 153 — Atlas: iloraz lokalizacji (LQ)
+Data: 2026-10-02
+Status: zamknięty
+
+- `statystyki.iloraz_lokalizacji`: LQ_i = (x_i/X_i)/(Σx/ΣX) z surowych
+  wartości licznika i mianownika (gminy z oboma, X_i > 0), stałe klasy
+  0,5 / 0,8 / 1,2 / 2
+- `/atlas/dane` z mianownikiem zwraca `lq`; widok mapy „Iloraz
+  lokalizacji” (legenda z liczebnościami, dymek), mapa do druku `tryb=lq`
+  (400 bez mianownika)
+- Testy: wzór, pominięcie gminy z mianownikiem 0, trasa (Kraków /
+  Wieliczka), wydruk
+- Sprawdzone w przeglądarce (jasny i ciemny)
+- `DECISIONS.md`: D-161

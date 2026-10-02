@@ -656,6 +656,19 @@ def test_dane_ze_wskaznikiem_wzglednym(client, monkeypatch):
     assert [g["nazwa"] for g in dane["gminy"]] == ["Wieliczka", "Kraków"]  # ranking po wartości względnej
     assert "na 1 000" in dane["zmienna"]["nazwa"] and dane["zmienna"]["mnoznik"] == 1000
     assert dane["zmienna"]["jednostka"] == "osoba / 1 000 osoba"
+    # ETAP 153: iloraz lokalizacji z sum (4600 / 860 000), nie ze średniej wskaźników
+    lq = {g["teryt"]: g["lq"] for g in dane["lq"]["gminy"]}
+    assert dane["lq"]["udzial_wojewodztwa"] == pytest.approx(4600 / 860000)
+    assert lq["1261011"] == pytest.approx(0.005 / (4600 / 860000)) and lq["1206032"] == pytest.approx(0.01 / (4600 / 860000))
+    assert "lq" not in client.get(f"/atlas/dane?{ZAPYTANIE}").get_json()
+    # mapa LQ do druku
+    cechy = [{"type": "Feature", "properties": {"teryt": t, "nazwa": t},
+              "geometry": {"type": "Polygon", "coordinates": [[[19 + i, 50], [20 + i, 50], [20 + i, 51], [19 + i, 51], [19 + i, 50]]]}}
+             for i, t in enumerate(["1261011", "1206032"])]
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {"type": "FeatureCollection", "features": cechy})
+    svg = client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&mianownik=1000&mnoznik=1000&tryb=lq").get_data(as_text=True)
+    assert "Iloraz lokalizacji, gminy" in svg and "jak w województwie (0,8–1,2)" in svg and "(5,35)" in svg
+    assert client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=lq").status_code == 400  # bez mianownika
 
     # korelacja i opis też używają wartości względnych
     kor = client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=2000&mianownik=1000&mnoznik=1000").get_json()
@@ -1331,3 +1344,19 @@ def test_gi_star_zgodne_z_pysal():
     # analiza zwraca Gi* razem z LISA
     wynik = autokorelacja.analiza(wart, {k: set(v) for k, v in sas.items()})
     assert len(wynik["gi"]) == 30 and wynik["kategorie_gi"]["H95"] == "gorący punkt (95%)"
+
+
+# ---------- ETAP 153: iloraz lokalizacji ----------
+
+
+def test_iloraz_lokalizacji():
+    licznik = [{"teryt": "a", "wartosc": 30}, {"teryt": "b", "wartosc": 10}, {"teryt": "c", "wartosc": 5}, {"teryt": "d", "wartosc": 1}]
+    mianownik = [{"teryt": "a", "wartosc": 100}, {"teryt": "b", "wartosc": 100}, {"teryt": "c", "wartosc": 0}, {"teryt": "d", "wartosc": 200}]
+    w = statystyki.iloraz_lokalizacji(licznik, mianownik)
+    assert w["udzial_wojewodztwa"] == pytest.approx(41 / 400)  # gmina c pominięta (mianownik 0)
+    lq = {g["teryt"]: g for g in w["gminy"]}
+    assert lq["a"]["lq"] == pytest.approx(0.3 / (41 / 400)) and lq["a"]["klasa"] == 4  # > 2
+    assert lq["b"]["lq"] == pytest.approx(0.1 / (41 / 400)) and lq["b"]["klasa"] == 2  # 0,8–1,2
+    assert lq["d"]["klasa"] == 0 and "c" not in lq
+    assert statystyki.iloraz_lokalizacji(licznik, []) is None
+

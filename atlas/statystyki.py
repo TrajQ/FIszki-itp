@@ -53,6 +53,31 @@ def podziel(licznik: list[dict], mianownik: list[dict], mnoznik: int) -> list[di
     ]
 
 
+# ---------- Iloraz lokalizacji (ETAP 153) ----------
+
+# Stałe klasy LQ — ta sama skala na każdej mapie; 0,8–1,2 to „jak w województwie”
+PROGI_LQ = [0.5, 0.8, 1.2, 2.0]
+OPISY_LQ = ["wyraźnie poniżej (< 0,5)", "poniżej (0,5–0,8)", "jak w województwie (0,8–1,2)", "powyżej (1,2–2)", "wyraźnie powyżej (> 2)"]
+
+
+def iloraz_lokalizacji(licznik: list[dict], mianownik: list[dict]) -> dict | None:
+    """LQ_i = (x_i / X_i) / (Σx / ΣX) — o ile udział zjawiska w gminie jest
+    większy niż w całym województwie (np. pracujący w przemyśle wśród
+    pracujących ogółem). Sumy z gmin, które mają obie wartości i X_i > 0.
+    None, gdy nie ma czego liczyć."""
+    mian = {g["teryt"]: g["wartosc"] for g in mianownik}
+    pary = [(g["teryt"], g["wartosc"], mian[g["teryt"]]) for g in licznik if mian.get(g["teryt"]) not in (None, 0)]
+    suma_x, suma_m = sum(x for _, x, _ in pary), sum(m for _, _, m in pary)
+    if not pary or not suma_x or not suma_m:
+        return None
+    udzial = suma_x / suma_m
+    gminy = []
+    for teryt, x, m in pary:
+        lq = (x / m) / udzial
+        gminy.append({"teryt": teryt, "lq": lq, "klasa": sum(1 for p in PROGI_LQ if lq >= p)})
+    return {"udzial_wojewodztwa": udzial, "gminy": gminy, "progi": PROGI_LQ, "opisy": OPISY_LQ}
+
+
 def podziel_szeregi(licznik: list[dict], mianownik: list[dict], mnoznik: int) -> list[dict]:
     """To samo dla szeregu czasowego jednej gminy (łączenie po roku)."""
     mian = {p["rok"]: p["wartosc"] for p in mianownik}
