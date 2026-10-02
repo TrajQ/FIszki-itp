@@ -90,13 +90,13 @@
         przyciskPokaz.hidden = false;
         przyciskiOceny.hidden = true;
 
-        pytanieEl.textContent = przod(fiszka);
+        pokazPytanie(fiszka);
         etykietaPrzod.textContent = trybOdwrocony.checked ? "Odpowiedź — jakie to pojęcie?" : "Pytanie";
         etykietaTyl.textContent = trybOdwrocony.checked ? "Pytanie" : "Odpowiedź";
         poleOdpowiedzi.value = "";
-        poleOdpowiedzi.hidden = !trybPisania.checked;
+        poleOdpowiedzi.hidden = !trybPisania.checked || Boolean(poleLuki);
         twojaBlok.hidden = true;
-        if (trybPisania.checked) poleOdpowiedzi.focus();
+        if (trybPisania.checked) (poleLuki || poleOdpowiedzi).focus();
         odpowiedzEl.textContent = tyl(fiszka);
         // ETAP 154: wycinek rysunku należy do pytania — w trybie odwróconym jest z tyłu karty
         for (const [obraz, widoczny] of [[obrazPrzod, !trybOdwrocony.checked], [obrazTyl, trybOdwrocony.checked]]) {
@@ -115,10 +115,83 @@
         kartaEl.classList.add("karta-powtorki--wejscie");
     }
 
+    // ---------- ETAP 172: fiszka z luką w trybie pisania ----------
+    // Pole do wpisania stoi w miejscu „[…]” (luki z ETAPu 139), a wpis
+    // porównujemy z całą odpowiedzią: dokładnie / bez polskich znaków /
+    // literówka / inaczej. Ocenę i tak wybiera użytkownik.
+
+    const ZNAK_LUKI = "[…]";
+    let poleLuki = null;
+
+    function pokazPytanie(fiszka) {
+        const tekst = przod(fiszka);
+        const czesci = tekst.split(ZNAK_LUKI);
+        poleLuki = null;
+        if (!trybPisania.checked || trybOdwrocony.checked || czesci.length !== 2) {
+            pytanieEl.textContent = tekst;
+            return;
+        }
+        poleLuki = document.createElement("input");
+        poleLuki.type = "text";
+        poleLuki.className = "pole-luki";
+        poleLuki.autocomplete = "off";
+        poleLuki.spellcheck = false;
+        poleLuki.setAttribute("aria-label", "Brakujące słowa");
+        poleLuki.size = Math.max(8, Math.min(30, tyl(fiszka).length + 2));
+        poleLuki.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                odslon();
+            }
+        });
+        pytanieEl.replaceChildren(czesci[0], poleLuki, czesci[1]);
+    }
+
+    function bezZnakow(tekst) {
+        return tekst.normalize("NFD").replace(/\p{M}/gu, "").replace(/ł/g, "l").replace(/Ł/g, "L");
+    }
+
+    function uprosc(tekst) {
+        return tekst.toLocaleLowerCase("pl-PL").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    }
+
+    function odlegloscEdycji(a, b) {
+        let poprzedni = Array.from({ length: b.length + 1 }, (_, i) => i);
+        for (let i = 1; i <= a.length; i++) {
+            const biezacy = [i];
+            for (let j = 1; j <= b.length; j++) {
+                biezacy[j] = Math.min(poprzedni[j] + 1, biezacy[j - 1] + 1, poprzedni[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+            }
+            poprzedni = biezacy;
+        }
+        return poprzedni[b.length];
+    }
+
+    // wynik porównania wpisu z luką — tekst dla użytkownika, bez punktów
+    function ocenaLuki(poprawna, wpisana) {
+        const p = uprosc(poprawna);
+        const w = uprosc(wpisana);
+        if (!w) return "Pole było puste.";
+        if (p === w) return "✓ Dokładnie tak.";
+        if (bezZnakow(p) === bezZnakow(w)) return "✓ Dobrze — tylko bez polskich znaków.";
+        if (odlegloscEdycji(bezZnakow(p), bezZnakow(w)) <= Math.max(1, Math.floor(p.length / 8))) return "≈ Prawie — literówka.";
+        return "✗ Inaczej niż w odpowiedzi.";
+    }
+
     function odslon() {
         if (odpowiedzWidoczna || kolejka.length === 0) return;
         odpowiedzWidoczna = true;
-        pokazPorownanie(tyl(kolejka[0]), poleOdpowiedzi.value);
+        if (poleLuki) {
+            const wpisana = poleLuki.value;
+            poleLuki.disabled = true;
+            poleLuki.blur();
+            odpowiedzEl.textContent = tyl(kolejka[0]);
+            twojaEl.textContent = wpisana.trim() || "—";
+            trafieniaEl.textContent = ocenaLuki(tyl(kolejka[0]), wpisana);
+            twojaBlok.hidden = false;
+        } else {
+            pokazPorownanie(tyl(kolejka[0]), poleOdpowiedzi.value);
+        }
         poleOdpowiedzi.hidden = true;
         poleOdpowiedzi.blur(); // żeby działały skróty 1/2/3
         odpowiedzBlok.hidden = false;
@@ -239,10 +312,8 @@
         } catch (e) {
             // zapamiętanie to tylko wygoda
         }
-        if (!odpowiedzWidoczna && kolejka.length) {
-            poleOdpowiedzi.hidden = !trybPisania.checked;
-            if (trybPisania.checked) poleOdpowiedzi.focus();
-        }
+        // bieżąca karta od nowa — przy luce pole wpisu pojawia się w pytaniu (ETAP 172)
+        if (!odpowiedzWidoczna && kolejka.length) pokazFiszke();
     });
 
     poleOdpowiedzi.addEventListener("keydown", (zdarzenie) => {

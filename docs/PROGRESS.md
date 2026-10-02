@@ -2982,3 +2982,21 @@ Status: zamknięty
   identyfikatory, CSV; sprawdzone w przeglądarce 1300/390 px
 - Pomoc: „Gminy w czasie”
 - `DECISIONS.md`: D-179
+
+## ETAP 172 — Fiszki: fiszki z luką w trybie pisania
+Data: 2026-10-02
+Status: zamknięty
+
+- `fiszki/static/powtorka.js`: przy trybie pisania (i bez odwrócenia)
+  fiszka z jednym „[…]” ma pole wpisu w miejscu luki (fokus od razu,
+  Enter — odsłonięcie); porównanie z całą odpowiedzią: dokładnie / bez
+  polskich znaków / literówka (odległość edycji ≤ 1 na 8 znaków) / inaczej
+  — bez wielkości liter i interpunkcji; zwykłe fiszki jak dotąd
+  (porównanie słów, ETAP 39)
+- Zmiana trybu pisania w trakcie rysuje bieżącą kartę od nowa
+- `fiszki.css`: pole luki jako podkreślenie w tekście pytania
+- Test: znak luki w JS taki sam jak `fiszki/luki.ZNAK_LUKI`; sprawdzone
+  w przeglądarce 1300/390 px (literówka, bez znaków, inaczej, zwykła
+  fiszka z polem tekstowym)
+- Pomoc: „Luka w trybie pisania”
+- `DECISIONS.md`: D-180

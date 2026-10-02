@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 171 (Atlas: kilka gmin na jednym wykresie w czasie — zamknięty)
-Ostatni ZIP: releases/warsztat_etap171_20261002.zip
-Testy: 584 passed / 0 failed
+ETAP: 172 (Fiszki: luka w trybie pisania — zamknięty)
+Ostatni ZIP: releases/warsztat_etap172_20261002.zip
+Testy: 585 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

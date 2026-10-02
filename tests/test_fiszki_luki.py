@@ -59,3 +59,14 @@ def test_druk_odmienia_liczbe_kart(client):
     assert "2 karty." in naglowek()
     client.post("/fiszki/1/luki", json={**zapis, "tekst": "[[e]] [[f]] [[g]] h"})
     assert "5 kart." in naglowek()
+
+
+def test_powtorka_rozpoznaje_znak_luki():
+    """ETAP 172: tryb pisania wstawia pole w miejsce znaku luki — ten sam znak co w luki.py."""
+    import os
+
+    from fiszki.luki import ZNAK_LUKI
+
+    with open(os.path.join(os.path.dirname(__file__), "..", "fiszki", "static", "powtorka.js"), encoding="utf-8") as plik:
+        js = plik.read()
+    assert f'const ZNAK_LUKI = "{ZNAK_LUKI}";' in js

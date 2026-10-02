@@ -3605,3 +3605,24 @@ jest podobny, ale to dwa moduły z innymi danymi — bez wspólnej funkcji
   przeładowany, a druk wymagałby osobnej ścieżki.
 - Mediana województwa jako linia odniesienia — wymaga pobrania wartości
   wszystkich gmin w każdym roku (kilkanaście zapytań do BDL).
+
+## D-180 — Luka w trybie pisania: porównanie całego wpisu, ocena dalej ręczna
+Data: 2026-10-02
+
+**Decyzja:** Fiszka z luką w trybie pisania porównuje cały wpis z
+odpowiedzią (po uproszczeniu: małe litery, bez interpunkcji) i nazywa
+wynik: dokładnie, bez polskich znaków, literówka, inaczej. Ocenę Leitnera
+nadal wybiera użytkownik.
+
+**Uzasadnienie:** Odpowiedź w luce to krótki termin („aktem prawa
+miejscowego”), więc porównanie słów z ETAPu 39 (wspólne rdzenie) jest
+za luźne, a dokładne dopasowanie — za surowe dla literówek i klawiatury
+bez polskich znaków. Automatyczna ocena pomijałaby przypadki, gdy wpis
+jest poprawnym synonimem; zostaje zasada „oceń się sam” z ETAPu 39
+(harmonogram Leitnera, D-012, zależy tylko od ocen użytkownika).
+
+**Odrzucone alternatywy:**
+- Kilka luk naraz w jednej karcie — każda luka to osobna fiszka (D-147),
+  pole jest jedno.
+- Ocena automatyczna „umiem”, gdy wpis się zgadza — mniej kontroli,
+  a błąd porównania psułby harmonogram.

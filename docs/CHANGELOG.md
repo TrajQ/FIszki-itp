@@ -970,3 +970,6 @@
 
 ## ETAP 171 — 2026-10-02
 - Atlas: do 5 gmin na jednym wykresie wskaźnika w latach (tabela, CSV, druk)
+
+## ETAP 172 — 2026-10-02
+- Fiszki: luka w trybie pisania — wpis w miejscu „[…]” z porównaniem (literówka, bez polskich znaków)
