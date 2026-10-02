@@ -83,6 +83,7 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% if pliki | length >= 2 %}<a href="{{ url_for('ceny.zestawienie_plikow', co=co) }}" id="link-zestawienia">Zestaw pliki obok siebie ↗</a>{% endif %}
             {% else %}
             <p class="wyciszony">Jeszcze nic.</p>
             {% endif %}

@@ -2848,3 +2848,20 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Koszty”
 - `DECISIONS.md`: D-172
+
+## ETAP 165 — Ceny: kilka plików RCN (powiatów) w jednym zestawieniu
+Data: 2026-10-02
+Status: zamknięty
+
+- `ceny/rcn.py`: `zestawienie_plikow` — dla każdego pliku `porownanie`
+  (te same funkcje co porównanie obszarów), różnica mediany wobec
+  pierwszego pliku, obszary pliku pod nim; `wykres_plikow_svg` — linia
+  na plik (bez linii „cały plik”); `MAKS_PLIKOW_ZESTAWIENIA` = 4
+- Trasa `/ceny/transakcje/zestawienie?pliki=…&co=&rynek=&od=&do=`:
+  formularz wyboru plików i filtrów, tabela, wykres i tabela lat, stopka
+  wydruku; bez wyboru — sam formularz; 1 plik albo > 4 — komunikat
+- Link „Zestaw pliki obok siebie” przy liście zaimportowanych (od 2 plików)
+- Testy: liczby zestawienia, wykres, trasa (formularz, błędy, wynik);
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Kilka powiatów obok siebie”
+- `DECISIONS.md`: D-173

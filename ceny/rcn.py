@@ -531,6 +531,33 @@ def porownanie(lokale: list[dict], obszary: list[dict]) -> dict:
     return {"calosc": calosc, "obszary": wiersze, "lata": lata}
 
 
+# ---------- zestawienie kilku plików RCN — różne powiaty obok siebie (ETAP 165) ----------
+
+MAKS_PLIKOW_ZESTAWIENIA = 4
+
+
+def zestawienie_plikow(zbiory: list[tuple[str, list[dict], list[dict]]]) -> dict:
+    """[(nazwa pliku, transakcje po filtrach, obszary pliku)] → wiersz na plik
+    (z różnicą mediany wobec pierwszego pliku) i pod nim jego obszary.
+    Pliki się nie mieszają — każdy liczony osobno, jak w porównaniu obszarów.
+    `pliki` + `lata` pasują do wykres_lat_svg (linia na plik)."""
+    pliki = []
+    for i, (nazwa, lokale, obszary) in enumerate(zbiory):
+        por = porownanie(lokale, obszary)
+        wiersz = {**por["calosc"], "nazwa": nazwa, "kolor": KOLORY_OBSZAROW[i % len(KOLORY_OBSZAROW)], "obszary": por["obszary"]}
+        pierwszy = pliki[0] if pliki else wiersz
+        if i and wiersz["liczba"] and pierwszy["liczba"]:
+            wiersz["wobec_pierwszego_proc"] = 100 * (wiersz["mediana_m2"] / pierwszy["mediana_m2"] - 1)
+        pliki.append(wiersz)
+    lata = sorted({r for p in pliki for r in p.get("lata", {})})
+    return {"pliki": pliki, "lata": lata}
+
+
+def wykres_plikow_svg(zestawienie: dict) -> str:
+    """Wykres median w latach — linia na plik (bez linii „cały plik”)."""
+    return wykres_lat_svg({"obszary": zestawienie["pliki"], "calosc": {}, "lata": zestawienie["lata"]})
+
+
 def mapa_svg(lokale: list[dict], obszary: list[dict], progi: list[float], kolory: list[str],
              szerokosc: int = 1000, wysokosc: int = 620) -> str:
     """Schematyczna mapa do raportu: punkty transakcji w klasach ceny i

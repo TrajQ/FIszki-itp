@@ -3471,3 +3471,21 @@ widzi liczbę transakcji i lata, zanim zdecyduje.
 - Automatyczne wypełnianie pola przy rysowaniu — ukryta liczba w
   kosztorysie, której źródła nie widać.
 - Filtr po przeznaczeniu w MPZP działki — w RCN często puste.
+
+## D-173 — Zestawienie plików RCN bez łączenia transakcji
+Data: 2026-10-02
+
+**Decyzja:** Pliki różnych powiatów zestawiamy obok siebie (wiersz i
+linia na plik), każdy liczony osobno tymi samymi funkcjami co porównanie
+obszarów. Transakcji z różnych plików nie łączymy w jeden zbiór, a
+obszary zostają przypisane do swojego pliku.
+
+**Uzasadnienie:** Powiaty prowadzą rejestr z różną kompletnością i
+w różnym czasie publikują dane — wspólna mediana mieszałaby te różnice.
+Zestawienie odpowiada na pytanie „o ile drożej w mieście niż w powiecie
+ościennym” bez nowego modelu danych (jak w cenach w okolicy, D-117, gdzie pliki też się nie mieszają). Do 4 plików
+— tyle czytelnie mieści tabela i wykres.
+
+**Odrzucone alternatywy:**
+- Obszar rysowany ponad granicą plików — wymagałby łączenia transakcji
+  i podwójnych wierszy przy nakładających się plikach.

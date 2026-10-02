@@ -243,6 +243,44 @@ def raport_transakcji(plik_id):
     )
 
 
+# ---------- zestawienie plików różnych powiatów (ETAP 165) ----------
+
+
+@ceny_bp.route("/transakcje/zestawienie")
+def zestawienie_plikow():
+    """Kilka zaimportowanych plików RCN obok siebie — te same filtry, każdy
+    plik liczony osobno. Bez wybranych plików: sam formularz wyboru."""
+    pliki = baza.pliki_rcn()
+    po_id = {p["id"]: p for p in pliki}
+    wybrane = list(dict.fromkeys(i for i in request.args.getlist("pliki", type=int) if i in po_id))
+    try:
+        co = _co()
+        filtry = _filtry(co)
+    except ValueError:
+        abort(400)
+    blad = None
+    if len(wybrane) > rcn.MAKS_PLIKOW_ZESTAWIENIA:
+        blad = f"Najwyżej {rcn.MAKS_PLIKOW_ZESTAWIENIA} pliki naraz."
+    elif request.args.getlist("pliki") and len(wybrane) < 2:
+        blad = "Zaznacz co najmniej dwa pliki."
+    zestawienie = None
+    if not blad and len(wybrane) >= 2:
+        zestawienie = rcn.zestawienie_plikow([(po_id[i]["nazwa"], _rekordy(i, co, filtry), baza.obszary_rcn(i)) for i in wybrane])
+    return render_template(
+        "ceny/zestawienie.html",
+        pliki=pliki,
+        wybrane=wybrane,
+        co=co,
+        filtry=filtry,
+        rynki=RYNKI,
+        blad=blad,
+        maks=rcn.MAKS_PLIKOW_ZESTAWIENIA,
+        zestawienie=zestawienie,
+        wykres=Markup(rcn.wykres_plikow_svg(zestawienie)) if zestawienie else None,  # tylko liczby i kolory z kodu
+        min_w_roku=rcn.MIN_W_ROKU,
+    )
+
+
 # ---------- podobne transakcje (ETAP 107) ----------
 
 

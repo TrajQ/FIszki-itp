@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+{% macro z(x, miejsca=0) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
+{% macro proc(x) %}{{ ('%+.1f' % x) | replace('.', ',') }}%{% endmacro %}
+
+{% block tytul %}Zestawienie plików RCN — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-cen{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('ceny.static', filename='ceny.css') }}">{% endblock %}
+
+{% block tresc %}
+{# ETAP 165: kilka powiatów (plików RCN) obok siebie — liczby z ceny/rcn.py #}
+{% set dzialki = co == 'dzialki' %}
+<div class="raport-cen">
+    <div class="raport-cen__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('ceny.transakcje', co=co) }}">‹ Transakcje</a>
+        {% if zestawienie %}<button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>{% endif %}
+    </div>
+
+    <section class="raport-cen__strona zestawienie-rcn__wybor">
+        <h1>Zestawienie plików RCN</h1>
+        <p class="wyciszony opis-cen">Pliki różnych powiatów obok siebie, z tymi samymi filtrami. Każdy plik liczony osobno — transakcje się nie mieszają. Różnica mediany — wobec pierwszego zaznaczonego pliku.</p>
+        {% if pliki | length < 2 %}
+        <p class="komunikat">Do zestawienia potrzeba co najmniej dwóch zaimportowanych plików (np. miasto i powiat ościenny) — zaimportuj je w module Ceny → Transakcje.</p>
+        {% else %}
+        <form method="get" class="stos" id="formularz-zestawienia">
+            <fieldset class="wybor-plikow-rcn">
+                <legend>Pliki (od 2 do {{ maks }})</legend>
+                {% for p in pliki %}
+                <label><input type="checkbox" name="pliki" value="{{ p.id }}" {{ 'checked' if p.id in wybrane }}> {{ p.nazwa }} <span class="wyciszony">{{ p.liczba }} lokali · {{ p.liczba_dzialek }} działek</span></label>
+                {% endfor %}
+            </fieldset>
+            <div class="rzad">
+                <label>Co <select name="co">
+                    <option value="lokale" {{ 'selected' if not dzialki }}>mieszkania</option>
+                    <option value="dzialki" {{ 'selected' if dzialki }}>działki</option>
+                </select></label>
+                <label>Rynek <select name="rynek">
+                    <option value="">wszystkie</option>
+                    {% for r in rynki %}<option value="{{ r }}" {{ 'selected' if filtry.rynek == r }}>{{ r }}</option>{% endfor %}
+                </select></label>
+                <label>Od roku <input type="number" name="od" min="2000" max="2100" value="{{ filtry.od_roku or '' }}"></label>
+                <label>Do roku <input type="number" name="do" min="2000" max="2100" value="{{ filtry.do_roku or '' }}"></label>
+                <button type="submit">Zestaw</button>
+            </div>
+        </form>
+        {% endif %}
+        {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+    </section>
+
+    {% if zestawienie %}
+    <section class="raport-cen__strona">
+        <h2>Ceny transakcyjne {{ 'działek' if dzialki else 'mieszkań' }}</h2>
+        <p class="wyciszony">{% if filtry.rynek %}rynek {{ filtry.rynek }} · {% endif %}{% if filtry.od_roku or filtry.do_roku %}lata {{ filtry.od_roku or '…' }}–{{ filtry.do_roku or '…' }} · {% endif %}{{ zestawienie.pliki | length }} pliki</p>
+        <div class="przewijanie-cen">
+        <table class="tabela" id="tabela-zestawienia">
+            <tr><th>Plik / obszar</th><th class="liczba">Transakcji</th><th class="liczba">Mediana za m²</th><th class="liczba">Połowa transakcji</th><th class="liczba">Różnica</th><th class="liczba">Mediana powierzchni</th><th class="liczba">Mediana ceny</th></tr>
+            {% for p in zestawienie.pliki %}
+            <tr class="raport-cen__calosc"><td><strong style="color: {{ p.kolor }}">{{ loop.index }}</strong> {{ p.nazwa }}</td><td class="liczba">{{ p.liczba }}</td>
+                {% if p.liczba %}<td class="liczba">{{ z(p.mediana_m2) }} zł</td><td class="liczba">{{ z(p.q1_m2) }}–{{ z(p.q3_m2) }}</td><td class="liczba">{{ proc(p.wobec_pierwszego_proc) if p.wobec_pierwszego_proc is defined else ('punkt odniesienia' if loop.first else '—') }}</td><td class="liczba">{{ z(p.mediana_pow, 1) }} m²</td><td class="liczba">{{ z(p.mediana_ceny) }} zł</td>
+                {% else %}<td colspan="5" class="wyciszony">brak transakcji przy tych filtrach</td>{% endif %}</tr>
+            {% for o in p.obszary %}
+            <tr><td class="zestawienie-rcn__obszar">{{ o.nazwa }}</td><td class="liczba">{{ o.liczba }}</td>
+                {% if o.liczba %}<td class="liczba">{{ z(o.mediana_m2) }} zł</td><td class="liczba">{{ z(o.q1_m2) }}–{{ z(o.q3_m2) }}</td><td class="liczba">{{ proc(o.wobec_calosci_proc) }} <span class="wyciszony">wobec pliku</span></td><td class="liczba">{{ z(o.mediana_pow, 1) }} m²</td><td class="liczba">{{ z(o.mediana_ceny) }} zł</td>
+                {% else %}<td colspan="5" class="wyciszony">brak transakcji w obszarze</td>{% endif %}</tr>
+            {% endfor %}
+            {% endfor %}
+        </table>
+        </div>
+
+        {% if zestawienie.lata %}
+        <h3>Mediana ceny za m² w latach [zł]</h3>
+        <div class="raport-cen__mapa">{{ wykres }}</div>
+        <p class="wyciszony opis-cen">Numery jak w tabeli. Pusty punkt: w tym roku mniej niż {{ min_w_roku }} transakcji w pliku, mediana niepewna.</p>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Plik</th>{% for r in zestawienie.lata %}<th class="liczba">{{ r }}</th>{% endfor %}</tr>
+            {% for p in zestawienie.pliki %}<tr><td><strong style="color: {{ p.kolor }}">{{ loop.index }}</strong> {{ p.nazwa }}</td>{% for r in zestawienie.lata %}<td class="liczba">{{ z((p.lata or {}).get(r)) }}</td>{% endfor %}</tr>{% endfor %}
+        </table>
+        </div>
+        {% endif %}
+        <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK) — ceny brutto z aktów notarialnych{{ '; przy działce zabudowanej cena obejmuje budynek' if dzialki }}. Powiaty prowadzą rejestr z różną kompletnością — liczba transakcji mówi, na ile mediana jest pewna.</p>
+    </section>
+    {{ stopka_wydruku("Ceny", "Rejestr Cen Nieruchomości (GUGiK), pliki " ~ (zestawienie.pliki | map(attribute='nazwa') | join(', '))) }}
+    {% endif %}
+</div>
+{% endblock %}

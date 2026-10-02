@@ -544,6 +544,45 @@ def test_trasa_okolicy(client, tmp_path, monkeypatch):
         assert 'URL_CENY_OKOLICA = "/ceny/okolica"' in client.get(strona).get_data(as_text=True)
 
 
+# ---------- ETAP 165: zestawienie plików różnych powiatów ----------
+
+
+def test_zestawienie_plikow():
+    lokale = lambda ceny: [{"rok": 2023 + i % 2, "rynek": "wtórny", "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50.0, "lat": 50.0, "lng": 19.9}
+                           for i, c in enumerate(ceny)]
+    obszar = {"id": 7, "nazwa": "Centrum", "geometria": prostokat(19.8, 49.9, 20.0, 50.1)}
+    z = rcn.zestawienie_plikow([("krakow.gpkg", lokale([10000, 12000, 14000]), [obszar]), ("wieliczka.gpkg", lokale([9000, 9000]), []),
+                                ("pusty.gpkg", [], [])])
+    krakow, wieliczka, pusty = z["pliki"]
+    assert krakow["mediana_m2"] == 12000 and "wobec_pierwszego_proc" not in krakow and krakow["obszary"][0]["liczba"] == 3
+    assert wieliczka["wobec_pierwszego_proc"] == pytest.approx(-25.0) and wieliczka["kolor"] != krakow["kolor"]
+    assert pusty["liczba"] == 0 and "wobec_pierwszego_proc" not in pusty
+    assert z["lata"] == [2023, 2024]
+    svg = rcn.wykres_plikow_svg(z)
+    assert svg.count("<polyline") == 2 and "stroke-dasharray" not in svg  # linia na plik z danymi, bez „całego pliku”
+
+
+def test_trasa_zestawienia(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    krakow, wieliczka = str(pobrane / "krakow.gpkg"), str(pobrane / "wieliczka.gpkg")
+    plik_rcn(krakow, [lokal(i, lok_cena_brutto=600000) for i in range(1, 5)])
+    plik_rcn(wieliczka, [lokal(i, lok_cena_brutto=450000) for i in range(1, 3)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    url = "/ceny/transakcje/zestawienie"
+    assert "co najmniej dwóch zaimportowanych" in client.get(url).get_data(as_text=True)
+    for s in (krakow, wieliczka):
+        client.post("/ceny/transakcje/import", data={"sciezka": s})
+    assert 'id="link-zestawienia"' in client.get("/ceny/transakcje").get_data(as_text=True)
+    strona = client.get(url).get_data(as_text=True)
+    assert 'name="pliki"' in strona and "tabela-zestawienia" not in strona  # sam formularz
+    assert "co najmniej dwa" in client.get(url + "?pliki=1").get_data(as_text=True)
+    wynik = client.get(url + "?pliki=1&pliki=2&pliki=1").get_data(as_text=True)
+    assert 'id="tabela-zestawienia"' in wynik and "krakow.gpkg" in wynik and "wieliczka.gpkg" in wynik and "stopka-wydruku" in wynik
+    assert "-25,0%" in wynik  # 9 000 wobec 12 000 zł/m² (lokal 50 m²)
+    assert client.get(url + "?pliki=1&pliki=2&rynek=zły").status_code == 400
+
+
 # ---------- ETAP 110: trend cen w obszarach ----------
 
 

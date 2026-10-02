@@ -949,3 +949,6 @@
 
 ## ETAP 164 — 2026-10-02
 - Osiedle: stawka gruntu podpowiadana z mediany cen działek niezabudowanych (RCN)
+
+## ETAP 165 — 2026-10-02
+- Ceny: zestawienie 2–4 plików RCN (powiatów) obok siebie, z wykresem w latach

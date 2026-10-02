@@ -490,3 +490,41 @@
     display: block;
     margin: 0 auto;
 }
+
+/* ---------- zestawienie plików RCN (ETAP 165) ---------- */
+.wybor-plikow-rcn {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 14px;
+}
+
+.wybor-plikow-rcn label {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+}
+
+.wybor-plikow-rcn legend {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+#formularz-zestawienia input[type="number"] {
+    width: 6.5em;
+}
+
+.zestawienie-rcn__obszar {
+    padding-left: 28px;
+}
+
+@media print {
+    .zestawienie-rcn__wybor {
+        display: none;
+    }
+}
