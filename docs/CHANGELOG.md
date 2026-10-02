@@ -904,3 +904,6 @@
 
 ## ETAP 149 — 2026-10-02
 - Dokumentacja: README i portfolio po ETAPach 120–148
+
+## ETAP 150 — 2026-10-02
+- Podsumowanie ETAPów 110–150 i plan 151–200 (docs/PODSUMOWANIE_110-150.md)

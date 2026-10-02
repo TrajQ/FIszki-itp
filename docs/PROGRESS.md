@@ -2613,3 +2613,17 @@ Status: zamknięty
   95%, 75 stron w przeglądzie), dwa nowe zrzuty do zrobienia, English summary
 - Pomoc: wpisy do funkcji z ETAPów 120–148 dodawane na bieżąco — sprawdzone
 - `DECISIONS.md`: D-157
+
+## ETAP 150 — Podsumowanie ETAPów 110–150 i plan 151–200
+Data: 2026-10-02
+Status: zamknięty
+
+- `docs/PODSUMOWANIE_110-150.md`: liczby przed i po (testy 494 → 554,
+  pokrycie 95%, decyzje 117 → 158, przegląd 75 stron, start 0,87 → 0,42 s),
+  co doszło w każdym module, błędy znalezione przez przeglądy i testy,
+  sprawy otwarte dla autora (SpatiaLite w CLAUDE.md, zrzuty i akapit
+  w portfolio, pierwsze uruchomienie na prawdziwych usługach)
+- Plan: ETAPy 151–170 konkretnie (z uzasadnieniem), 171–200 jako kierunki
+  do doprecyzowania po przeglądzie w ETAPie 170
+- Link w README
+- `DECISIONS.md`: D-158

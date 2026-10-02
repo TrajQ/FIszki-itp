@@ -3226,3 +3226,18 @@ obce osoby — liczby muszą się zgadzać z kodem.
 **Odrzucone alternatywy:**
 - Liczby generowane automatycznie w dokumencie — kolejny skrypt do
   utrzymania przy aktualizacji raz na kilkadziesiąt ETAPów.
+
+## D-158 — Plan kolejnych ETAPów: dwadzieścia konkretnie, reszta kierunkami
+Data: 2026-10-02
+
+**Decyzja:** Plan na ETAPy 151–200 rozpisuje konkretnie tylko 151–170
+(co i dlaczego), a 171–200 jako kierunki. Szczegóły dalszej części powstaną
+po przeglądzie w ETAPie 170.
+
+**Uzasadnienie:** Plan ETAPów 121–150 zmieniał się w trakcie (np. przegląd
+stron wyłapał błędy wyszukiwarki, przegląd kodu — dymki map). Rozpisanie 50
+pozycji z góry dawałoby listę, która po drodze przestaje odpowiadać
+temu, co wychodzi w użyciu.
+
+**Odrzucone alternatywy:**
+- Pełna lista 50 ETAPów — sztywna i w połowie nieaktualna przed realizacją.
