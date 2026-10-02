@@ -3419,3 +3419,18 @@ map byłoby mylące. Wspólne klasy pokazują zmianę wprost.
 **Odrzucone alternatywy:**
 - Mapa zmiany między dwoma latami — już jest (widok „Zmiana”); małe mapy
   pokazują przebieg w kilku punktach czasu.
+
+## D-170 — Zestawienie działek z danych zapisanych, bez pobierania na nowo
+Data: 2026-10-02
+
+**Decyzja:** Zestawienie „Moich działek” korzysta wyłącznie z tego, co
+zapisano razem z działką (przeznaczenie, powierzchnia, punkt), i mówi to
+w przypisie. Pełne, aktualne dane daje porównanie działek (pobiera na
+nowo) i karta działki.
+
+**Uzasadnienie:** Zestawienie ma działać od razu i bez sieci (np. przed
+spotkaniem), także dla kilkudziesięciu działek, które w porównaniu
+oznaczałyby kilkadziesiąt zapytań do ULDK i WFS.
+
+**Odrzucone alternatywy:**
+- Obrysy działek na schemacie — wymagałyby pobrania geometrii z ULDK.

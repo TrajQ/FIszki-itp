@@ -7,10 +7,12 @@ mpzp/routes.py na końcu pliku).
 import csv
 import io
 
-from flask import Response, jsonify, request
+from flask import Response, jsonify, render_template, request
+from markupsafe import Markup
 
 from dane.uldk import WZOR_ID_DZIALKI
 
+from . import zestawienie
 from .baza import usun_zapisana, zapisane, zapisz_dzialke
 from .liczby import liczba_skonczona
 from .routes import mpzp_bp
@@ -55,6 +57,17 @@ def usun_z_zapisanych():
     if not usun_zapisana(request.args.get("id", "")):
         return jsonify({"blad": "Tej działki nie ma w „Moich działkach”."}), 404
     return jsonify({"ok": True})
+
+
+@mpzp_bp.route("/zapisane/druk")
+def zapisane_druk():
+    """ETAP 162: wszystkie „Moje działki” na kartce — z zapisanych danych, bez sieci."""
+    dzialki = zestawienie.wiersze(list(reversed(zapisane())))  # od najstarszej — numery się nie przesuwają
+    return render_template(
+        "mpzp/zestawienie.html", dzialki=dzialki, grupy=zestawienie.wedlug_przeznaczenia(dzialki),
+        suma_m2=sum(d["powierzchnia_m2"] or 0 for d in dzialki),
+        schemat=Markup(zestawienie.schemat_svg(dzialki)),  # tylko liczby, kolory i escapowane identyfikatory
+    )
 
 
 @mpzp_bp.route("/zapisane.csv")

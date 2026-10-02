@@ -2799,3 +2799,16 @@ Status: zamknięty
 - Testy: arkusz, gmina bez danych w jednym roku, złe lata, 404, strona
 - Sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-169
+
+## ETAP 162 — MPZP: zestawienie „Moich działek” do druku
+Data: 2026-10-02
+Status: zamknięty
+
+- `mpzp/zestawienie.py`: działki z numerem (od najstarszego zapisu),
+  opisem przeznaczenia ze słownika symboli i współrzędnymi PL-2000;
+  suma powierzchni według przeznaczenia (nieznana powierzchnia to nie
+  0 m²); schemat położenia SVG z numerami i podziałką
+- Trasa `/mpzp/zapisane/druk` — z danych zapisanych, bez zapytań do
+  ULDK i planów; link „Druk ↗” w panelu „Moje działki”; stopka wydruku
+- Test; sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-170

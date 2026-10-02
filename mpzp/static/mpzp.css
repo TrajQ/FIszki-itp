@@ -1029,3 +1029,17 @@ button.wpis-zapisany {
 .ceny-okolicy__tabela td {
     white-space: nowrap;
 }
+
+/* ETAP 162: zestawienie „Moich działek” do druku */
+.przewijanie-zestawienia {
+    overflow-x: auto;
+}
+
+.raport__schemat svg {
+    width: 100%;
+    height: auto;
+}
+
+.bez-lamania {
+    white-space: nowrap;
+}

@@ -932,3 +932,25 @@ def test_eksport_dxf_bez_wfs_z_kimpzp(client, monkeypatch):
     monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: [ObiektPlanu("w", {"symbol": "U", "tytul": "Plan X"})])
     tekst = client.get("/mpzp/eksport.dxf?id=146501_1.0001.AR_1.1&uklad=pl1992").get_data(as_text=True)
     assert "\nAR_1.1 (" in tekst and " m2) U\n" in tekst  # numer działki, pole i przeznaczenie z KIMPZP
+
+
+# ---------- ETAP 162: zestawienie „Moich działek” do druku ----------
+
+
+def test_zestawienie_zapisanych_dzialek(tmp_path):
+    from app import create_app
+    app = create_app(instance_path=str(tmp_path))
+    app.config.update(TESTING=True)
+    with app.test_client() as c:
+        assert "Nie masz jeszcze zapisanych działek" in c.get("/mpzp/zapisane/druk").get_data(as_text=True)
+        with app.app_context():
+            from mpzp.baza import zapisz_dzialke
+            zapisz_dzialke("306401_1.0051.AR_18.14", "1MN", 52.40, 16.92, 812.4, "dla klienta A")
+            zapisz_dzialke("306401_1.0051.AR_18.15", "2MN/U", 52.401, 16.921, 1200.0, "")
+            zapisz_dzialke("306401_1.0051.AR_18.16", None, 52.402, 16.925, None, "")
+        html = c.get("/mpzp/zapisane/druk").get_data(as_text=True)
+    assert "3 działki · łącznie 2 012 m²" in html and "dla klienta A" in html and "bez planu w danych" in html
+    assert "MN — " in html and "strefa 6" in html and "<svg" in html and html.count("<circle") == 3
+    assert "stopka-wydruku" in html and "nie jest wypisem" in html
+    # numery od najstarszego zapisu
+    assert html.index("306401_1.0051.AR_18.14") < html.index("306401_1.0051.AR_18.16")

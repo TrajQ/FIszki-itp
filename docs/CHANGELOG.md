@@ -940,3 +940,6 @@
 
 ## ETAP 161 — 2026-10-02
 - Atlas: mapy jednego wskaźnika w kilku latach obok siebie, we wspólnych klasach
+
+## ETAP 162 — 2026-10-02
+- MPZP: wszystkie zapisane działki na jednej kartce

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+
+{% block tytul %}Moje działki — zestawienie — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
+
+{% macro m2(x) %}{% if x is none %}—{% else %}{{ '{:,.0f}'.format(x).replace(',', ' ') }}{% endif %}{% endmacro %}
+
+{% block tresc %}
+<div class="raport">
+    <div class="raport__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa działek</a>
+        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+    </div>
+    <h1>Moje działki — zestawienie</h1>
+    {% if not dzialki %}
+    <p class="karta pusty-stan">Nie masz jeszcze zapisanych działek. Na mapie kliknij działkę i użyj „☆ Zapisz do moich działek”.</p>
+    {% else %}
+    <p class="wyciszony">{{ dzialki | length }} {{ 'działka' if dzialki | length == 1 else ('działki' if dzialki | length % 10 in [2, 3, 4] and dzialki | length % 100 not in [12, 13, 14] else 'działek') }} · łącznie {{ m2(suma_m2) }} m²</p>
+    <div class="raport__schemat">{{ schemat }}</div>
+    <p class="wyciszony przypis">Schemat położenia (bez podkładu): numery jak w tabeli.</p>
+
+    <div class="przewijanie-zestawienia"><table class="tabela">
+        <tr><th class="liczba">Nr</th><th>Działka</th><th>Przeznaczenie</th><th class="liczba">Pow. [m²]</th><th>Notatka</th><th class="liczba">PL-2000 x, y [m]</th><th>Zapisano</th></tr>
+        {% for d in dzialki %}
+        <tr><td class="liczba">{{ d.nr }}</td><td class="identyfikator">{{ d.dzialka_id }}</td>
+            <td>{% if d.przeznaczenie %}<strong>{{ d.przeznaczenie }}</strong>{% if d.opis_przeznaczenia %}<br><span class="wyciszony">{{ d.opis_przeznaczenia }}</span>{% endif %}{% else %}<span class="wyciszony">bez planu w danych</span>{% endif %}</td>
+            <td class="liczba">{{ m2(d.powierzchnia_m2) }}</td><td>{{ d.notatka }}</td>
+            <td class="liczba bez-lamania">{{ '%.1f' % d.x2000 }}<br>{{ '%.1f' % d.y2000 }}<br><span class="wyciszony">strefa {{ d.uklad[-1] }}</span></td><td class="bez-lamania">{{ d.data_dodania[:10] }}</td></tr>
+        {% endfor %}
+    </table></div>
+
+    <h2>Według przeznaczenia</h2>
+    <table class="tabela">
+        <tr><th>Przeznaczenie</th><th class="liczba">Działek</th><th class="liczba">Pow. [m²]</th><th class="liczba">Udział</th></tr>
+        {% for g in grupy %}
+        <tr><td>{{ g.przeznaczenie or 'bez planu w danych' }}</td><td class="liczba">{{ g.liczba }}</td><td class="liczba">{{ m2(g.pow_m2) }}</td><td class="liczba">{% if suma_m2 and g.pow_m2 is not none %}{{ ('%.1f' % (100 * g.pow_m2 / suma_m2)).replace('.', ',') }}%{% else %}—{% endif %}</td></tr>
+        {% endfor %}
+    </table>
+    <p class="wyciszony przypis">Przeznaczenie i powierzchnia z chwili zapisania działki (ULDK, plan miejscowy albo integracja planów GUGiK). Zestawienie nie jest wypisem ani wyrysem z planu.</p>
+    {% endif %}
+    {{ stopka_wydruku("MPZP", "zapisane działki (ULDK, plany miejscowe — GUGiK)") }}
+</div>
+{% endblock %}

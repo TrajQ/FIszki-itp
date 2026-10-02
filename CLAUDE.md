@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 161 (Atlas: mapy w kilku latach — zamknięty)
-Ostatni ZIP: releases/warsztat_etap161_20261002.zip
-Testy: 571 passed / 0 failed
+ETAP: 162 (MPZP: zestawienie moich działek — zamknięty)
+Ostatni ZIP: releases/warsztat_etap162_20261002.zip
+Testy: 572 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).
