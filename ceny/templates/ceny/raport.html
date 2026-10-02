@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 {% macro z(x, miejsca=0) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
 
 {% block tytul %}Raport cen transakcyjnych — {{ plik.nazwa }} — Warsztat{% endblock %}
@@ -107,7 +108,8 @@
         </table>
         </div>
         {% endif %}
-        <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK) — ceny brutto z aktów notarialnych, {{ 'działki (powierzchnia z obrysu w pliku; przy nieruchomości zabudowanej cena obejmuje budynek)' if dzialki else 'lokale mieszkalne' }}; pominięte przy imporcie: {% for k, v in odrzucone.items() %}{{ k }} ({{ v }}){{ ', ' if not loop.last }}{% else %}nic{% endfor %}. Statystyki: Warsztat, {{ dzis }}. Mediana i kwartyle — połowa transakcji mieści się w podanym przedziale.</p>
+        <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK) — ceny brutto z aktów notarialnych, {{ 'działki (powierzchnia z obrysu w pliku; przy nieruchomości zabudowanej cena obejmuje budynek)' if dzialki else 'lokale mieszkalne' }}; pominięte przy imporcie: {% for k, v in odrzucone.items() %}{{ k }} ({{ v }}){{ ', ' if not loop.last }}{% else %}nic{% endfor %}. Mediana i kwartyle — połowa transakcji mieści się w podanym przedziale.</p>
     </section>
+    {{ stopka_wydruku("Ceny", "Rejestr Cen Nieruchomości (GUGiK), plik " ~ plik.nazwa) }}
 </div>
 {% endblock %}

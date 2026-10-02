@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 
 {% block tytul %}{{ projekt.nazwa }} — raport z terenu — Warsztat{% endblock %}
 {% block klasa_body %}strona-raportu-terenu{% endblock %}
@@ -120,6 +121,6 @@
         </div>
     </section>
     {% endif %}
-    <p class="wyciszony przypis">Raport z modułu Teren aplikacji Warsztat. Położenie: GPS telefonu (WGS84).</p>
+    {{ stopka_wydruku("Teren", "pomiary w terenie; położenie — GPS telefonu (WGS84)") }}
 </div>
 {% endblock %}

@@ -647,6 +647,33 @@ input[type="file"]::file-selector-button {
     }
 }
 
+/* ---------- Stopka stron do druku (ETAP 142, templates/_wydruk.html) ---------- */
+
+.stopka-wydruku {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px solid var(--linia);
+    color: var(--tekst-drugi);
+    font-size: 12px;
+}
+
+.stopka-wydruku span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media print {
+    .stopka-wydruku {
+        break-inside: avoid;
+        color: #555;
+        border-top-color: #bbb;
+    }
+}
+
 /* ---------- Wróć do pracy: ostatnio używane (ETAP 141) ---------- */
 
 .ostatnie {

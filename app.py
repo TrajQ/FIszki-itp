@@ -78,6 +78,9 @@ def create_app(instance_path=None):
     app.teardown_appcontext(close_db_teren)
     app.teardown_appcontext(close_db_ceny)
 
+    # ETAP 142: data i godzina w stopce wydruków (templates/_wydruk.html)
+    app.jinja_env.globals["teraz_wydruku"] = lambda: datetime.now().strftime("%d.%m.%Y, %H:%M")
+
     @app.route("/")
     def index():
         # Każdy moduł sam liczy swoje podsumowanie; strona główna tylko je

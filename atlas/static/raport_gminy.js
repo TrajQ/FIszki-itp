@@ -180,6 +180,5 @@
     if (mapaPolozenia.complete && mapaPolozenia.naturalWidth === 0) brakMapy();
     else mapaPolozenia.addEventListener("error", brakMapy);
 
-    document.getElementById("data-raportu").textContent = new Date().toLocaleDateString("pl-PL");
     wczytajWszystkie();
 })();

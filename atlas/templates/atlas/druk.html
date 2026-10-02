@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 
 {% block tytul %}Mapa do druku — Atlas{% endblock %}
 {% block klasa_body %}strona-druku-mapy{% endblock %}
@@ -18,5 +19,6 @@
     <img id="mapa-druk" class="druk-mapy__obraz" src="{{ url_for('atlas.mapa_do_druku_svg', **parametry) }}"
          alt="Kartogram do druku" onerror="document.getElementById('blad-druku').hidden = false; this.hidden = true;">
     <p id="blad-druku" class="komunikat komunikat--blad" hidden>Nie udało się przygotować mapy (brak danych albo granic gmin). Wróć do atlasu i sprawdź, czy mapa wyświetla się na ekranie.</p>
+    {{ stopka_wydruku("Atlas", "GUS, Bank Danych Lokalnych; granice gmin — PRG (GUGiK)") }}
 </div>
 {% endblock %}

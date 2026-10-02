@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 {% macro z(x, miejsca=0) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
 {% macro proc(x) %}{{ ('%+.1f' % x) | replace('.', ',') }}%{% endmacro %}
 {% macro zmiana(c) %}{% if not c %}—{% elif c.zmiana_proc is none %}{{ z(c.zmiana) }}{% else %}{{ proc(c.zmiana_proc) }}{% endif %}{% endmacro %}
@@ -69,7 +70,7 @@
         </div>
         <p class="wyciszony opis-cen">Ile m² mieszkania kosztuje tyle, co jedno przeciętne miesięczne wynagrodzenie brutto w tym samym powiecie. Uproszczenie do porównań: bez kredytu, podatków i kosztów życia.</p>
         {% endif %}
-        <p class="wyciszony opis-cen">Źródło: GUS, Bank Danych Lokalnych. Raport z modułu Ceny aplikacji Warsztat.</p>
     </section>
+    {{ stopka_wydruku("Ceny", "GUS, Bank Danych Lokalnych") }}
 </div>
 {% endblock %}

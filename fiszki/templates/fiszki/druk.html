@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 
 {% block tytul %}Fiszki do druku — Warsztat{% endblock %}
 {% block klasa_body %}strona-druku{% endblock %}
@@ -35,5 +36,6 @@
     {% else %}
     <div class="karta pusty-stan">Brak fiszek do wydrukowania.</div>
     {% endif %}
+    {{ stopka_wydruku("Fiszki") }}
 </div>
 {% endblock %}

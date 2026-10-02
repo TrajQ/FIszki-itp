@@ -13,7 +13,6 @@ import io
 import json
 import os
 import tempfile
-from datetime import date
 
 from flask import Response, abort, jsonify, redirect, render_template, request, url_for
 from markupsafe import Markup
@@ -241,7 +240,6 @@ def raport_transakcji(plik_id):
         mapa=Markup(rcn.mapa_svg(lokale, obszary, mapa["progi"], rcn.KOLORY_KLAS)),  # tylko liczby i kolory z kodu
         progi=mapa["progi"],
         kolory=rcn.KOLORY_KLAS,
-        dzis=date.today().isoformat(),
     )
 
 
@@ -301,7 +299,7 @@ def karta_wyceny(plik_id):
     return render_template(
         "ceny/wycena.html", plik=plik, p=p, wynik=wynik, opis_filtrow=opis_filtrow,
         mapa=Markup(rcn.mapa_wyceny_svg(wynik, p["lat"], p["lng"])),  # tylko liczby i kolory z kodu
-        powrot=url_for("ceny.transakcje", plik=plik_id, co=p["co"]), dzis=date.today().isoformat(),
+        powrot=url_for("ceny.transakcje", plik=plik_id, co=p["co"]),
     )
 
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 {% from "osiedle/_liczby.html" import m %}
 
 {% block tytul %}{{ k.nazwa }} — raport koncepcji — Warsztat{% endblock %}
@@ -136,6 +137,7 @@
         <div class="tabela-cen-okolicy-wrap"><table class="tabela" id="tabela-cen-okolicy"></table></div>
         <p class="wyciszony raport-osiedla__stopka" id="zrodlo-cen-okolicy"></p>
     </section>
+    {{ stopka_wydruku("Osiedle") }}
 </div>
 {% endblock %}
 

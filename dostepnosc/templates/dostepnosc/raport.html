@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 
 {% block tytul %}Raport dostępności — Warsztat{% endblock %}
 {% block klasa_body %}strona-raportu-dostepnosci{% endblock %}
@@ -73,5 +74,6 @@
 
         <p class="przypis">{% for p in r.przypisy %}{{ p }} {% endfor %}</p>
     </section>
+    {{ stopka_wydruku("Dostępność") }}
 </div>
 {% endblock %}

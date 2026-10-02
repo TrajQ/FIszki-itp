@@ -3094,3 +3094,21 @@ kilku rzeczy; dotąd trzeba było wejść w moduł i wybrać z listy.
   każdym wejściu oznaczałby nową tabelę i zapisy przy odczycie.
 - Atlas i Dostępność w sekcji — nie przechowują dat zmian (cache GUS i
   pliki wyników); dodawanie ich tylko dla tej sekcji to zbędna zmiana schematu.
+
+## D-150 — Jedna stopka wydruków jako makro Jinja
+Data: 2026-10-02
+
+**Decyzja:** Strony do druku kończą się wspólnym makrem
+`stopka_wydruku` z `templates/_wydruk.html`. Stopka stoi na końcu
+dokumentu, nie na każdej kartce. Test pilnuje, żeby nowa strona z
+przyciskiem „Drukuj” jej nie pominęła.
+
+**Uzasadnienie:** Dopiski o źródle i dacie były w każdym raporcie inne
+(albo ich nie było); wydruk do pracy semestralnej musi mówić, skąd są dane
+i z którego dnia. To dziesięć stron w ośmiu modułach — wspólny element ma
+tu sens (zasada „bez abstrakcji dla dwóch modułów” nie dotyczy).
+
+**Odrzucone alternatywy:**
+- Stopka na każdej stronie (`position: fixed` albo `@page` z polami
+  marginesu) — `fixed` nachodzi na treść, pola marginesu nie działają w
+  Firefoksie, domyślnej przeglądarce Linux Mint.

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 
 {% block tytul %}Karta działki {{ dzialka.id }} — Warsztat{% endblock %}
 {% block klasa_body %}strona-raportu{% endblock %}
@@ -124,6 +125,7 @@
         orientacyjny. <strong>Raport nie jest wypisem ani wyrysem z planu miejscowego</strong> —
         wiążący jest tekst i rysunek uchwały.
     </footer>
+    {{ stopka_wydruku("MPZP") }}
 </div>
 {% endblock %}
 

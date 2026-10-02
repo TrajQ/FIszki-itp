@@ -1,0 +1,9 @@
+{# ETAP 142: wspólna stopka stron do druku — skąd wydruk, z jakich danych i kiedy.
+   Użycie: {% from "_wydruk.html" import stopka_wydruku %} … {{ stopka_wydruku("Ceny", "GUS, Bank Danych Lokalnych") }} #}
+{% macro stopka_wydruku(modul, zrodlo=none) %}
+<footer class="stopka-wydruku">
+    <span>Warsztat · moduł {{ modul }}</span>
+    {% if zrodlo %}<span>Źródło: {{ zrodlo }}</span>{% endif %}
+    <span>Wygenerowano {{ teraz_wydruku() }}</span>
+</footer>
+{% endmacro %}

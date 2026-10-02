@@ -2474,3 +2474,18 @@ Status: zamknięty
   w Terenie zawężony do sekcji terminów
 - Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
 - `DECISIONS.md`: D-149
+
+## ETAP 142 — Wydruki: spójna stopka
+Data: 2026-10-02
+Status: zamknięty
+
+- `templates/_wydruk.html`: makro `stopka_wydruku(modul, zrodlo)` —
+  „Warsztat · moduł …”, źródło danych, „Wygenerowano dd.mm.rrrr, gg:mm”
+  (globalna funkcja Jinja `teraz_wydruku`)
+- Stopka na 10 stronach do druku: Atlas (raport gminy, mapa do druku),
+  MPZP, Fiszki, Dostępność, Osiedle, Teren, Ceny (raport, wycena, raport
+  miast); usunięte powtarzające się dopiski „Raport z modułu…” /
+  „Opracowanie: Warsztat, data” i data wstawiana przez JS w raporcie gminy
+- Test: każda strona z „Drukuj” ma stopkę; treść i format daty
+- Przegląd stron: 70 stron, 0 problemów
+- `DECISIONS.md`: D-150

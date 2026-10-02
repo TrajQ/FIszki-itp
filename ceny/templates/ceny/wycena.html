@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 {% macro z(x, miejsca=0) %}{% if x is none %}—{% else %}{% set s = '{:,.{}f}'.format(x, miejsca) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
 
 {% block tytul %}Wycena porównawcza — {{ plik.nazwa }} — Warsztat{% endblock %}
@@ -47,8 +48,9 @@
         </table>
         </div>
         {% if wynik.liczba > wynik.transakcje | length %}<p class="wyciszony opis-cen">W tabeli {{ wynik.transakcje | length }} najbliższych z {{ wynik.liczba }}; mediana ze wszystkich.</p>{% endif %}
-        <p class="wyciszony opis-cen"><strong>To nie jest operat szacunkowy.</strong> Cena orientacyjna = mediana ceny za m² podobnych transakcji × powierzchnia, bez korekt na stan, piętro, standard ani datę transakcji. Przedział „połowa” — od pierwszego do trzeciego kwartyla. Źródło: Rejestr Cen Nieruchomości (GUGiK), plik {{ plik.nazwa }}, ceny brutto z aktów notarialnych. Opracowanie: Warsztat, {{ dzis }}.</p>
+        <p class="wyciszony opis-cen"><strong>To nie jest operat szacunkowy.</strong> Cena orientacyjna = mediana ceny za m² podobnych transakcji × powierzchnia, bez korekt na stan, piętro, standard ani datę transakcji. Przedział „połowa” — od pierwszego do trzeciego kwartyla.</p>
     </section>
     {% endif %}
+    {{ stopka_wydruku("Ceny", "Rejestr Cen Nieruchomości (GUGiK), plik " ~ plik.nazwa ~ ", ceny brutto z aktów notarialnych") }}
 </div>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 
 {% block tytul %}{{ gmina.nazwa if gmina else 'Raport gminy' }} — raport gminy — Warsztat{% endblock %}
 {% block klasa_body %}strona-raportu-gminy{% endblock %}
@@ -81,9 +82,9 @@
             </details>
         </section>
         {% endif %}
-        <p class="wyciszony przypis raport-gminy__zrodlo">Źródło danych: GUS, Bank Danych Lokalnych (bdl.stat.gov.pl). Raport z Warsztatu, <span id="data-raportu"></span>.</p>
     </section>
     {% endif %}
+    {{ stopka_wydruku("Atlas", "GUS, Bank Danych Lokalnych (bdl.stat.gov.pl)") }}
 </div>
 {% endblock %}
 

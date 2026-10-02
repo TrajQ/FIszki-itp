@@ -880,3 +880,6 @@
 
 ## ETAP 141 — 2026-10-02
 - Strona główna: „Wróć do pracy” — ostatnio używane ze wszystkich modułów
+
+## ETAP 142 — 2026-10-02
+- Wydruki: wspólna stopka (moduł, źródło danych, data wygenerowania)
