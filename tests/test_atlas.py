@@ -1382,3 +1382,38 @@ def test_mapy_w_latach(client, monkeypatch):
     assert client.get(f"/atlas/lata.svg?{ZAPYTANIE}&lata=2016,2023").status_code == 404  # 2016 bez danych (2023 z cache) — jeden rok to za mało
     strona = client.get(f"/atlas/lata?{ZAPYTANIE}").get_data(as_text=True)
     assert 'value="2014,2017,2020,2023"' in strona and "stopka-wydruku" in strona
+
+
+# ---------- ETAP 171: kilka gmin w czasie ----------
+
+
+def test_wykres_gmin_svg():
+    from atlas.wykres_svg import _ladna_os, wykres_gmin_svg
+
+    serie = [{"szereg": [{"rok": r, "wartosc": v} for r, v in [(2015, 10.0), (2016, 12.0), (2017, 15.0)]], "kolor": "#0071e3"},
+             {"szereg": [{"rok": r, "wartosc": v} for r, v in [(2015, 2.0), (2017, 3.0)]], "kolor": "#ff9500"}]
+    svg = wykres_gmin_svg(serie)
+    assert svg.count("<polyline") == 1  # druga seria bez 2016 — linia przerwana, same punkty
+    assert svg.count("<circle") == 5 and ">2016</text>" in svg and ">0</text>" in svg  # oś od zera (dane blisko zera)
+    assert ">1</text>" in svg and ">2</text>" in svg  # numery linii
+    assert "za mało lat" in wykres_gmin_svg([{"szereg": [{"rok": 2020, "wartosc": 1.0}], "kolor": "#000"}])
+    assert _ladna_os(803, 1217) == (800, 1300, 100)
+
+
+def test_strona_gmin_w_czasie(client, monkeypatch):
+    szeregi = {"011212161011": [{"rok": 2021, "wartosc": 800000.0}, {"rok": 2022, "wartosc": 802000.0}, {"rok": 2023, "wartosc": 804237.0}],
+               "011212106032": [{"rok": 2021, "wartosc": 60000.0}, {"rok": 2023, "wartosc": 63000.0}]}
+    monkeypatch.setattr(atlas_routes.bdl, "szereg_gminy", lambda zid, gid: szeregi[gid])
+    url = f"/atlas/gminy-w-czasie?{ZAPYTANIE}"
+    pusta = client.get(url).get_data(as_text=True)
+    assert 'id="lista-gmin"' in pusta and "Kraków (1261011)" in pusta and "tabela-gmin-czasu" not in pusta
+    strona = client.get(url + "&gminy=011212161011,011212106032,zly,011212161011").get_data(as_text=True)
+    assert 'id="tabela-gmin-czasu"' in strona and "<polyline" in strona and "stopka-wydruku" in strona
+    assert "+0,5%" in strona and "+5,0%" in strona  # zmiana 2021→2023: Kraków, Wieliczka
+    assert strona.count('data-usun="') == 2  # duplikat i zły identyfikator pominięte
+    csv_ = client.get(url + "&gminy=011212106032&format=csv")
+    tekst = csv_.data.decode("utf-8-sig")
+    assert csv_.mimetype == "text/csv" and tekst.splitlines()[0] == "teryt,gmina,wartosc_2021,wartosc_2023"
+    assert "1206032,Wieliczka,60000.0,63000.0" in tekst
+    assert client.get("/atlas/gminy-w-czasie?zmienna=x").status_code == 400
+    assert 'id="link-gminy-czas"' in client.get("/atlas/").get_data(as_text=True)

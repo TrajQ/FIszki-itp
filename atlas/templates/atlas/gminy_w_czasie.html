@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+{% macro z(x) %}{% if x is none %}—{% else %}{% set s = '{:,.2f}'.format(x).rstrip('0').rstrip('.') %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
+
+{% block tytul %}Gminy w czasie — Atlas{% endblock %}
+{% block klasa_body %}strona-druku-mapy{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+{# ETAP 171: kilka gmin na jednym wykresie — liczby z GUS BDL, wykres z atlas/wykres_svg.py #}
+<div class="druk-mapy">
+    <div class="druk-mapy__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
+        {% if serie %}<div class="rzad">
+            <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.gminy_w_czasie', format='csv', gminy=wybrane | join(','), **parametry) }}">Pobierz CSV</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>{% endif %}
+    </div>
+    <div class="druk-mapy__opis">
+        <h1>{{ zmienna.nazwa if zmienna else 'Gminy w czasie' }}</h1>
+        {% if zmienna %}<p class="wyciszony">{{ zmienna.jednostka or '–' }} · gminy województwa {{ wojewodztwo.nazwa }} · GUS, Bank Danych Lokalnych</p>{% endif %}
+    </div>
+    {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+
+    {% if gminy %}
+    <form method="get" class="karta stos wybor-gmin-czasu" id="formularz-gmin">
+        {% for k, v in parametry.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+        <input type="hidden" name="gminy" value="{{ wybrane | join(',') }}" id="pole-gminy">
+        <div class="rzad">
+            <label class="rzad">Gmina <input type="text" list="lista-gmin" id="dodaj-gmine" placeholder="zacznij pisać nazwę…" autocomplete="off"></label>
+            <datalist id="lista-gmin">{% for g in gminy %}<option value="{{ g.nazwa }} ({{ g.teryt }})"></option>{% endfor %}</datalist>
+            <button type="button" class="przycisk--drugi" id="przycisk-dodaj">Dodaj</button>
+            <span class="wyciszony">do {{ maks }} gmin</span>
+        </div>
+        <ul class="wybrane-gminy" id="wybrane-gminy">
+            {% for s in serie %}<li><span class="probka-serii" style="background: {{ s.kolor }}"></span><strong>{{ loop.index }}</strong> {{ s.gmina.nazwa }} <button type="button" class="przycisk--tekst" data-usun="{{ s.gmina.bdl_id }}" aria-label="Usuń {{ s.gmina.nazwa }}">✕</button></li>{% endfor %}
+        </ul>
+    </form>
+    {% endif %}
+
+    {% if serie %}
+    <div class="druk-mapy__obraz wykres-gmin-czasu">{{ wykres }}</div>
+    <div class="przewijanie-tabeli">
+    <table class="tabela" id="tabela-gmin-czasu">
+        <tr><th>Gmina</th>{% for r in lata %}<th class="liczba">{{ r }}</th>{% endfor %}<th class="liczba">Zmiana</th></tr>
+        {% for s in serie %}
+        <tr><td><strong style="color: {{ s.kolor }}">{{ loop.index }}</strong> {{ s.gmina.nazwa }}</td>
+            {% for r in lata %}<td class="liczba">{{ z(s.po_roku.get(r)) }}</td>{% endfor %}
+            <td class="liczba">{% if s.zmiana and s.zmiana.zmiana_proc is not none %}{{ ('%+.1f' % s.zmiana.zmiana_proc) | replace('.', ',') }}% <span class="wyciszony">{{ s.zmiana.od }}→{{ s.zmiana.do }}</span>{% else %}—{% endif %}</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+    <p class="wyciszony druk-mapy__opis">Brak punktu — GUS nie podaje wartości w tym roku. Zmiana: od pierwszego do ostatniego roku z danymi.</p>
+    {{ stopka_wydruku("Atlas", "GUS, Bank Danych Lokalnych") }}
+    {% elif gminy %}
+    <p class="wyciszony druk-mapy__opis">Dodaj gminy, żeby zobaczyć wykres.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    // Lista gmin z nazwą i TERYT-em z datalist → identyfikatory BDL w ukrytym polu
+    const GMINY = {{ gminy | map(attribute='bdl_id') | list | tojson }};
+    const OPISY = {{ gminy | map(attribute='nazwa') | list | tojson }};
+    const TERYTY = {{ gminy | map(attribute='teryt') | list | tojson }};
+    const MAKS = {{ maks }};
+</script>
+<script src="{{ url_for('atlas.static', filename='gminy_w_czasie.js') }}"></script>
+{% endblock %}

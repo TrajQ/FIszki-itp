@@ -3585,3 +3585,23 @@ samouczek), żeby projekt dało się dalej czytać po trzech miesiącach.
 **Odrzucone alternatywy:**
 - Plan tylko do 200 i nowy plan potem — mniej spójne serie, dwa razy
   ta sama praca przeglądowa.
+
+## D-179 — Wykres gmin w czasie rysowany na serwerze
+Data: 2026-10-02
+
+**Decyzja:** Wykres kilku gmin w latach to SVG z Pythona
+(`atlas/wykres_svg.py`) na osobnej stronie, a nie rozbudowa wykresu
+profilu w JS (`wykres_gminy.js`, jedna seria). Wybór gmin jest w adresie
+strony (`gminy=…`), więc wynik da się zapisać jako zakładkę i wydrukować.
+
+**Uzasadnienie:** Strona ma służyć do porównań w pracach zaliczeniowych —
+druk i CSV są ważniejsze niż interakcja. Jak mapy do druku: SVG tylko z
+liczb i kolorów, nazwy gmin w HTML. Wykres cen (`ceny/rcn.wykres_lat_svg`)
+jest podobny, ale to dwa moduły z innymi danymi — bez wspólnej funkcji
+(CLAUDE.md: bez abstrakcji dla dwóch modułów).
+
+**Odrzucone alternatywy:**
+- Kilka serii w `wykres_gminy.js` — profil gminy zrobiłby się
+  przeładowany, a druk wymagałby osobnej ścieżki.
+- Mediana województwa jako linia odniesienia — wymaga pobrania wartości
+  wszystkich gmin w każdym roku (kilkanaście zapytań do BDL).

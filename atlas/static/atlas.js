@@ -536,6 +536,15 @@
         lata.set("klasy", poleKlasy.value);
         lata.delete("rok_bazowy");
         document.getElementById("link-lata").href = `${URL_DRUK.replace(/druk$/, "lata")}?${lata}`;
+        document.getElementById("link-gminy-czas").href = urlGminWCzasie("");
+    }
+
+    // ETAP 171: kilka gmin na jednym wykresie w czasie — parametry wskaźnika, bez roku bazowego
+    function urlGminWCzasie(gminy) {
+        const p = new URLSearchParams(biezaceParametry);
+        p.delete("rok_bazowy");
+        if (gminy) p.set("gminy", gminy);
+        return `${URL_DRUK.replace(/druk$/, "gminy-w-czasie")}?${p}`;
     }
 
     function odswiezWidok() {
@@ -896,6 +905,7 @@
         profilEl.hidden = false;
         profilNazwa.textContent = gmina.nazwa;
         document.getElementById("profil-raport").href = URL_RAPORT_GMINY.replace("000000000000", gmina.bdl_id);
+        document.getElementById("profil-czas").href = urlGminWCzasie(gmina.bdl_id);
         profilMiejsce.textContent = `${miejsce}. miejsce z ${s.liczba_gmin} w województwie (${biezaceDane.rok})`;
         profilLiczby.replaceChildren(liczbaProfilu(String(biezaceDane.rok), zJednostka(gmina.wartosc)));
         if (s.mediana) {

@@ -91,6 +91,7 @@
         <div class="rzad">
             <a id="link-druk" class="przycisk przycisk--drugi" href="#" target="_blank" title="Kartogram z legendą, podziałką i źródłem — SVG albo PDF">Mapa do druku ↗</a>
             <a id="link-lata" class="przycisk przycisk--drugi" href="#" target="_blank" title="Ten sam wskaźnik w kilku latach obok siebie, we wspólnych klasach">Mapy w latach ↗</a>
+            <a id="link-gminy-czas" class="przycisk przycisk--drugi" href="#" target="_blank" title="Do 5 gmin na jednym wykresie wskaźnika w latach">Gminy w czasie ↗</a>
             <a id="link-eksport" class="przycisk przycisk--drugi" href="#">Pobierz CSV</a>
             <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Granice gmin z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
         </div>
@@ -116,7 +117,10 @@
                 <div id="profil-liczby" class="profil__liczby"></div>
                 <div id="profil-wykres" class="profil__wykres"></div>
                 <p id="profil-status" class="wyciszony profil__status"></p>
-                <a id="profil-raport" class="przycisk przycisk--tekst" href="#">Raport tej gminy ›</a>
+                <div class="rzad">
+                    <a id="profil-raport" class="przycisk przycisk--tekst" href="#">Raport tej gminy ›</a>
+                    <a id="profil-czas" class="przycisk przycisk--tekst" href="#" target="_blank">Porównaj z innymi gminami w czasie ↗</a>
+                </div>
                 <details id="profil-tabela-wrap" hidden>
                     <summary>Tabela wartości</summary>
                     <table id="profil-tabela" class="tabela"></table>

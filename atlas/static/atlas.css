@@ -1167,3 +1167,55 @@ button.przelacznik__opcja--aktywna:hover {
     border-radius: 5px;
     background: var(--akcent);
 }
+
+/* ---------- gminy w czasie (ETAP 171) ---------- */
+.wybrane-gminy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+}
+
+.wybrane-gminy li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.probka-serii {
+    display: inline-block;
+    width: 14px;
+    height: 4px;
+    border-radius: 2px;
+}
+
+#dodaj-gmine {
+    min-width: 0;
+    width: 18rem;
+    max-width: 100%;
+}
+
+.wykres-gmin-czasu svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.przewijanie-tabeli {
+    overflow-x: auto;
+}
+
+/* liczby z odstępem tysięcy nie łamią się w wąskiej kolumnie — tabela przewija się w bok */
+.przewijanie-tabeli td.liczba,
+.druk-mapy__akcje > a {
+    white-space: nowrap;
+}
+
+@media print {
+    .wybor-gmin-czasu {
+        display: none;
+    }
+}

@@ -967,3 +967,6 @@
 
 ## ETAP 170 — 2026-10-02
 - Przegląd po ETAPach 151–169 i plan ETAPów 171–250
+
+## ETAP 171 — 2026-10-02
+- Atlas: do 5 gmin na jednym wykresie wskaźnika w latach (tabela, CSV, druk)

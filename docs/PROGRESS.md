@@ -2962,3 +2962,23 @@ Status: zamknięty
   po 20 ETAPów z przeglądem i dokumentacją na końcu każdej
 - README: odnośnik do planu
 - `DECISIONS.md`: D-178
+
+## ETAP 171 — Atlas: kilka gmin na jednym wykresie w czasie
+Data: 2026-10-02
+Status: zamknięty
+
+- `atlas/trasy_czas.py`: strona `/atlas/gminy-w-czasie` (parametry
+  wskaźnika jak mapa do druku + `gminy` — identyfikatory BDL, do 5):
+  szeregi z tego samego cache co profil gminy (`szereg:<zmienna>:<gmina>`),
+  wskaźnik względny przez `podziel_szeregi`, tabela lat ze zmianą, CSV
+  (jak `eksport.csv`: przecinek, UTF-8 z BOM)
+- `atlas/wykres_svg.py`: `wykres_gmin_svg` — linie w kolorach serii,
+  numery przy ostatnim punkcie, brak roku przerywa linię, oś od zera przy
+  danych blisko zera; tylko liczby i kolory z kodu
+- Wybór gmin: pole z podpowiedziami (nazwa + TERYT), dodawanie Enterem,
+  ✕ usuwa (`gminy_w_czasie.js`); linki „Gminy w czasie ↗” pod mapą i
+  „Porównaj z innymi gminami w czasie” w profilu gminy
+- Testy: wykres (przerwana linia, oś, numery), strona, duplikaty i złe
+  identyfikatory, CSV; sprawdzone w przeglądarce 1300/390 px
+- Pomoc: „Gminy w czasie”
+- `DECISIONS.md`: D-179
