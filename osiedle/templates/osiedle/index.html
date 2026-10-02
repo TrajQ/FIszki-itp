@@ -161,9 +161,13 @@
 
         <section id="sekcja-kosztow" class="karta stos" hidden>
             <h3>Szacunek kosztów</h3>
-            <p class="wyciszony opis-panelu">Wpisz stawki, które znasz (np. z cenników albo wskaźników kosztów budowy na ten rok) — Warsztat nie podsuwa stawek. Ilości liczy z koncepcji; pozycje bez stawki są pomijane.</p>
+            <p class="wyciszony opis-panelu">Wpisz stawki, które znasz (np. z cenników albo wskaźników kosztów budowy na ten rok) — Warsztat sam stawek nie wpisuje (cenę gruntu może podpowiedzieć z transakcji RCN). Ilości liczy z koncepcji; pozycje bez stawki są pomijane.</p>
             <div class="przewijanie-osiedla"><table class="tabela tabela-kosztow" id="tabela-kosztow" hidden></table></div>
             <p id="podsumowanie-kosztow" class="wyciszony opis-panelu" hidden></p>
+            <div class="rzad">
+                <button type="button" id="podpowiedz-grunt" class="przycisk--tekst" title="Mediana ceny m² działek niezabudowanych do 1 km od obszaru — z pliku RCN zaimportowanego w module Ceny">Cena gruntu w okolicy (RCN)</button>
+            </div>
+            <div id="wynik-gruntu" class="opis-panelu" hidden></div>
             <details class="zalozenia" id="stawki-kosztow">
                 <summary>Stawki</summary>
                 <div class="zalozenia__pola">

@@ -2831,3 +2831,20 @@ Status: zamknięty
 - Test: wynik zgodny z liczeniem ręcznym; sprawdzone w przeglądarce
   1300/390 px (także Ceny i Osiedle — ikony rysowania)
 - `DECISIONS.md`: D-171
+
+## ETAP 164 — Osiedle: podpowiedź stawki gruntu z transakcji RCN
+Data: 2026-10-02
+Status: zamknięty
+
+- Trasa `/ceny/okolica` przyjmuje `tylko_niezabudowane: true` — w
+  podsumowaniu działek tylko rodzaj „gruntowa niezabudowana” (cena
+  zabudowanej obejmuje budynek); stała `rcn.NIEZABUDOWANA`
+- Osiedle, karta „Szacunek kosztów”: przycisk „Cena gruntu w okolicy
+  (RCN)” — mediana zł/m² działek niezabudowanych do 1 km od obszaru,
+  rozstęp kwartylny, liczba transakcji, lata, nazwa pliku; ostrzeżenie
+  przy < 5 transakcjach; przycisk „Wpisz medianę jako stawkę gruntu”
+  (wpisuje dopiero na kliknięcie)
+- Test: filtr działek niezabudowanych (tylko wartość `true` włącza filtr);
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Koszty”
+- `DECISIONS.md`: D-172

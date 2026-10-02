@@ -3452,3 +3452,22 @@ a podział mieszkańców proporcjonalnie do pola byłby fałszywą dokładności
 **Odrzucone alternatywy:**
 - Tabela obszarów jak w Cenach (`rcn_obszary`) — Ceny mają bazę modułu;
   tu byłaby jedyną tabelą.
+
+## D-172 — Stawka gruntu z RCN tylko jako podpowiedź
+Data: 2026-10-02
+
+**Decyzja:** Osiedle może pokazać medianę ceny m² działek niezabudowanych
+w promieniu 1 km od obszaru (zaimportowany plik RCN), ale wpisuje ją do
+stawki gruntu dopiero po kliknięciu. Pozostałe stawki dalej wpisuje
+użytkownik (D-163).
+
+**Uzasadnienie:** Dla gruntu jest lokalne źródło liczb (akty notarialne z
+RCN), dla kosztów budowy — nie. Działki zabudowane odpadają, bo ich cena
+zawiera budynek. Wpis na kliknięcie: przeznaczenie i stan działek w
+okolicy bywają różne, a mała próba daje niepewną medianę — użytkownik
+widzi liczbę transakcji i lata, zanim zdecyduje.
+
+**Odrzucone alternatywy:**
+- Automatyczne wypełnianie pola przy rysowaniu — ukryta liczba w
+  kosztorysie, której źródła nie widać.
+- Filtr po przeznaczeniu w MPZP działki — w RCN często puste.

@@ -682,6 +682,7 @@ def heksagony(rekordy: list[dict], rozdzielczosc: int, minimum: int) -> dict:
 # ---------- ceny w okolicy działki / obszaru (ETAP 109, dla MPZP i osiedla) ----------
 
 PROMIENIE_OKOLICY_M = (250, 500, 1000, 2000)
+NIEZABUDOWANA = "gruntowa niezabudowana"  # wartość nier_rodzaj po _czytelne (ETAP 164)
 
 
 def ksztalt_okolicy(geometria) -> object:

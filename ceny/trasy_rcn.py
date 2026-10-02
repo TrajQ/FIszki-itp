@@ -342,8 +342,11 @@ def heksagony_transakcji(plik_id):
 def okolica():
     """JSON {geometria: GeoJSON punktu/wieloboku, promien: m} → podsumowanie
     mieszkań i działek z tego zaimportowanego pliku RCN, który ma w zasięgu
-    najwięcej transakcji (pliki różnych powiatów się nie mieszają)."""
+    najwięcej transakcji (pliki różnych powiatów się nie mieszają).
+    ETAP 164: `tylko_niezabudowane` — działki tylko gruntowe niezabudowane
+    (cena zabudowanej obejmuje budynek; do stawki gruntu w Osiedlu)."""
     dane = request.get_json(silent=True) or {}
+    tylko_niezabudowane = dane.get("tylko_niezabudowane") is True
     promien = dane.get("promien")
     try:
         ksztalt = rcn.ksztalt_okolicy(dane.get("geometria"))
@@ -355,6 +358,8 @@ def okolica():
     wyniki: dict[int, dict] = {}
     for co, tabela in (("lokale", "rcn_lokale"), ("dzialki", "rcn_dzialki")):
         for plik_id, rekordy in baza.w_prostokacie(tabela, *prostokat).items():
+            if co == "dzialki" and tylko_niezabudowane:
+                rekordy = [r for r in rekordy if r["nieruchomosc"] == rcn.NIEZABUDOWANA]
             wyniki.setdefault(plik_id, {"lokale": None, "dzialki": None})[co] = rcn.okolica(rekordy, ksztalt, promien)
 
     def razem(w):

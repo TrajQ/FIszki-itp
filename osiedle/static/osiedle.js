@@ -487,6 +487,39 @@
         pokazKoszty(b.koszty);
     }
 
+    // ETAP 164: podpowiedź stawki gruntu — mediana działek niezabudowanych z RCN (moduł Ceny).
+    // Nic nie wpisuje się samo: użytkownik widzi liczbę transakcji i lata, i decyduje.
+    document.getElementById("podpowiedz-grunt").addEventListener("click", async () => {
+        const wynik = document.getElementById("wynik-gruntu");
+        let obszar = null;
+        rysunek.eachLayer((w) => {
+            if (w.funkcja === OBSZAR) obszar = w.toGeoJSON().geometry;
+        });
+        wynik.hidden = false;
+        if (!obszar) return wynik.replaceChildren(element("p", "", "Najpierw narysuj obszar opracowania."));
+        wynik.replaceChildren(element("p", "wyciszony", "Szukam w plikach RCN…"));
+        try {
+            const d = await zapytaj(URL_CENY_OKOLICA, { method: "POST", body: JSON.stringify({ geometria: obszar, promien: 1000, tylko_niezabudowane: true }) });
+            const s = d.dzialki;
+            if (!d.plik || !s) {
+                wynik.replaceChildren(element("p", "", d.pliki_zaimportowane ? "W zaimportowanych plikach RCN nie ma transakcji działek niezabudowanych do 1 km od obszaru." : "Najpierw zaimportuj plik RCN powiatu w module Ceny → Transakcje."));
+                return;
+            }
+            const opis = element("p", "", `Działki niezabudowane do 1 km: mediana ${formatM2.format(s.mediana_m2)} zł/m² (połowa transakcji ${formatM2.format(s.q1_m2)}–${formatM2.format(s.q3_m2)}), ${s.liczba} transakcji z lat ${s.od.slice(0, 4)}–${s.do.slice(0, 4)}, plik ${d.plik.nazwa}.`);
+            const wpisz = element("button", "przycisk--drugi", "Wpisz medianę jako stawkę gruntu");
+            wpisz.type = "button";
+            wpisz.addEventListener("click", () => {
+                const pole = document.querySelector('[data-stawka="grunt"]');
+                pole.value = Math.round(s.mediana_m2);
+                pole.dispatchEvent(new Event("input"));
+                document.getElementById("stawki-kosztow").open = true;
+            });
+            wynik.replaceChildren(opis, element("p", "wyciszony", s.liczba < 5 ? "Mniej niż 5 transakcji — mediana niepewna." : "Ceny z aktów notarialnych; przeznaczenie i stan działek bywają różne."), wpisz);
+        } catch (e) {
+            wynik.replaceChildren(element("p", "komunikat komunikat--blad", e.message));
+        }
+    });
+
     // ETAP 155: szacunek kosztów — ilości × stawki liczy serwer (osiedle/koszty.py)
     function pokazKoszty(k) {
         const sekcja = document.getElementById("sekcja-kosztow");

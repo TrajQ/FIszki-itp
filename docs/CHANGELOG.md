@@ -946,3 +946,6 @@
 
 ## ETAP 163 — 2026-10-02
 - Dostępność: średni czas i zasięg 15 min w narysowanych dzielnicach
+
+## ETAP 164 — 2026-10-02
+- Osiedle: stawka gruntu podpowiadana z mediany cen działek niezabudowanych (RCN)

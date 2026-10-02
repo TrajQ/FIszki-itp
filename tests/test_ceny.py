@@ -519,7 +519,8 @@ def test_trasa_okolicy(client, tmp_path, monkeypatch):
     pobrane.mkdir()
     krakow, wieliczka = str(pobrane / "krakow.gpkg"), str(pobrane / "wieliczka.gpkg")
     plik_rcn(krakow, [lokal(i, lok_cena_brutto=600000 + 10000 * i, geom=geometria_gpkg(50.0 + i / 20000, 19.9)) for i in range(1, 7)])
-    dodaj_dzialki(krakow, [dzialka(f"T{i}", i, dzi_cena_brutto=90000 * i) for i in range(1, 4)])  # działki ok. 50,001–50,003
+    dodaj_dzialki(krakow, [dzialka(f"T{i}", i, dzi_cena_brutto=90000 * i, **({"nier_rodzaj": "gruntowaZabudowana"} if i == 2 else {}))
+                           for i in range(1, 4)])  # działki ok. 50,001–50,003
     plik_rcn(wieliczka, [lokal(i, geom=geometria_gpkg(50.0, 19.9 + i / 50000)) for i in range(1, 3)])
     monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
     url = "/ceny/okolica"
@@ -534,6 +535,10 @@ def test_trasa_okolicy(client, tmp_path, monkeypatch):
     assert client.post(url, json={"geometria": {"type": "Point", "coordinates": [2.3, 48.8]}, "promien": 500}).status_code == 400
     obszar = client.post(url, json={"geometria": prostokat(19.899, 49.999, 19.901, 50.0002), "promien": 250}).get_json()
     assert obszar["lokale"]["w_srodku"] == 3  # 50,00005 / 50,0001 / 50,00015 w obszarze (do 50,0002)
+    # ETAP 164: tylko działki niezabudowane (stawka gruntu w Osiedlu); T2 to zabudowana
+    tylko = client.post(url, json={"geometria": punkt, "promien": 500, "tylko_niezabudowane": True}).get_json()
+    assert tylko["dzialki"]["liczba"] == 2 and tylko["lokale"]["liczba"] == 6
+    assert client.post(url, json={"geometria": punkt, "promien": 500, "tylko_niezabudowane": "tak"}).get_json()["dzialki"]["liczba"] == 3
     # MPZP i osiedle wołają tę trasę
     for strona in ("/mpzp/", "/osiedle/"):
         assert 'URL_CENY_OKOLICA = "/ceny/okolica"' in client.get(strona).get_data(as_text=True)
