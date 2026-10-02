@@ -3667,3 +3667,23 @@ terenów. PBC zostaje z terenów: obrys budynku nie mówi nic o zieleni.
   arbitralny, wynik niejasny dla czytającego raport.
 - Program (mieszkania) z powierzchni całkowitej budynków — w kolejnych
   ETAPach, gdy budynki dostaną funkcję.
+
+## D-183 — Linia zabudowy: kontrola przecięcia, bez zgadywania strony
+Data: 2026-10-02
+
+**Decyzja:** Nieprzekraczalna linia zabudowy to łamana w rysunku
+koncepcji. Warsztat zgłasza budynki, których obrys ją przecina, i podaje
+odległość każdego budynku od linii; nie ocenia, po której stronie linii
+budynek ma stać.
+
+**Uzasadnienie:** Strona „dozwolona” zależy od rysunku planu (zwykle od
+strony drogi), a linia narysowana w Warsztacie nie niesie tej informacji.
+Zgadywanie (np. „strona z terenem KD”) dawałoby fałszywe ostrzeżenia przy
+liniach wzdłuż zieleni czy granic działek. Przecięcie i odległość są
+jednoznaczne, a położenie po złej stronie widać na rysunku.
+
+**Odrzucone alternatywy:**
+- Linia jako wielobok „pas zakazu zabudowy” — wymaga rysowania drugiej
+  krawędzi; plan podaje linię, nie pas.
+- Wskazanie strony strzałką przy linii — dodatkowy element interfejsu
+  dla rzadkiego przypadku; do rozważenia, jeśli będzie potrzebne.

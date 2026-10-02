@@ -143,6 +143,7 @@
     Object.assign(L.drawLocal.draw.toolbar.buttons, {
         polygon: "Rysuj wielobok",
         rectangle: "Rysuj prostokąt",
+        polyline: "Rysuj nieprzekraczalną linię zabudowy",
     });
     Object.assign(L.drawLocal.draw.toolbar.actions, { title: "Przerwij rysowanie", text: "Anuluj" });
     Object.assign(L.drawLocal.draw.toolbar.finish, { title: "Zakończ rysowanie", text: "Zakończ" });
@@ -151,6 +152,11 @@
         start: "Kliknij, żeby zacząć wielobok.",
         cont: "Klikaj kolejne wierzchołki.",
         end: "Kliknij pierwszy punkt, żeby zamknąć.",
+    };
+    L.drawLocal.draw.handlers.polyline.tooltip = {
+        start: "Kliknij, żeby zacząć linię zabudowy.",
+        cont: "Klikaj kolejne punkty linii.",
+        end: "Kliknij ostatni punkt jeszcze raz albo „Zakończ”.",
     };
     L.drawLocal.draw.handlers.rectangle.tooltip.start = "Kliknij i przeciągnij, żeby narysować prostokąt.";
     L.drawLocal.draw.handlers.simpleshape.tooltip.end = "Puść przycisk, żeby zakończyć.";
@@ -174,7 +180,8 @@
         draw: {
             polygon: { allowIntersection: false, showArea: false, shapeOptions: { color: "#0071e3" } },
             rectangle: { showArea: false, shapeOptions: { color: "#0071e3" } },
-            polyline: false,
+            // ETAP 175: łamana — tylko nieprzekraczalna linia zabudowy
+            polyline: { shapeOptions: { color: KOLOR_LINII, weight: 3 } },
             circle: false,
             circlemarker: false,
             marker: false,
@@ -189,6 +196,9 @@
     function styl(funkcja, wybrany) {
         if (funkcja === OBSZAR) {
             return { color: "#1d1d1f", weight: wybrany ? 4 : 2.5, dashArray: "8 6", fill: false };
+        }
+        if (funkcja === LINIA) {
+            return { color: KOLOR_LINII, weight: wybrany ? 5 : 3, dashArray: "10 4 2 4", fill: false };
         }
         if (funkcja === BUDYNEK) {
             return { color: wybrany ? "#0071e3" : "#ffffff", weight: wybrany ? 3 : 1.5, fillColor: KOLOR_BUDYNKU, fillOpacity: 0.85, fill: true };
@@ -208,12 +218,13 @@
         ulozWarstwy();
     }
 
-    // Obszar pod spodem, budynki na wierzchu (ETAP 173) — każdy da się kliknąć
+    // Obszar pod spodem, nad terenami budynki (ETAP 173), na samej górze linie zabudowy (ETAP 175)
     function ulozWarstwy() {
-        rysunek.eachLayer((w) => {
-            if (w.funkcja === OBSZAR) w.bringToBack();
-            else if (w.funkcja === BUDYNEK) w.bringToFront();
-        });
+        for (const [funkcja, naWierzch] of [[OBSZAR, false], [BUDYNEK, true], [LINIA, true]]) {
+            rysunek.eachLayer((w) => {
+                if (w.funkcja === funkcja) naWierzch ? w.bringToFront() : w.bringToBack();
+            });
+        }
     }
 
     function zaznacz(warstwa) {
@@ -223,6 +234,7 @@
         if (!warstwa) return;
         warstwa.setStyle(styl(warstwa.funkcja, true));
         funkcjaTerenu.value = warstwa.funkcja;
+        funkcjaTerenu.disabled = warstwa.funkcja === LINIA; // linia nie może stać się wielobokiem (ETAP 175)
         pokazParametry(warstwa);
     }
 
@@ -342,7 +354,12 @@
     mapa.on("click", () => zaznacz(null));
 
     mapa.on(L.Draw.Event.CREATED, (e) => {
-        const funkcja = funkcjaDoRysowania();
+        // łamana to zawsze linia zabudowy; wielobok przy wybranej linii — nie wiadomo, co to jest
+        if (e.layerType !== "polyline" && funkcjaDoRysowania() === LINIA) {
+            pokazKomunikat("Linię zabudowy rysuj narzędziem łamanej (pierwsza ikona) — wybierz inną funkcję, żeby narysować wielobok.");
+            return;
+        }
+        const funkcja = e.layerType === "polyline" ? LINIA : funkcjaDoRysowania();
         // Obszar opracowania jest jeden — nowy zastępuje stary.
         if (funkcja === OBSZAR) {
             rysunek.eachLayer((w) => {
@@ -509,17 +526,20 @@
         const tabela = document.getElementById("tabela-budynkow");
         const glowa = element("tr");
         glowa.append(element("th", "", "Nr"), element("th", "", "Teren"), element("th", "liczba", "Rzut m²"), element("th", "liczba", "Kond."), element("th", "liczba", "Całkowita m²"));
+        if (bud.linii_zabudowy) glowa.append(element("th", "liczba", "Od linii m"));
         tabela.replaceChildren(glowa);
         for (const b of bud.lista) {
             const tr = element("tr");
             tr.append(element("td", "", String(b.nr)), element("td", b.teren ? "" : "wyciszony", b.teren || "—"),
                 element("td", "liczba", formatM2.format(b.pole_m2)), element("td", "liczba", String(b.kondygnacje)), element("td", "liczba", formatM2.format(b.calkowita_m2)));
+            if (bud.linii_zabudowy) tr.append(element("td", b.przecina_linie ? "liczba stan--zle" : "liczba", b.przecina_linie ? "przecina" : formatWsk.format(b.od_linii_m)));
             tabela.appendChild(tr);
         }
         const kontrole = document.getElementById("kontrole-budynkow");
         kontrole.replaceChildren();
         if (bud.poza_terenem_zabudowy) kontrole.appendChild(element("li", "", `Budynków nie na terenie zabudowy (MN, MW, U): ${bud.poza_terenem_zabudowy}.`));
         if (bud.poza_obszarem) kontrole.appendChild(element("li", "", `Budynków wychodzących poza obszar opracowania: ${bud.poza_obszarem}.`));
+        if (bud.przecina_linie) kontrole.appendChild(element("li", "", `Budynków przecinających nieprzekraczalną linię zabudowy: ${bud.przecina_linie}.`));
     }
 
     // ETAP 164: podpowiedź stawki gruntu — mediana działek niezabudowanych z RCN (moduł Ceny).

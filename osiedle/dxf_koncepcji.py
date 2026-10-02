@@ -14,10 +14,10 @@ from shapely.ops import unary_union
 from dane.dxf import KOLORY_ACI, dxf
 from mpzp.uklady import gauss_kruger, strefa_pl2000
 
-from .bilans import OBSZAR
+from .bilans import BUDYNEK, FUNKCJE, LINIA, OBSZAR
 
 KOLORY_FUNKCJI = {"MN": "zolty", "MW": "pomaranczowy", "U": "czerwony", "ZP": "zielony", "KD": "szary",
-                  "KS": "jasnoszary", "WS": "niebieski", OBSZAR: "bialy"}
+                  "KS": "jasnoszary", "WS": "niebieski", OBSZAR: "bialy", LINIA: "czerwony"}
 UKLADY = ("pl2000", "pl1992")
 WYSOKOSC_OPISU_M = 4.0
 
@@ -48,10 +48,13 @@ def koncepcja_dxf(geojson: dict, uklad: str = "pl2000") -> tuple[str, str]:
         warstwa = f"OSIEDLE_{funkcja.upper()}"
         warstwy.setdefault(warstwa, KOLORY_ACI[KOLORY_FUNKCJI.get(funkcja, "bialy")])
         geometria = shape(c["geometry"])
+        if geometria.geom_type == "LineString":  # linia zabudowy (ETAP 175)
+            obiekty.append({"warstwa": warstwa, "linia": [na_metry(lon, lat) for lon, lat in geometria.coords]})
+            continue
         for wielobok in getattr(geometria, "geoms", [geometria]):
             for pierscien in [wielobok.exterior, *wielobok.interiors]:
                 obiekty.append({"warstwa": warstwa, "wielobok": [na_metry(lon, lat) for lon, lat in pierscien.coords]})
-        if funkcja != OBSZAR:
+        if funkcja in FUNKCJE:  # bez obszaru i budynków (ETAP 173)
             nr += 1  # numeracja terenów jak w raporcie (kolejność rysunku, bez obszaru)
             punkt = geometria.representative_point()
             obiekty.append({"warstwa": "OSIEDLE_OPISY", "tekst": f"{funkcja} {nr}", "punkt": na_metry(punkt.x, punkt.y),

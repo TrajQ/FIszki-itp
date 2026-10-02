@@ -979,3 +979,6 @@
 
 ## ETAP 174 — 2026-10-02
 - Osiedle: wskaźniki zabudowy z budynków obok wskaźników z terenów, ze zgodnością z planem
+
+## ETAP 175 — 2026-10-02
+- Osiedle: nieprzekraczalna linia zabudowy — odległość budynków i kontrola przecięcia

@@ -71,6 +71,14 @@
     vertical-align: middle;
 }
 
+/* ETAP 175: linia zabudowy — próbka jako przerywana kreska */
+.funkcja__probka--linia {
+    height: 0;
+    border-top: 3px dashed;
+    border-radius: 0;
+    background: transparent;
+}
+
 .funkcja__probka--obszar {
     border: 2px dashed var(--tekst);
     background: transparent;

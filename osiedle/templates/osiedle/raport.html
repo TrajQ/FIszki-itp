@@ -88,6 +88,7 @@
                     <tr><td>powierzchnia biologicznie czynna</td><td class="liczba">{{ m(w.pbc_proc) }}%</td>{% if wb %}<td class="liczba wyciszony">—</td>{% endif %}</tr>
                     <tr><td>najwyższa zabudowa</td><td class="liczba">{{ m(w.max_kondygnacje) }} kond.</td>{% if wb %}<td class="liczba">{{ m(wb.max_kondygnacje) }} kond.</td>{% endif %}</tr>
                 </table>
+                {% if b.budynki and b.budynki.przecina_linie %}<p class="komunikat komunikat--ostrzezenie">Budynków przecinających nieprzekraczalną linię zabudowy: {{ b.budynki.przecina_linie }}.</p>{% endif %}
                 {% if wb %}<p class="wyciszony">Z budynków: {{ b.budynki.liczba }} narysowanych obrysów, rzut × kondygnacje każdego budynku; powierzchnia biologicznie czynna tylko z terenów.</p>{% endif %}
                 {% endif %}
 

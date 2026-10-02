@@ -39,7 +39,8 @@ def _para(kod: int, wartosc) -> str:
 
 def dxf(warstwy: dict[str, int], obiekty: list[dict]) -> str:
     """warstwy: {nazwa: kolor ACI}; obiekty: {"warstwa", "wielobok": [(x, y), …]}
-    (zamknięta polilinia) albo {"warstwa", "tekst", "punkt": (x, y), "wysokosc"}."""
+    (zamknięta polilinia), {"warstwa", "linia": [(x, y), …]} (otwarta, ETAP 175)
+    albo {"warstwa", "tekst", "punkt": (x, y), "wysokosc"}."""
     czesci = [_para(0, "SECTION"), _para(2, "HEADER"), _para(9, "$ACADVER"), _para(1, "AC1009"), _para(0, "ENDSEC"),
               _para(0, "SECTION"), _para(2, "TABLES"), _para(0, "TABLE"), _para(2, "LAYER"), _para(70, len(warstwy))]
     for nazwa, kolor in warstwy.items():
@@ -47,11 +48,12 @@ def dxf(warstwy: dict[str, int], obiekty: list[dict]) -> str:
     czesci += [_para(0, "ENDTAB"), _para(0, "ENDSEC"), _para(0, "SECTION"), _para(2, "ENTITIES")]
     for o in obiekty:
         warstwa = nazwa_ascii(o["warstwa"])
-        if "wielobok" in o:
-            punkty = list(o["wielobok"])
-            if len(punkty) > 1 and punkty[0] == punkty[-1]:
+        if "wielobok" in o or "linia" in o:
+            zamknieta = "wielobok" in o
+            punkty = list(o["wielobok"] if zamknieta else o["linia"])
+            if zamknieta and len(punkty) > 1 and punkty[0] == punkty[-1]:
                 punkty = punkty[:-1]  # zamknięcie zapisuje flaga 70 = 1
-            czesci += [_para(0, "POLYLINE"), _para(8, warstwa), _para(66, 1), _para(10, 0.0), _para(20, 0.0), _para(30, 0.0), _para(70, 1)]
+            czesci += [_para(0, "POLYLINE"), _para(8, warstwa), _para(66, 1), _para(10, 0.0), _para(20, 0.0), _para(30, 0.0), _para(70, 1 if zamknieta else 0)]
             for x, y in punkty:
                 czesci += [_para(0, "VERTEX"), _para(8, warstwa), _para(10, float(x)), _para(20, float(y)), _para(30, 0.0)]
             czesci += [_para(0, "SEQEND"), _para(8, warstwa)]

@@ -57,6 +57,9 @@
                 {# ETAP 173: budynek — obrys na terenie MN / MW / U, z liczbą kondygnacji #}
                 <label class="funkcja"><input type="radio" name="funkcja" value="{{ budynek }}">
                     <span class="funkcja__probka" style="background: {{ kolor_budynku }}"></span> <strong>budynek</strong> obrys z kondygnacjami</label>
+                {# ETAP 175: nieprzekraczalna linia zabudowy — rysowana narzędziem łamanej #}
+                <label class="funkcja"><input type="radio" name="funkcja" value="{{ linia }}">
+                    <span class="funkcja__probka funkcja__probka--linia" style="border-color: {{ kolor_linii }}"></span> <strong>linia zabudowy</strong> nieprzekraczalna (narzędzie łamanej)</label>
                 {% for kod, f in funkcje.items() %}
                 <label class="funkcja"><input type="radio" name="funkcja" value="{{ kod }}">
                     <span class="funkcja__probka" style="background: {{ f.kolor }}"></span> <strong>{{ kod }}</strong> {{ f.nazwa }}</label>
@@ -229,6 +232,8 @@
     const OBSZAR = {{ obszar | tojson }};
     const BUDYNEK = {{ budynek | tojson }};
     const KOLOR_BUDYNKU = {{ kolor_budynku | tojson }};
+    const LINIA = {{ linia | tojson }};
+    const KOLOR_LINII = {{ kolor_linii | tojson }};
     const FUNKCJE = {{ funkcje | tojson }};
     const DOMYSLNE = {{ domyslne | tojson }};
     const URL_WARSTWY_KRAJOWE = "{{ url_for('mpzp.warstwy_krajowe') }}";

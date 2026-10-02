@@ -28,6 +28,9 @@ OBSZAR = "obszar"
 BUDYNEK = "budynek"
 DOMYSLNE_KONDYGNACJE_BUDYNKU = 2
 KOLOR_BUDYNKU = "#3a3a3c"
+# ETAP 175: nieprzekraczalna linia zabudowy — łamana; budynek nie może jej przecinać
+LINIA = "linia_zabudowy"
+KOLOR_LINII = "#d70015"
 
 # Funkcje terenu: nazwa, kolor na mapie, czy to teren zabudowy
 # (powierzchnię zabudowy i kondygnacje liczymy tylko dla tych — wskazniki.py).
@@ -80,6 +83,10 @@ def wczytaj_tereny(geojson: dict) -> tuple[BaseGeometry | None, list[dict]]:
             geometria = shape(cecha["geometry"])
         except Exception:
             raise BladKoncepcji(f"Obiekt {i}: niepoprawna geometria.") from None
+        if (cecha.get("properties") or {}).get("funkcja") == LINIA:
+            if geometria.geom_type != "LineString" or geometria.length == 0:
+                raise BladKoncepcji(f"Obiekt {i}: linia zabudowy musi być łamaną.")
+            continue  # linie czyta wczytaj_linie
         if geometria.geom_type not in ("Polygon", "MultiPolygon") or geometria.is_empty:
             raise BladKoncepcji(f"Obiekt {i}: dozwolone są tylko wieloboki.")
         if not geometria.is_valid:
@@ -122,13 +129,21 @@ def wczytaj_budynki(geojson: dict) -> list[dict]:
     return budynki
 
 
-def _budynki(budynki: list[dict], tereny: list[dict], obszar, pole) -> dict | None:
+def wczytaj_linie(geojson: dict) -> list:
+    """Nieprzekraczalne linie zabudowy (ETAP 175) — łamane w stopniach
+    (sprawdzone już w wczytaj_tereny)."""
+    return [shape(c["geometry"]) for c in geojson.get("features") or [] if (c.get("properties") or {}).get("funkcja") == LINIA]
+
+
+def _budynki(budynki: list[dict], tereny: list[dict], obszar, pole, linie: list | None = None, w_metrach=None) -> dict | None:
     """Zestawienie budynków (ETAP 173): powierzchnia zabudowy (rzut) i
     całkowita (rzut × kondygnacje), teren, na którym leży większość
-    budynku, i kontrole: budynek nie na terenie zabudowy, poza obszarem."""
+    budynku, i kontrole: budynek nie na terenie zabudowy, poza obszarem.
+    ETAP 175: przecięcie nieprzekraczalnej linii zabudowy i odległość od niej."""
     if not budynki:
         return None
-    lista, poza_zabudowa, poza_obszarem = [], 0, 0
+    linie_m = [w_metrach(linia) for linia in (linie or [])]
+    lista, poza_zabudowa, poza_obszarem, przecina = [], 0, 0, 0
     for nr, b in enumerate(budynki, start=1):
         rzut = pole(b["geometria"])
         nakladanie = [(pole(b["geometria"].intersection(t["geometria"])), t["funkcja"]) for t in tereny if b["geometria"].intersects(t["geometria"])]
@@ -138,8 +153,14 @@ def _budynki(budynki: list[dict], tereny: list[dict], obszar, pole) -> dict | No
             poza_zabudowa += 1
         if obszar is not None and pole(b["geometria"].difference(obszar)) > max(1.0, rzut * 0.01):
             poza_obszarem += 1
-        lista.append({"nr": nr, "pole_m2": round(rzut, 1), "kondygnacje": b["kondygnacje"],
-                      "calkowita_m2": round(rzut * b["kondygnacje"], 1), "teren": funkcja})
+        wpis = {"nr": nr, "pole_m2": round(rzut, 1), "kondygnacje": b["kondygnacje"],
+                "calkowita_m2": round(rzut * b["kondygnacje"], 1), "teren": funkcja}
+        if linie_m:
+            obrys = w_metrach(b["geometria"])
+            wpis["przecina_linie"] = any(obrys.intersects(linia) for linia in linie_m)
+            wpis["od_linii_m"] = 0.0 if wpis["przecina_linie"] else round(min(obrys.distance(linia) for linia in linie_m), 1)
+            przecina += wpis["przecina_linie"]
+        lista.append(wpis)
     return {
         "liczba": len(lista),
         "zabudowa_m2": round(sum(b["pole_m2"] for b in lista), 1),
@@ -147,6 +168,8 @@ def _budynki(budynki: list[dict], tereny: list[dict], obszar, pole) -> dict | No
         "lista": lista,
         "poza_terenem_zabudowy": poza_zabudowa,
         "poza_obszarem": poza_obszarem,
+        "linii_zabudowy": len(linie_m),
+        "przecina_linie": przecina,
     }
 
 
@@ -156,6 +179,7 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     (ustalenia i założenia programu — z ustawień koncepcji)."""
     obszar, tereny = wczytaj_tereny(geojson)
     budynki = wczytaj_budynki(geojson)
+    linie = wczytaj_linie(geojson)
     try:
         plan = wsk.ustalenia_planu(ustawienia)
         prog.zalozenia(ustawienia)  # sprawdzenie także przy pustym rysunku
@@ -215,7 +239,7 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     )
     wskazniki = wsk.wskazniki(tereny, podstawa)
     program = prog.program(tereny, obszar_m2, ustawienia)
-    zestawienie_budynkow = _budynki(budynki, tereny, obszar, pole)
+    zestawienie_budynkow = _budynki(budynki, tereny, obszar, pole, linie, lambda g: _w_metrach(g, szerokosc))
     wskazniki_budynkow = wsk.wskazniki_budynkow(zestawienie_budynkow, podstawa)  # ETAP 174
     return {
         "obszar_m2": round(obszar_m2, 1) if obszar_m2 is not None else None,

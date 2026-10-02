@@ -11,7 +11,7 @@ from dane import uldk
 
 from . import baza, cien
 from .obszar_z_pliku import obszar_z_geojson
-from .bilans import BUDYNEK, DOMYSLNE_KONDYGNACJE_BUDYNKU, FUNKCJE, KOLOR_BUDYNKU, OBSZAR, BladKoncepcji, bilans
+from .bilans import BUDYNEK, DOMYSLNE_KONDYGNACJE_BUDYNKU, FUNKCJE, KOLOR_BUDYNKU, KOLOR_LINII, LINIA, OBSZAR, BladKoncepcji, bilans
 from .koszty import STAWKI
 from .program import ZALOZENIA
 from .wskazniki import DOMYSLNE, BladParametru
@@ -55,7 +55,7 @@ def podsumowanie() -> dict:
 @osiedle_bp.route("/")
 def index():
     return render_template(
-        "osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR, budynek=BUDYNEK, kolor_budynku=KOLOR_BUDYNKU,
+        "osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR, budynek=BUDYNEK, kolor_budynku=KOLOR_BUDYNKU, linia=LINIA, kolor_linii=KOLOR_LINII,
         domyslne={**DOMYSLNE, BUDYNEK: {"kondygnacje": DOMYSLNE_KONDYGNACJE_BUDYNKU}},  # ETAP 173: pole kondygnacji budynku
         zalozenia=ZALOZENIA, stawki=STAWKI,
     )
@@ -193,6 +193,8 @@ def eksport_geojson(koncepcja_id):
             cecha["properties"]["nazwa_funkcji"] = FUNKCJE[funkcja]["nazwa"]
         elif funkcja == BUDYNEK:
             cecha["properties"]["nazwa_funkcji"] = "budynek"
+        elif funkcja == LINIA:
+            cecha["properties"]["nazwa_funkcji"] = "nieprzekraczalna linia zabudowy"
     nazwa = secure_filename(f"koncepcja_{k['id']}_{k['nazwa']}.geojson") or "koncepcja.geojson"
     return Response(
         json.dumps(k["geojson"], ensure_ascii=False),

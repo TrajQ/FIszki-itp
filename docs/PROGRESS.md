@@ -3040,3 +3040,25 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Budynki”
 - `DECISIONS.md`: D-182
+
+## ETAP 175 — Osiedle: nieprzekraczalna linia zabudowy i kontrola budynków
+Data: 2026-10-02
+Status: zamknięty
+
+- `osiedle/bilans.py`: obiekt `funkcja: "linia_zabudowy"` (łamana;
+  pomijany przez `wczytaj_tereny`), `wczytaj_linie`; w zestawieniu
+  budynków `przecina_linie`, `od_linii_m` (odległość w metrach) i liczba
+  budynków przecinających linię
+- Mapa: narzędzie łamanej (zawsze linia zabudowy; wielobok przy wybranej
+  linii — komunikat), styl czerwony przerywany, linie na wierzchu;
+  funkcji zaznaczonej linii nie da się zmienić na teren; kolumna „Od
+  linii m” i kontrola w karcie „Budynki”; polskie podpowiedzi narzędzia
+- Szkic SVG: linia czerwona przerywana nad budynkami; `dane/dxf.py`:
+  obiekt `linia` (otwarta polilinia); DXF koncepcji: warstwa
+  `OSIEDLE_LINIA_ZABUDOWY`; przy okazji numeracja opisów w DXF tylko dla
+  terenów (od ETAPu 173 liczyła też budynki — inaczej niż raport);
+  raport: ostrzeżenie o przecięciu
+- Testy: przecięcie i odległość, walidacja łamanej, szkic, DXF, raport;
+  sprawdzone w przeglądarce (rysowanie łamanej myszą) 1300/390 px
+- Pomoc: „Linia zabudowy”
+- `DECISIONS.md`: D-183

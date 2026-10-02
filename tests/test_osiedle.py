@@ -597,3 +597,41 @@ def test_wskazniki_z_budynkow(client):
     client.put(f"/osiedle/koncepcje/{k2}", json={"geojson": kolekcja(prostokat(0, 0, 100, 100, "MN"))})
     porownanie = client.get(f"/osiedle/porownanie?id={k}&id={k2}").get_data(as_text=True)
     assert "z budynków: intensywność" in porownanie
+
+
+# ---------- ETAP 175: nieprzekraczalna linia zabudowy ----------
+
+
+def linia(punkty, funkcja="linia_zabudowy"):
+    return {"type": "Feature", "properties": {"funkcja": funkcja},
+            "geometry": {"type": "LineString", "coordinates": [[17 + x / MX, 52 + y / MY] for x, y in punkty]}}
+
+
+def test_linia_zabudowy(client):
+    rysunek = kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 100, 100, "MW"),
+                       linia([(0, 80), (100, 80)]),
+                       prostokat(10, 10, 20, 10, "budynek"),        # 60 m od linii
+                       prostokat(40, 75, 20, 10, "budynek"))        # przecina linię
+    b = bilans(rysunek)
+    bud = b["budynki"]
+    assert bud["linii_zabudowy"] == 1 and bud["przecina_linie"] == 1
+    assert [x["przecina_linie"] for x in bud["lista"]] == [False, True]
+    assert bud["lista"][0]["od_linii_m"] == pytest.approx(60, abs=0.2) and bud["lista"][1]["od_linii_m"] == 0
+    assert {f["funkcja"] for f in b["funkcje"]} == {"MW"}  # linia nie jest terenem
+    assert "od_linii_m" not in bilans(kolekcja(prostokat(0, 0, 10, 10, "budynek")))["budynki"]["lista"][0]
+    with pytest.raises(BladKoncepcji):
+        bilans(kolekcja(linia([(0, 0), (10, 0)], funkcja="MW")))  # łamana jako teren
+    with pytest.raises(BladKoncepcji):
+        bilans(kolekcja({"type": "Feature", "properties": {"funkcja": "linia_zabudowy"}, "geometry": prostokat(0, 0, 5, 5, "x")["geometry"]}))
+    # szkic, DXF i GeoJSON radzą sobie z łamaną
+    from osiedle.dxf_koncepcji import koncepcja_dxf
+    from osiedle.rysunek_svg import szkic_svg
+
+    svg = szkic_svg(rysunek, numery=True)
+    assert 'stroke="#d70015"' in svg and svg.count("<circle") == 1
+    tekst, _ = koncepcja_dxf(rysunek)
+    assert "OSIEDLE_LINIA_ZABUDOWY" in tekst and tekst.count("\nMW 1\n") == 1 and "MW 2" not in tekst
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "L"}).get_json()["id"]
+    assert client.put(f"/osiedle/koncepcje/{k}", json={"geojson": rysunek}).status_code == 200
+    assert client.get(f"/osiedle/koncepcje/{k}.dxf").status_code == 200
+    assert "przecinających nieprzekraczalną linię zabudowy: 1" in client.get(f"/osiedle/koncepcje/{k}/raport").get_data(as_text=True)
