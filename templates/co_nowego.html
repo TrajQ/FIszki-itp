@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block tytul %}Co nowego — Warsztat{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Co nowego</h1>
+        <p>Zmiany w kolejnych ETAPach — najnowsze na górze. Pełna lista ({{ wszystkich }} ETAPów) jest w <code>docs/CHANGELOG.md</code>.</p>
+    </div>
+</div>
+<ol class="co-nowego">
+    {% for w in wpisy %}
+    <li class="karta co-nowego__etap{{ ' co-nowego__etap--nowy' if poprzedni is not none and w.etap > poprzedni }}">
+        <h3>ETAP {{ w.etap }} <span class="wyciszony">· {{ w.data }}</span>{% if poprzedni is not none and w.etap > poprzedni %} <span class="etykieta etykieta--akcent">nowe</span>{% endif %}</h3>
+        <ul>{% for p in w.punkty %}<li>{{ p }}</li>{% endfor %}</ul>
+    </li>
+    {% else %}
+    <li class="wyciszony">Brak pliku docs/CHANGELOG.md.</li>
+    {% endfor %}
+</ol>
+{% endblock %}

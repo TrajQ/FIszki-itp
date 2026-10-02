@@ -931,3 +931,6 @@
 
 ## ETAP 158 — 2026-10-02
 - Przepisy: druk artykułów z notatkami albo wybranych
+
+## ETAP 159 — 2026-10-02
+- „Co nowego” — zmiany po aktualizacji, pasek na stronie głównej

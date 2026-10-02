@@ -3375,3 +3375,17 @@ Notatki, które są trwałe, mają własny tryb `?notatki=1`.
 
 **Odrzucone alternatywy:**
 - Zapamiętane „zakładki” artykułów — notatki pełnią już tę rolę.
+
+## D-167 — „Co nowego” z CHANGELOG-u, bez osobnej listy
+Data: 2026-10-02
+
+**Decyzja:** Strona „Co nowego” czyta `docs/CHANGELOG.md`, który i tak jest
+uzupełniany po każdym ETAPie. Ostatnio obejrzany ETAP to jedna liczba w
+pliku w `instance/`.
+
+**Uzasadnienie:** Użytkownik nie czyta plików w repozytorium, a po
+aktualizacji o kilka ETAPów nie wie, co doszło. Jedno źródło zmian — brak
+ryzyka, że dwie listy się rozjadą.
+
+**Odrzucone alternatywy:**
+- Osobna, krótsza lista „dla użytkownika” — kolejny plik do utrzymania.

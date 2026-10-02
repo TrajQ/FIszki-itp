@@ -115,13 +115,16 @@ def create_app(instance_path=None):
         from kopia import ostatnia_kopia_automatyczna
 
         ostatnie = ostatnio_uzywane()
+        import nowosci  # ETAP 159
+
+        nowe_etapy = nowosci.nowe(app.instance_path)
         # ETAP 146: „Pierwsze kroki”, dopóki w żadnym module nie ma własnych danych
         pusta = not ostatnie and not podsumowania.get("atlas") and not (podsumowania.get("dostepnosc") or {}).get("pliki")
         pierwsze_kroki = {"klucz_gemini": bool(app.config.get("GEMINI_API_KEY")),
                           "klucz_gus": bool(app.config.get("GUS_BDL_API_KEY"))} if pusta else None
         return render_template(
             "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
-            ostatnie=ostatnie, pierwsze_kroki=pierwsze_kroki,
+            ostatnie=ostatnie, pierwsze_kroki=pierwsze_kroki, nowe_etapy=nowe_etapy,
             kopia_auto=ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
             auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
         )
@@ -177,6 +180,17 @@ def create_app(instance_path=None):
     def pomoc():
         """Krótkie przepisy „jak zrobić…” dla każdego modułu (ETAP 87)."""
         return render_template("pomoc.html")
+
+    @app.route("/co-nowego")
+    def co_nowego():
+        """ETAP 159: zmiany z docs/CHANGELOG.md; obejrzenie strony zeruje pasek na stronie głównej."""
+        import nowosci
+
+        lista = nowosci.wpisy()
+        poprzedni = nowosci.widziany(app.instance_path)
+        if lista:
+            nowosci.zapisz_widziany(app.instance_path, lista[0]["etap"])
+        return render_template("co_nowego.html", wpisy=lista[:40], poprzedni=poprzedni, wszystkich=len(lista))
 
     @app.route("/szukaj")
     def szukaj():

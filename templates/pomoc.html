@@ -22,6 +22,9 @@
     <details><summary>Jak uruchomić i zamknąć Warsztat?</summary>
         <p>Ikoną z pulpitu. Otwiera się okno terminala i przeglądarka z adresem <code>http://127.0.0.1:{{ config.PORT }}</code>. Zamknięcie okna terminala zamyka aplikację. Warsztat działa tylko na tym komputerze — nikt z sieci się z nim nie połączy.</p>
     </details>
+    <details><summary>Co się zmieniło po aktualizacji?</summary>
+        <p>Po aktualizacji (<code>./aktualizuj.sh</code>) strona główna pokazuje pasek „Warsztat zaktualizowany — … Zobacz, co nowego”. <a href="{{ url_for('co_nowego') }}">Co nowego</a> zbiera zmiany z kolejnych ETAPów, nowe od ostatniej wizyty są oznaczone; po obejrzeniu pasek znika.</p>
+    </details>
     <details><summary>Jak przełączyć jasny i ciemny wygląd?</summary>
         <p>Przycisk ◐ na końcu menu przełącza po kolei: jak w systemie → jasny (☀) → ciemny (☾). Wybór zapamiętuje przeglądarka. Jasny przydaje się np. przy rzutniku na zajęciach, gdy system ma tryb ciemny.</p>
     </details>

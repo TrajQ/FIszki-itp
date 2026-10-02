@@ -2751,3 +2751,18 @@ Status: zamknięty
 - Własne klasy wydruku w przepisy.css (bez pożyczania z modułu Ceny)
 - Test; sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-166
+
+## ETAP 159 — Co nowego po aktualizacji
+Data: 2026-10-02
+Status: zamknięty
+
+- `nowosci.py`: wpisy z `docs/CHANGELOG.md` (nagłówki „## ETAP N —
+  data”, punkty wieloliniowe sklejone), od najnowszego; numer ostatnio
+  obejrzanego ETAPu w `instance/widziana_wersja.txt`; pierwsze
+  uruchomienie zapisuje bieżący ETAP bez paska
+- Strona `/co-nowego` (40 ostatnich ETAPów, nowe oznaczone); jej
+  obejrzenie usuwa pasek „Warsztat zaktualizowany…” ze strony głównej
+- Wpis w Pomocy
+- Testy: parsowanie, pierwsze uruchomienie, pasek, oznaczenie, znikanie;
+  sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-167

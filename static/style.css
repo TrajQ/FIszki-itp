@@ -722,6 +722,36 @@ input[type="file"]::file-selector-button {
     }
 }
 
+/* ---------- Co nowego (ETAP 159) ---------- */
+
+.co-nowego {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.co-nowego__etap h3 {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+}
+
+.co-nowego__etap ul {
+    margin: 0;
+    padding-left: 1.2em;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
+.co-nowego__etap--nowy {
+    box-shadow: inset 3px 0 0 var(--akcent), var(--cien);
+}
+
+.co-nowego__pasek {
+    margin-bottom: 20px;
+}
+
 /* ---------- Pierwsze kroki: pusta instalacja (ETAP 146) ---------- */
 
 .pierwsze-kroki {
