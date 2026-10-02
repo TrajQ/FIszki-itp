@@ -2886,3 +2886,25 @@ Status: zamknięty
   telefonu 390 px ciemny: brak wymaganego, liczba za duża, zapis poprawny)
 - Pomoc: „Pola wymagane i zakres liczb”
 - `DECISIONS.md`: D-174
+
+## ETAP 167 — Skróty klawiszowe: okno „?”, wyszukiwanie, mapa; lista w Pomocy
+Data: 2026-10-02
+Status: zamknięty
+
+- `static/skroty.js` (każda strona): `?` — okno ze skrótami (wspólne +
+  tej strony), `/` — pole wyszukiwania strony (atrybut `data-skrot-szukaj`:
+  Atlas, MPZP — działka, symbole, Fiszki, Przepisy, akt — „Idź do”,
+  Szukaj), gdzie go nie ma — strona Szukaj; `m` — fokus na pierwszej
+  widocznej mapie Leaflet (strzałki i +/− działają od razu); bez działania
+  w polach tekstowych i z Ctrl/Alt/Cmd; link do zwiniętej sekcji
+  (`#kotwica` na `<details>`) ją rozwija
+- `base.html`: `<dialog id="okno-skrotow">` z blokiem `skroty` — wiersze
+  stron: powtórka (spacja, 1–3, Ctrl+Enter), quiz (1–4/A–D, Enter), MPZP
+  (Esc — pomiar)
+- Powtórka i quiz ignorują klawisze, gdy okno skrótów jest otwarte
+- Pomoc → Na start: „Skróty klawiszowe” (`#skroty`) — pełna tabela
+- Przy okazji: niepoprawna sekwencja `\;` w teście kalendarza
+  (ostrzeżenie Pythona) poprawiona
+- Test: okno i skróty strony, pola wyszukiwania, sekcja Pomocy;
+  sprawdzone w przeglądarce 1300/390 px (?, Esc, /, m, Pomoc#skroty)
+- `DECISIONS.md`: D-175

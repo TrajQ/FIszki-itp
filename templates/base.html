@@ -34,7 +34,24 @@
         {% block tresc %}{% endblock %}
     </main>
 
+    {# ETAP 167: lista skrótów pod klawiszem „?”; strony dopisują swoje w bloku `skroty` (wiersze <tr>) #}
+    <dialog id="okno-skrotow" class="okno-skrotow" aria-labelledby="tytul-skrotow" data-url-szukaj="{{ url_for('szukaj') }}">
+        <div class="okno-skrotow__naglowek">
+            <h2 id="tytul-skrotow">Skróty klawiszowe</h2>
+            <button type="button" id="zamknij-skroty" class="przycisk--tekst" aria-label="Zamknij">✕</button>
+        </div>
+        <table class="tabela okno-skrotow__tabela">
+            {% block skroty %}{% endblock %}
+            <tr><td><kbd>/</kbd></td><td>szukaj — pole wyszukiwania na tej stronie albo strona Szukaj</td></tr>
+            <tr><td><kbd>m</kbd></td><td>na stronie z mapą: przejdź do mapy — potem <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> przesuwają, <kbd>+</kbd> <kbd>−</kbd> przybliżają</td></tr>
+            <tr><td><kbd>?</kbd></td><td>ta lista</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>zamyka okno; w trakcie rysowania na mapie — przerywa rysowanie</td></tr>
+        </table>
+        <p class="wyciszony">Skróty nie działają, gdy piszesz w polu tekstowym. Pełna lista — <a href="{{ url_for('pomoc') }}#skroty">Pomoc</a>.</p>
+    </dialog>
+
     <script src="{{ url_for('static', filename='motyw.js') }}"></script>
+    <script src="{{ url_for('static', filename='skroty.js') }}"></script>
     {% block skrypty %}{% endblock %}
 </body>
 </html>

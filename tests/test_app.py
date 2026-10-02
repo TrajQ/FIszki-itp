@@ -205,7 +205,7 @@ def test_plik_ics_zgodny_z_rfc5545():
     assert "\n" not in ics.replace("\r\n", "")  # tylko CRLF
     assert all(len(l.encode("utf-8")) <= 75 for l in linie)
     rozlozone = ics.replace("\r\n ", "")  # złożenie łamanych linii
-    assert "SUMMARY:Egzamin: Kolokwium\\, prawo\; część 1" in rozlozone
+    assert "SUMMARY:Egzamin: Kolokwium\\, prawo\\; część 1" in rozlozone
     assert "DESCRIPTION:wszystkie fiszki: utrwalone 40%\\nok. 5 dziennie" in rozlozone
     assert "DTSTART;VALUE=DATE:20261002\r\nDTEND;VALUE=DATE:20261003" in ics and "DTSTAMP:20260930T080000Z" in ics
     assert rozlozone.count("BEGIN:VEVENT") == 2 and "URL:http://127.0.0.1:5000/teren/projekty/1" in rozlozone
@@ -479,3 +479,17 @@ def test_pierwsze_kroki_tylko_w_pustej_instalacji(czysty_client):
     assert "Klucz Gemini jest ustawiony" in c.get("/").get_data(as_text=True)
     c.post("/osiedle/koncepcje", json={"nazwa": "Pierwsza"})
     assert "Pierwsze kroki" not in c.get("/").get_data(as_text=True)  # coś zapisane — karta znika
+
+
+# ---------- ETAP 167: skróty klawiszowe ----------
+
+
+def test_okno_skrotow(client):
+    glowna = client.get("/").get_data(as_text=True)
+    assert 'id="okno-skrotow"' in glowna and "skroty.js" in glowna and 'data-url-szukaj="/szukaj"' in glowna
+    powtorka = client.get("/fiszki/powtorka").get_data(as_text=True)
+    assert "nie umiem / trudne / umiem" in powtorka  # skróty strony w oknie
+    assert "nie umiem / trudne / umiem" not in glowna
+    for strona in ("/atlas/", "/mpzp/", "/fiszki/", "/przepisy/", "/szukaj"):
+        assert "data-skrot-szukaj" in client.get(strona).get_data(as_text=True), strona
+    assert 'id="skroty"' in client.get("/pomoc").get_data(as_text=True)

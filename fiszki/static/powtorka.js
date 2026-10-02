@@ -255,6 +255,7 @@
 
     document.addEventListener("keydown", (zdarzenie) => {
         if (zdarzenie.target.matches("input:not([type=checkbox]), textarea")) return;
+        if (document.querySelector("dialog[open]")) return; // okno skrótów (ETAP 167) — spacja nie odsłania za nim
         if (zdarzenie.code === "Space") {
             zdarzenie.preventDefault();
             odslon();

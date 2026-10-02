@@ -30,7 +30,7 @@
 
 <section class="karta stos">
     <form id="formularz-szukania" class="szukajka" role="search">
-        <input id="pole-szukania" type="search" placeholder="np. intensywność zabudowy, „działka budowlana”, art. 15" aria-label="Szukaj w przepisach" autocomplete="off" {{ 'disabled' if not akty }}>
+        <input id="pole-szukania" type="search" data-skrot-szukaj placeholder="np. intensywność zabudowy, „działka budowlana”, art. 15" aria-label="Szukaj w przepisach" autocomplete="off" {{ 'disabled' if not akty }}>
         <select id="filtr-aktu" aria-label="Szukaj w akcie" {{ 'disabled' if not akty }}>
             <option value="">we wszystkich aktach</option>
             {% for a in akty %}<option value="{{ a.id }}">{{ a.nazwa | truncate(70) }}</option>{% endfor %}

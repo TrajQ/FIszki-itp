@@ -42,7 +42,7 @@
 
 <div class="uklad-aktu">
     <nav class="karta spis-aktu" aria-label="Spis jednostek">
-        <input id="filtr-spisu" type="search" placeholder="Idź do: 15a" aria-label="Filtruj spis">
+        <input id="filtr-spisu" type="search" data-skrot-szukaj placeholder="Idź do: 15a" aria-label="Filtruj spis">
         <ol id="spis">
             {% for j in jednostki %}
             {% if j.naglowek and (loop.first or j.naglowek != jednostki[loop.index0 - 1].naglowek) %}<li class="spis-aktu__naglowek">{{ j.naglowek }}</li>{% endif %}

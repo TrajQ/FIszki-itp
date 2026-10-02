@@ -27,7 +27,7 @@
     <div id="mapa" class="karta"></div>
     <aside class="panel-boczny">
         <form id="szukaj-dzialki" class="karta szukaj-dzialki">
-            <input id="pole-id-dzialki" type="search" placeholder="Obręb i numer działki, np. Jeżyce 18/14"
+            <input id="pole-id-dzialki" type="search" data-skrot-szukaj placeholder="Obręb i numer działki, np. Jeżyce 18/14"
                    autocomplete="off" role="combobox" aria-expanded="false" aria-controls="podpowiedzi-dzialek">
             <button type="submit">Szukaj</button>
             <ul id="podpowiedzi-dzialek" class="podpowiedzi-dzialek" role="listbox" hidden></ul>
@@ -52,6 +52,10 @@
         </section>
     </aside>
 </div>
+{% endblock %}
+
+{% block skroty %}
+<tr><td><kbd>Esc</kbd></td><td>wyłącza pomiar odległości i powierzchni</td></tr>
 {% endblock %}
 
 {% block skrypty %}

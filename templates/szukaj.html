@@ -11,7 +11,7 @@
 </div>
 
 <form class="karta rzad szukaj-globalnie" method="get" action="{{ url_for('szukaj') }}" role="search">
-    <input type="search" name="q" value="{{ fraza }}" placeholder="np. intensywność zabudowy, Kazimierz, 123/4" aria-label="Czego szukasz" minlength="2" required autofocus>
+    <input type="search" name="q" data-skrot-szukaj value="{{ fraza }}" placeholder="np. intensywność zabudowy, Kazimierz, 123/4" aria-label="Czego szukasz" minlength="2" required autofocus>
     <button type="submit">Szukaj</button>
 </form>
 

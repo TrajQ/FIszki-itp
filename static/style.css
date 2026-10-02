@@ -251,6 +251,65 @@ code {
     color: var(--tekst);
 }
 
+/* ---------- okno skrótów klawiszowych (ETAP 167) ---------- */
+
+.okno-skrotow {
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 64px);
+    padding: 20px 24px;
+    border: 0;
+    border-radius: var(--promien);
+    background: var(--tlo-karty);
+    color: var(--tekst);
+    box-shadow: var(--cien);
+}
+
+.okno-skrotow::backdrop {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.okno-skrotow__naglowek {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.okno-skrotow h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.okno-skrotow__tabela {
+    margin: 12px 0;
+    font-size: 14px;
+}
+
+.okno-skrotow__tabela td:first-child {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.okno-skrotow kbd,
+.lista-skrotow kbd {
+    display: inline-block;
+    min-width: 1.6em;
+    padding: 0.1em 0.45em;
+    border: 1px solid var(--linia);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--tlo-wyciszone);
+    color: var(--tekst);
+    font-family: var(--czcionka);
+    font-size: 0.85em;
+    text-align: center;
+}
+
+.okno-skrotow p {
+    margin: 0;
+    font-size: 13px;
+}
+
 /* ---------- Układ strony ---------- */
 
 .tresc {

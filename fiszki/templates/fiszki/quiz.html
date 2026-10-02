@@ -47,6 +47,11 @@
 </div>
 {% endblock %}
 
+{% block skroty %}
+<tr><td><kbd>1</kbd>–<kbd>4</kbd> albo <kbd>A</kbd>–<kbd>D</kbd></td><td>wybierz odpowiedź</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>następne pytanie</td></tr>
+{% endblock %}
+
 {% block skrypty %}
 <script>
     const URL_PYTANIA = "{{ url_for('fiszki.quiz_pytania', pdf_id=pdf['id'] if pdf else None, temat=temat) }}";

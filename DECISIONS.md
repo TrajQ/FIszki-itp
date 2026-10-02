@@ -3508,3 +3508,23 @@ migracji zapisanych projektów.
 - Odrzucanie punktów z brakami przy imporcie — utrata danych z terenu.
 - Domyślne zakresy dla wzorów (np. kondygnacje 1–30) — Warsztat nie
   zgaduje reguł za użytkownika.
+
+## D-175 — Skróty klawiszowe: jeden plik wspólny, skróty stron w szablonach
+Data: 2026-10-02
+
+**Decyzja:** Skróty wspólne (`?`, `/`, `m`) obsługuje jeden plik
+`static/skroty.js` ładowany w `base.html`. Lista w oknie składa się z
+wierszy wspólnych i bloku `skroty`, który wypełnia szablon strony.
+Skróty działające już w modułach (powtórka, quiz, pomiar w MPZP) zostają
+w ich plikach JS — okno tylko je opisuje.
+
+**Uzasadnienie:** Lista skrótów jest tam, gdzie jest strona — kto zmienia
+szablon, widzi też jej skróty. Pojedyncze litery bez modyfikatorów, bo
+Ctrl/Alt to skróty przeglądarki i systemu (Linux Mint). Skróty nie
+działają w polach tekstowych, żeby „m” czy „/” dało się wpisać.
+
+**Odrzucone alternatywy:**
+- Rejestr skrótów w JS z opisami generowanymi do okna — wspólna
+  abstrakcja dla trzech miejsc; szablon wystarcza.
+- Skróty nawigacji „g a” (do Atlasu) itp. — menu jest zawsze widoczne,
+  a dwuklawiszowe sekwencje trudno zapamiętać.

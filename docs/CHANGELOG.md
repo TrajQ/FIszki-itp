@@ -955,3 +955,6 @@
 
 ## ETAP 166 — 2026-10-02
 - Teren: pola wymagane i zakresy liczb — pilnuje ich formularz na telefonie
+
+## ETAP 167 — 2026-10-02
+- Skróty klawiszowe: „?” pokazuje listę, „/” wyszukiwanie, „m” mapa; tabela w Pomocy

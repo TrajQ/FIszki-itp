@@ -69,6 +69,12 @@
 </div>
 {% endblock %}
 
+{% block skroty %}
+<tr><td><kbd>spacja</kbd></td><td>pokaż odpowiedź</td></tr>
+<tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>nie umiem / trudne / umiem</td></tr>
+<tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>w trybie pisania: sprawdź wpisaną odpowiedź</td></tr>
+{% endblock %}
+
 {% block skrypty %}
 <script>
     const URL_KOLEJKA = "{{ url_for('fiszki.kolejka_powtorki', pdf_id=pdf['id'] if pdf else None, wszystkie=1 if wszystkie else None, temat=temat) }}";
