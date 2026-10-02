@@ -889,3 +889,6 @@
 
 ## ETAP 144 — 2026-10-02
 - Testy: warstwa Gemini, mapy druku Atlasu, import obszaru, aktualizacja (pokrycie 95%)
+
+## ETAP 145 — 2026-10-02
+- Dokumentacja: docs/ARCHITEKTURA.md — jak aplikacja jest poskładana

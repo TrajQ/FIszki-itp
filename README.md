@@ -24,6 +24,7 @@ Uruchomienie na Linux Mint: [docs/URUCHOMIENIE.md](docs/URUCHOMIENIE.md).
 Aktualizacja z pobranego ZIP-a: `./aktualizuj.sh` (kopia zapasowa, dane
 i klucze bez zmian).
 Opis projektu do portfolio: [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
+Jak aplikacja jest poskładana: [docs/ARCHITEKTURA.md](docs/ARCHITEKTURA.md).
 Postęp prac: [docs/PROGRESS.md](docs/PROGRESS.md), decyzje:
 [DECISIONS.md](DECISIONS.md), zasady pracy: [CLAUDE.md](CLAUDE.md).
 

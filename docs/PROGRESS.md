@@ -2525,3 +2525,20 @@ Status: zamknięty
   port z `.env`
 - Instrukcja pomiaru w README
 - `DECISIONS.md`: D-152
+
+## ETAP 145 — Dokumentacja: architektura
+Data: 2026-10-02
+Status: zamknięty
+
+- `docs/ARCHITEKTURA.md`: obraz całości (start → `create_app` →
+  blueprinty → `dane/` → `instance/`), konfiguracja i ochrona, układ
+  modułu, haki dla stron wspólnych (`podsumowanie`, `terminy`,
+  `wyszukaj`, `ostatnie`), powiązania między modułami (sprawdzone
+  w importach), warstwa `dane/`, zasady pilnowane przez kod (liczby z
+  danych, cytaty w źródle, kotwice, SVG z serwera, nietykalne dane),
+  frontend, testy i narzędzia, kolejność czytania kodu
+- Odnośniki do decyzji sprawdzone z `DECISIONS.md`
+- Stan faktyczny: geometria jako GeoJSON w SQLite + shapely; SpatiaLite
+  (wymieniony w stosie w CLAUDE.md) nie jest używany
+- Link w README
+- `DECISIONS.md`: D-153

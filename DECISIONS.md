@@ -3144,3 +3144,22 @@ a to on decyduje, co trafia do fiszki. Próg kusiłby testami „dla procentu”
 **Odrzucone alternatywy:**
 - pytest-cov w zależnościach — kolejny pakiet w instalacji użytkownika
   tylko dla narzędzia deweloperskiego.
+
+## D-153 — Architektura opisana w jednym pliku, ze stanem faktycznym
+Data: 2026-10-02
+
+**Decyzja:** `docs/ARCHITEKTURA.md` opisuje aplikację tak, jak jest w
+kodzie (sprawdzone importami i grepem), z odnośnikami do decyzji.
+Rozbieżność z opisem stosu w CLAUDE.md jest nazwana wprost: geometria
+leży w SQLite jako GeoJSON i liczy ją shapely, SpatiaLite nie wszedł do
+projektu.
+
+**Uzasadnienie:** Po 140 ETAPach wiedza o układzie była rozsiana po
+PROGRESS (2500 linii) i 150 decyzjach. Ktoś wracający po trzech miesiącach
+potrzebuje mapy na jedną stronę.
+
+**Odrzucone alternatywy:**
+- Diagramy generowane narzędziem — kolejna zależność; obraz ASCII
+  wystarcza i da się go poprawić w edytorze.
+- Zmiana wpisu o SpatiaLite w CLAUDE.md — to sekcja „Stack — nie zmieniaj
+  bez pytania”; zostaje do decyzji autora.
