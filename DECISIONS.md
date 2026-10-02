@@ -3434,3 +3434,21 @@ oznaczałyby kilkadziesiąt zapytań do ULDK i WFS.
 
 **Odrzucone alternatywy:**
 - Obrysy działek na schemacie — wymagałyby pobrania geometrii z ULDK.
+
+## D-171 — Dzielnice w Dostępności bez zapisu na serwerze
+Data: 2026-10-02
+
+**Decyzja:** Obszary narysowane w module Dostępność nie trafiają do bazy:
+przeglądarka trzyma je w localStorage (osobno dla pliku wyników) i
+przysyła do bezstanowej trasy, która liczy statystyki. Komórka należy do
+obszaru, gdy jej środek jest w wieloboku.
+
+**Uzasadnienie:** Moduł nie ma bazy (czyta pliki wyników, D-034) —
+dokładanie jej dla listy wieloboków to nowy plik w kopii zapasowej i
+migracje. Obszary łatwo narysować ponownie; wynik zależy tylko od pliku
+i wieloboku. Środek komórki zamiast części wspólnej — komórki H3 są małe,
+a podział mieszkańców proporcjonalnie do pola byłby fałszywą dokładnością.
+
+**Odrzucone alternatywy:**
+- Tabela obszarów jak w Cenach (`rcn_obszary`) — Ceny mają bazę modułu;
+  tu byłaby jedyną tabelą.

@@ -5,6 +5,7 @@
 {% block klasa_body %}strona--szeroka{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet-draw/leaflet.draw.css') }}">
 <link rel="stylesheet" href="{{ url_for('dostepnosc.static', filename='dostepnosc.css') }}">
 {% endblock %}
 
@@ -115,6 +116,14 @@
             </table>
         </section>
 
+        <section class="karta stos" id="karta-dzielnic">
+            <h3>Dzielnice</h3>
+            <p class="wyciszony porownanie__opis">Narysuj na mapie dzielnicę albo osiedle (wielobok lub prostokąt w lewym górnym rogu mapy) — do 8 obszarów. Komórka należy do obszaru, gdy jej środek jest w środku; czas średni ważony liczbą mieszkańców, gdy plik ją ma. Obszary pamięta ta przeglądarka, osobno dla każdego pliku.</p>
+            <ul id="lista-dzielnic" class="lista-dzielnic"></ul>
+            <div class="przewijanie-dzielnic"><table class="tabela" id="tabela-dzielnic" hidden></table></div>
+            <p id="status-dzielnic" class="wyciszony" hidden></p>
+        </section>
+
         <section class="karta stos">
             <h3>Porównaj scenariusze</h3>
             <p class="wyciszony porownanie__opis">Np. stan obecny i stan po budowie szkoły. Bieżący plik to „przed”, wybrany — „po”.</p>
@@ -190,5 +199,6 @@
     const URL_KOMORKA = "{{ url_for('dostepnosc.komorka', nazwa='__PLIK__', indeks='__H3__') }}";
 </script>
 <script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='leaflet-draw/leaflet.draw.js') }}"></script>
 <script src="{{ url_for('dostepnosc.static', filename='dostepnosc.js') }}"></script>
 {% endblock %}

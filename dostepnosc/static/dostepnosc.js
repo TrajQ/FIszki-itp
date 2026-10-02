@@ -230,9 +230,116 @@
         pokazOgniwo(analiza);
         pokazKrzywa(analiza);
         pokazLuki(analiza);
+        odswiezDzielnice(); // ETAP 163: tabela dzielnic dla nowego wskaźnika
         // „Gdzie nowa placówka?” — tylko dla czasu dojścia do jednej usługi.
         document.getElementById("lokalizacja-blok").hidden = !analiza.minuty || kolumna === WARTOSC_LACZNY;
         ustawLinkGeojson(null);
+    }
+
+    // ---------- wyniki w narysowanych dzielnicach (ETAP 163) — liczy serwer (dostepnosc/obszary.py) ----------
+
+    const KOLORY_DZIELNIC = ["#0071e3", "#34c759", "#5e5ce6", "#ff375f", "#30b0c7", "#8e6e4e", "#bf5af2", "#1d1d1f"];
+    const KLUCZ_DZIELNIC = `dostepnosc.dzielnice.${NAZWA_PLIKU}`;
+    const warstwaDzielnic = L.featureGroup().addTo(mapa);
+    let dzielnice = []; // [{nazwa, geometria}]
+    try {
+        dzielnice = JSON.parse(localStorage.getItem(KLUCZ_DZIELNIC) || "[]");
+    } catch (e) {
+        dzielnice = []; // bez localStorage obszary znikną po przeładowaniu
+    }
+    function zapamietajDzielnice() {
+        try {
+            localStorage.setItem(KLUCZ_DZIELNIC, JSON.stringify(dzielnice));
+        } catch (e) {
+            /* tylko wygoda */
+        }
+    }
+    mapa.addControl(new L.Control.Draw({
+        position: "topleft",
+        draw: { polygon: { allowIntersection: false, showArea: false }, rectangle: { showArea: false }, polyline: false, circle: false, marker: false, circlemarker: false },
+    }));
+    mapa.on(L.Draw.Event.CREATED, (e) => {
+        if (dzielnice.length >= 8) return pokazBlad("Najwyżej 8 obszarów — usuń któryś z listy.");
+        const nazwa = (prompt("Nazwa obszaru (np. Jeżyce):", `Obszar ${dzielnice.length + 1}`) || "").trim();
+        if (!nazwa) return;
+        dzielnice.push({ nazwa, geometria: e.layer.toGeoJSON().geometry });
+        zapamietajDzielnice();
+        odswiezDzielnice();
+    });
+
+    async function odswiezDzielnice() {
+        const lista = document.getElementById("lista-dzielnic");
+        const tabela = document.getElementById("tabela-dzielnic");
+        const status = document.getElementById("status-dzielnic");
+        warstwaDzielnic.clearLayers();
+        lista.replaceChildren();
+        dzielnice.forEach((d, i) => {
+            const kolor = KOLORY_DZIELNIC[i % KOLORY_DZIELNIC.length];
+            const napis = document.createElement("span");
+            napis.textContent = `${i + 1}. ${d.nazwa}`; // nazwa od użytkownika — jako tekst
+            L.geoJSON(d.geometria, { style: { color: kolor, weight: 2.5, fill: false, dashArray: "6 4" }, interactive: false })
+                .bindTooltip(napis).addTo(warstwaDzielnic);
+            const li = document.createElement("li");
+            const nr = document.createElement("span");
+            nr.className = "lista-dzielnic__nr";
+            nr.style.borderColor = nr.style.color = kolor;
+            nr.textContent = i + 1;
+            const nazwa = document.createElement("span");
+            nazwa.textContent = d.nazwa;
+            const usun = document.createElement("button");
+            usun.type = "button";
+            usun.className = "przycisk--tekst";
+            usun.textContent = "Usuń";
+            usun.addEventListener("click", () => {
+                dzielnice.splice(i, 1);
+                zapamietajDzielnice();
+                odswiezDzielnice();
+            });
+            li.append(nr, nazwa, usun);
+            lista.appendChild(li);
+        });
+        tabela.hidden = status.hidden = true;
+        if (!dzielnice.length || !biezacaKolumna) return;
+        try {
+            const odp = await fetch(`${urlPliku}/obszary`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ kolumna: biezacaKolumna === WARTOSC_LACZNY ? "laczny" : biezacaKolumna, obszary: dzielnice }),
+            });
+            const w = await odp.json().catch(() => ({}));
+            if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+            const naglowek = document.createElement("tr");
+            const kolumny = [["Obszar", ""], ["Komórek", "liczba"], ["Mieszkańcy", "liczba"], [w.minuty ? "Czas śr. [min]" : "Średnia", "liczba"], ["Mediana", "liczba"]];
+            if (w.minuty) kolumny.push([`Do ${w.prog} min`, "liczba"]);
+            for (const [t, k] of kolumny) {
+                const th = document.createElement("th");
+                th.className = k;
+                th.textContent = t;
+                naglowek.appendChild(th);
+            }
+            tabela.replaceChildren(naglowek);
+            const wiersz = (nazwa, s) => {
+                const tr = document.createElement("tr");
+                const komorki = [nazwa, s.komorek, s.mieszkancy === undefined ? "—" : formatLiczby.format(s.mieszkancy),
+                    s.srednia === undefined ? "—" : formatLiczby.format(s.srednia), s.mediana === undefined ? "—" : formatLiczby.format(s.mediana)];
+                if (w.minuty) komorki.push(s.w_zasiegu_proc === undefined ? "—" : `${formatProcentu.format(s.w_zasiegu_proc)}%`);
+                komorki.forEach((tekst, k) => {
+                    const td = document.createElement("td");
+                    td.className = k ? "liczba" : "";
+                    td.textContent = tekst;
+                    tr.appendChild(td);
+                });
+                return tr;
+            };
+            w.obszary.forEach((o, i) => tabela.appendChild(wiersz(`${i + 1}. ${o.nazwa}`, o)));
+            const calosc = wiersz("cały plik", w.calosc);
+            calosc.className = "tabela-dzielnic__calosc";
+            tabela.appendChild(calosc);
+            tabela.hidden = false;
+        } catch (e) {
+            status.textContent = e.message;
+            status.hidden = false;
+        }
     }
 
     // ---------- gdzie nowa placówka (ETAP 78) ----------

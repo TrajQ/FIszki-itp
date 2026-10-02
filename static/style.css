@@ -936,6 +936,22 @@ input[type="file"]::file-selector-button {
     background: var(--tlo-wyciszone);
 }
 
+/* Ikony Leaflet.draw (Osiedle, Ceny, Dostępność): reguła wyżej ustawia
+   „background” skrótem i kasuje obrazki z leaflet.draw.css — przywracamy je
+   wyższą szczegółowością. Tło zawsze jasne, bo ikony w arkuszu są ciemne
+   (także w trybie ciemnym). Wcześniej kopia w osiedle.css i ceny.css (ETAP 163). */
+.leaflet-container .leaflet-bar.leaflet-draw-toolbar a {
+    background-color: #ffffff;
+    background-image: url("leaflet-draw/images/spritesheet.svg");
+    background-repeat: no-repeat;
+    background-size: 300px 30px;
+    background-clip: padding-box;
+}
+
+.leaflet-container .leaflet-bar.leaflet-draw-toolbar a:hover {
+    background-color: #f0f0f3;
+}
+
 /* ---------- Wąskie ekrany ---------- */
 
 @media (max-width: 700px) {

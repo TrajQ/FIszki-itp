@@ -2812,3 +2812,22 @@ Status: zamknięty
   ULDK i planów; link „Druk ↗” w panelu „Moje działki”; stopka wydruku
 - Test; sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-170
+
+## ETAP 163 — Dostępność: wyniki w narysowanych dzielnicach
+Data: 2026-10-02
+Status: zamknięty
+
+- `dostepnosc/obszary.py`: komórki H3 ze środkiem w wieloboku
+  (`shapely.contains_xy`), liczba komórek, mieszkańcy, średni czas ważony
+  ludnością (gdy jest kolumna ludności), mediana, udział w zasięgu 15 min;
+  także dla czasu „do wszystkich usług”; obok wynik całego pliku
+- Trasa POST `/dostepnosc/plik/<nazwa>/obszary` (bezstanowa, do 8 obszarów)
+- Mapa: rysowanie wieloboku / prostokąta (Leaflet.draw), karta
+  „Dzielnice” z listą i tabelą; obszary w localStorage dla danego pliku;
+  nazwy jako tekst (nie HTML) w dymkach i na liście
+- Przy okazji: ikony Leaflet.draw przeniesione do `static/style.css`
+  (wcześniej kopie w osiedle.css i ceny.css); siatka panelu Dostępności na
+  telefonie `minmax(0, 1fr)` — szeroka tabela nie poszerza strony
+- Test: wynik zgodny z liczeniem ręcznym; sprawdzone w przeglądarce
+  1300/390 px (także Ceny i Osiedle — ikony rysowania)
+- `DECISIONS.md`: D-171

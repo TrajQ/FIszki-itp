@@ -427,19 +427,7 @@
     }
 }
 
-/* Ikony Leaflet.draw (jak w module osiedle): styl przycisków mapy ze
-   static/style.css kasuje obrazki z leaflet.draw.css — przywracamy je. */
-.leaflet-container .leaflet-bar.leaflet-draw-toolbar a {
-    background-color: #ffffff;
-    background-image: url("../../static/leaflet-draw/images/spritesheet.svg");
-    background-repeat: no-repeat;
-    background-size: 300px 30px;
-    background-clip: padding-box;
-}
-
-.leaflet-container .leaflet-bar.leaflet-draw-toolbar a:hover {
-    background-color: #f0f0f3;
-}
+/* Ikony Leaflet.draw — w static/style.css (ETAP 163). */
 
 /* ---------- mieszkania / działki (ETAP 106) ---------- */
 

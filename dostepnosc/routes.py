@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 import math
 
-from . import druk, lokalizacja, model, zasieg
+from . import druk, lokalizacja, model, obszary, zasieg
 from . import wyniki as wyniki_h3
 from .wyniki import BladWynikow
 
@@ -384,6 +384,21 @@ def zasieg_z_punktu(nazwa):
         return jsonify({"blad": str(e)}), 422
     wynik["kolumna"] = kolumna if czasy is not None else None
     return jsonify(wynik)
+
+
+@dostepnosc_bp.route("/plik/<nazwa>/obszary", methods=["POST"])
+def wyniki_w_obszarach(nazwa):
+    """ETAP 163: JSON {kolumna, obszary: [{nazwa, geometria}]} → statystyki w każdym obszarze."""
+    dane = request.get_json(silent=True) or {}
+    kolumna = dane.get("kolumna") or ""
+    if kolumna == "laczny":
+        kolumna = wyniki_h3.NAZWA_LACZNEGO
+    try:
+        return jsonify(obszary.w_obszarach(_wczytaj(nazwa), kolumna, dane.get("obszary")))
+    except KeyError:
+        return jsonify({"blad": f"Plik nie ma kolumny „{kolumna}”."}), 404
+    except BladWynikow as e:
+        return jsonify({"blad": str(e)}), 400
 
 
 @dostepnosc_bp.route("/plik/<nazwa>/<kolumna>")

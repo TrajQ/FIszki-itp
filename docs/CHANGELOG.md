@@ -943,3 +943,6 @@
 
 ## ETAP 162 — 2026-10-02
 - MPZP: wszystkie zapisane działki na jednej kartce
+
+## ETAP 163 — 2026-10-02
+- Dostępność: średni czas i zasięg 15 min w narysowanych dzielnicach

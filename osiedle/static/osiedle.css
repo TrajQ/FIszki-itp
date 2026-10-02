@@ -139,22 +139,7 @@ button.przycisk--niebezpieczny-tekst {
     }
 }
 
-/* Ikony Leaflet.draw: wspólny styl przycisków mapy (static/style.css)
-   ustawia „background” skrótem i kasuje obrazki z leaflet.draw.css —
-   przywracamy je selektorem o wyższej szczegółowości. Tło zawsze jasne,
-   bo ikony w arkuszu są ciemne (także w trybie ciemnym). */
-.leaflet-container .leaflet-bar.leaflet-draw-toolbar a {
-    background-color: #ffffff;
-    background-image: url("../../static/leaflet-draw/images/spritesheet.svg");
-    background-repeat: no-repeat;
-    background-size: 300px 30px;
-    background-clip: padding-box;
-}
-
-.leaflet-container .leaflet-bar.leaflet-draw-toolbar a:hover {
-    background-color: #f0f0f3;
-}
-
+/* Ikony Leaflet.draw — w static/style.css (ETAP 163). */
 .leaflet-draw-actions a {
     font-family: var(--czcionka);
 }

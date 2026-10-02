@@ -462,3 +462,38 @@ def test_trasa_zasiegu(client):
     assert bez_kolumny["kolumna"] is None and "nowi" not in bez_kolumny["progi"][0]
     assert client.get(url, query_string={"lat": "x", "lng": 1}).status_code == 400
     assert client.get(url, query_string={"lat": 52.4, "lng": 16.9, "kretosc": 5}).status_code == 422
+
+
+# ---------- ETAP 163: wyniki w narysowanych obszarach ----------
+
+
+def test_wyniki_w_obszarach(client):
+    import h3
+    from dostepnosc import wyniki as wyniki_h3
+    from dostepnosc.routes import PLIK_PRZYKLADU, _wczytaj
+    url = f"/dostepnosc/plik/{PLIK_PRZYKLADU}/obszary"
+    with client.application.app_context():
+        dane = _wczytaj(PLIK_PRZYKLADU)
+    srodki = [h3.cell_to_latlng(k) for k in dane["komorki"]]
+    lat_sr = sorted(s[0] for s in srodki)[len(srodki) // 2]
+    polnoc = {"type": "Polygon", "coordinates": [[[10, lat_sr], [30, lat_sr], [30, 60], [10, 60], [10, lat_sr]]]}
+    caly = {"type": "Polygon", "coordinates": [[[10, 40], [30, 40], [30, 60], [10, 60], [10, 40]]]}
+    odp = client.post(url, json={"kolumna": "czas_szkola_min", "obszary": [{"nazwa": " Północ  ", "geometria": polnoc}, {"nazwa": "", "geometria": caly}]})
+    w = odp.get_json()
+    assert odp.status_code == 200 and [o["nazwa"] for o in w["obszary"]] == ["Północ", "obszar"]
+    # ręcznie: komórki ze środkiem na północ od mediany szerokości, czas ważony ludnością
+    idx = [i for i, (la, _) in enumerate(srodki) if la > lat_sr and dane["kolumny"]["czas_szkola_min"][i] is not None]
+    czasy = [dane["kolumny"]["czas_szkola_min"][i] for i in idx]
+    ludn = [dane["ludnosc"][i] for i in idx]
+    p = w["obszary"][0]
+    assert p["komorek"] == len(idx) and p["mieszkancy"] == pytest.approx(sum(ludn))
+    assert p["srednia"] == pytest.approx(sum(c * l for c, l in zip(czasy, ludn)) / sum(ludn))
+    assert p["w_zasiegu_proc"] == pytest.approx(100 * sum(l for c, l in zip(czasy, ludn) if c <= 15) / sum(ludn))
+    assert w["obszary"][1]["komorek"] == w["calosc"]["komorek"] and w["minuty"] is True
+    laczny = client.post(url, json={"kolumna": "laczny", "obszary": [{"nazwa": "x", "geometria": caly}]}).get_json()
+    assert laczny["obszary"][0]["komorek"] <= w["calosc"]["komorek"]
+    assert client.post(url, json={"kolumna": "nie_ma", "obszary": [{"geometria": caly}]}).status_code == 404
+    assert client.post(url, json={"kolumna": "czas_szkola_min", "obszary": []}).status_code == 400
+    assert client.post(url, json={"kolumna": "czas_szkola_min", "obszary": [{"geometria": {"type": "Point", "coordinates": [17, 52]}}]}).status_code == 400
+    assert client.post("/dostepnosc/plik/nie_ma.csv/obszary", json={}).status_code == 404
+    assert wyniki_h3.PROG_MIASTA_15 == 15

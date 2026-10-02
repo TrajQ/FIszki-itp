@@ -262,7 +262,7 @@
 
 @media (max-width: 1000px) {
     .uklad-dostepnosci {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr); /* szeroka tabela dzielnic przewija się, a nie poszerza strony */
     }
 
     #mapa-dostepnosci {
@@ -598,4 +598,51 @@ button.model__wstawiaj--aktywny {
 
 .tabela-zasiegu td {
     white-space: nowrap;
+}
+
+/* ETAP 163: dzielnice narysowane na mapie */
+.lista-dzielnic {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+}
+
+.lista-dzielnic li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lista-dzielnic li span:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.lista-dzielnic__nr {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border: 2px solid;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.przewijanie-dzielnic {
+    overflow-x: auto;
+}
+
+#tabela-dzielnic {
+    font-size: 13px;
+}
+
+.tabela-dzielnic__calosc td {
+    font-weight: 600;
 }
