@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+
+{% block tytul %}Mapy w kilku latach — Atlas{% endblock %}
+{% block klasa_body %}strona-druku-mapy{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="druk-mapy">
+    <div class="druk-mapy__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
+        <div class="rzad">
+            <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.mapy_w_latach_svg', pobierz=1, **parametry) }}">Pobierz SVG</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>
+    </div>
+    <form method="get" class="rzad druk-mapy__opis">
+        {% for k, v in parametry.items() if k != 'lata' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+        <label class="rzad">Lata (2–6, po przecinku) <input type="text" name="lata" value="{{ parametry.get('lata', '') }}" placeholder="np. 2014,2018,2023" required></label>
+        <button type="submit" class="przycisk--drugi">Pokaż</button>
+    </form>
+    <p class="wyciszony druk-mapy__opis">Ten sam wskaźnik na kilku mapach obok siebie, w klasach wspólnych dla wszystkich lat — ten sam kolor to ta sama wartość na każdej mapie. Arkusz A4 poziomo.</p>
+    <img id="mapa-druk" class="druk-mapy__obraz" src="{{ url_for('atlas.mapy_w_latach_svg', **parametry) }}"
+         alt="Mapy wskaźnika w kilku latach" onerror="document.getElementById('blad-druku').hidden = false; this.hidden = true;">
+    <p id="blad-druku" class="komunikat komunikat--blad" hidden>Nie udało się przygotować map — sprawdź, czy GUS ma dane dla co najmniej dwóch z wybranych lat.</p>
+    {{ stopka_wydruku("Atlas", "GUS, Bank Danych Lokalnych; granice gmin — PRG (GUGiK)") }}
+</div>
+{% endblock %}

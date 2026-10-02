@@ -162,6 +162,82 @@ def mapa_do_druku_svg():
     return Response(svg, mimetype="image/svg+xml", headers=naglowki)
 
 
+MAKS_LAT_MAP = 6
+
+
+def _lata_z_zapytania(argumenty) -> list[int]:
+    try:
+        lata = sorted({int(r) for r in (argumenty.get("lata") or "").replace(";", ",").split(",") if r.strip()})
+    except ValueError:
+        raise ValueError("Lata: liczby po przecinku, np. 2014,2018,2023.") from None
+    if not 2 <= len(lata) <= MAKS_LAT_MAP or not all(1995 <= r <= 2100 for r in lata):
+        raise ValueError(f"Wybierz od 2 do {MAKS_LAT_MAP} lat.")
+    return lata
+
+
+def _mapy_w_latach(argumenty) -> tuple[str, dict]:
+    """ETAP 161: ten sam wskaźnik w kilku latach — wspólne klasy z wartości
+    wszystkich lat razem, żeby kolor znaczył to samo na każdej mapie."""
+    lata = _lata_z_zapytania(argumenty)
+    metoda, liczba_klas = _parametry_klasyfikacji(argumenty)
+    wyniki = {}
+    for rok in lata:
+        parametry = _parametry_zapytania({**argumenty.to_dict(), "rok": str(rok)})
+        parametry["rok_bazowy"] = None
+        wynik = _policz_dane(**parametry)
+        if wynik["gminy"]:
+            wyniki[rok] = wynik
+    if len(wyniki) < 2:
+        raise LookupError("Dane GUS są tylko dla jednego z wybranych lat (albo żadnego) — wybierz inne lata.")
+    pierwszy = next(iter(wyniki.values()))
+    wszystkie = [g["wartosc"] for w in wyniki.values() for g in w["gminy"]]
+    k = statystyki.klasyfikuj(wszystkie, metoda, liczba_klas)
+    liczba = len(k["progi"]) + 1
+    granice_klas = [min(wszystkie), *k["progi"], max(wszystkie)]
+    mapy = [(str(rok), {g["teryt"]: _kolor_klasy(_numer_klasy(g["wartosc"], k["progi"]), liczba) for g in w["gminy"]})
+            for rok, w in wyniki.items()]
+    legenda = [(_kolor_klasy(i, liczba), f"{statystyki.format_liczby(round(granice_klas[i], 2))} – {statystyki.format_liczby(round(granice_klas[i + 1], 2))}", None)
+               for i in range(liczba)]
+    legenda.append((mapa_svg.KOLOR_BRAK, "brak danych", None))
+    zmienna = pierwszy["zmienna"]
+    brakujace = [r for r in lata if r not in wyniki]
+    przypisy = ["Źródło: GUS, Bank Danych Lokalnych; granice: PRG, GUGiK. Opracowanie własne w aplikacji Warsztat.",
+                f"Klasyfikacja: {k['nazwa_metody']}, {liczba} klas wspólnych dla wszystkich lat (z wartości gmin ze wszystkich map)."]
+    if brakujace:
+        przypisy.append(f"Bez danych GUS w latach: {', '.join(map(str, brakujace))} — pominięte.")
+    kolekcja = granice.granice_gmin(pierwszy["wojewodztwo"]["teryt"], os.path.join(folder_modulu(), "granice"))
+    svg = mapa_svg.male_mapy_svg(kolekcja, mapy, zmienna["nazwa"], f"Gminy województwa {pierwszy['wojewodztwo']['nazwa']}, {', '.join(map(str, wyniki))}",
+                                 legenda, zmienna.get("jednostka") or "Wartość", przypisy)
+    return svg, pierwszy
+
+
+@atlas_bp.route("/lata.svg")
+def mapy_w_latach_svg():
+    try:
+        svg, wynik = _mapy_w_latach(request.args)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except LookupError as e:
+        return jsonify({"blad": str(e)}), 404
+    except (BladBDL, granice.BladGranic) as e:
+        return jsonify({"blad": str(e)}), 502
+    naglowki = {}
+    if request.args.get("pobierz"):
+        naglowki["Content-Disposition"] = f"attachment; filename=lata_{wynik['wojewodztwo']['teryt']}_{request.args.get('lata', '').replace(',', '-')}.svg"
+    return Response(svg, mimetype="image/svg+xml", headers=naglowki)
+
+
+@atlas_bp.route("/lata")
+def mapy_w_latach():
+    """Strona: wybór lat i podgląd arkusza z małymi mapami (ETAP 161)."""
+    parametry = request.args.to_dict()
+    parametry.pop("pobierz", None)
+    rok = request.args.get("rok", type=int)
+    if "lata" not in parametry and rok:
+        parametry["lata"] = ",".join(str(r) for r in (rok - 9, rok - 6, rok - 3, rok))
+    return render_template("atlas/lata.html", parametry=parametry)
+
+
 @atlas_bp.route("/druk")
 def druk():
     """Strona z mapą do druku: podgląd, „Drukuj / zapisz PDF”, „Pobierz SVG”."""

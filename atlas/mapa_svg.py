@@ -203,3 +203,61 @@ def polozenie_gminy_svg(granice: dict, teryt_gminy: str, szerokosc: int = 420, w
         "</svg>",
     ]
     return "\n".join(czesci)
+
+
+# ---------- Ten sam wskaźnik w kilku latach obok siebie (ETAP 161) ----------
+
+
+def male_mapy_svg(
+    granice: dict,
+    mapy: list[tuple[str, dict[str, str]]],
+    tytul: str,
+    podtytul: str,
+    legenda: list[tuple[str, str, int | None]],
+    tytul_legendy: str,
+    przypisy: list[str],
+) -> str:
+    """Arkusz A4 poziomo z 2–6 małymi kartogramami (te same granice, wspólne
+    klasy) i jedną legendą. mapy: [(etykieta, {teryt: kolor})]."""
+    cechy = [c for c in granice["features"] if _pierscienie(c["geometry"])]
+    if not cechy or not mapy:
+        raise ValueError("Brak granic gmin albo lat do narysowania.")
+    min_lon, min_lat, max_lon, max_lat = _zasieg(cechy)
+    wsp_dlugosci = math.cos(math.radians((min_lat + max_lat) / 2))
+    kolumny = 2 if len(mapy) <= 4 else 3
+    wiersze = math.ceil(len(mapy) / kolumny)
+    x0, y0, x1, y1 = MARGINES, 100, KOLUMNA_LEGENDY - 20, WYSOKOSC - 70
+    szer_pola, wys_pola = (x1 - x0) / kolumny, (y1 - y0) / wiersze
+    szer_stopni, wys_stopni = (max_lon - min_lon) * wsp_dlugosci, max_lat - min_lat
+    skala = min((szer_pola - 12) / szer_stopni, (wys_pola - 26) / wys_stopni)
+
+    czesci = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{SZEROKOSC}" height="{WYSOKOSC}" '
+        f'viewBox="0 0 {SZEROKOSC} {WYSOKOSC}" font-family="Helvetica, Arial, sans-serif">',
+        f'<rect width="{SZEROKOSC}" height="{WYSOKOSC}" fill="#ffffff"/>',
+        f'<text x="{MARGINES}" y="48" font-size="22" font-weight="700" fill="#1d1d1f">{escape(tytul)}</text>',
+        f'<text x="{MARGINES}" y="74" font-size="14" fill="#6e6e73">{escape(podtytul)}</text>',
+    ]
+    for i, (etykieta, kolory) in enumerate(mapy):
+        kx = x0 + (i % kolumny) * szer_pola
+        ky = y0 + (i // kolumny) * wys_pola
+        px = kx + (szer_pola - szer_stopni * skala) / 2
+        py = ky + 22
+
+        def punkt(lon: float, lat: float) -> str:
+            return f"{px + (lon - min_lon) * wsp_dlugosci * skala:.1f},{py + (max_lat - lat) * skala:.1f}"
+
+        czesci.append(f'<text x="{kx + szer_pola / 2:.1f}" y="{ky + 14:.1f}" font-size="15" font-weight="700" fill="#1d1d1f" text-anchor="middle">{escape(etykieta)}</text>')
+        czesci.append('<g stroke="#ffffff" stroke-width="0.4" stroke-linejoin="round">')
+        for cecha in cechy:
+            teryt = cecha["properties"].get("teryt", "")
+            sciezka = " ".join("M" + " L".join(punkt(lon, lat) for lon, lat in p) + " Z" for p in _pierscienie(cecha["geometry"]))
+            czesci.append(f'<path d="{sciezka}" fill="{kolory.get(teryt, KOLOR_BRAK)}" fill-rule="evenodd"><title>{escape(cecha["properties"].get("nazwa") or teryt)}</title></path>')
+        czesci.append("</g>")
+    czesci += _legenda(legenda, tytul_legendy)
+    czesci += _podzialka(skala)
+    czesci += _polnoc()
+    for i, przypis in enumerate(przypisy):
+        czesci.append(f'<text x="{MARGINES}" y="{WYSOKOSC - 44 + i * 16}" font-size="11" fill="#6e6e73">{escape(przypis)}</text>')
+    czesci.append("</svg>")
+    return "\n".join(czesci)

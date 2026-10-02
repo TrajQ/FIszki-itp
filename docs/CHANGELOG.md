@@ -937,3 +937,6 @@
 
 ## ETAP 160 — 2026-10-02
 - Przegląd: raport osiedla na telefonie bez przewijania strony; szybsze porównanie inwentaryzacji
+
+## ETAP 161 — 2026-10-02
+- Atlas: mapy jednego wskaźnika w kilku latach obok siebie, we wspólnych klasach

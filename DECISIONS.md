@@ -3405,3 +3405,17 @@ sekcji nie było na stronie.
 **Odrzucone alternatywy:**
 - Osobny zestaw danych przeglądu w pliku — dane zasiewa ten sam skrypt,
   czytelnie obok listy stron.
+
+## D-169 — Małe mapy we wspólnych klasach ze wszystkich lat
+Data: 2026-10-02
+
+**Decyzja:** Progi klas dla arkusza „mapy w latach” liczymy z wartości
+gmin ze wszystkich wybranych lat razem, wybraną metodą klasyfikacji.
+
+**Uzasadnienie:** Osobne klasy dla każdego roku (np. kwantyle) dawałyby
+zawsze ten sam rozkład kolorów i ukrywały wzrost lub spadek — porównanie
+map byłoby mylące. Wspólne klasy pokazują zmianę wprost.
+
+**Odrzucone alternatywy:**
+- Mapa zmiany między dwoma latami — już jest (widok „Zmiana”); małe mapy
+  pokazują przebieg w kilku punktach czasu.

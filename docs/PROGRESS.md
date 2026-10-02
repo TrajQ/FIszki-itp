@@ -2784,3 +2784,18 @@ Status: zamknięty
   komórek 15 m — 1000+1000 punktów 1,14 s → 0,013 s, ten sam wynik
   (test równoważności z porównaniem każdy z każdym)
 - `DECISIONS.md`: D-168
+
+## ETAP 161 — Atlas: ten sam wskaźnik w kilku latach obok siebie
+Data: 2026-10-02
+Status: zamknięty
+
+- `mapa_svg.male_mapy_svg`: arkusz A4 poziomo z 2–6 małymi
+  kartogramami (2 albo 3 kolumny), wspólna legenda, podziałka i północ
+- `/atlas/lata.svg?…&lata=2014,2018,2023`: klasy wspólne dla wszystkich
+  lat (klasyfikacja wartości gmin ze wszystkich map razem), lata bez
+  danych GUS pominięte z przypisem, mniej niż dwa lata z danymi → 404
+- Strona `/atlas/lata` (pole lat, domyślnie co 3 lata wstecz, druk, SVG,
+  stopka); link „Mapy w latach ↗” pod mapą Atlasu
+- Testy: arkusz, gmina bez danych w jednym roku, złe lata, 404, strona
+- Sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-169

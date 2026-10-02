@@ -1360,3 +1360,25 @@ def test_iloraz_lokalizacji():
     assert lq["d"]["klasa"] == 0 and "c" not in lq
     assert statystyki.iloraz_lokalizacji(licznik, []) is None
 
+
+
+# ---------- ETAP 161: ten sam wskaźnik w kilku latach ----------
+
+
+def test_mapy_w_latach(client, monkeypatch):
+    cechy = [{"type": "Feature", "properties": {"teryt": t, "nazwa": n},
+              "geometry": {"type": "Polygon", "coordinates": [[[19 + i, 50], [20 + i, 50], [20 + i, 51], [19 + i, 51], [19 + i, 50]]]}}
+             for i, (t, n) in enumerate([("1261011", "Kraków"), ("1206032", "Wieliczka")])]
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {"type": "FeatureCollection", "features": cechy})
+    odp = client.get(f"/atlas/lata.svg?{ZAPYTANIE}&lata=2013,2023")
+    assert odp.status_code == 200 and odp.mimetype == "image/svg+xml"
+    svg = odp.get_data(as_text=True)
+    assert ">2013</text>" in svg and ">2023</text>" in svg and "wspólnych dla wszystkich lat" in svg
+    assert svg.count("<path") == 4  # 2 gminy × 2 mapy
+    assert "#c7c7cc" in svg  # Wieliczka bez danych w 2013
+    for zle in ("2023", "2013,2014,2015,2016,2017,2018,2019", "abc", "1900,2023"):
+        assert client.get(f"/atlas/lata.svg?{ZAPYTANIE}&lata={zle}").status_code == 400
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", lambda z, rok, woj: [] if rok != 2023 else [bdl.Wartosc("011212161011", "1261011", "Kraków", 1.0)])
+    assert client.get(f"/atlas/lata.svg?{ZAPYTANIE}&lata=2016,2023").status_code == 404  # 2016 bez danych (2023 z cache) — jeden rok to za mało
+    strona = client.get(f"/atlas/lata?{ZAPYTANIE}").get_data(as_text=True)
+    assert 'value="2014,2017,2020,2023"' in strona and "stopka-wydruku" in strona

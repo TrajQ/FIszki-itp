@@ -530,6 +530,12 @@
         parametry.set("metoda", poleMetoda.value);
         parametry.set("klasy", poleKlasy.value);
         document.getElementById("link-druk").href = `${URL_DRUK}?${parametry}`;
+        // ETAP 161: małe mapy w kilku latach — te same parametry wskaźnika, lata domyślnie co 3
+        const lata = new URLSearchParams(biezaceParametry);
+        lata.set("metoda", poleMetoda.value);
+        lata.set("klasy", poleKlasy.value);
+        lata.delete("rok_bazowy");
+        document.getElementById("link-lata").href = `${URL_DRUK.replace(/druk$/, "lata")}?${lata}`;
     }
 
     function odswiezWidok() {
