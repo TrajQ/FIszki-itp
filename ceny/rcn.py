@@ -153,10 +153,11 @@ def czytaj_plik(sciezka: str) -> dict:
 
     Czyta tabelę lokali i tabelę działek — tę, która jest w pliku; błąd,
     gdy nie ma żadnej."""
+    db = sqlite3.connect(f"file:{sciezka}?mode=ro", uri=True)
     try:
-        db = sqlite3.connect(f"file:{sciezka}?mode=ro", uri=True)
         tabele = {w[0] for w in db.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
     except sqlite3.DatabaseError as e:
+        db.close()  # connect() nie czyta pliku — błąd wychodzi dopiero przy pierwszym zapytaniu
         raise BladPliku("To nie jest plik GeoPackage (baza SQLite).") from e
     wynik = {"lokale": [], "odrzucone": {}, "dzialki": [], "odrzucone_dzialki": {}}
     try:

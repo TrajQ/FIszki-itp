@@ -675,7 +675,11 @@
 
     function dodajPunkt(latlng, nazwa = "") {
         const znacznik = L.marker(latlng, { icon: ikonaPunktu(punktyModelu.length + 1), keyboard: false }).addTo(warstwaPunktow);
-        if (nazwa) znacznik.bindTooltip(nazwa);
+        if (nazwa) {
+            const napis = document.createElement("span");
+            napis.textContent = nazwa; // nazwa z wgranego CSV — Leaflet wstawiłby napis jako HTML
+            znacznik.bindTooltip(napis);
+        }
         const wpis = { latlng, znacznik, nazwa };
         znacznik.on("click", () => {
             if (!wstawianie) return;

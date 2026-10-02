@@ -3178,3 +3178,20 @@ część funkcji wymaga klucza w `.env`, a część działa od razu na przykład
 - Przycisk „ukryj” zapamiętany w przeglądarce — kolejny stan do
   pilnowania; karta i tak przestaje być potrzebna po pierwszej pracy.
 - Kreator krok po kroku — za dużo jak na dwie zmienne w `.env`.
+
+## D-155 — Ostrzeżenia o zasobach jako błędy testów; tekst do dymków jako węzeł
+Data: 2026-10-02
+
+**Decyzja:** `pytest.ini` zamienia `ResourceWarning` na błąd. Do dymków
+Leaflet (`bindTooltip`, `bindPopup`) tekst spoza kodu trafia wyłącznie jako
+element z `textContent`.
+
+**Uzasadnienie:** Ostrzeżenie o niezamkniętym pliku pojawiało się co
+kilka przebiegów przy przypadkowym teście i przez kilkadziesiąt ETAPów
+było odkładane. Jako błąd wskazuje winny test od razu. Leaflet traktuje
+napis w dymku jako HTML, więc nazwa z wgranego pliku mogła wykonać skrypt
+na stronie aplikacji, która ma dostęp do wszystkich danych użytkownika.
+
+**Odrzucone alternatywy:**
+- Escapowanie napisów przed `bindTooltip` — łatwo zapomnieć o nowym
+  miejscu; węzeł DOM jest bezpieczny z definicji.

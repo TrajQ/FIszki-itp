@@ -895,3 +895,6 @@
 
 ## ETAP 146 — 2026-10-02
 - Strona główna: „Pierwsze kroki” dla nowej instalacji
+
+## ETAP 147 — 2026-10-02
+- Przegląd kodu: zamykanie plików i baz, dymki map bez HTML z danych, ostrzeżenia w testach jako błędy

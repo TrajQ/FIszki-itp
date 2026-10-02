@@ -82,7 +82,8 @@
             interactive: false,
             style: { className: "wojewodztwo-tla", weight: 1 },
             onEachFeature: (cecha, warstwa) => {
-                warstwa.bindTooltip(cecha.properties.nazwa, {
+                // węzeł z textContent: Leaflet wstawia napis jako HTML, a nazwa przychodzi z pliku granic
+                warstwa.bindTooltip(element("span", "", cecha.properties.nazwa), {
                     permanent: true,
                     direction: "center",
                     className: "etykieta-wojewodztwa",

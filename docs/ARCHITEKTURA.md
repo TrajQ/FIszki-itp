@@ -128,6 +128,9 @@ bazie jako cache (np. `cache_bdl`).
   `--tekst-drugi`…) z wersją ciemną (`prefers-color-scheme`); kontrast
   liczony wg WCAG i pilnowany testem (D-139). CSS modułów używa tokenów.
 - Leaflet i Leaflet.draw lokalnie w `static/`; pdf.js lokalnie w Fiszkach.
+- Tekst spoza kodu (nazwy od użytkownika, z wgranych plików, z usług) trafia
+  do DOM przez `textContent`; dymki Leaflet dostają węzeł, nie napis —
+  napis Leaflet wstawia jako HTML.
 - Strony do druku: `@media print`, przycisk „Drukuj / zapisz PDF”, wspólna
   stopka `templates/_wydruk.html` (D-150).
 - Dostępność: link „Przejdź do treści”, `main#tresc`, `:focus-visible`,
@@ -135,7 +138,8 @@ bazie jako cache (np. `cache_bdl`).
 
 ## Testy i narzędzia
 
-- `pytest` — testy w `tests/`, jeden lub kilka plików na moduł. Usługi
+- `pytest` — testy w `tests/`, jeden lub kilka plików na moduł;
+  niezamknięty plik to błąd testu (`pytest.ini`). Usługi
   zewnętrzne są zawsze podmienione (`monkeypatch`), testy nie potrzebują
   internetu ani klucza Gemini.
 - `narzedzia/przeglad_stron.py` — otwiera wszystkie strony w Chromium

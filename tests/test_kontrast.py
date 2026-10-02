@@ -20,7 +20,8 @@ PARY = [  # (kolor tekstu, tło) — rzeczywiste połączenia w aplikacji
 
 
 def _tokeny():
-    css = open(STYL, encoding="utf-8").read()
+    with open(STYL, encoding="utf-8") as plik:
+        css = plik.read()
     poczatek_ciemnego = css.index("@media (prefers-color-scheme: dark)")
 
     def odczytaj(blok):

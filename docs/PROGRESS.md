@@ -2556,3 +2556,26 @@ Status: zamknięty
 - Test: karta tylko w pustej instalacji, stany kluczy
 - Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
 - `DECISIONS.md`: D-154
+
+## ETAP 147 — Przegląd kodu
+Data: 2026-10-02
+Status: zamknięty
+
+- Niestabilne „1 warning” w testach: przyczyna — test kontrastu
+  (ETAP 131) otwierał `static/style.css` bez zamknięcia; poprawione
+- `pytest.ini`: `ResourceWarning` i nieobsłużone wyjątki w `__del__` to
+  błąd testu — trzy pełne przebiegi czyste
+- Połączenia SQLite: `kopia.py` (sprawdzanie kopii) zamyka połączenie
+  przez `closing()` — `with sqlite3.connect()` tylko zatwierdza transakcję;
+  `ceny/rcn.czytaj_plik` zamyka połączenie, gdy plik nie jest bazą.
+  Python 3.11 o tym nie ostrzega (od 3.13 tak)
+- Dymki Leaflet z tekstem spoza kodu (nazwa obszaru od użytkownika, nazwa
+  punktu z CSV, nazwa gminy z pliku granic, data z pliku RCN) jako węzeł z
+  `textContent` — wcześniej Leaflet wstawiał je jako HTML
+- Bez zmian po sprawdzeniu: pyflakes (tylko celowe importy tras), brak
+  sekretów i TODO, nasłuch tylko 127.0.0.1, szerokie `except` uzasadnione
+  (shapely, wycofanie zapisu z ponownym zgłoszeniem), `innerHTML` tylko
+  ze stałym tekstem
+- ARCHITEKTURA.md: zasada dymków i `pytest.ini`
+- Przegląd stron: 70 stron, 0 problemów
+- `DECISIONS.md`: D-155

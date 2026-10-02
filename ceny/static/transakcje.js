@@ -81,7 +81,7 @@
         if (widokMapy.elements.widok.value !== "punkty") return; // heksagony i zmianę rysuje rysujHeksagony()
         for (const [lat, lng, cenaM2, data, pow] of m.punkty) {
             L.circleMarker([lat, lng], { radius: 5, weight: 0.6, color: "#3a2a1a", fillColor: KOLORY[klasa(cenaM2, m.progi)], fillOpacity: 0.85 })
-                .bindTooltip(`${liczba.format(cenaM2)} zł/m² · ${pow} m² · ${data}`)
+                .bindTooltip(el("span", "", `${liczba.format(cenaM2)} zł/m² · ${pow} m² · ${data}`))
                 .addTo(warstwa);
         }
         dopasujWidok(warstwa);
@@ -403,7 +403,7 @@
         d.obszary.forEach((o, i) => {
             const kolor = kolory[o.id];
             L.geoJSON(o.geometria, { style: { color: kolor, weight: 2.5, fillOpacity: 0.05 } })
-                .bindTooltip(`${i + 1}. ${o.nazwa}`).addTo(warstwaObszarow);
+                .bindTooltip(el("span", "", `${i + 1}. ${o.nazwa}`)).addTo(warstwaObszarow); // nazwa od użytkownika — nie jako HTML
             const li = el("li", "obszar-rcn");
             const zmien = el("button", "przycisk--tekst", "Zmień nazwę");
             zmien.type = "button";
@@ -547,7 +547,7 @@
                 el("td", "", String((DZIALKI ? t.przeznaczenie : t.izby) || "—")), el("td", "liczba", `${liczba.format(t.cena)} zł`), el("td", "liczba", `${liczba.format(t.cena_m2)} zł`));
             tabela.appendChild(tr);
             L.circleMarker([t.lat, t.lng], { radius: 8, color: "#0071e3", weight: 2.5, fill: false })
-                .bindTooltip(`${liczba.format(t.cena_m2)} zł/m² · ${liczba.format(t.pow_m2)} m² · ${t.data}`).addTo(warstwaPodobnych);
+                .bindTooltip(el("span", "", `${liczba.format(t.cena_m2)} zł/m² · ${liczba.format(t.pow_m2)} m² · ${t.data}`)).addTo(warstwaPodobnych);
         }
         const przewijanie = el("div", "przewijanie-cen");
         przewijanie.appendChild(tabela);

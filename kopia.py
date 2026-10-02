@@ -17,6 +17,7 @@ import sqlite3
 import tempfile
 import time
 import zipfile
+from contextlib import closing
 from datetime import datetime
 
 # Foldery w instance/, których nie kopiujemy (cache do odtworzenia).
@@ -145,7 +146,8 @@ def _sprawdz_i_rozpakuj(zip_: zipfile.ZipFile, cel: str) -> int:
         for nazwa in nazwy_plikow:
             if nazwa.endswith(".db"):
                 try:
-                    with sqlite3.connect(f"file:{os.path.join(katalog, nazwa)}?mode=ro", uri=True) as db:
+                    # closing(): „with sqlite3.connect()” tylko zatwierdza transakcję, połączenia nie zamyka
+                    with closing(sqlite3.connect(f"file:{os.path.join(katalog, nazwa)}?mode=ro", uri=True)) as db:
                         wynik = db.execute("PRAGMA integrity_check").fetchone()[0]
                 except sqlite3.DatabaseError as e:
                     raise BladKopii(f"Baza {nazwa} w kopii jest uszkodzona ({e}).") from e
