@@ -2641,3 +2641,18 @@ Status: zamknięty
 - Sprawdzone w przeglądarce 1300/390 px: kolejność, przeładowanie,
   podpowiedź; przegląd stron 75/0
 - `DECISIONS.md`: D-159
+
+## ETAP 152 — Atlas: gorące punkty Getisa-Orda Gi*
+Data: 2026-10-02
+Status: zamknięty
+
+- `atlas/autokorelacja.gi_star`: Gi* (Ord i Getis 1995) z wagami
+  binarnymi i samą gminą, z-score, p dwustronne z rozkładu normalnego,
+  kategorie 90/95/99% gorące i zimne; liczone w `analiza` na tym samym
+  oczyszczonym sąsiedztwie co LISA
+- Wynik sprawdzony z PySAL (esda.G_Local, star=True): różnica < 1e-13;
+  wartości referencyjne w teście
+- Mapa: widok „Gorące punkty” (legenda z liczebnościami, dymek z z),
+  mapa do druku `tryb=gi`
+- Sprawdzone w przeglądarce (jasny i ciemny)
+- `DECISIONS.md`: D-160

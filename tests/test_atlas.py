@@ -886,6 +886,10 @@ def test_mapa_lisa_do_druku(client, monkeypatch):
     svg = odp.get_data(as_text=True)
     assert "Klastry LISA (p &lt; 0,05)" in svg or "Klastry LISA (p < 0,05)" in svg
     assert "I Morana = 0," in svg and "permutacji), sąsiedztwo queen." in svg
+    atlas_routes._sasiedzi_wojewodztw.clear()
+    svg = client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=gi").get_data(as_text=True)  # ETAP 152
+    atlas_routes._sasiedzi_wojewodztw.clear()
+    assert "Gorące i zimne punkty Gi*" in svg and "gorący punkt (99%)" in svg and "Getis-Ord Gi*" in svg
 
 
 # ---------- ETAP 52: na tle kraju ----------
@@ -1308,3 +1312,22 @@ def test_trasa_sylwetek(raport_client, monkeypatch):
     assert [w["k"] for w in s] == [2, 3] and s[0]["najlepsza"]
     assert c.get(f"/atlas/typologia/sylwetki?woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1").status_code == 400
     assert "Porównaj liczbę typów" in c.get("/atlas/typologia").get_data(as_text=True)
+
+
+# ---------- ETAP 152: gorące punkty Getisa-Orda Gi* ----------
+
+
+def test_gi_star_zgodne_z_pysal():
+    """Wartości referencyjne z PySAL (esda.G_Local, star=True, wagi binarne) dla tej samej siatki."""
+    from atlas import autokorelacja
+    pos = {f"g{x}{y}": (x, y) for y in range(5) for x in range(6)}
+    sas = {i: sorted(j for j in pos if j != i and max(abs(pos[i][0] - pos[j][0]), abs(pos[i][1] - pos[j][1])) == 1) for i in pos}
+    wart = {i: 100 - 8 * (x + y) + (x * 7 + y * 3) % 5 for i, (x, y) in pos.items()}
+    gi = {g["teryt"]: g for g in autokorelacja.gi_star(wart, sas)}
+    for teryt, z_pysal in [("g00", 3.2482092832), ("g22", 0.7294864219), ("g54", -3.3376095387), ("g30", 1.2915853341)]:
+        assert gi[teryt]["z"] == pytest.approx(z_pysal, abs=1e-9)
+    assert gi["g00"]["kategoria"] == "H99" and gi["g54"]["kategoria"] == "C99" and gi["g22"]["kategoria"] == "ns"
+    assert gi["g30"]["p"] == pytest.approx(0.1965, abs=1e-3)  # dwustronne z rozkładu normalnego
+    # analiza zwraca Gi* razem z LISA
+    wynik = autokorelacja.analiza(wart, {k: set(v) for k, v in sas.items()})
+    assert len(wynik["gi"]) == 30 and wynik["kategorie_gi"]["H95"] == "gorący punkt (95%)"

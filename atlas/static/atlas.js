@@ -154,6 +154,10 @@
     const KOLORY_LISA = { HH: "#d7191c", LL: "#2c7bb6", HL: "#fdae61", LH: "#abd9e9", ns: "#e5e5ea" };
     let wynikMorana = null; // odpowiedź /autokorelacja dla bieżących danych
     let lisaPoTeryt = new Map();
+    // Gorące punkty Gi* (ETAP 152): czerwone — gorące, niebieskie — zimne; liczy serwer
+    const KOLORY_GI = { H99: "#b2182b", H95: "#ef8a62", H90: "#fddbc7", ns: "#e5e5ea", C90: "#d1e5f0", C95: "#67a9cf", C99: "#2166ac" };
+    const KOLEJNOSC_GI = ["H99", "H95", "H90", "ns", "C90", "C95", "C99"];
+    let giPoTeryt = new Map();
 
     // Kolor dla gminy w bieżącym trybie.
     function kolorGminy(gmina) {
@@ -161,6 +165,10 @@
         if (tryb === "lisa") {
             const lisa = lisaPoTeryt.get(gmina.teryt);
             return lisa ? KOLORY_LISA[lisa.kategoria] : KOLOR_BRAK;
+        }
+        if (tryb === "gi") {
+            const gi = giPoTeryt.get(gmina.teryt);
+            return gi ? KOLORY_GI[gi.kategoria] : KOLOR_BRAK;
         }
         if (tryb === "zmiana") {
             if (gmina.zmiana_proc === null || gmina.zmiana_proc === undefined) return KOLOR_BRAK;
@@ -435,6 +443,7 @@
     const opisMorana = document.getElementById("opis-morana");
     const listaLisa = document.getElementById("lista-lisa");
     const przyciskLisa = przelacznik.querySelector('[data-tryb="lisa"]');
+    const przyciskGi = przelacznik.querySelector('[data-tryb="gi"]');
     let numerMorana = 0;
 
     function liczKategorie() {
@@ -447,9 +456,11 @@
         numerMorana += 1;
         wynikMorana = null;
         lisaPoTeryt = new Map();
+        giPoTeryt = new Map();
         wynikMoranaEl.hidden = true;
         statusMorana.hidden = true;
         przyciskLisa.hidden = true;
+        przyciskGi.hidden = true;
         przyciskMoran.disabled = false;
         przyciskMoran.textContent = "Policz I Morana";
     }
@@ -465,6 +476,7 @@
             if (numer !== numerMorana) return;
             wynikMorana = wynik;
             lisaPoTeryt = new Map(wynik.lisa.map((l) => [l.teryt, l]));
+            giPoTeryt = new Map(wynik.gi.map((g) => [g.teryt, g]));
             const f3 = (x) => x.toLocaleString("pl-PL", { maximumFractionDigits: 3, minimumFractionDigits: 3 });
             liczbyMorana.replaceChildren(
                 liczbaProfilu("I Morana", f3(wynik.moran_i)),
@@ -487,6 +499,7 @@
             }
             wynikMoranaEl.hidden = false;
             przyciskLisa.hidden = false;
+            przyciskGi.hidden = false;
             przelacznik.hidden = false;
             przyciskMoran.textContent = "Policzone ✓";
             ustawTryb("lisa");
@@ -736,6 +749,10 @@
                     if (tryb === "lisa") {
                         tresc += lisa ? ` · ${wynikMorana.kategorie[lisa.kategoria]} (p = ${formatLiczby.format(lisa.p)})` : " · bez sąsiadów z danymi";
                     }
+                    if (tryb === "gi") {
+                        const gi = giPoTeryt.get(gmina.teryt);
+                        tresc += gi ? ` · ${wynikMorana.kategorie_gi[gi.kategoria]} (z = ${formatLiczby.format(gi.z)})` : " · bez sąsiadów z danymi";
+                    }
                 }
                 const dymek = element("div");
                 dymek.append(element("strong", "", cecha.properties.nazwa), element("br"), tresc);
@@ -765,6 +782,17 @@
 
     function pokazLegende() {
         legendaEl.replaceChildren();
+        if (tryb === "gi") {
+            legendaEl.appendChild(element("div", "legenda__tytul", "gorące i zimne punkty Gi*"));
+            const ile = {};
+            for (const g of wynikMorana.gi) ile[g.kategoria] = (ile[g.kategoria] || 0) + 1;
+            for (const kategoria of KOLEJNOSC_GI) {
+                const wiersz = wierszLegendy(KOLORY_GI[kategoria], wynikMorana.kategorie_gi[kategoria]);
+                wiersz.appendChild(element("span", "legenda__liczebnosc", `${ile[kategoria] || 0}`));
+                legendaEl.appendChild(wiersz);
+            }
+            return;
+        }
         if (tryb === "lisa") {
             legendaEl.appendChild(element("div", "legenda__tytul", "klastry LISA (p < 0,05)"));
             const ile = liczKategorie();

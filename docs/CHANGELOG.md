@@ -910,3 +910,6 @@
 
 ## ETAP 151 — 2026-10-02
 - Wygląd: ręczny wybór motywu jasny / ciemny / jak w systemie
+
+## ETAP 152 — 2026-10-02
+- Atlas: gorące i zimne punkty Getisa-Orda Gi* na mapie i na wydruku

@@ -13,9 +13,18 @@ wartościach (skupiska), czy rozkład w przestrzeni jest losowy?
   GeoDa i PySAL — bez założenia o rozkładzie normalnym. Ziarno losowania
   jest stałe, więc wynik jest powtarzalny.
 
+Gorące punkty Getisa-Orda Gi* (ETAP 152): dla każdej gminy suma wartości
+w niej i u sąsiadów porównana z tym, czego należałoby się spodziewać przy
+losowym rozkładzie — wynik jako z-score. W odróżnieniu od LISA patrzy na
+skupiska wartości (wysokie razem z otoczeniem), nie na podobieństwo do
+sąsiadów, więc nie ma kategorii „odstająca”. Wagi binarne z samą gminą
+(„gwiazdka”), istotność z rozkładu normalnego, progi 90/95/99% jak
+w ArcGIS (Hot Spot Analysis).
+
 Liczby liczy ten moduł; model językowy ich nie dotyka (CLAUDE.md).
 """
 
+import math
 import random
 import statistics
 
@@ -26,6 +35,14 @@ TOLERANCJA_STYKU = 0.001  # stopnie, ok. 70–110 m — większa niż szczeliny 
 LICZBA_PERMUTACJI = 999
 ZIARNO = 20260929
 POZIOM_ISTOTNOSCI = 0.05
+
+# (z krytyczne, poziom ufności) od najsilniejszego
+PROGI_GI = [(2.576, 99), (1.960, 95), (1.645, 90)]
+KATEGORIE_GI = {
+    "H99": "gorący punkt (99%)", "H95": "gorący punkt (95%)", "H90": "gorący punkt (90%)",
+    "ns": "nieistotne statystycznie",
+    "C90": "zimny punkt (90%)", "C95": "zimny punkt (95%)", "C99": "zimny punkt (99%)",
+}
 
 KATEGORIE = {
     "HH": "wysokie wśród wysokich (gorący punkt)",
@@ -122,7 +139,30 @@ def analiza(wartosci: dict[str, float], sasiedzi_gmin: dict[str, set[str]]) -> d
         "interpretacja": _interpretacja(i_obs, oczekiwane, p_globalne),
         "lisa": _lisa(z, sasiedztwo, losowanie),
         "kategorie": KATEGORIE,
+        "gi": gi_star(uzyte, sasiedztwo),
+        "kategorie_gi": KATEGORIE_GI,
     }
+
+
+def gi_star(wartosci: dict[str, float], sasiedztwo: dict[str, list[str]]) -> list[dict]:
+    """Gi* (Ord i Getis 1995) z wagami binarnymi, gmina liczona jako swój sąsiad:
+
+    Gi* = (Σ w_ij x_j − x̄ Σ w_ij) / (S √((n Σ w_ij² − (Σ w_ij)²) / (n − 1))),
+    S = √(Σ x_j² / n − x̄²). Wynik jest z-score; p dwustronne z rozkładu normalnego.
+    """
+    n = len(wartosci)
+    srednia = statistics.fmean(wartosci.values())
+    s = math.sqrt(sum(v * v for v in wartosci.values()) / n - srednia * srednia)
+    wynik = []
+    for t, sasiedzi in sasiedztwo.items():
+        okno = [t, *sasiedzi]
+        w = len(okno)  # Σ w_ij = Σ w_ij² przy wagach 0/1
+        mianownik = s * math.sqrt((n * w - w * w) / (n - 1))
+        z = (sum(wartosci[j] for j in okno) - srednia * w) / mianownik if mianownik else 0.0
+        p = math.erfc(abs(z) / math.sqrt(2))  # 2 × (1 − Φ(|z|))
+        kategoria = next((("H" if z > 0 else "C") + str(poziom) for prog, poziom in PROGI_GI if abs(z) >= prog), "ns")
+        wynik.append({"teryt": t, "z": z, "p": p, "kategoria": kategoria})
+    return wynik
 
 
 def _lisa(z: dict[str, float], sasiedztwo: dict[str, list[str]], losowanie: random.Random) -> list[dict]:

@@ -69,6 +69,7 @@
             <button type="button" data-tryb="wartosc" class="przelacznik__opcja przelacznik__opcja--aktywna">Wartość</button>
             <button type="button" data-tryb="zmiana" class="przelacznik__opcja">Zmiana</button>
             <button type="button" data-tryb="lisa" class="przelacznik__opcja" hidden>Klastry LISA</button>
+            <button type="button" data-tryb="gi" class="przelacznik__opcja" hidden title="Gorące i zimne punkty Getisa-Orda Gi*">Gorące punkty</button>
         </div>
         <div id="klasyfikacja" class="klasyfikacja">
             <label>Podział na klasy
@@ -150,7 +151,7 @@
         <div class="rzad rzad--miedzy">
             <div>
                 <h3>Autokorelacja przestrzenna</h3>
-                <p class="wyciszony korelacja__opis">Czy gminy o wysokich wartościach sąsiadują z podobnymi? Globalne I Morana i lokalne skupiska LISA (sąsiedztwo „queen”, 999 permutacji).</p>
+                <p class="wyciszony korelacja__opis">Czy gminy o wysokich wartościach sąsiadują z podobnymi? Globalne I Morana, lokalne skupiska LISA (sąsiedztwo „queen”, 999 permutacji) i gorące punkty Getisa-Orda Gi*.</p>
             </div>
             <button id="przycisk-moran" type="button" class="przycisk--drugi">Policz I Morana</button>
         </div>
@@ -159,7 +160,7 @@
             <div id="liczby-morana" class="profil__liczby"></div>
             <p id="opis-morana" class="opis-korelacji"></p>
             <ul id="lista-lisa" class="lista-lisa"></ul>
-            <p class="wyciszony przypis">p z testu permutacyjnego (jak w GeoDa/PySAL): odsetek losowych przetasowań wartości między gminami, które dały równie skrajny wynik. Klastry LISA na mapie: przełącznik „Klastry LISA” nad mapą.</p>
+            <p class="wyciszony przypis">p z testu permutacyjnego (jak w GeoDa/PySAL): odsetek losowych przetasowań wartości między gminami, które dały równie skrajny wynik. Klastry LISA na mapie: przełącznik „Klastry LISA” nad mapą. „Gorące punkty” (Gi*): gmina razem z sąsiadami ma wyraźnie wyższe (czerwone) albo niższe (niebieskie) wartości, niż wynikałoby z przypadku — z-score, progi 90/95/99% jak w ArcGIS.</p>
         </div>
     </section>
 

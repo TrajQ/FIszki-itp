@@ -3258,3 +3258,20 @@ do serwera. Skrypt w `<head>` zapobiega mignięciu jasnej strony.
   zmianie i obsługa w każdym module dla czysto wizualnej rzeczy.
 - Zmienne CSS bez duplikacji przez `light-dark()` — nowsza funkcja CSS,
   starsze przeglądarki na Linux Mint by jej nie obsłużyły.
+
+## D-160 — Gi* z istotnością z rozkładu normalnego, sprawdzony z PySAL
+Data: 2026-10-02
+
+**Decyzja:** Gi* liczy się wzorem analitycznym (z-score, p z rozkładu
+normalnego, progi 90/95/99% jak w ArcGIS Hot Spot Analysis), bez
+permutacji. Poprawność sprawdzona porównaniem z PySAL (esda) w osobnym
+środowisku — PySAL nie jest zależnością projektu.
+
+**Uzasadnienie:** Gi* jest standardem w analizie „gorących punktów” i
+uzupełnia LISA (skupiska wartości zamiast podobieństwa do sąsiadów). Wzór
+analityczny to jedna pętla, bez kosztu 999 permutacji na gminę.
+
+**Odrzucone alternatywy:**
+- esda/libpysal jako zależność — numpy, scipy i pandas dla jednego wzoru.
+- Permutacyjna istotność jak w LISA — dla Gi* praktyka (ArcGIS, QGIS)
+  opiera się na z-score; wynik byłby nieporównywalny z tymi narzędziami.
