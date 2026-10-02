@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+
+{% block tytul %}{{ akt.nazwa | truncate(50) }} — do druku — Warsztat{% endblock %}
+{% block klasa_body %}strona-druku-aktu{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('przepisy.static', filename='przepisy.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="druk-aktu">
+    <div class="druk-aktu__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('przepisy.widok_aktu', akt_id=akt.id) }}">‹ {{ akt.nazwa | truncate(40) }}</a>
+        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+    </div>
+    <section class="druk-aktu__strona">
+        <h1>{{ akt.nazwa }}</h1>
+        <p class="wyciszony">{{ 'Artykuły z moimi notatkami' if tryb == 'notatki' else 'Wybrane artykuły' }} · {{ jednostki | length }}</p>
+        {% for j in jednostki %}
+        <article class="druk-aktu__jednostka">
+            <h3>{{ j.oznaczenie }} <span class="wyciszony">· PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</span></h3>
+            {% if j.naglowek %}<p class="wyciszony">{{ j.naglowek }}</p>{% endif %}
+            <p class="jednostka__tekst">{{ j.tekst_html }}</p>
+            {% set n = notatki.get(j.id) %}
+            {% if n %}<aside class="notatka"><span class="notatka__etykieta">Moja notatka · {{ n.data_zmiany[:10] }}</span><p class="notatka__tekst">{{ n.tekst }}</p></aside>{% endif %}
+        </article>
+        {% else %}
+        <p class="wyciszony">Nic nie wybrano — zaznacz „druk” przy artykułach albo dodaj notatki.</p>
+        {% endfor %}
+        <p class="wyciszony druk-aktu__przypis">Tekst z wgranego PDF-a; wiążący jest tekst ogłoszony w Dzienniku Ustaw.</p>
+    </section>
+    {{ stopka_wydruku("Przepisy", akt.nazwa | truncate(80)) }}
+</div>
+{% endblock %}

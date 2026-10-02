@@ -928,3 +928,6 @@
 
 ## ETAP 157 — 2026-10-02
 - Teren: porównanie dwóch inwentaryzacji — zestawienie i zmiany w tych samych miejscach
+
+## ETAP 158 — 2026-10-02
+- Przepisy: druk artykułów z notatkami albo wybranych

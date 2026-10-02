@@ -3362,3 +3362,16 @@ przy gęstych pomiarach).
   przepisywania; może później jako pole opcjonalne.
 - Optymalne przypisanie (algorytm węgierski) — przy tych skalach wynik
   prawie ten sam, kod dużo trudniejszy.
+
+## D-166 — Wybór artykułów do druku w adresie strony
+Data: 2026-10-02
+
+**Decyzja:** Lista jednostek do druku jest w parametrach adresu (`?j=`),
+nie w bazie; zaznaczenia na stronie aktu nie są zapamiętywane.
+
+**Uzasadnienie:** Wybór do wydruku jest jednorazowy (przed kolokwium);
+adres da się zapisać w zakładkach, a stan w bazie trzeba by sprzątać.
+Notatki, które są trwałe, mają własny tryb `?notatki=1`.
+
+**Odrzucone alternatywy:**
+- Zapamiętane „zakładki” artykułów — notatki pełnią już tę rolę.

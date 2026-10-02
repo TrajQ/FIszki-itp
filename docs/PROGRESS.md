@@ -2738,3 +2738,16 @@ Status: zamknięty
 - Testy: pary (w tym punkt przesunięty o 40 m), zmiana p.p., projekt bez
   wspólnych pól, błędy; sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-165
+
+## ETAP 158 — Przepisy: druk notatek i wybranych artykułów
+Data: 2026-10-02
+Status: zamknięty
+
+- Trasa `/przepisy/akty/<id>/druk`: `?notatki=1` — jednostki z notatkami,
+  `?j=…&j=…` — wybrane; tekst z odesłaniami, strona PDF, nagłówek
+  rozdziału, notatka; stopka wydruku
+- Strona aktu: „Drukuj z notatkami” (gdy są notatki), pole „druk” przy
+  każdej jednostce i „Drukuj zaznaczone (n)”
+- Własne klasy wydruku w przepisy.css (bez pożyczania z modułu Ceny)
+- Test; sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-166

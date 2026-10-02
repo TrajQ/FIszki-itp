@@ -170,6 +170,21 @@
     });
 })();
 
+// ---------- druk zaznaczonych jednostek (ETAP 158) ----------
+(function () {
+    "use strict";
+
+    const link = document.getElementById("druk-wybranych");
+    const pola = [...document.querySelectorAll(".wybor-do-druku")];
+    function odswiez() {
+        const wybrane = pola.filter((p) => p.checked).map((p) => p.value);
+        link.hidden = !wybrane.length;
+        link.textContent = `Drukuj zaznaczone (${wybrane.length})`;
+        link.href = `${URL_DRUKU}?${new URLSearchParams(wybrane.map((id) => ["j", id]))}`;
+    }
+    pola.forEach((p) => p.addEventListener("change", odswiez));
+})();
+
 // ---------- notatki przy jednostkach (ETAP 140) ----------
 (function () {
     "use strict";

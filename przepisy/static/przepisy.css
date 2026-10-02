@@ -558,3 +558,71 @@ button.przycisk--niebezpieczny-tekst {
     color: var(--tekst-drugi);
     font-size: 0.8em;
 }
+
+/* ETAP 158: zaznaczanie jednostek do druku */
+.do-druku {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    color: var(--tekst-drugi);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.druk-aktu__jednostka {
+    break-inside: avoid;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--linia-slaba);
+}
+
+.druk-aktu__jednostka h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+}
+
+.druk-aktu {
+    display: grid;
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.druk-aktu__akcje {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.druk-aktu__strona {
+    padding: 28px;
+    border-radius: 16px;
+    background: var(--tlo-karty);
+    box-shadow: var(--cien);
+}
+
+.druk-aktu__strona > * {
+    min-width: 0;
+}
+
+.druk-aktu__przypis {
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .druk-aktu__strona {
+        padding: 16px;
+    }
+}
+
+@media print {
+    .strona-druku-aktu .pasek-nawigacji,
+    .druk-aktu__akcje {
+        display: none;
+    }
+
+    .druk-aktu__strona {
+        padding: 0;
+        box-shadow: none;
+    }
+}

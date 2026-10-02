@@ -523,3 +523,18 @@ def test_krotkie_slowo_znajduje_odmiane(client):
     wgraj(client)
     wyniki = client.get("/przepisy/szukaj", query_string={"q": "plan"}).get_json()["wyniki"]
     assert "Art. 15" in [w["oznaczenie"] for w in wyniki]
+
+
+def test_druk_wybranych_i_z_notatkami(client):
+    """ETAP 158."""
+    wgraj(client)
+    client.put("/przepisy/jednostki/4/notatka", json={"tekst": "Na kolokwium!"})
+    akt = client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert "Drukuj z notatkami" in akt and 'class="wybor-do-druku" value="4"' in akt
+    z_notatkami = client.get("/przepisy/akty/1/druk?notatki=1").get_data(as_text=True)
+    assert "Artykuły z moimi notatkami · 1" in z_notatkami and "Na kolokwium!" in z_notatkami and "Art. 15" in z_notatkami
+    assert "Art. 2" not in z_notatkami.split("<h1>")[1] and "stopka-wydruku" in z_notatkami
+    wybrane = client.get("/przepisy/akty/1/druk?j=2&j=3&j=999").get_data(as_text=True)
+    assert "Wybrane artykuły · 2" in wybrane and "Art. 1" in wybrane and "Art. 2" in wybrane and "Na kolokwium!" not in wybrane
+    assert "Nic nie wybrano" in client.get("/przepisy/akty/1/druk").get_data(as_text=True)
+    assert client.get("/przepisy/akty/9/druk").status_code == 404

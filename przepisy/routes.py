@@ -143,6 +143,26 @@ def widok_aktu(akt_id):
                            notatki=baza.notatki_aktu(akt_id), maks_notatki=baza.MAKS_NOTATKI)
 
 
+@przepisy_bp.route("/akty/<int:akt_id>/druk")
+def druk_aktu(akt_id):
+    """ETAP 158: wybrane jednostki (?j=id&j=id…) albo wszystkie z notatkami
+    (?notatki=1) — tekst, notatka i strona PDF, do wydruku przed kolokwium."""
+    akt = _akt_albo_404(akt_id)
+    jednostki = baza.jednostki_aktu(akt_id)
+    notatki = baza.notatki_aktu(akt_id)
+    if request.args.get("notatki"):
+        wybrane = [j for j in jednostki if j["id"] in notatki]
+        tryb = "notatki"
+    else:
+        identyfikatory = set(request.args.getlist("j", type=int))
+        wybrane = [j for j in jednostki if j["id"] in identyfikatory]
+        tryb = "wybrane"
+    mapa = mapa_jednostek(jednostki)
+    for j in wybrane:
+        j["tekst_html"] = z_odeslaniami(j["tekst"], mapa, j["id"])
+    return render_template("przepisy/druk.html", akt=akt, jednostki=wybrane, notatki=notatki, tryb=tryb)
+
+
 @przepisy_bp.route("/jednostki/<int:jednostka_id>/notatka", methods=["PUT"])
 def zapisz_notatke(jednostka_id):
     """ETAP 140: notatka przy artykule; pusty tekst usuwa."""
