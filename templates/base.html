@@ -9,6 +9,7 @@
     {% block head %}{% endblock %}
 </head>
 <body class="{% block klasa_body %}{% endblock %}">
+    <a class="do-tresci" href="#tresc">Przejdź do treści</a>
     {# Wspólna nawigacja aplikacji. Aktywny moduł rozpoznajemy po blueprincie. #}
     <header class="pasek-nawigacji">
         <nav class="pasek-nawigacji__wnetrze">
@@ -26,7 +27,7 @@
         </nav>
     </header>
 
-    <main class="{% block klasa_main %}tresc{% endblock %}">
+    <main id="tresc" tabindex="-1" class="{% block klasa_main %}tresc{% endblock %}">
         {% block tresc %}{% endblock %}
     </main>
 

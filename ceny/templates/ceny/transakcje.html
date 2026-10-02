@@ -49,7 +49,7 @@
             <details>
                 <summary>Wgraj plik z innego miejsca</summary>
                 <form method="post" action="{{ url_for('ceny.importuj_transakcje') }}" enctype="multipart/form-data" class="rzad">
-                    <input type="file" name="plik" accept=".gpkg" required>
+                    <input type="file" name="plik" accept=".gpkg" required aria-label="Plik GeoPackage z Rejestru Cen Nieruchomości">
                     <button type="submit" class="przycisk--drugi">Wgraj</button>
                 </form>
                 <p class="wyciszony opis-cen">Do 50 MB — większy plik wskaż z katalogu Pobrane.</p>

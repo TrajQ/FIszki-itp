@@ -73,7 +73,7 @@
             <summary>Importuj fiszki z pliku</summary>
             <p class="wyciszony">Eksport z Anki (.txt), Quizlet (pojęcie ⇥ definicja) albo CSV: kolumny pytanie i odpowiedź. Z eksportu CSV tej aplikacji wraca też kotwica w PDF-ie. Powtórzone fiszki są pomijane.</p>
             <form id="formularz-importu" class="stos">
-                <input type="file" name="plik" accept=".txt,.csv,.tsv,text/plain,text/csv" required>
+                <input type="file" name="plik" accept=".txt,.csv,.tsv,text/plain,text/csv" required aria-label="Plik z fiszkami do importu (TXT lub CSV)">
                 <input type="text" name="tematy" placeholder="Temat importowanych fiszek (opcjonalnie)" list="lista-tematow-podpowiedzi" maxlength="200">
                 <button type="submit" class="przycisk--drugi">Importuj</button>
             </form>

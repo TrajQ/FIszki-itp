@@ -845,3 +845,34 @@ input[type="file"]::file-selector-button {
 .karta p code {
     overflow-wrap: anywhere;
 }
+
+/* ---------- dostępność z klawiatury (ETAP 130) ---------- */
+
+/* link „Przejdź do treści” — widoczny dopiero po Tab, pozwala ominąć menu */
+.do-tresci {
+    position: absolute;
+    top: -40px;
+    left: 8px;
+    z-index: 2000;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: var(--akcent);
+    color: #ffffff;
+}
+
+.do-tresci:focus {
+    top: 8px;
+}
+
+main:focus {
+    outline: none; /* fokus po „Przejdź do treści” — bez ramki wokół całej strony */
+}
+
+/* wyraźna ramka fokusu dla przycisków i linków (tylko z klawiatury) */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--akcent);
+    outline-offset: 2px;
+}

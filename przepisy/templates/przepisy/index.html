@@ -56,7 +56,7 @@
     <p class="wyciszony">Jeszcze nic nie wgrano.</p>
     {% endif %}
     <form class="rzad" method="post" action="{{ url_for('przepisy.dodaj_akt') }}" enctype="multipart/form-data">
-        <input type="file" name="plik" accept="application/pdf,.pdf" required>
+        <input type="file" name="plik" accept="application/pdf,.pdf" required aria-label="Plik PDF aktu prawnego">
         <button type="submit" class="przycisk--drugi">Wgraj PDF</button>
     </form>
     <p class="wyciszony opis-panelu">PDF musi mieć warstwę tekstową (skany bez OCR nie zadziałają). Tekst dzielony jest na artykuły („Art. 15.”) i paragrafy („§ 4.”).</p>

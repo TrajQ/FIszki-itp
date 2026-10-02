@@ -122,7 +122,7 @@
         <p class="karta__opis">Podręcznik, skrypt, notatki z wykładu.</p>
     </div>
     <div class="rzad">
-        <input type="file" name="plik" accept="application/pdf" required>
+        <input type="file" name="plik" accept="application/pdf" required aria-label="Plik PDF do wgrania">
         <button type="submit">Wgraj</button>
     </div>
 </form>
@@ -165,7 +165,7 @@
         <a id="pobierz-na-telefon" class="przycisk" href="{{ url_for('fiszki.fiszki_na_telefon') }}">📱 Pobierz plik</a>
     </form>
     <form id="import-z-telefonu" class="rzad">
-        <input id="plik-wynikow" type="file" accept=".json,application/json" required>
+        <input id="plik-wynikow" type="file" accept=".json,application/json" required aria-label="Plik z wynikami nauki z telefonu">
         <button type="submit" class="przycisk--drugi">Importuj wyniki</button>
     </form>
     <p id="wynik-importu" class="komunikat" hidden></p>

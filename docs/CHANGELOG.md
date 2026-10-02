@@ -840,3 +840,7 @@
 - Przywracanie danych z kopii zapasowej w aplikacji (z kopią
   bezpieczeństwa i zachowaniem poprzednich danych)
 - Pomoc: opis
+
+## ETAP 130 — 2026-10-02
+- Dostępność: etykiety pól plików, „Przejdź do treści”, ramka fokusu z
+  klawiatury; automatyczne sprawdzanie w przeglądzie stron

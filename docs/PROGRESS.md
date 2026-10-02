@@ -2281,3 +2281,20 @@ Status: zamknięty
 - Sprawdzone w przeglądarce: pobranie kopii → zmiana → przywrócenie;
   poprawione łamanie długich ścieżek na telefonie
 - `DECISIONS.md`: D-137
+
+## ETAP 130 — Dostępność: etykiety pól, nazwy przycisków, obsługa klawiatury
+Data: 2026-10-02
+Status: zamknięty
+
+- `narzedzia/przeglad_stron.py`: sprawdzanie dostępności na każdej
+  stronie — `lang`, obrazy bez `alt`, pola bez etykiety (label /
+  aria-label / title / placeholder), przyciski i linki bez nazwy,
+  powtórzone `id`; pierwszy przebieg: 7 stron z problemami
+- Poprawione: etykiety (`aria-label`) pól wyboru pliku w fiszkach (3),
+  przepisach, dostępności (2), cenach i terenie; nazwa i typ pola w
+  edytorze formularza terenu (pola tworzone w JS)
+- `base.html`: link „Przejdź do treści” (pierwszy po Tab, omija menu),
+  `main` jako cel fokusu; wyraźna ramka fokusu z klawiatury
+  (`:focus-visible`) dla linków, przycisków i rozwijanych sekcji
+- Wynik przeglądu: 69 stron, 0 problemów; sprawdzona obsługa klawiaturą
+- `DECISIONS.md`: D-138

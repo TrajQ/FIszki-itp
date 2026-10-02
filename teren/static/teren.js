@@ -411,6 +411,8 @@
         nazwa.dataset.rola = "nazwa";
         const typ = element("select");
         typ.dataset.rola = "typ";
+        typ.setAttribute("aria-label", "Typ pola"); // ETAP 130: bez widocznej etykiety w wierszu edytora
+        nazwa.setAttribute("aria-label", "Nazwa pola");
         for (const [klucz, opis] of Object.entries(TYPY)) typ.appendChild(new Option(opis, klucz));
         typ.value = pole.typ;
         const opcje = element("input");

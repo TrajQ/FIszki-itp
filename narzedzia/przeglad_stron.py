@@ -38,6 +38,29 @@ c.post("/teren/projekty", data={"nazwa": "Ankieta — Rynek", "wzor": "ankieta"}
 c.post("/osiedle/koncepcje", json={"nazwa": "A"})
 c.post("/ceny/transakcje/import", data={"sciezka": os.path.join(pobrane, "rcn.gpkg")})
 c.post("/ceny/transakcje/1/obszary", json={"nazwa": "Centrum", "geometria": {"type": "Polygon", "coordinates": [[[19.92, 50.05], [19.96, 50.05], [19.96, 50.07], [19.92, 50.07], [19.92, 50.05]]]}})
+# Brak etykiet, nazw i tekstów alternatywnych — to, co czytnik ekranu
+# przeczyta jako „przycisk”, „pole edycji” albo pominie (ETAP 130).
+SPRAWDZ_DOSTEPNOSC = """() => {
+    const widoczny = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== "hidden";
+    const nazwa = (e) => (e.getAttribute("aria-label") || e.getAttribute("title") || e.getAttribute("aria-labelledby") || "").trim();
+    const p = [];
+    if (!document.documentElement.lang) p.push("brak lang");
+    for (const e of document.querySelectorAll("img")) if (!e.hasAttribute("alt")) p.push("img bez alt: " + (e.id || e.src.slice(-40)));
+    for (const e of document.querySelectorAll("input:not([type=hidden]):not([type=submit]):not([type=button]), select, textarea")) {
+        if (!widoczny(e)) continue;
+        const etykieta = e.closest("label") || (e.id && document.querySelector(`label[for="${e.id}"]`));
+        if (!etykieta && !nazwa(e) && !e.getAttribute("placeholder")) p.push("pole bez etykiety: " + (e.id || e.name || e.type));
+    }
+    for (const e of document.querySelectorAll("button, a[href]")) {
+        if (!widoczny(e)) continue;
+        if (!e.textContent.trim() && !nazwa(e) && !e.querySelector("img[alt]:not([alt=''])")) p.push(e.tagName.toLowerCase() + " bez nazwy: " + (e.id || e.className || e.getAttribute("href")));
+    }
+    const id = {};
+    for (const e of document.querySelectorAll("[id]")) id[e.id] = (id[e.id] || 0) + 1;
+    for (const [k, n] of Object.entries(id)) if (n > 1) p.push(`id powtórzony ${n}×: ${k}`);
+    return p;
+}"""
+
 WYMAGAJA_PARAMETROW = ("/dostepnosc/raport", "/mpzp/raport")  # ?plik=, ?id=
 POMIN = ("favicon.ico", ".csv", ".json", ".svg", ".geojson", ".ics", ".txt", ".html", "/static", "/plik", "/telefon")
 STRONY = sorted({r.rule for r in app.url_map.iter_rules() if "GET" in r.methods and not r.arguments and not r.rule.endswith(POMIN) and "static" not in r.endpoint and r.rule not in WYMAGAJA_PARAMETROW})
@@ -64,6 +87,11 @@ with sync_playwright() as p:
                 pg.close(); continue
             sw = pg.evaluate("document.documentElement.scrollWidth")
             winni = pg.evaluate("[...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && !e.closest('nav, .leaflet-container, [class*=przewijanie], [class*=wrap], .zlozony__przewijanie, table')).slice(0,3).map(e => e.tagName + '.' + e.className)")
+            # ETAP 130: podstawowa dostępność — tylko na jednej szerokości (wynik ten sam)
+            dostepnosc = pg.evaluate(SPRAWDZ_DOSTEPNOSC) if szer == 1300 else []
+            if dostepnosc:
+                problemy += 1
+                print("dostępność", adres, dostepnosc[:6])
             if odp.status >= 400 or bledy or sw > szer:
                 problemy += 1
                 print(szer, adres, odp.status, "| szer:", sw, winni, "| bledy:", bledy)

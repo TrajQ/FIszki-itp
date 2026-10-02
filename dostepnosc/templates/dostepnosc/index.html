@@ -40,7 +40,7 @@
                 {% endfor %}
             </ul>
             <form class="stos" method="post" action="{{ url_for('dostepnosc.wgraj') }}" enctype="multipart/form-data">
-                <input type="file" name="plik" accept=".csv,text/csv" required>
+                <input type="file" name="plik" accept=".csv,text/csv" required aria-label="Plik CSV z wynikami dostępności">
                 <button type="submit" class="przycisk--drugi">Wgraj CSV</button>
             </form>
             <details class="format-pliku">
@@ -155,7 +155,7 @@
                 <p class="przypis">Czas = odległość w linii prostej × krętość ÷ prędkość. Model nie zna rzek, torów ani ogrodzeń — do szybkiego porównania wariantów, nie zamiast analizy sieciowej.</p>
             </details>
             <label class="model__plik">Albo wczytaj punkty z pliku CSV
-                <input id="model-plik" type="file" accept=".csv,.txt,text/csv">
+                <input id="model-plik" type="file" accept=".csv,.txt,text/csv" aria-label="Plik CSV z punktami usług">
                 <span class="wyciszony">Kolumny lat i lon w stopniach (EPSG:4326), opcjonalnie nazwa. Z QGIS: eksport warstwy punktowej do CSV z geometrią jako X/Y w EPSG:4326.</span>
             </label>
             <div class="rzad">

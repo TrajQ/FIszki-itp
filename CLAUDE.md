@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 129 (przywracanie kopii w aplikacji — zamknięty)
-Ostatni ZIP: releases/warsztat_etap129_20261002.zip
+ETAP: 130 (dostępność: etykiety, fokus, pominięcie menu — zamknięty)
+Ostatni ZIP: releases/warsztat_etap130_20261002.zip
 Testy: 522 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -2874,3 +2874,23 @@ Ręczne przywracanie z instrukcji było dla studenta zbyt ryzykowne.
 - Restart aplikacji po przywróceniu — połączenia z bazami otwierane są na
   zapytanie, więc nie jest potrzebny.
 - Dowolna ścieżka pliku do przywrócenia — tylko pliki z listy (jak RCN).
+
+## D-138 — Dostępność sprawdzana automatycznie w przeglądzie stron
+Data: 2026-10-02
+
+**Decyzja:** Podstawowe reguły dostępności (lang, alt, etykiety pól,
+nazwy przycisków i linków, unikalne id) sprawdza skrypt przeglądu stron
+na każdej stronie; dodany link „Przejdź do treści” i ramka fokusu
+`:focus-visible`. Etykiety dodajemy przez `aria-label` tam, gdzie
+widoczny tekst obok pola wystarcza wzrokowo, ale nie jest powiązany z
+polem.
+
+**Uzasadnienie:** Ręczne sprawdzanie łatwo pominąć przy nowej stronie;
+reguły w skrypcie działają dla każdej strony z tablicy tras. Obsługa
+klawiaturą i czytnikiem ekranu to wymaganie dostępności cyfrowej.
+
+**Odrzucone alternatywy:**
+- axe-core — zewnętrzny skrypt wstrzykiwany do stron (CDN niedostępny w
+  aplikacji offline); podstawowe reguły wystarczą.
+- Ramka fokusu także przy kliknięciu myszą — rozprasza; `:focus-visible`
+  pokazuje ją tylko z klawiatury.
