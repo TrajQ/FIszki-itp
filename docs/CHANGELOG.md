@@ -892,3 +892,6 @@
 
 ## ETAP 145 — 2026-10-02
 - Dokumentacja: docs/ARCHITEKTURA.md — jak aplikacja jest poskładana
+
+## ETAP 146 — 2026-10-02
+- Strona główna: „Pierwsze kroki” dla nowej instalacji

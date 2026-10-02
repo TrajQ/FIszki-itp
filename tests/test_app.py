@@ -463,3 +463,19 @@ def test_start_nie_laduje_biblioteki_gemini():
     wynik = subprocess.run([sys.executable, "-c", "import sys, tempfile, app; app.create_app(instance_path=tempfile.mkdtemp()); "
                             "print('google.genai' in sys.modules)"], capture_output=True, text=True, cwd=str(pathlib.Path(__file__).parent.parent))
     assert wynik.stdout.strip().splitlines()[-1] == "False", wynik.stderr[-500:]
+
+
+# ---------- ETAP 146: pierwsze kroki ----------
+
+
+def test_pierwsze_kroki_tylko_w_pustej_instalacji(czysty_client):
+    c = czysty_client
+    c.application.config["GEMINI_API_KEY"] = ""
+    c.application.config["GUS_BDL_API_KEY"] = "klucz"
+    strona = c.get("/").get_data(as_text=True)
+    assert "Pierwsze kroki" in strona and "GEMINI_API_KEY=…" in strona and "Klucz GUS jest ustawiony" in strona
+    assert "pierwsze-kroki__stan--ok" in strona  # GUS — tak, Gemini — nie
+    c.application.config["GEMINI_API_KEY"] = "x"
+    assert "Klucz Gemini jest ustawiony" in c.get("/").get_data(as_text=True)
+    c.post("/osiedle/koncepcje", json={"nazwa": "Pierwsza"})
+    assert "Pierwsze kroki" not in c.get("/").get_data(as_text=True)  # coś zapisane — karta znika

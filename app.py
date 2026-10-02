@@ -114,9 +114,14 @@ def create_app(instance_path=None):
         terminy = wszystkie_terminy()
         from kopia import ostatnia_kopia_automatyczna
 
+        ostatnie = ostatnio_uzywane()
+        # ETAP 146: „Pierwsze kroki”, dopóki w żadnym module nie ma własnych danych
+        pusta = not ostatnie and not podsumowania.get("atlas") and not (podsumowania.get("dostepnosc") or {}).get("pliki")
+        pierwsze_kroki = {"klucz_gemini": bool(app.config.get("GEMINI_API_KEY")),
+                          "klucz_gus": bool(app.config.get("GUS_BDL_API_KEY"))} if pusta else None
         return render_template(
             "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
-            ostatnie=ostatnio_uzywane(),
+            ostatnie=ostatnie, pierwsze_kroki=pierwsze_kroki,
             kopia_auto=ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
             auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
         )

@@ -3163,3 +3163,18 @@ potrzebuje mapy na jedną stronę.
   wystarcza i da się go poprawić w edytorze.
 - Zmiana wpisu o SpatiaLite w CLAUDE.md — to sekcja „Stack — nie zmieniaj
   bez pytania”; zostaje do decyzji autora.
+
+## D-154 — Pierwsze kroki znikają same, bez przycisku „ukryj”
+Data: 2026-10-02
+
+**Decyzja:** Karta „Pierwsze kroki” pokazuje się, dopóki instalacja jest
+pusta, i znika po pierwszym zapisie w dowolnym module. Stan kluczy liczy
+serwer (czy są ustawione, bez treści — jak w diagnostyce).
+
+**Uzasadnienie:** Nowy użytkownik widział osiem kart bez wskazówki, że
+część funkcji wymaga klucza w `.env`, a część działa od razu na przykładach.
+
+**Odrzucone alternatywy:**
+- Przycisk „ukryj” zapamiętany w przeglądarce — kolejny stan do
+  pilnowania; karta i tak przestaje być potrzebna po pierwszej pracy.
+- Kreator krok po kroku — za dużo jak na dwie zmienne w `.env`.

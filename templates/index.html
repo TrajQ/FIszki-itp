@@ -6,6 +6,45 @@
     <p>Osiem niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
 </section>
 
+{% if pierwsze_kroki %}
+<section class="karta stos pierwsze-kroki" aria-labelledby="naglowek-pierwszych-krokow">
+    <h3 id="naglowek-pierwszych-krokow">Pierwsze kroki</h3>
+    <ol class="pierwsze-kroki__lista">
+        <li class="pierwsze-kroki__krok">
+            <span class="pierwsze-kroki__stan {{ 'pierwsze-kroki__stan--ok' if pierwsze_kroki.klucz_gemini }}">{{ '✓' if pierwsze_kroki.klucz_gemini else '1' }}</span>
+            <div>
+                <strong>Klucz Gemini {{ 'jest ustawiony' if pierwsze_kroki.klucz_gemini else 'w pliku .env' }}</strong>
+                <p class="wyciszony">{% if pierwsze_kroki.klucz_gemini %}Działają propozycje fiszek z PDF-ów, opisy wskaźników i pytania do przepisów.{% else %}Wpisz <code>GEMINI_API_KEY=…</code> w pliku <code>.env</code> w katalogu Warsztatu i uruchom go ponownie (klucz: aistudio.google.com). Bez klucza działa wszystko poza propozycjami fiszek, opisami i pytaniami do przepisów.{% endif %}</p>
+            </div>
+        </li>
+        <li class="pierwsze-kroki__krok">
+            <span class="pierwsze-kroki__stan {{ 'pierwsze-kroki__stan--ok' if pierwsze_kroki.klucz_gus }}">{{ '✓' if pierwsze_kroki.klucz_gus else '2' }}</span>
+            <div>
+                <strong>Klucz GUS {{ 'jest ustawiony' if pierwsze_kroki.klucz_gus else '(nieobowiązkowy)' }}</strong>
+                <p class="wyciszony">{% if pierwsze_kroki.klucz_gus %}Atlas i Ceny pytają GUS z wyższym limitem zapytań.{% else %}Atlas i Ceny działają bez niego; z kluczem <code>GUS_BDL_API_KEY</code> (bezpłatny, api.stat.gov.pl) GUS pozwala na więcej zapytań.{% endif %}</p>
+            </div>
+        </li>
+        <li class="pierwsze-kroki__krok">
+            <span class="pierwsze-kroki__stan">3</span>
+            <div>
+                <strong>Spróbuj bez własnych danych</strong>
+                <p class="wyciszony"><a href="{{ url_for('dostepnosc.index') }}">Dostępność</a> ma gotowy przykład (Poznań),
+                    w <a href="{{ url_for('mpzp.index') }}">MPZP</a> kliknij działkę na mapie,
+                    w <a href="{{ url_for('teren.index') }}">Terenie</a> załóż projekt ze wzoru, a w <a href="{{ url_for('atlas.index') }}">Atlasie</a> wybierz wskaźnik GUS.</p>
+            </div>
+        </li>
+        <li class="pierwsze-kroki__krok">
+            <span class="pierwsze-kroki__stan">4</span>
+            <div>
+                <strong>Gdy coś nie działa</strong>
+                <p class="wyciszony"><a href="{{ url_for('pomoc') }}">Pomoc</a> ma krótkie przepisy „jak zrobić…”, a <a href="{{ url_for('diagnostyka') }}">diagnostyka</a> sprawdzi klucze i połączenie z usługami.</p>
+            </div>
+        </li>
+    </ol>
+    <p class="wyciszony pierwsze-kroki__stopka">Ta karta zniknie, gdy zapiszesz coś w którymkolwiek module.</p>
+</section>
+{% endif %}
+
 {% if ostatnie %}
 <section class="karta stos ostatnie" aria-labelledby="naglowek-ostatnich">
     <h3 id="naglowek-ostatnich">Wróć do pracy</h3>

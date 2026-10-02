@@ -674,6 +674,62 @@ input[type="file"]::file-selector-button {
     }
 }
 
+/* ---------- Pierwsze kroki: pusta instalacja (ETAP 146) ---------- */
+
+.pierwsze-kroki {
+    margin-bottom: 20px;
+}
+
+.pierwsze-kroki h3 {
+    margin: 0;
+}
+
+.pierwsze-kroki__lista {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pierwsze-kroki__krok {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+
+.pierwsze-kroki__krok p {
+    margin: 2px 0 0;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.pierwsze-kroki__stan {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--tlo-wyciszone);
+    color: var(--tekst-drugi);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* obwódka zamiast wypełnienia: biały tekst na jasnozielonym (tryb ciemny) byłby nieczytelny */
+.pierwsze-kroki__stan--ok {
+    box-shadow: inset 0 0 0 2px var(--sukces);
+    background: none;
+    color: var(--sukces);
+}
+
+.pierwsze-kroki__stopka {
+    margin: 0;
+    font-size: 13px;
+}
+
 /* ---------- Wróć do pracy: ostatnio używane (ETAP 141) ---------- */
 
 .ostatnie {

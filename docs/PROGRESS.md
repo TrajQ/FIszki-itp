@@ -2542,3 +2542,17 @@ Status: zamknięty
   (wymieniony w stosie w CLAUDE.md) nie jest używany
 - Link w README
 - `DECISIONS.md`: D-153
+
+## ETAP 146 — Strona główna: pierwsze kroki
+Data: 2026-10-02
+Status: zamknięty
+
+- Karta „Pierwsze kroki” w pustej instalacji (brak „ostatnio używanych”,
+  zestawów Atlasu i własnych wyników Dostępności): stan klucza Gemini
+  (co bez niego nie działa), nieobowiązkowy klucz GUS, co wypróbować bez
+  własnych danych, Pomoc i diagnostyka; znika po pierwszym zapisie
+- Znacznik „gotowe” jako obwódka w kolorze sukcesu (biały na
+  jasnozielonym w trybie ciemnym byłby nieczytelny)
+- Test: karta tylko w pustej instalacji, stany kluczy
+- Sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
+- `DECISIONS.md`: D-154
