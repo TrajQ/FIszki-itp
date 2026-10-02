@@ -127,6 +127,8 @@ bazie jako cache (np. `cache_bdl`).
 - `static/style.css` — wspólne komponenty i tokeny kolorów (`--akcent`,
   `--tekst-drugi`…) z wersją ciemną (`prefers-color-scheme`); kontrast
   liczony wg WCAG i pilnowany testem (D-139). CSS modułów używa tokenów.
+  Motyw można wybrać ręcznie (`static/motyw.js`, atrybut `data-motyw` na
+  `<html>`, D-159).
 - Leaflet i Leaflet.draw lokalnie w `static/`; pdf.js lokalnie w Fiszkach.
 - Tekst spoza kodu (nazwy od użytkownika, z wgranych plików, z usług) trafia
   do DOM przez `textContent`; dymki Leaflet dostają węzeł, nie napis —

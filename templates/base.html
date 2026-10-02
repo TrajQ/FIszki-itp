@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block tytul %}Warsztat{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    {# ETAP 151: ręcznie wybrany motyw przed narysowaniem strony (bez mignięcia jasnej) #}
+    <script>try { const m = localStorage.getItem("warsztat-motyw"); if (m === "jasny" || m === "ciemny") document.documentElement.setAttribute("data-motyw", m); } catch (e) {}</script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% block head %}{% endblock %}
 </head>
@@ -23,6 +25,7 @@
                 {% endfor %}
                 <li><a href="{{ url_for('szukaj') }}" class="{{ 'aktywny' if request.endpoint == 'szukaj' }}" title="Szukaj we wszystkich modułach" aria-label="Szukaj">⌕ Szukaj</a></li>
                 <li><a href="{{ url_for('pomoc') }}" class="{{ 'aktywny' if request.endpoint == 'pomoc' }}" title="Jak zrobić…">Pomoc</a></li>
+                <li><button type="button" id="przelacznik-motywu" class="przelacznik-motywu" aria-label="Zmień motyw">◐</button></li>
             </ul>
         </nav>
     </header>
@@ -31,6 +34,7 @@
         {% block tresc %}{% endblock %}
     </main>
 
+    <script src="{{ url_for('static', filename='motyw.js') }}"></script>
     {% block skrypty %}{% endblock %}
 </body>
 </html>

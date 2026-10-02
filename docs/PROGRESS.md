@@ -2627,3 +2627,17 @@ Status: zamknięty
   do doprecyzowania po przeglądzie w ETAPie 170
 - Link w README
 - `DECISIONS.md`: D-158
+
+## ETAP 151 — Wygląd: przełącznik motywu
+Data: 2026-10-02
+Status: zamknięty
+
+- Przycisk w menu: jak w systemie (◐) → jasny (☀) → ciemny (☾);
+  wybór w localStorage (ustawienie wyglądu), atrybut `data-motyw` na
+  `<html>` ustawiany skryptem w `<head>` przed narysowaniem strony
+- `style.css`: tryb ciemny systemu wyłączany przez `data-motyw="jasny"`,
+  osobny blok tokenów dla `data-motyw="ciemny"` (+ `color-scheme`)
+- Test: oba bloki ciemne mają identyczne tokeny (kontrast liczony raz)
+- Sprawdzone w przeglądarce 1300/390 px: kolejność, przeładowanie,
+  podpowiedź; przegląd stron 75/0
+- `DECISIONS.md`: D-159

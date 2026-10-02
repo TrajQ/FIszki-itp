@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 150 (podsumowanie 110–150 — zamknięty)
-Ostatni ZIP: releases/warsztat_etap150_20261002.zip
-Testy: 554 passed / 0 failed
+ETAP: 151 (przełącznik motywu — zamknięty)
+Ostatni ZIP: releases/warsztat_etap151_20261002.zip
+Testy: 555 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

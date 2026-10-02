@@ -907,3 +907,6 @@
 
 ## ETAP 150 — 2026-10-02
 - Podsumowanie ETAPów 110–150 i plan 151–200 (docs/PODSUMOWANIE_110-150.md)
+
+## ETAP 151 — 2026-10-02
+- Wygląd: ręczny wybór motywu jasny / ciemny / jak w systemie

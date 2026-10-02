@@ -3241,3 +3241,20 @@ temu, co wychodzi w użyciu.
 
 **Odrzucone alternatywy:**
 - Pełna lista 50 ETAPów — sztywna i w połowie nieaktualna przed realizacją.
+
+## D-159 — Motyw ręczny w przeglądarce, nie w bazie
+Data: 2026-10-02
+
+**Decyzja:** Wybór motywu trzyma localStorage przeglądarki i ustawia go
+krótki skrypt w `<head>` (atrybut `data-motyw`). Tokeny trybu ciemnego są
+w dwóch blokach CSS (systemowy i ręczny); test pilnuje, że są identyczne.
+
+**Uzasadnienie:** To ustawienie wyglądu jednej przeglądarki, nie dane
+użytkownika — nie powinno trafiać do kopii zapasowej ani wymagać zapytania
+do serwera. Skrypt w `<head>` zapobiega mignięciu jasnej strony.
+
+**Odrzucone alternatywy:**
+- Ustawienie po stronie serwera (ciasteczko / baza) — zapis przy każdej
+  zmianie i obsługa w każdym module dla czysto wizualnej rzeczy.
+- Zmienne CSS bez duplikacji przez `light-dark()` — nowsza funkcja CSS,
+  starsze przeglądarki na Linux Mint by jej nie obsłużyły.

@@ -55,3 +55,14 @@ def test_kontrast_tekstu(motyw):
     t = _tokeny()[motyw]
     za_malo = [(a, b, round(kontrast(t.get(a, a), t.get(b, b)), 2)) for a, b in PARY if kontrast(t.get(a, a), t.get(b, b)) < AA]
     assert za_malo == []
+
+
+def test_motyw_reczny_ma_te_same_tokeny_co_systemowy():
+    """ETAP 151: blok :root[data-motyw="ciemny"] = blok trybu ciemnego systemu."""
+    with open(STYL, encoding="utf-8") as plik:
+        css = plik.read()
+    systemowy = css[css.index("@media (prefers-color-scheme: dark)"):css.index(':root[data-motyw="ciemny"]')]
+    reczny = css[css.index(':root[data-motyw="ciemny"]'):css.index(':root[data-motyw="jasny"]')]
+    tokeny = lambda blok: dict(re.findall(r"(--[\w-]+):\s*([^;]+);", blok))
+    assert tokeny(systemowy) and tokeny(systemowy) == tokeny(reczny)
+    assert ':root:not([data-motyw="jasny"])' in systemowy  # ręczny jasny wyłącza tryb ciemny systemu
