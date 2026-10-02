@@ -480,8 +480,8 @@ button.przycisk--niebezpieczny-tekst {
     font-size: 13px;
 }
 
-/* ETAP 155: szacunek kosztów — szeroka tabela przewija się w panelu */
-.tabela-kosztow-wrap {
+/* ETAP 155/160: szeroka tabela (koszty, odległości i cień) przewija się w wąskim panelu i raporcie */
+.przewijanie-osiedla {
     overflow-x: auto;
 }
 

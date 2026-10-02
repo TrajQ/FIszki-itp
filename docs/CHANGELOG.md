@@ -934,3 +934,6 @@
 
 ## ETAP 159 — 2026-10-02
 - „Co nowego” — zmiany po aktualizacji, pasek na stronie głównej
+
+## ETAP 160 — 2026-10-02
+- Przegląd: raport osiedla na telefonie bez przewijania strony; szybsze porównanie inwentaryzacji

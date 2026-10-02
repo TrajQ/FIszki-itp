@@ -3389,3 +3389,19 @@ ryzyka, że dwie listy się rozjadą.
 
 **Odrzucone alternatywy:**
 - Osobna, krótsza lista „dla użytkownika” — kolejny plik do utrzymania.
+
+## D-168 — Przegląd stron na koncepcjach z treścią
+Data: 2026-10-02
+
+**Decyzja:** Dane w narzędziu przeglądu stron obejmują nie tylko „puste”
+obiekty (projekt, koncepcja), ale też takie z treścią, która wyświetla
+tabele i sekcje warunkowe (tereny, koszty, notatki, wycinki, drugi
+projekt do porównania).
+
+**Uzasadnienie:** Błąd z ETAPu 100 (tabela cienia poszerzała raport na
+telefonie) przetrwał 60 ETAPów, bo przegląd oglądał koncepcję bez terenów —
+sekcji nie było na stronie.
+
+**Odrzucone alternatywy:**
+- Osobny zestaw danych przeglądu w pliku — dane zasiewa ten sam skrypt,
+  czytelnie obok listy stron.

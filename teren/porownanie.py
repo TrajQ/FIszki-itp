@@ -14,6 +14,7 @@ Dwie części:
 """
 
 import math
+import statistics
 
 from .raport import zestawienie
 
@@ -49,20 +50,42 @@ def zestawienie_obok(pola: list[dict], punkty_a: list[dict], punkty_b: list[dict
     return wynik
 
 
+def _siatka(punkty: list[dict], bok_m: float) -> tuple[dict, callable]:
+    """Punkty w komórkach ok. bok_m × bok_m (indeks do szukania sąsiadów)."""
+    stopien_szer = bok_m / 111_320
+    stopien_dl = bok_m / (111_320 * max(0.1, math.cos(math.radians(statistics.fmean(p["lat"] for p in punkty)))))
+    def komorka(p):
+        return int(p["lat"] // stopien_szer), int(p["lng"] // stopien_dl)
+    komorki: dict = {}
+    for p in punkty:
+        komorki.setdefault(komorka(p), []).append(p)
+    return komorki, komorka
+
+
+def _najblizszy(p: dict, komorki: dict, komorka, prog_m: float):
+    """Najbliższy punkt z siatki w promieniu prog_m (albo None) — sąsiednie komórki wystarczą."""
+    w, k = komorka(p)
+    kandydaci = [q for dw in (-1, 0, 1) for dk in (-1, 0, 1) for q in komorki.get((w + dw, k + dk), ())]
+    najlepszy = min(kandydaci, key=lambda q: odleglosc_m(p, q), default=None)
+    return najlepszy if najlepszy is not None and odleglosc_m(p, najlepszy) <= prog_m else None
+
+
 def pary(punkty_a: list[dict], punkty_b: list[dict], prog_m: float = PROG_M) -> list[tuple[dict, dict, float]]:
-    """Wzajemnie najbliższe punkty A i B w promieniu prog_m (z położeniem)."""
+    """Wzajemnie najbliższe punkty A i B w promieniu prog_m (z położeniem).
+    Para musi leżeć w promieniu prog_m, więc najbliższego szukamy tylko w
+    sąsiednich komórkach siatki o boku prog_m (ETAP 160) — ten sam wynik co
+    porównanie każdego z każdym, ale w czasie liniowym."""
     a = [p for p in punkty_a if p.get("lat") is not None]
     b = [p for p in punkty_b if p.get("lat") is not None]
     if not a or not b:
         return []
-    najblizszy_a = {id(pb): min(a, key=lambda pa: odleglosc_m(pa, pb)) for pb in b}
-    najblizszy_b = {id(pa): min(b, key=lambda pb: odleglosc_m(pa, pb)) for pa in a}
+    siatka_a, komorka_a = _siatka(a, prog_m)
+    siatka_b, komorka_b = _siatka(b, prog_m)
     wynik = []
     for pb in b:
-        pa = najblizszy_a[id(pb)]
-        d = odleglosc_m(pa, pb)
-        if d <= prog_m and najblizszy_b[id(pa)] is pb:
-            wynik.append((pa, pb, d))
+        pa = _najblizszy(pb, siatka_a, komorka_a, prog_m)
+        if pa is not None and _najblizszy(pa, siatka_b, komorka_b, prog_m) is pb:
+            wynik.append((pa, pb, odleglosc_m(pa, pb)))
     return wynik
 
 

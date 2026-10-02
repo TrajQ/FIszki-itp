@@ -507,3 +507,22 @@ def test_pary_punktow():
     assert [(x["nr"], y["nr"]) for x, y, _ in porownanie.pary(a, b)] == [(1, 1)]
     assert porownanie.odleglosc_m({"lat": 52.0, "lng": 17.0}, {"lat": 52.001, "lng": 17.0}) == pytest.approx(111.2, abs=0.2)
     assert porownanie.pary(a, [{"lat": None, "lng": None, "nr": 1}]) == []
+
+
+def test_pary_z_siatki_jak_kazdy_z_kazdym():
+    """ETAP 160: indeks w siatce daje te same pary co porównanie wszystkich punktów."""
+    import random
+    from teren import porownanie
+    los = random.Random(5)
+    a = [{"lat": 52.4 + los.uniform(0, 0.002), "lng": 16.9 + los.uniform(0, 0.003), "nr": i} for i in range(150)]
+    b = [{"lat": p["lat"] + los.gauss(0, 0.00008), "lng": p["lng"] + los.gauss(0, 0.0001), "nr": i} for i, p in enumerate(a)]
+
+    def kazdy_z_kazdym():
+        wynik = set()
+        for pb in b:
+            pa = min(a, key=lambda q: porownanie.odleglosc_m(q, pb))
+            if porownanie.odleglosc_m(pa, pb) <= porownanie.PROG_M and min(b, key=lambda q: porownanie.odleglosc_m(pa, q)) is pb:
+                wynik.add((pa["nr"], pb["nr"]))
+        return wynik
+    z_siatki = {(x["nr"], y["nr"]) for x, y, _ in porownanie.pary(a, b)}
+    assert z_siatki == kazdy_z_kazdym() and len(z_siatki) > 50

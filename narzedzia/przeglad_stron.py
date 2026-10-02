@@ -71,6 +71,20 @@ bdl.pobierz_zmienna = lambda zid: bdl.Zmienna(zid, "Mediana cen za 1 m2 lokali m
 bdl.szereg_gminy = lambda zid, jid: [{"rok": r, "wartosc": 6000 + 400 * (r - 2015) + int(jid[-4:]) % 900} for r in range(2015, 2025)]
 c.put("/ceny/zmienna", json={"id": 633})
 c.put("/ceny/zmienna", json={"id": 64428, "rodzaj": "wynagrodzenie"})
+# ETAP 160: strony z ETAPów 151–159 — porównanie inwentaryzacji, druk przepisów,
+# koszty koncepcji, fiszka z wycinkiem rysunku
+from test_fiszki_obrazy import png, data_url  # noqa: E402
+c.post("/teren/projekty/1/podobny")
+with app.app_context():
+    from teren import baza as baza_terenu
+    for projekt, przesuniecie in ((1, 0.0), (2, 0.00003)):
+        baza_terenu.zapisz_punkty(projekt, [{"uid": f"p{projekt}{i:05d}", "lat": 52.40 + i * 0.0003 + przesuniecie, "lng": 16.90, "dokladnosc_m": 4,
+                                             "czas": f"202{4 + projekt}-05-01T10:{i:02d}", "wartosci": {}, "uwagi": "", "zdjecie": None} for i in range(6)])
+c.post("/fiszki/1/fiszki", json={"strona": 1, "fragment_tekstu": "[wycinek rysunku, s. 1]", "pytanie": "Co to za schemat?", "odpowiedz": "Plan", "obraz": data_url(png())})
+c.put("/osiedle/koncepcje/1", json={"geojson": {"type": "FeatureCollection", "features": [
+    {"type": "Feature", "properties": {"funkcja": "obszar"}, "geometry": {"type": "Polygon", "coordinates": [[[16.9, 52.4], [16.902, 52.4], [16.902, 52.401], [16.9, 52.401], [16.9, 52.4]]]}},
+    {"type": "Feature", "properties": {"funkcja": "MW", "zabudowa_proc": 30, "kondygnacje": 5}, "geometry": {"type": "Polygon", "coordinates": [[[16.9, 52.4], [16.901, 52.4], [16.901, 52.4005], [16.9, 52.4005], [16.9, 52.4]]]}}]},
+    "ustawienia": {"koszty": {"budowa_mw": 6500, "grunt": 900}}})
 # Brak etykiet, nazw i tekstów alternatywnych — to, co czytnik ekranu
 # przeczyta jako „przycisk”, „pole edycji” albo pominie (ETAP 130).
 SPRAWDZ_DOSTEPNOSC = """() => {
@@ -94,13 +108,14 @@ SPRAWDZ_DOSTEPNOSC = """() => {
     return p;
 }"""
 
-WYMAGAJA_PARAMETROW = ("/dostepnosc/raport", "/mpzp/raport", "/ceny/raport")  # ?plik=, ?id= — z parametrami niżej
+WYMAGAJA_PARAMETROW = ("/dostepnosc/raport", "/mpzp/raport", "/ceny/raport", "/teren/porownanie")  # ?plik=, ?id= — z parametrami niżej
 POMIN = ("favicon.ico", ".csv", ".json", ".svg", ".geojson", ".ics", ".txt", ".html", "/static", "/plik", "/telefon")
 STRONY = sorted({r.rule for r in app.url_map.iter_rules() if "GET" in r.methods and not r.arguments and not r.rule.endswith(POMIN) and "static" not in r.endpoint and r.rule not in WYMAGAJA_PARAMETROW})
 STRONY += ["/teren/projekty/1", "/teren/projekty/1/raport", "/osiedle/koncepcje/1/raport", "/ceny/transakcje?plik=1", "/ceny/transakcje?plik=1&co=dzialki",
            "/ceny/transakcje/1/raport", "/ceny/transakcje/1/raport?co=dzialki", "/ceny/transakcje/1/wycena?lat=50.06&lng=19.94&pow=50&promien=1000&tolerancja=0.2",
            "/fiszki/1/", "/przepisy/akty/1", "/osiedle/?koncepcja=1", "/szukaj?q=plan", "/szukaj?q=centrum",
-           "/ceny/raport?id=011212161000&nazwa=Kraków&id=023216264000&nazwa=Wrocław — miasto na prawach powiatu"]
+           "/ceny/raport?id=011212161000&nazwa=Kraków&id=023216264000&nazwa=Wrocław — miasto na prawach powiatu",
+           "/teren/porownanie?a=1&b=2", "/przepisy/akty/1/druk?notatki=1", "/przepisy/akty/1/druk?j=2&j=4", "/fiszki/powtorka", "/fiszki/druk"]
 srv = make_server("127.0.0.1", 5218, app, threaded=True); threading.Thread(target=srv.serve_forever, daemon=True).start()
 problemy = 0
 with sync_playwright() as p:

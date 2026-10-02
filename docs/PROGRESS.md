@@ -2766,3 +2766,21 @@ Status: zamknięty
 - Testy: parsowanie, pierwsze uruchomienie, pasek, oznaczenie, znikanie;
   sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-167
+
+## ETAP 160 — Przegląd po ETAPach 151–159
+Data: 2026-10-02
+Status: zamknięty
+
+- pyflakes czysty; pokrycie całości 95%, nowy kod 94–100%; testy
+  z ostrzeżeniami o zasobach jako błędami — czyste
+- Przegląd stron rozszerzony o strony z ETAPów 151–159 (porównanie
+  inwentaryzacji, druk przepisów, koncepcja z terenami i kosztami, fiszka
+  z wycinkiem): 81 stron × 2 szerokości, 0 problemów
+- Znalezione: raport osiedla przewijał się poziomo na telefonie przez
+  tabelę „Odległości i cień” (błąd z ETAPu 100, niewidoczny, bo
+  koncepcja w przeglądzie nie miała terenów) — tabela w przewijanym
+  kontenerze; klasa `przewijanie-osiedla` wspólna dla obu tabel
+- Teren: parowanie punktów w porównaniu inwentaryzacji przez siatkę
+  komórek 15 m — 1000+1000 punktów 1,14 s → 0,013 s, ten sam wynik
+  (test równoważności z porównaniem każdy z każdym)
+- `DECISIONS.md`: D-168
