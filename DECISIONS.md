@@ -3443,7 +3443,7 @@ przeglądarka trzyma je w localStorage (osobno dla pliku wyników) i
 przysyła do bezstanowej trasy, która liczy statystyki. Komórka należy do
 obszaru, gdy jej środek jest w wieloboku.
 
-**Uzasadnienie:** Moduł nie ma bazy (czyta pliki wyników, D-034) —
+**Uzasadnienie:** Moduł nie ma bazy (czyta pliki wyników CSV, D-015) —
 dokładanie jej dla listy wieloboków to nowy plik w kopii zapasowej i
 migracje. Obszary łatwo narysować ponownie; wynik zależy tylko od pliku
 i wieloboku. Środek komórki zamiast części wspólnej — komórki H3 są małe,
