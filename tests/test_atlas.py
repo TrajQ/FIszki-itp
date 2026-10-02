@@ -1002,7 +1002,8 @@ def test_raport_gminy_opis_sprawdza_liczby(raport_client, monkeypatch):
 
     from dane import gemini
     monkeypatch.setattr(gemini.Config, "GEMINI_API_KEY", "test")
-    monkeypatch.setattr(gemini.genai, "Client", Klient)
+    import google.genai  # dane/gemini.py ładuje bibliotekę dopiero przy zapytaniu (ETAP 143)
+    monkeypatch.setattr(google.genai, "Client", Klient)
     r = c.post(f"/atlas/raport-gminy/{GMINA}/opis")
     assert r.status_code == 200 and "Miejsce 2 na 2 gmin" in przekazane["tresc"]  # fakty z kodu
 

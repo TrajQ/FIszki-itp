@@ -9,9 +9,6 @@ tłumaczy i porządkuje to, co dostał, a nie wymyśla).
 import json
 import re
 
-from google import genai
-from google.genai import errors, types
-
 from config import Config
 
 PROMPT_SYSTEMOWY = (
@@ -30,6 +27,24 @@ class BladGemini(Exception):
     """Błąd komunikacji z Gemini API albo nieparsowalna odpowiedź."""
 
 
+def _generuj(contents, **konfiguracja):
+    """Jedno zapytanie do Gemini; błąd API → BladGemini. Biblioteka
+    google-genai ładowana dopiero tu (ETAP 143): jej import to ok. 0,4 s,
+    połowa startu aplikacji, a większość uruchomień nie pyta modelu."""
+    from google import genai
+    from google.genai import errors, types
+
+    try:
+        client = genai.Client(api_key=Config.GEMINI_API_KEY)
+        return client.models.generate_content(
+            model=Config.GEMINI_MODEL,
+            contents=contents,
+            config=types.GenerateContentConfig(**konfiguracja),
+        )
+    except errors.APIError as e:
+        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+
+
 def zaproponuj_fiszke(fragment_tekstu: str) -> dict:
     """Zwraca {"pytanie": str, "odpowiedz": str} na podstawie fragmentu tekstu.
 
@@ -40,17 +55,7 @@ def zaproponuj_fiszke(fragment_tekstu: str) -> dict:
     if not Config.GEMINI_API_KEY:
         raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
 
-    try:
-        client = genai.Client(api_key=Config.GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model=Config.GEMINI_MODEL,
-            contents=fragment_tekstu,
-            config=types.GenerateContentConfig(
-                system_instruction=PROMPT_SYSTEMOWY,
-            ),
-        )
-    except errors.APIError as e:
-        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    response = _generuj(fragment_tekstu, system_instruction=PROMPT_SYSTEMOWY)
 
     return _sparsuj_odpowiedz(response.text or "")
 
@@ -111,18 +116,8 @@ def zaproponuj_fiszki_ze_strony(tekst_strony: str, liczba: int = 5) -> list[dict
     if not Config.GEMINI_API_KEY:
         raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
 
-    try:
-        client = genai.Client(api_key=Config.GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model=Config.GEMINI_MODEL,
-            contents=tekst_strony,
-            config=types.GenerateContentConfig(
-                system_instruction=PROMPT_STRONY.format(liczba=liczba),
-                response_mime_type="application/json",
-            ),
-        )
-    except errors.APIError as e:
-        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    response = _generuj(tekst_strony, system_instruction=PROMPT_STRONY.format(liczba=liczba),
+                        response_mime_type="application/json")
 
     return sparsuj_liste_fiszek(response.text or "")
 
@@ -190,15 +185,7 @@ def opisz_wskaznik(fakty: list[str]) -> str:
     if not Config.GEMINI_API_KEY:
         raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
 
-    try:
-        client = genai.Client(api_key=Config.GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model=Config.GEMINI_MODEL,
-            contents="Fakty:\n" + "\n".join(f"- {f}" for f in fakty),
-            config=types.GenerateContentConfig(system_instruction=PROMPT_OPISU),
-        )
-    except errors.APIError as e:
-        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    response = _generuj("Fakty:\n" + "\n".join(f"- {f}" for f in fakty), system_instruction=PROMPT_OPISU)
 
     opis = (response.text or "").strip()
     if not opis:
@@ -247,18 +234,7 @@ def odpowiedz_z_przepisow(pytanie: str, fragmenty: list[str]) -> dict:
     tresc = "PYTANIE: " + pytanie + "\n\nFRAGMENTY:\n\n" + "\n\n".join(
         f"[{i}] {f}" for i, f in enumerate(fragmenty, start=1)
     )
-    try:
-        client = genai.Client(api_key=Config.GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model=Config.GEMINI_MODEL,
-            contents=tresc,
-            config=types.GenerateContentConfig(
-                system_instruction=PROMPT_PRZEPISOW,
-                response_mime_type="application/json",
-            ),
-        )
-    except errors.APIError as e:
-        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    response = _generuj(tresc, system_instruction=PROMPT_PRZEPISOW, response_mime_type="application/json")
 
     tekst = (response.text or "").strip()
     if tekst.startswith("```"):
@@ -296,15 +272,7 @@ def opisz_gmine(fakty: list[str]) -> str:
     """
     if not Config.GEMINI_API_KEY:
         raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
-    try:
-        client = genai.Client(api_key=Config.GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model=Config.GEMINI_MODEL,
-            contents="Fakty:\n" + "\n".join(f"- {f}" for f in fakty),
-            config=types.GenerateContentConfig(system_instruction=PROMPT_RAPORTU_GMINY),
-        )
-    except errors.APIError as e:
-        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    response = _generuj("Fakty:\n" + "\n".join(f"- {f}" for f in fakty), system_instruction=PROMPT_RAPORTU_GMINY)
     opis = (response.text or "").strip()
     if not opis:
         raise BladGemini("Gemini zwrócił pusty opis.")
@@ -334,16 +302,6 @@ def zaproponuj_fiszki_z_przepisu(tekst: str, oznaczenie: str, liczba: int = 4) -
     Cytaty i liczby sprawdza wywołujący (przepisy/pytania.py)."""
     if not Config.GEMINI_API_KEY:
         raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
-    try:
-        client = genai.Client(api_key=Config.GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model=Config.GEMINI_MODEL,
-            contents=tekst,
-            config=types.GenerateContentConfig(
-                system_instruction=PROMPT_FISZEK_Z_PRZEPISU.format(oznaczenie=oznaczenie, liczba=liczba),
-                response_mime_type="application/json",
-            ),
-        )
-    except errors.APIError as e:
-        raise BladGemini(f"Błąd Gemini API: {e.message}") from e
+    response = _generuj(tekst, system_instruction=PROMPT_FISZEK_Z_PRZEPISU.format(oznaczenie=oznaczenie, liczba=liczba),
+                        response_mime_type="application/json")
     return sparsuj_liste_fiszek(response.text or "")

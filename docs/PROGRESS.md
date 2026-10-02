@@ -2489,3 +2489,20 @@ Status: zamknięty
 - Test: każda strona z „Drukuj” ma stopkę; treść i format daty
 - Przegląd stron: 70 stron, 0 problemów
 - `DECISIONS.md`: D-150
+
+## ETAP 143 — Wydajność: szybszy start aplikacji
+Data: 2026-10-02
+Status: zamknięty
+
+- Pomiar (`python -X importtime`): z ok. 0,87 s startu 0,4 s to import
+  `google.genai`, potrzebny dopiero przy pytaniu do modelu
+- `dane/gemini.py`: sześć identycznych bloków wywołania zebrane w
+  `_generuj(contents, **konfiguracja)`, które importuje bibliotekę przy
+  pierwszym zapytaniu; zachowanie i komunikaty błędów bez zmian
+  (sprawdzone na żywym API: zły klucz → czytelny BladGemini)
+- Start (import + `create_app`): 0,87 s → 0,42 s
+- Statyczne: Flask wysyła ETag z `no-cache` — przeglądarka dostaje 304,
+  zmiany po aktualizacji widać od razu; bez zmian
+- Test: start nie ładuje `google.genai`; test opisu gminy podmienia
+  klienta w `google.genai`
+- `DECISIONS.md`: D-151

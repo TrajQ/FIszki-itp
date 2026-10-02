@@ -1,3 +1,5 @@
+import pathlib
+
 import pytest
 
 from app import create_app
@@ -449,3 +451,15 @@ def test_wroc_do_pracy(czysty_client, monkeypatch):
     monkeypatch.setattr(osiedle.routes, "ostatnie", zepsute)
     strona = c.get("/").get_data(as_text=True)
     assert "wyklad.pdf" in strona and "/osiedle/?koncepcja=1" not in strona  # błąd jednego modułu nie psuje reszty
+
+
+# ---------- ETAP 143: szybki start ----------
+
+
+def test_start_nie_laduje_biblioteki_gemini():
+    """google-genai to ok. 0,4 s importu — ładowana dopiero przy pierwszym zapytaniu do modelu."""
+    import subprocess
+    import sys
+    wynik = subprocess.run([sys.executable, "-c", "import sys, tempfile, app; app.create_app(instance_path=tempfile.mkdtemp()); "
+                            "print('google.genai' in sys.modules)"], capture_output=True, text=True, cwd=str(pathlib.Path(__file__).parent.parent))
+    assert wynik.stdout.strip().splitlines()[-1] == "False", wynik.stderr[-500:]

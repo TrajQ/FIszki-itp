@@ -3112,3 +3112,20 @@ tu sens (zasada „bez abstrakcji dla dwóch modułów” nie dotyczy).
 - Stopka na każdej stronie (`position: fixed` albo `@page` z polami
   marginesu) — `fixed` nachodzi na treść, pola marginesu nie działają w
   Firefoksie, domyślnej przeglądarce Linux Mint.
+
+## D-151 — Biblioteka Gemini ładowana przy pierwszym zapytaniu
+Data: 2026-10-02
+
+**Decyzja:** `google.genai` importujemy wewnątrz `dane/gemini._generuj`,
+a nie na początku modułu. Wszystkie wywołania modelu idą przez tę funkcję.
+Test pilnuje, żeby start aplikacji biblioteki nie ładował.
+
+**Uzasadnienie:** Import trwał ok. 0,4 s, połowę czasu od kliknięcia ikony
+do gotowego serwera, a większość uruchomień w ogóle nie pyta modelu.
+Przy okazji sześć skopiowanych bloków (klient, zapytanie, zamiana błędu)
+zeszło do jednego miejsca.
+
+**Odrzucone alternatywy:**
+- Dłuższe przechowywanie statycznych plików w pamięci przeglądarki
+  (`SEND_FILE_MAX_AGE_DEFAULT`) — lokalnie zysk znikomy, a po aktualizacji
+  stary CSS/JS zostawałby w przeglądarce.

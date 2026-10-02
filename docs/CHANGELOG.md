@@ -883,3 +883,6 @@
 
 ## ETAP 142 — 2026-10-02
 - Wydruki: wspólna stopka (moduł, źródło danych, data wygenerowania)
+
+## ETAP 143 — 2026-10-02
+- Wydajność: start aplikacji o połowę szybszy (Gemini ładowane przy pierwszym użyciu)
