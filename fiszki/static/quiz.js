@@ -6,6 +6,7 @@
     const LITERY = ["A", "B", "C", "D"];
     const karta = document.getElementById("karta-quizu");
     const pytanieEl = document.getElementById("pytanie-quizu");
+    const obrazQuizu = document.getElementById("obraz-quizu");
     const odpowiedziEl = document.getElementById("odpowiedzi-quizu");
     const dalej = document.getElementById("przycisk-dalej");
     const postep = document.getElementById("postep-quizu");
@@ -35,6 +36,8 @@
         odpowiedziano = false;
         dalej.hidden = true;
         pytanieEl.textContent = p.pytanie;
+        obrazQuizu.hidden = !p.obraz; // ETAP 154
+        if (p.obraz) obrazQuizu.src = p.obraz;
         odpowiedziEl.replaceChildren();
         p.odpowiedzi.forEach((tekst, i) => {
             const li = el("li");

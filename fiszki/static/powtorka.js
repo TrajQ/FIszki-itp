@@ -12,6 +12,8 @@
     const koniecOpis = document.getElementById("koniec-opis");
     const bladEl = document.getElementById("blad-powtorki");
     const pytanieEl = document.getElementById("pytanie-powtorki");
+    const obrazPrzod = document.getElementById("obraz-przod");
+    const obrazTyl = document.getElementById("obraz-tyl");
     const odpowiedzEl = document.getElementById("odpowiedz-powtorki");
     const fragmentEl = document.getElementById("fragment-powtorki");
     const odpowiedzBlok = document.getElementById("odpowiedz-blok");
@@ -96,6 +98,11 @@
         twojaBlok.hidden = true;
         if (trybPisania.checked) poleOdpowiedzi.focus();
         odpowiedzEl.textContent = tyl(fiszka);
+        // ETAP 154: wycinek rysunku należy do pytania — w trybie odwróconym jest z tyłu karty
+        for (const [obraz, widoczny] of [[obrazPrzod, !trybOdwrocony.checked], [obrazTyl, trybOdwrocony.checked]]) {
+            obraz.hidden = !(fiszka.obraz && widoczny);
+            if (!obraz.hidden) obraz.src = fiszka.obraz;
+        }
         fragmentEl.textContent = fiszka.fragment_tekstu;
         fragmentEl.hidden = !fiszka.fragment_tekstu; // fiszka z importu nie ma cytatu
         pudelkoEl.textContent = `Pudełko ${fiszka.pudelko} z 5`;

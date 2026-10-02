@@ -46,6 +46,8 @@ const licznikFiszekEl = document.getElementById("licznik-fiszek");
 let dokumentPdf = null;
 let numerStrony = 1;
 let zaznaczonyFragment = null; // { tekst, strona }
+let obrazWycinka = null; // ETAP 154: data URL PNG wycinka do zapisu z fiszką
+const podgladWycinka = document.getElementById("podglad-wycinka");
 
 async function wczytajDokument() {
     try {
@@ -121,6 +123,7 @@ przyciskNastepna.addEventListener("click", () => renderujStrone(numerStrony + 1)
 przyciskZaproponuj.addEventListener("click", async () => {
     if (!zaznaczonyFragment) return;
     const fragment = zaznaczonyFragment;
+    ustawWycinek(null);
 
     formularzFiszki.hidden = false;
     podgladFragmentu.textContent = fragment.tekst;
@@ -151,6 +154,7 @@ przyciskZaproponuj.addEventListener("click", async () => {
 
 przyciskAnuluj.addEventListener("click", () => {
     formularzFiszki.hidden = true;
+    ustawWycinek(null);
     ukryjPrzyciskZaproponuj();
 });
 
@@ -174,6 +178,7 @@ przyciskZapisz.addEventListener("click", async () => {
                 pytanie,
                 odpowiedz,
                 tematy: poleTematowNowych.value,
+                obraz: obrazWycinka, // ETAP 154: null przy zwykłej fiszce
             }),
         });
     } catch (e) {
@@ -188,8 +193,80 @@ przyciskZapisz.addEventListener("click", async () => {
     }
 
     formularzFiszki.hidden = true;
+    ustawWycinek(null);
     ukryjPrzyciskZaproponuj();
     await odswiezListeFiszek();
+});
+
+// ---------- wycinek rysunku (ETAP 154) ----------
+// Prostokąt zaznaczony na wyrenderowanej stronie → PNG z płótna pdf.js.
+
+const przyciskWycinka = document.getElementById("przycisk-wycinka");
+const nakladkaWycinka = document.getElementById("nakladka-wycinka");
+const ramkaWycinka = document.getElementById("ramka-wycinka");
+const MAKS_SZEROKOSC_WYCINKA = 1400; // px — większy wycinek zmniejszamy (plik do 2 MB)
+let poczatekWycinka = null;
+
+function ustawWycinek(dataUrl) {
+    obrazWycinka = dataUrl;
+    podgladWycinka.hidden = !dataUrl;
+    if (dataUrl) podgladWycinka.src = dataUrl;
+    else podgladWycinka.removeAttribute("src");
+}
+
+function trybWycinka(wlacz) {
+    nakladkaWycinka.hidden = !wlacz;
+    przyciskWycinka.setAttribute("aria-pressed", String(wlacz));
+    ramkaWycinka.hidden = true;
+    poczatekWycinka = null;
+    if (wlacz) ukryjPrzyciskZaproponuj();
+}
+
+przyciskWycinka.addEventListener("click", () => trybWycinka(nakladkaWycinka.hidden));
+
+function punktNaNakladce(e) {
+    const r = nakladkaWycinka.getBoundingClientRect();
+    return { x: Math.min(Math.max(e.clientX - r.left, 0), r.width), y: Math.min(Math.max(e.clientY - r.top, 0), r.height) };
+}
+
+function prostokat(a, b) {
+    return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(a.x - b.x), h: Math.abs(a.y - b.y) };
+}
+
+nakladkaWycinka.addEventListener("pointerdown", (e) => {
+    poczatekWycinka = punktNaNakladce(e);
+    nakladkaWycinka.setPointerCapture(e.pointerId);
+});
+
+nakladkaWycinka.addEventListener("pointermove", (e) => {
+    if (!poczatekWycinka) return;
+    const p = prostokat(poczatekWycinka, punktNaNakladce(e));
+    Object.assign(ramkaWycinka.style, { left: `${p.x}px`, top: `${p.y}px`, width: `${p.w}px`, height: `${p.h}px` });
+    ramkaWycinka.hidden = false;
+});
+
+nakladkaWycinka.addEventListener("pointerup", (e) => {
+    if (!poczatekWycinka) return;
+    const p = prostokat(poczatekWycinka, punktNaNakladce(e));
+    trybWycinka(false);
+    if (p.w < 12 || p.h < 12) return; // przypadkowe kliknięcie
+    // płótno ma piksele w skali widoku; nakładka — w pikselach CSS
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / r.width, sy = canvas.height / r.height;
+    const zmniejszenie = Math.min(1, MAKS_SZEROKOSC_WYCINKA / (p.w * sx));
+    const wycinek = document.createElement("canvas");
+    wycinek.width = Math.round(p.w * sx * zmniejszenie);
+    wycinek.height = Math.round(p.h * sy * zmniejszenie);
+    wycinek.getContext("2d").drawImage(canvas, p.x * sx, p.y * sy, p.w * sx, p.h * sy, 0, 0, wycinek.width, wycinek.height);
+    zaznaczonyFragment = { tekst: `[wycinek rysunku, s. ${numerStrony}]`, strona: numerStrony };
+    ustawWycinek(wycinek.toDataURL("image/png"));
+    formularzFiszki.hidden = false;
+    document.getElementById("formularz-luk").hidden = true;
+    podgladFragmentu.textContent = `Wycinek rysunku ze strony ${numerStrony}`;
+    polePytanie.value = "";
+    poleOdpowiedz.value = "";
+    statusGemini.textContent = "Wpisz pytanie do rysunku (np. „Co oznacza ten symbol?”) i odpowiedź.";
+    polePytanie.focus();
 });
 
 // ---------- fiszki z luką (ETAP 139) — fiszki tworzy serwer (fiszki/luki.py) ----------
@@ -327,6 +404,13 @@ async function odswiezListeFiszek() {
         const pytanie = document.createElement("div");
         pytanie.className = "fiszka-pytanie";
         pytanie.textContent = fiszka.pytanie;
+        if (fiszka.obraz) { // ETAP 154: miniatura wycinka nad pytaniem
+            const obraz = document.createElement("img");
+            obraz.className = "fiszka-obraz";
+            obraz.src = fiszka.obraz;
+            obraz.alt = "Wycinek rysunku";
+            li.appendChild(obraz);
+        }
         const odpowiedzEl = document.createElement("div");
         odpowiedzEl.className = "fiszka-odpowiedz";
         odpowiedzEl.textContent = fiszka.odpowiedz;

@@ -2671,3 +2671,22 @@ Status: zamknięty
   Wieliczka), wydruk
 - Sprawdzone w przeglądarce (jasny i ciemny)
 - `DECISIONS.md`: D-161
+
+## ETAP 154 — Fiszki: fiszka z wycinkiem rysunku z PDF
+Data: 2026-10-02
+Status: zamknięty
+
+- Tryb „✂ Wycinek rysunku” w widoku PDF: prostokąt przeciągnięty na
+  stronie → PNG z płótna pdf.js (szersze niż 1400 px zmniejszane),
+  podgląd w formularzu nowej fiszki; kotwica: strona
+- `fiszki/obrazy.py`: sprawdzenie data URL (PNG, sygnatura, do 2 MB),
+  zapis pod losową nazwą w `instance/fiszki/obrazy/`, tabela
+  `obrazy_fiszek` (kaskada z fiszką), sprzątanie osieroconych plików po
+  usunięciu fiszki lub PDF-a, trasa `/fiszki/obrazy/<nazwa>`
+- Obraz przy pytaniu: lista fiszek (miniatura), powtórka (w trybie
+  odwróconym z tyłu karty), quiz, druk, plik na telefon (data URL w pliku)
+- Przy okazji: komentarz do importu tras wrócił nad import (rozdzielony
+  w ETAPie 141)
+- Testy: wszystkie miejsca wyświetlania, złe obrazy, limit, ścieżki,
+  sprzątanie; sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-162

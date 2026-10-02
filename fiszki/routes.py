@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import egzaminy, luki, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
+from . import egzaminy, luki, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
 from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
@@ -186,7 +186,20 @@ def lista_fiszek(pdf_id):
         "SELECT * FROM fiszki WHERE pdf_id = ? ORDER BY strona, id", (pdf_id,)
     ).fetchall()
     po_fiszce = tematy.tematy_fiszek(db)
-    return jsonify([{**dict(f), "tematy": po_fiszce.get(f["id"], [])} for f in fiszki])
+    obrazki = obrazy.obrazy_fiszek(db)
+    return jsonify([{**dict(f), "tematy": po_fiszce.get(f["id"], []), "obraz": url_obrazu(obrazki.get(f["id"]))} for f in fiszki])
+
+
+def url_obrazu(nazwa: str | None) -> str | None:
+    """ETAP 154: adres wycinka rysunku fiszki (albo None)."""
+    return url_for("fiszki.obraz_fiszki", nazwa=nazwa) if nazwa else None
+
+
+@fiszki_bp.route("/obrazy/<nazwa>")
+def obraz_fiszki(nazwa):
+    if not obrazy.WZOR_NAZWY.match(nazwa):
+        abort(404)
+    return send_from_directory(obrazy.folder(), nazwa, mimetype="image/png")
 
 
 @fiszki_bp.route("/<int:pdf_id>/szkic", methods=["POST"])
@@ -242,15 +255,19 @@ def zapisz_fiszke(pdf_id):
         abort(400, "Brak wymaganych pól fiszki.")
     try:
         lista_tematow = tematy.normalizuj(dane.get("tematy"))
+        obraz = obrazy.odczytaj(dane["obraz"]) if dane.get("obraz") else None  # ETAP 154
     except tematy.BladTematow as e:
         abort(400, str(e))
+    except obrazy.BladObrazu as e:
+        return jsonify({"blad": str(e)}), 400
 
     db = get_db()
     fiszka_id = _wstaw_fiszke(db, pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, lista_tematow)
+    nazwa_obrazu = obrazy.zapisz(db, fiszka_id, obraz) if obraz else None
     db.commit()
 
     nowa = db.execute("SELECT * FROM fiszki WHERE id = ?", (fiszka_id,)).fetchone()
-    return jsonify({**dict(nowa), "tematy": tematy.tematy_fiszek(db).get(fiszka_id, [])}), 201
+    return jsonify({**dict(nowa), "tematy": tematy.tematy_fiszek(db).get(fiszka_id, []), "obraz": url_obrazu(nazwa_obrazu)}), 201
 
 
 def _wstaw_fiszke(db, pdf_id, strona, fragment_tekstu, pytanie, odpowiedz, lista_tematow) -> int:
@@ -290,6 +307,7 @@ def usun_fiszke(pdf_id, fiszka_id):
     db = get_db()
     db.execute("DELETE FROM fiszki WHERE id = ? AND pdf_id = ?", (fiszka_id, pdf_id))
     db.commit()
+    obrazy.usun_osierocone(db)
     return "", 204
 
 
@@ -339,7 +357,8 @@ def _fiszki_do_eksportu(pdf_id=None, temat=None):
     gdzie = (" WHERE " + " AND ".join(warunki)) if warunki else ""
     kolejnosc = " ORDER BY strona, fiszki.id" if pdf_id is not None else " ORDER BY pdfy.nazwa_oryginalna, strona, fiszki.id"
     return db.execute(
-        "SELECT fiszki.*, pdfy.nazwa_oryginalna FROM fiszki JOIN pdfy ON pdfy.id = fiszki.pdf_id" + gdzie + kolejnosc,
+        "SELECT fiszki.*, pdfy.nazwa_oryginalna, obrazy_fiszek.plik AS obraz_plik FROM fiszki JOIN pdfy ON pdfy.id = fiszki.pdf_id"
+        " LEFT JOIN obrazy_fiszek ON obrazy_fiszek.fiszka_id = fiszki.id" + gdzie + kolejnosc,  # ETAP 154: wycinek do druku
         parametry,
     ).fetchall()
 
@@ -352,6 +371,7 @@ def usun_pdf(pdf_id):
     db.execute("DELETE FROM fiszki WHERE pdf_id = ?", (pdf_id,))
     db.execute("DELETE FROM pdfy WHERE id = ?", (pdf_id,))
     db.commit()
+    obrazy.usun_osierocone(db)
 
     sciezka = os.path.join(folder_plikow(), pdf["nazwa_pliku"])
     if os.path.exists(sciezka):
@@ -359,8 +379,6 @@ def usun_pdf(pdf_id):
     return redirect(url_for("fiszki.index"))
 
 
-# Pozostałe trasy modułu — w osobnych plikach, rejestrują się na fiszki_bp.
-# Import na końcu, bo tamte pliki importują fiszki_bp z tego modułu.
 # ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
 
 
@@ -376,6 +394,8 @@ def ostatnie(limit: int = 3) -> list[dict]:
              "url": url_for("fiszki.widok_pdf", pdf_id=w["id"])} for w in wiersze]
 
 
+# Pozostałe trasy modułu — w osobnych plikach, rejestrują się na fiszki_bp.
+# Import na końcu, bo tamte pliki importują fiszki_bp z tego modułu.
 from . import trasy_nauka, trasy_telefon, trasy_wymiana  # noqa: E402, F401
 
 

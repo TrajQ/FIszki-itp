@@ -77,6 +77,13 @@ CREATE TABLE IF NOT EXISTS powtorki_z_telefonu (
     data TEXT NOT NULL
 );
 
+-- ETAP 154: wycinek rysunku z PDF przy pytaniu fiszki (plik PNG w
+-- instance/fiszki/obrazy/). Osobna tabela, jak tematy — bez migracji.
+CREATE TABLE IF NOT EXISTS obrazy_fiszek (
+    fiszka_id INTEGER PRIMARY KEY REFERENCES fiszki(id) ON DELETE CASCADE,
+    plik TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,

@@ -916,3 +916,6 @@
 
 ## ETAP 153 — 2026-10-02
 - Atlas: iloraz lokalizacji dla wskaźników względnych, na mapie i na wydruku
+
+## ETAP 154 — 2026-10-02
+- Fiszki: fiszka z wycinkiem rysunku z PDF (mapy, schematy), także na telefonie

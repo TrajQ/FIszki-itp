@@ -278,6 +278,36 @@ mark {
     border-radius: 8px;
 }
 
+/* ETAP 154: zaznaczanie wycinka rysunku nad stroną PDF */
+.nakladka-wycinka {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.ramka-wycinka {
+    position: absolute;
+    border: 2px dashed var(--akcent);
+    background: var(--akcent-tlo);
+}
+
+#przycisk-wycinka[aria-pressed="true"] {
+    background: var(--akcent-wypelnienie);
+    color: #fff;
+}
+
+.fiszka-obraz {
+    display: block;
+    max-width: 100%;
+    max-height: 120px;
+    margin: 4px 0;
+    border: 1px solid var(--linia);
+    border-radius: 6px;
+    background: #fff;
+}
+
 .akcje-zaznaczenia {
     position: absolute;
     z-index: 10;
@@ -696,6 +726,24 @@ button.odpowiedz-quizu--zla {
 
 .karta-druk__pytanie {
     font-weight: 600;
+}
+
+/* ETAP 154: wycinek rysunku z PDF przy pytaniu */
+.karta-druk__obraz {
+    display: block;
+    max-width: 100%;
+    max-height: 45mm;
+    margin: 0 auto 2mm;
+}
+
+.obraz-fiszki {
+    display: block;
+    max-width: 100%;
+    max-height: 50vh;
+    margin: 8px 0;
+    border: 1px solid var(--linia);
+    border-radius: var(--promien-maly);
+    background: #fff; /* rysunek z PDF ma białe tło także w trybie ciemnym */
 }
 
 .karta-druk__nr {

@@ -9,7 +9,7 @@ import random
 
 from flask import abort, jsonify, redirect, render_template, request, url_for
 
-from . import egzaminy, powtorki, quiz as quiz_fiszek, statystyki_nauki
+from . import egzaminy, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki
 from .baza import get_db
 from .routes import (
     _WARUNEK_DO_POWTORKI,
@@ -18,6 +18,7 @@ from .routes import (
     _pobierz_pdf_albo_404,
     _temat_z_zapytania,
     fiszki_bp,
+    url_obrazu,
 )
 
 
@@ -56,7 +57,8 @@ def quiz_pytania():
         pytania = quiz_fiszek.uloz_quiz(zakres, wszystkie, liczba, random.Random(ziarno))
     except quiz_fiszek.ZaMaloFiszek as e:
         return jsonify({"blad": str(e)}), 400
-    return jsonify(pytania)
+    obrazki = obrazy.obrazy_fiszek(db)  # ETAP 154
+    return jsonify([{**p, "obraz": url_obrazu(obrazki.get(p["fiszka_id"]))} for p in pytania])
 
 
 @fiszki_bp.route("/statystyki")
@@ -108,7 +110,8 @@ def kolejka_powtorki():
             ORDER BY pudelko, fiszki.id""",
         parametry,
     ).fetchall()
-    fiszki = [dict(w) for w in wiersze]
+    obrazki = obrazy.obrazy_fiszek(db)  # ETAP 154
+    fiszki = [{**dict(w), "obraz": url_obrazu(obrazki.get(w["id"]))} for w in wiersze]
     if wszystkie:
         random.shuffle(fiszki)
     return jsonify(fiszki)

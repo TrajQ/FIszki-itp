@@ -16,7 +16,7 @@ import re
 import secrets
 from datetime import date, timedelta
 
-from . import powtorki
+from . import obrazy, powtorki
 
 FORMAT = "warsztat-powtorki"
 MAKS_WYNIKOW = 20000
@@ -63,7 +63,9 @@ def fiszki_do_eksportu(db, dzis: date, temat: str | None, pdf_id: int | None) ->
             WHERE {" AND ".join(warunki)} ORDER BY fiszki.id""",
         parametry,
     ).fetchall()
-    return [dict(w) for w in wiersze]
+    # ETAP 154: wycinek rysunku osadzony w pliku (telefon działa bez połączenia z Warsztatem)
+    obrazki = obrazy.obrazy_fiszek(db)
+    return [{**dict(w), "obraz": obrazy.jako_data_url(obrazki[w["id"]]) if w["id"] in obrazki else None} for w in wiersze]
 
 
 def odczytaj_wyniki(dane, instalacja: str, dzis: date) -> list[dict]:

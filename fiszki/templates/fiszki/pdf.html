@@ -34,6 +34,7 @@
             <span id="numer-strony" class="wyciszony"></span>
             <button id="strona-nastepna" type="button" class="przycisk--drugi">Następna ›</button>
             <button id="przycisk-fiszki-strony" type="button" title="Gemini zaproponuje kilka fiszek z całej bieżącej strony">✦ Fiszki z tej strony</button>
+            <button id="przycisk-wycinka" type="button" class="przycisk--drugi" aria-pressed="false" title="Zaznacz prostokątem rysunek, mapę albo schemat — powstanie fiszka z tym wycinkiem">✂ Wycinek rysunku</button>
         </div>
         <p id="blad-pdf" class="komunikat komunikat--blad" hidden></p>
         <p class="podpowiedz wyciszony">Zaznacz myszką fragment tekstu, żeby utworzyć fiszkę.</p>
@@ -41,6 +42,7 @@
             <div id="warstwa-pdf">
                 <canvas id="canvas-pdf"></canvas>
                 <div id="warstwa-tekstu" class="textLayer"></div>
+                <div id="nakladka-wycinka" class="nakladka-wycinka" hidden><div id="ramka-wycinka" class="ramka-wycinka" hidden></div></div>
                 <div id="akcje-zaznaczenia" class="akcje-zaznaczenia" hidden>
                     <button id="przycisk-zaproponuj" type="button">✦ Zaproponuj fiszkę</button>
                     <button id="przycisk-luka" type="button" class="przycisk--drugi" title="Fiszka z luką: ukryjesz wybrane słowa fragmentu">[…] Z luką</button>
@@ -63,6 +65,7 @@
         <div id="formularz-fiszki" class="karta stos" hidden>
             <h3>Nowa fiszka</h3>
             <blockquote id="podglad-fragmentu"></blockquote>
+            <img id="podglad-wycinka" class="obraz-fiszki" alt="Wycinek rysunku do fiszki" hidden>
             <p id="status-gemini" class="wyciszony"></p>
             <label>Pytanie <textarea id="pole-pytanie"></textarea></label>
             <label>Odpowiedź <textarea id="pole-odpowiedz"></textarea></label>

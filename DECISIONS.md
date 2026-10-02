@@ -3290,3 +3290,20 @@ używa sum. Stałe klasy pozwalają porównać mapy różnych branż i lat.
 **Odrzucone alternatywy:**
 - Klasy z kwantyli jak na mapie wartości — „1 = jak w województwie”
   straciłoby znaczenie.
+
+## D-162 — Wycinek rysunku robi przeglądarka, serwer tylko sprawdza PNG
+Data: 2026-10-02
+
+**Decyzja:** Wycinek powstaje w przeglądarce z płótna, na którym pdf.js
+narysował stronę; serwer przyjmuje gotowy PNG (data URL), sprawdza
+sygnaturę i rozmiar i zapisuje plik. Obraz należy do pytania. W pliku na
+telefon jest osadzony jako data URL; eksport CSV/Anki zostaje tekstowy.
+
+**Uzasadnienie:** Strona jest już wyrenderowana na płótnie — wycięcie to
+jedno `drawImage`. Renderowanie PDF po stronie serwera wymagałoby nowej
+zależności (np. PyMuPDF / poppler).
+
+**Odrzucone alternatywy:**
+- Kolumna `obraz` w tabeli `fiszki` — moduł dokłada nowe tabele zamiast
+  kolumn (bez migracji), jak tematy.
+- Obrazy w eksporcie Anki — wymaga paczki .apkg z mediami, osobny format.
