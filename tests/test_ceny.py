@@ -211,7 +211,7 @@ def test_obszary_rcn():
     kokarda = {"type": "Polygon", "coordinates": [[[19.9, 50.0], [20.0, 50.1], [20.0, 50.0], [19.9, 50.1], [19.9, 50.0]]]}
     assert rcn.sprawdz_obszar(kokarda)["type"] in ("Polygon", "MultiPolygon")
 
-    lokale = [{"rok": r, "data": f"{r}-06-01", "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": lat, "lng": 19.95}
+    lokale = [{"rok": r, "data": f"{r}-06-01", "rynek": "wtórny", "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": lat, "lng": 19.95}
               for r, c, lat in [(2023, 10000, 50.01), (2024, 12000, 50.02), (2024, 14000, 50.03),
                                 (2023, 20000, 50.11), (2024, 22000, 50.12), (2024, 9000, None)]]
     poludnie = {"id": 1, "nazwa": "Południe", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}
@@ -510,7 +510,7 @@ def test_trasa_okolicy(client, tmp_path, monkeypatch):
 
 
 def test_wykres_lat():
-    lokale = [{"rok": r, "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": 50.01, "lng": 19.95}
+    lokale = [{"rok": r, "rynek": "wtórny", "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50, "lat": 50.01, "lng": 19.95}
               for r, c in [(2022, 10000)] * 6 + [(2023, 11000)] * 2 + [(2024, 13000)] * 5]
     obszar = {"id": 1, "nazwa": "A", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}
     por = rcn.porownanie(lokale, [obszar])
@@ -683,3 +683,21 @@ def test_w_obszarze_wektorowo():
     lokale = [{"lat": 50.0 + i / 100, "lng": 19.95} for i in range(10)] + [{"lat": None, "lng": None}]
     assert len(rcn.w_obszarze(lokale, prostokat(19.9, 50.0, 20.0, 50.045))) == 4  # 50,01…50,04 (brzeg 50,00 nie wewnątrz)
     assert rcn.w_obszarze([], prostokat(19.9, 50.0, 20.0, 50.1)) == []
+
+
+# ---------- ETAP 135: rynek pierwotny i wtórny ----------
+
+
+def test_premia_rynku_pierwotnego():
+    def lok(rynek, cena, lat=50.01):
+        return {"rok": 2024, "data": "2024-06-01", "rynek": rynek, "cena_m2": float(cena), "pow_m2": 50.0, "cena": cena * 50, "lat": lat, "lng": 19.95}
+    lokale = [lok("pierwotny", c) for c in (12000, 12500, 13000, 13500, 14000)] + [lok("wtórny", c) for c in (10000, 10000, 10500, 11000, 11000, 9000)]
+    lokale += [lok("pierwotny", 20000, lat=50.12), lok("wtórny", 15000, lat=50.12)]  # drugi obszar: po jednej transakcji
+    a = {"id": 1, "nazwa": "A", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}
+    b = {"id": 2, "nazwa": "B", "geometria": prostokat(19.9, 50.1, 20.0, 50.15)}
+    por = rcn.porownanie(lokale, [a, b])
+    wa, wb = por["obszary"]
+    assert wa["rynki"] == {"pierwotny": {"liczba": 5, "mediana_m2": 13000}, "wtórny": {"liczba": 6, "mediana_m2": 10250}}
+    assert wa["premia_pierwotnego_proc"] == pytest.approx(100 * (13000 / 10250 - 1))
+    assert wb["rynki"]["pierwotny"]["liczba"] == 1 and wb["premia_pierwotnego_proc"] is None  # za mało, żeby liczyć premię
+    assert por["calosc"]["premia_pierwotnego_proc"] is not None

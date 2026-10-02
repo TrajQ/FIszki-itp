@@ -2965,3 +2965,21 @@ kwartale, kolejny rok) wymagały dotąd ręcznego przepisywania pól.
 - Kopiowanie z punktami — mieszałoby pomiary z różnych terminów.
 - Osobna biblioteka „szablonów” — wzorce wbudowane już są; projekt jako
   wzór wystarcza bez nowego miejsca w interfejsie.
+
+## D-143 — Premia rynku pierwotnego tylko przy 5 transakcjach na rynek
+Data: 2026-10-02
+
+**Decyzja:** W porównaniu obszarów mediana za m² liczy się osobno dla
+rynku pierwotnego i wtórnego; różnicę procentową („premia pierwotnego”)
+pokazujemy tylko, gdy oba rynki mają w obszarze co najmniej 5 transakcji.
+Liczby obok median zawsze widać.
+
+**Uzasadnienie:** Różnica między rynkami to jedno z pierwszych pytań przy
+analizie cen dzielnicy, a dotąd wymagała dwukrotnego przełączania filtra
+i liczenia w pamięci. Próg 5 jest ten sam co w medianach rocznych (D-118).
+
+**Odrzucone alternatywy:**
+- Premia bez progu — przy 1–2 transakcjach deweloperskich wynik byłby
+  przypadkowy, a wyglądałby jak wskaźnik.
+- Osobny przełącznik „porównaj rynki” — tabela pojawia się sama, gdy
+  w danych są oba rynki.

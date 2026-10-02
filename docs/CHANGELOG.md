@@ -859,3 +859,6 @@
 
 ## ETAP 134 — 2026-10-02
 - Teren: „Utwórz podobny” — nowy projekt z polami i obszarem istniejącego
+
+## ETAP 135 — 2026-10-02
+- Ceny: premia rynku pierwotnego w porównaniu obszarów i w raporcie

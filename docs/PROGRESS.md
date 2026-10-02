@@ -2366,3 +2366,18 @@ Status: zamknięty
 - Test: pola, rodzaj, obszar skopiowane; punkty nie; osobny klucz; 404
 - Przegląd stron: 69 stron, 0 problemów
 - `DECISIONS.md`: D-142
+
+## ETAP 135 — Ceny: rynek pierwotny i wtórny w porównaniu obszarów
+Data: 2026-10-02
+Status: zamknięty
+
+- `rcn._rynki`: mediana za m² i liczba transakcji osobno dla rynku
+  pierwotnego i wtórnego, „premia pierwotnego” w % (tylko gdy oba rynki
+  mają co najmniej `MIN_W_RYNKU = 5` transakcji); dołączane do każdego
+  wiersza `porownanie`
+- Strona Transakcje: tabela pod porównaniem obszarów (tylko mieszkania,
+  tylko gdy w danych są transakcje z rynku pierwotnego)
+- Raport do druku: sekcja „Rynek pierwotny i wtórny”
+- Test premii; fikstury z polem `rynek`
+- Sprawdzone w przeglądarce 1300/390 px: tabela, raport bez przelewania
+- `DECISIONS.md`: D-143

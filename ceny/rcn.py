@@ -485,6 +485,21 @@ def _mediany_lat(lokale: list[dict]) -> dict[int, float]:
     return {r: statistics.median(v) for r, v in sorted(po_roku.items())}
 
 
+MIN_W_RYNKU = 5  # ETAP 135: premia rynku pierwotnego tylko przy co najmniej tylu transakcjach w obu rynkach
+
+
+def _rynki(zbior: list[dict]) -> dict:
+    """Mediana za m² osobno na rynku pierwotnym i wtórnym oraz premia
+    pierwotnego (%), gdy oba rynki mają co najmniej MIN_W_RYNKU transakcji."""
+    rynki = {}
+    for rynek in ("pierwotny", "wtórny"):
+        ceny = [l["cena_m2"] for l in zbior if l["rynek"] == rynek]
+        rynki[rynek] = {"liczba": len(ceny), "mediana_m2": statistics.median(ceny) if ceny else None}
+    p, w = rynki["pierwotny"], rynki["wtórny"]
+    premia = 100 * (p["mediana_m2"] / w["mediana_m2"] - 1) if min(p["liczba"], w["liczba"]) >= MIN_W_RYNKU else None
+    return {"rynki": rynki, "premia_pierwotnego_proc": premia}
+
+
 def porownanie(lokale: list[dict], obszary: list[dict]) -> dict:
     """Wiersz „cały plik” i po jednym dla każdego obszaru: liczba, mediana za m²
     z kwartylami, mediana powierzchni i ceny, różnica mediany wobec całości,
@@ -501,6 +516,7 @@ def porownanie(lokale: list[dict], obszary: list[dict]) -> dict:
             "mediana_ceny": statistics.median(l["cena"] for l in zbior),
             "lata": _mediany_lat(zbior),
             "lata_liczba": {r: n for r, n in sorted(Counter(l["rok"] for l in zbior).items())},
+            **_rynki(zbior),
         }
 
     calosc = wiersz("cały plik", lokale)

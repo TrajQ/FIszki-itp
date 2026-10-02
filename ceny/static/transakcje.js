@@ -370,6 +370,31 @@
         pojemnik.appendChild(s);
     }
 
+    // ETAP 135: rynek pierwotny i wtórny w obszarach — premia liczona na serwerze (rcn._rynki)
+    function tabelaRynkow(por) {
+        const tabela = document.getElementById("rynki-rcn");
+        tabela.replaceChildren();
+        const wiersze = [...por.obszary.map((o, i) => [o, i + 1]), [por.calosc, null]];
+        const sensowna = !DZIALKI && por.obszary.length && wiersze.some(([o]) => o.rynki && o.rynki.pierwotny.liczba);
+        tabela.hidden = !sensowna;
+        if (!sensowna) return;
+        const procent = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1, minimumFractionDigits: 1, signDisplay: "exceptZero" });
+        const glowa = el("tr");
+        glowa.append(el("th", "", "Obszar"), el("th", "liczba", "Pierwotny: mediana za m²"), el("th", "liczba", "Wtórny: mediana za m²"), el("th", "liczba", "Premia pierwotnego"));
+        tabela.appendChild(glowa);
+        const opis = (r) => r.liczba ? `${liczba.format(r.mediana_m2)} zł (${r.liczba})` : "—";
+        for (const [o, nr] of wiersze) {
+            if (!o.rynki) continue;
+            const tr = el("tr", nr ? "" : "raport-cen__calosc");
+            const nazwa = el("td", "obszar-rcn");
+            if (nr) nazwa.appendChild(numerObszaru(nr, o.kolor));
+            nazwa.append(o.nazwa);
+            tr.append(nazwa, el("td", "liczba", opis(o.rynki.pierwotny)), el("td", "liczba", opis(o.rynki["wtórny"])),
+                el("td", "liczba", o.premia_pierwotnego_proc === null ? "za mało danych" : `${procent.format(o.premia_pierwotnego_proc)}%`));
+            tabela.appendChild(tr);
+        }
+    }
+
     function pokazObszary(d) {
         const kolory = Object.fromEntries(d.porownanie.obszary.map((o) => [o.id, o.kolor]));
         warstwaObszarow.clearLayers();
@@ -399,6 +424,7 @@
         const tabela = document.getElementById("porownanie-rcn");
         tabela.replaceChildren();
         wykresLatObszarow(d.porownanie);
+        tabelaRynkow(d.porownanie);
         if (!d.obszary.length) return;
         const glowa = el("tr");
         glowa.append(el("th", "", "Obszar"), el("th", "liczba", "Transakcji"), el("th", "liczba", "Mediana za m²"),

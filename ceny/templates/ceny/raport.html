@@ -74,6 +74,21 @@
         {% endif %}
         {% endif %}
 
+        {% if not dzialki and porownanie.obszary and porownanie.calosc.rynki and porownanie.calosc.rynki.pierwotny.liczba %}
+        <h3>Rynek pierwotny i wtórny</h3>
+        <div class="przewijanie-cen">
+        <table class="tabela">
+            <tr><th>Obszar</th><th class="liczba">Pierwotny: mediana za m²</th><th class="liczba">Wtórny: mediana za m²</th><th class="liczba">Premia pierwotnego</th></tr>
+            {% for o in porownanie.obszary + [porownanie.calosc] %}{% if o.rynki %}
+            <tr{% if loop.last %} class="raport-cen__calosc"{% endif %}><td>{% if not loop.last %}<strong style="color: {{ o.kolor }}">{{ loop.index }}</strong> {% endif %}{{ o.nazwa }}</td>
+                {% for r in ['pierwotny', 'wtórny'] %}<td class="liczba">{% if o.rynki[r].liczba %}{{ z(o.rynki[r].mediana_m2) }} zł ({{ o.rynki[r].liczba }}){% else %}—{% endif %}</td>{% endfor %}
+                <td class="liczba">{% if o.premia_pierwotnego_proc is not none %}{{ ('%+.1f' % o.premia_pierwotnego_proc) | replace('.', ',') }}%{% else %}za mało danych{% endif %}</td></tr>
+            {% endif %}{% endfor %}
+        </table>
+        </div>
+        <p class="wyciszony opis-cen">W nawiasie — liczba transakcji. Premię liczymy, gdy w obszarze jest co najmniej {{ min_w_rynku }} transakcji na każdym rynku; to różnica median (inne mieszkania na każdym rynku), nie cena tego samego lokalu.</p>
+        {% endif %}
+
         {% if statystyki %}
         <h2>{{ 'Według przeznaczenia w planie' if dzialki else 'Według liczby izb' }}</h2>
         <div class="przewijanie-cen">

@@ -217,6 +217,7 @@ def raport_transakcji(plik_id):
         statystyki=rcn.statystyki(lokale),
         porownanie=porownanie,
         min_w_roku=rcn.MIN_W_ROKU,
+        min_w_rynku=rcn.MIN_W_RYNKU,
         opis_pietra=rcn.OPISY_PIETER.get(request.args.get("pietro")),
         wykres_lat=Markup(rcn.wykres_lat_svg(porownanie)),  # ETAP 110; tylko liczby i kolory z kodu
         mapa=Markup(rcn.mapa_svg(lokale, obszary, mapa["progi"], rcn.KOLORY_KLAS)),  # tylko liczby i kolory z kodu

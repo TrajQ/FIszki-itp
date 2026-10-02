@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 134 (teren: projekt jako wzór — zamknięty)
-Ostatni ZIP: releases/warsztat_etap134_20261002.zip
-Testy: 529 passed / 0 failed
+ETAP: 135 (ceny: rynek pierwotny i wtórny w obszarach — zamknięty)
+Ostatni ZIP: releases/warsztat_etap135_20261002.zip
+Testy: 530 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).
