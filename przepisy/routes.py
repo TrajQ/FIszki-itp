@@ -139,7 +139,20 @@ def widok_aktu(akt_id):
     mapa = mapa_jednostek(jednostki)
     for j in jednostki:  # ETAP 121: „art. 15 ust. 2” → odnośnik do artykułu tego aktu
         j["tekst_html"] = z_odeslaniami(j["tekst"], mapa, j["id"])
-    return render_template("przepisy/akt.html", akt=akt, jednostki=jednostki, slowniczek=slowniczek(jednostki))
+    return render_template("przepisy/akt.html", akt=akt, jednostki=jednostki, slowniczek=slowniczek(jednostki),
+                           notatki=baza.notatki_aktu(akt_id), maks_notatki=baza.MAKS_NOTATKI)
+
+
+@przepisy_bp.route("/jednostki/<int:jednostka_id>/notatka", methods=["PUT"])
+def zapisz_notatke(jednostka_id):
+    """ETAP 140: notatka przy artykule; pusty tekst usuwa."""
+    jednostka = baza.jednostka(jednostka_id)
+    if jednostka is None:
+        abort(404)
+    tekst = str((request.get_json(silent=True) or {}).get("tekst") or "").strip()
+    if len(tekst) > baza.MAKS_NOTATKI:
+        return jsonify({"blad": f"Notatka może mieć najwyżej {baza.MAKS_NOTATKI} znaków."}), 400
+    return jsonify({"notatka": baza.zapisz_notatke(jednostka, tekst)})
 
 
 @przepisy_bp.route("/akty/<int:akt_id>/slowniczek")
@@ -328,4 +341,8 @@ def wyszukaj(fraza: str) -> list[dict]:
          "opis": w["podglad"].replace(baza.ZNACZNIK_OD, "").replace(baza.ZNACZNIK_DO, ""),
          "url": url_for("przepisy.widok_aktu", akt_id=w["akt_id"]) + f"#j{w['id']}"}
         for w in baza.szukaj(fraza)[:10]
+    ] + [  # ETAP 140: własne notatki
+        {"tytul": f"Notatka: {n['oznaczenie']} — {n['nazwa_aktu']}", "opis": n["tekst"][:200],
+         "url": url_for("przepisy.widok_aktu", akt_id=n["akt_id"]) + f"#j{n['jednostka_id']}"}
+        for n in baza.szukaj_w_notatkach(fraza)[:5]
     ]

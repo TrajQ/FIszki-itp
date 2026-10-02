@@ -44,7 +44,7 @@
         <ol id="spis">
             {% for j in jednostki %}
             {% if j.naglowek and (loop.first or j.naglowek != jednostki[loop.index0 - 1].naglowek) %}<li class="spis-aktu__naglowek">{{ j.naglowek }}</li>{% endif %}
-            <li><a href="#j{{ j.id }}" data-oznaczenie="{{ j.oznaczenie }}">{{ j.oznaczenie }}</a></li>
+            <li><a href="#j{{ j.id }}" data-oznaczenie="{{ j.oznaczenie }}">{{ j.oznaczenie }}{% if j.id in notatki %} <span class="spis-aktu__notatka" title="Ma notatkę">✎</span>{% endif %}</a></li>
             {% endfor %}
         </ol>
     </nav>
@@ -56,11 +56,14 @@
             <div class="jednostka__pasek">
                 <strong>{{ j.oznaczenie }}</strong>
                 <span class="rzad jednostka__akcje">
+                    <button type="button" class="przycisk--tekst przycisk-notatki" data-jednostka="{{ j.id }}" title="Własna notatka przy tej jednostce">✎ {{ 'Notatka' if j.id in notatki else 'Dodaj notatkę' }}</button>
                     {% if j.oznaczenie != 'Tytuł' %}<button type="button" class="przycisk--tekst przycisk-fiszek" data-jednostka="{{ j.id }}" title="Gemini zaproponuje fiszki z tego artykułu; zostaną tylko te z cytatem w tekście">✦ Fiszki</button>{% endif %}
                     <a class="wyciszony" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}#page={{ j.strona_od }}" target="_blank" rel="noopener">PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</a>
                 </span>
             </div>
             <p class="jednostka__tekst">{{ j.tekst_html }}</p>
+            {% set n = notatki.get(j.id) %}
+            <aside class="notatka" {{ 'hidden' if not n }}><span class="notatka__etykieta">Moja notatka{% if n %} · {{ n.data_zmiany[:10] }}{% endif %}</span><p class="notatka__tekst">{{ n.tekst if n }}</p></aside>
         </section>
         {% endfor %}
     </article>
@@ -73,6 +76,7 @@
     const URL_LISTY = "{{ url_for('przepisy.index') }}";
     const URL_AKTUALNOSC = "{{ url_for('przepisy.aktualnosc_aktu', akt_id=akt.id) }}";
     const URL_SEJM_POBIERZ = "{{ url_for('przepisy.pobierz_z_sejmu') }}";
+    const MAKS_NOTATKI = {{ maks_notatki }}; // ETAP 140
     const URL_JEDNOSTKI = "{{ url_for('przepisy.szkice_fiszek_z_jednostki', jednostka_id=0) }}".replace(/0\/szkice-fiszek$/, "");
 </script>
 <script src="{{ url_for('przepisy.static', filename='akt.js') }}"></script>

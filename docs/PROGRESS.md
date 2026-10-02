@@ -2443,3 +2443,18 @@ Status: zamknięty
 - Bez zmian w bazie: to zwykłe fiszki (powtórki, telefon, quiz, druk)
 - Testy: funkcja i trasa; sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-147
+
+## ETAP 140 — Przepisy: notatki przy artykułach
+Data: 2026-10-02
+Status: zamknięty
+
+- Tabela `notatki` (jedna na jednostkę, z `akt_id`); `baza.notatki_aktu`,
+  `zapisz_notatke` (pusty tekst usuwa), `szukaj_w_notatkach` (bez
+  polskich znaków); usunięcie aktu usuwa notatki
+- Trasa PUT `/przepisy/jednostki/<id>/notatka` (limit 5000 znaków)
+- Strona aktu: „✎ Dodaj notatkę / Notatka” przy jednostce, edytor w
+  miejscu, notatka pod tekstem, ✎ w spisie
+- Wyszukiwarka globalna: wyniki „Notatka: Art. … — akt”
+- Pasek jednostki na wąskim ekranie: numer bez łamania
+- Test; sprawdzone w przeglądarce 1300/390 px, jasny i ciemny
+- `DECISIONS.md`: D-148

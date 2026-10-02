@@ -874,3 +874,6 @@
 
 ## ETAP 139 — 2026-10-02
 - Fiszki: fiszki z luką — zaznacz słowa, każda luka to fiszka
+
+## ETAP 140 — 2026-10-02
+- Przepisy: własne notatki przy artykułach, w wyszukiwarce

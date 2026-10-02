@@ -3059,3 +3059,21 @@ zmian w siedmiu miejscach, w tym w samodzielnym pliku na telefon.
   wersji formatu.
 - Luki proponowane przez Gemini — wybór, co jest ważne, to część nauki;
   propozycje pytań z modelu już są.
+
+## D-148 — Notatka przypięta do jednostki wgranego aktu
+Data: 2026-10-02
+
+**Decyzja:** Notatka jest kluczowana numerem jednostki (`jednostka_id`)
+z kopią `akt_id`. Nowszy tekst jednolity to w Warsztacie nowy akt, więc
+notatki go nie „przechodzą” — zostają przy starej wersji.
+
+**Uzasadnienie:** Jednostki aktu nie są nigdy dzielone ponownie w miejscu,
+więc numer jednostki jest stały. Przenoszenie po oznaczeniu („Art. 15”)
+między wersjami byłoby mylące, gdy nowelizacja zmieniła treść artykułu —
+notatka opisywałaby inny tekst.
+
+**Odrzucone alternatywy:**
+- Klucz (akt, oznaczenie) — w rozporządzeniach z załącznikami oznaczenia
+  potrafią się powtarzać.
+- Notatki jako fiszki — fiszka to pytanie i odpowiedź do powtórek,
+  notatka to komentarz do czytania; inne użycie.

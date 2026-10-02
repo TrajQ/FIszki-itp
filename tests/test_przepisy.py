@@ -488,3 +488,30 @@ def test_odeslania_na_stronie(client):
     wgraj(client)
     html = client.get("/przepisy/akty/1").get_data(as_text=True)
     assert 'class="odeslanie" href="#j4"' in html  # „zgodnie z art. 15 ust. 2” w art. 2 → Art. 15
+
+
+# ---------- ETAP 140: notatki przy jednostkach ----------
+
+
+def test_notatki_przy_jednostkach(client):
+    wgraj(client)
+    html = client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert "✎ Dodaj notatkę" in html and "Moja notatka ·" not in html
+    url = "/przepisy/jednostki/4/notatka"  # Art. 15
+    n = client.put(url, json={"tekst": "  Na kolokwium: intensywność\nobowiązkowo w planie.  "}).get_json()["notatka"]
+    assert n["tekst"] == "Na kolokwium: intensywność\nobowiązkowo w planie."
+    html = client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert "Moja notatka ·" in html and "Na kolokwium" in html and 'title="Ma notatkę"' in html
+    assert client.put(url, json={"tekst": "Poprawiona"}).get_json()["notatka"]["tekst"] == "Poprawiona"  # jedna na jednostkę
+    # wyszukiwarka globalna znajduje notatkę (bez polskich znaków)
+    strona = client.get("/szukaj", query_string={"q": "poprawiona"}).get_data(as_text=True)
+    assert "Notatka: Art. 15" in strona and "/przepisy/akty/1#j4" in strona
+    assert client.put(url, json={"tekst": "x" * 5001}).status_code == 400
+    assert client.put("/przepisy/jednostki/999/notatka", json={"tekst": "a"}).status_code == 404
+    assert client.put(url, json={"tekst": "   "}).get_json() == {"notatka": None}  # pusty tekst usuwa
+    assert "Moja notatka ·" not in client.get("/przepisy/akty/1").get_data(as_text=True)
+    client.put(url, json={"tekst": "zostanie usunięta z aktem"})
+    client.delete("/przepisy/akty/1")
+    with client.application.app_context():
+        from przepisy import baza
+        assert baza.get_db().execute("SELECT COUNT(*) FROM notatki").fetchone()[0] == 0

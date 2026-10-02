@@ -170,6 +170,79 @@
     });
 })();
 
+// ---------- notatki przy jednostkach (ETAP 140) ----------
+(function () {
+    "use strict";
+
+    function el(tag, klasa, tekst) {
+        const e = document.createElement(tag);
+        if (klasa) e.className = klasa;
+        if (tekst !== undefined) e.textContent = tekst;
+        return e;
+    }
+
+    function otworzEdytor(przycisk) {
+        const sekcja = przycisk.closest(".jednostka");
+        if (sekcja.querySelector(".edytor-notatki")) return;
+        const notatka = sekcja.querySelector(".notatka");
+        const edytor = el("div", "edytor-notatki");
+        const pole = el("textarea");
+        pole.rows = 4;
+        pole.maxLength = MAKS_NOTATKI;
+        pole.setAttribute("aria-label", `Notatka: ${sekcja.querySelector(".jednostka__pasek strong").textContent}`);
+        pole.value = notatka.hidden ? "" : notatka.querySelector(".notatka__tekst").textContent;
+        const zapisz = el("button", "", "Zapisz");
+        const anuluj = el("button", "przycisk--drugi", "Anuluj");
+        const blad = el("p", "komunikat komunikat--blad");
+        blad.hidden = true;
+        for (const b of [zapisz, anuluj]) b.type = "button";
+        const rzad = el("div", "rzad");
+        rzad.append(zapisz, anuluj);
+        edytor.append(pole, rzad, blad);
+        notatka.hidden = true;
+        notatka.after(edytor);
+        pole.focus();
+
+        function zamknij() {
+            edytor.remove();
+            notatka.hidden = !notatka.querySelector(".notatka__tekst").textContent;
+        }
+        anuluj.addEventListener("click", zamknij);
+        zapisz.addEventListener("click", async () => {
+            zapisz.disabled = true;
+            try {
+                const odp = await fetch(`${URL_JEDNOSTKI}${przycisk.dataset.jednostka}/notatka`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ tekst: pole.value }),
+                });
+                const dane = await odp.json().catch(() => ({}));
+                if (!odp.ok) throw new Error(dane.blad || `Błąd ${odp.status}`);
+                const n = dane.notatka;
+                notatka.querySelector(".notatka__tekst").textContent = n ? n.tekst : "";
+                notatka.querySelector(".notatka__etykieta").textContent = n ? `Moja notatka · ${n.data_zmiany.slice(0, 10)}` : "Moja notatka";
+                przycisk.textContent = n ? "✎ Notatka" : "✎ Dodaj notatkę";
+                const wSpisie = document.querySelector(`#spis a[href="#${sekcja.id}"]`);
+                const znak = wSpisie && wSpisie.querySelector(".spis-aktu__notatka");
+                if (wSpisie && n && !znak) {
+                    const nowy = el("span", "spis-aktu__notatka", "✎");
+                    nowy.title = "Ma notatkę";
+                    wSpisie.append(" ", nowy);
+                } else if (znak && !n) {
+                    znak.remove();
+                }
+                zamknij();
+            } catch (e) {
+                blad.textContent = e.message;
+                blad.hidden = false;
+                zapisz.disabled = false;
+            }
+        });
+    }
+
+    document.querySelectorAll(".przycisk-notatki").forEach((p) => p.addEventListener("click", () => otworzEdytor(p)));
+})();
+
 // ---------- czy jest nowszy tekst jednolity (ETAP 101) ----------
 (function () {
     "use strict";

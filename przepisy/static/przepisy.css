@@ -369,9 +369,18 @@ button.przycisk--niebezpieczny-tekst {
     gap: 8px;
 }
 
-.przycisk-fiszek {
+.przycisk-fiszek,
+.przycisk-notatki {
     padding: 0 4px;
     font-size: 12px;
+}
+
+.jednostka__pasek strong {
+    white-space: nowrap;
+}
+
+.jednostka__akcje {
+    justify-content: flex-end;
 }
 
 .propozycje-fiszek {
@@ -517,4 +526,35 @@ button.przycisk--niebezpieczny-tekst {
     outline-offset: 6px;
     border-radius: 8px;
     scroll-margin-top: 80px;
+}
+
+/* ETAP 140: własne notatki przy jednostkach */
+.notatka {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--ostrzezenie);
+    border-radius: 0 8px 8px 0;
+    background: var(--ostrzezenie-tlo);
+}
+
+.notatka__etykieta {
+    color: var(--tekst-drugi);
+    font-size: 0.8rem;
+}
+
+.notatka__tekst {
+    margin: 4px 0 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.edytor-notatki {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.spis-aktu__notatka {
+    color: var(--tekst-drugi);
+    font-size: 0.8em;
 }

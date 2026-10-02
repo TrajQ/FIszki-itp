@@ -47,6 +47,14 @@ CREATE VIRTUAL TABLE IF NOT EXISTS jednostki_fts USING fts5(
 
 -- ETAP 62: zadane pytania z odpowiedzią (JSON: odpowiedź, cytaty z
 -- oznaczeniem jednostki i stroną — kopia, żeby historia przetrwała zmiany).
+-- ETAP 140: własne notatki przy jednostkach (jedna na jednostkę).
+CREATE TABLE IF NOT EXISTS notatki (
+    jednostka_id INTEGER PRIMARY KEY REFERENCES jednostki(id),
+    akt_id INTEGER NOT NULL,
+    tekst TEXT NOT NULL,
+    data_zmiany TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS pytania (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pytanie TEXT NOT NULL,
@@ -163,10 +171,50 @@ def usun_akt(akt_id: int) -> str | None:
         cytaty = json.loads(p["wynik"]).get("cytaty", [])
         if p["akt_id"] == akt_id or any(c.get("akt_id") == akt_id for c in cytaty):
             db.execute("DELETE FROM pytania WHERE id = ?", (p["id"],))
+    db.execute("DELETE FROM notatki WHERE akt_id = ?", (akt_id,))
     db.execute("DELETE FROM jednostki WHERE akt_id = ?", (akt_id,))
     db.execute("DELETE FROM akty WHERE id = ?", (akt_id,))
     db.commit()
     return wiersz["nazwa_pliku"]
+
+
+# ---------- notatki przy jednostkach (ETAP 140) ----------
+
+MAKS_NOTATKI = 5000
+
+
+def notatki_aktu(akt_id: int) -> dict[int, dict]:
+    """{jednostka_id: {"tekst", "data_zmiany"}}"""
+    return {w["jednostka_id"]: {"tekst": w["tekst"], "data_zmiany": w["data_zmiany"]}
+            for w in get_db().execute("SELECT * FROM notatki WHERE akt_id = ?", (akt_id,))}
+
+
+def zapisz_notatke(jednostka: dict, tekst: str) -> dict | None:
+    """Pusty tekst usuwa notatkę. → zapisana notatka albo None."""
+    db = get_db()
+    if not tekst:
+        db.execute("DELETE FROM notatki WHERE jednostka_id = ?", (jednostka["id"],))
+        db.commit()
+        return None
+    teraz = datetime.now().isoformat(timespec="seconds")
+    db.execute(
+        """INSERT INTO notatki (jednostka_id, akt_id, tekst, data_zmiany) VALUES (?, ?, ?, ?)
+           ON CONFLICT(jednostka_id) DO UPDATE SET tekst = excluded.tekst, data_zmiany = excluded.data_zmiany""",
+        (jednostka["id"], jednostka["akt_id"], tekst, teraz),
+    )
+    db.commit()
+    return {"tekst": tekst, "data_zmiany": teraz}
+
+
+def szukaj_w_notatkach(fraza: str) -> list[dict]:
+    """Notatki zawierające frazę (bez wielkości liter i polskich znaków)."""
+    szukane = sprowadz(fraza)
+    wiersze = get_db().execute(
+        """SELECT notatki.*, jednostki.oznaczenie, akty.nazwa AS nazwa_aktu FROM notatki
+           JOIN jednostki ON jednostki.id = notatki.jednostka_id JOIN akty ON akty.id = notatki.akt_id
+           ORDER BY notatki.data_zmiany DESC"""
+    ).fetchall()
+    return [dict(w) for w in wiersze if szukane in sprowadz(w["tekst"])]
 
 
 # ---------- wyszukiwanie ----------
