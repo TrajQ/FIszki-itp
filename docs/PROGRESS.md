@@ -2724,3 +2724,17 @@ Status: zamknięty
 - Testy: OLS vs numpy, odtworzenie znanych efektów, pomijanie zmiennych,
   trasa; sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-164
+
+## ETAP 157 — Teren: porównanie dwóch inwentaryzacji
+Data: 2026-10-02
+Status: zamknięty
+
+- `teren/porownanie.py`: wspólne pola (nazwa i typ), zestawienie A/B ze
+  zmianą w p.p. i zmianą średniej, pary punktów wzajemnie najbliższych
+  w promieniu 15 m (haversine), zmiany w tych samych miejscach dla pól
+  na skali (lepiej / gorzej / bez zmian, z numerami punktów)
+- Trasa `/teren/porownanie?a=&b=` (strona do druku, stopka), formularz
+  „Porównaj” na stronie projektu
+- Testy: pary (w tym punkt przesunięty o 40 m), zmiana p.p., projekt bez
+  wspólnych pól, błędy; sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-165

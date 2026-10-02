@@ -464,3 +464,46 @@ def test_podobny_projekt(client):
         assert baza.punkty(2) == [] and len(baza.punkty(1)) == 1
     assert client.post("/teren/projekty/99/podobny").status_code == 404
     assert "Utwórz podobny" in client.get("/teren/projekty/1").get_data(as_text=True)
+
+
+# ---------- ETAP 157: porównanie dwóch inwentaryzacji ----------
+
+
+def test_porownanie_inwentaryzacji(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń 2025", "wzor": "zielen"})
+    client.post("/teren/projekty/1/podobny")  # „Zieleń 2025 (kopia)” — te same pola
+    client.post("/teren/projekty", data={"nazwa": "Inny formularz", "wzor": "budynki"})
+
+    def pkt(uid, lat, lng, stan, obwod, czas):
+        return {"uid": uid, "lat": lat, "lng": lng, "dokladnosc_m": 4, "czas": czas, "wartosci": {"obiekt": "drzewo", "stan": stan, "obwód pnia [cm]": obwod},
+                "uwagi": "", "zdjecie": None}
+    with client.application.app_context():
+        from teren import baza
+        baza.zapisz_punkty(1, [pkt("a000001", 52.40000, 16.90000, "dobry", 100, "2025-05-01T10:00"),
+                               pkt("a000002", 52.40100, 16.90000, "średni", 80, "2025-05-01T10:05"),
+                               pkt("a000003", 52.40200, 16.90000, "dobry", 60, "2025-05-01T10:10")])
+        # rok później: drzewo 1 lepiej… nie, gorzej (dobry → zły), 2 bez zmian, 3 przesunięte o ~40 m (nie para), nowe 4
+        baza.zapisz_punkty(2, [pkt("b000001", 52.40005, 16.90003, "zły", 104, "2026-05-01T10:00"),
+                               pkt("b000002", 52.40102, 16.89998, "średni", 82, "2026-05-01T10:05"),
+                               pkt("b000003", 52.40236, 16.90000, "dobry", 61, "2026-05-01T10:10"),
+                               pkt("b000004", 52.40500, 16.90000, "dobry", 20, "2026-05-01T10:15")])
+    html = client.get("/teren/porownanie?a=1&b=2").get_data(as_text=True)
+    assert "Porównanie inwentaryzacji" in html and "(3 punktów)" in html and "(4 punktów)" in html
+    assert "<strong>2</strong> par" in html  # punkt 3 przesunięty o ~40 m — nie para
+    assert "lepiej: <strong>0</strong> · gorzej: <strong>1</strong> · bez zmian: 1" in html
+    assert "dobry</td><td>zły" in html and "-8,3 p.p." in html  # stan „średni”: 1/3 → 1/4
+    assert "stopka-wydruku" in html
+    inny = client.get("/teren/porownanie?a=1&b=3").get_data(as_text=True)
+    assert "nie mają wspólnych pól" in inny
+    assert client.get("/teren/porownanie?a=1&b=1").status_code == 400
+    assert client.get("/teren/porownanie?a=1&b=99").status_code == 404
+    assert "Porównaj" in client.get("/teren/projekty/1").get_data(as_text=True)
+
+
+def test_pary_punktow():
+    from teren import porownanie
+    a = [{"lat": 52.0, "lng": 17.0, "nr": 1}, {"lat": 52.0001, "lng": 17.0, "nr": 2}]
+    b = [{"lat": 52.00002, "lng": 17.0, "nr": 1}]  # bliżej punktu 1 niż 2 — jedna para, punkt 2 bez pary
+    assert [(x["nr"], y["nr"]) for x, y, _ in porownanie.pary(a, b)] == [(1, 1)]
+    assert porownanie.odleglosc_m({"lat": 52.0, "lng": 17.0}, {"lat": 52.001, "lng": 17.0}) == pytest.approx(111.2, abs=0.2)
+    assert porownanie.pary(a, [{"lat": None, "lng": None, "nr": 1}]) == []

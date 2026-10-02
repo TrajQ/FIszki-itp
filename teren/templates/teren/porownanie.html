@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+
+{% block tytul %}{{ a.nazwa }} / {{ b.nazwa }} — porównanie — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-terenu{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('teren.static', filename='teren.css') }}">{% endblock %}
+
+{% macro liczba(x) %}{{ ('%.1f' % x).rstrip('0').rstrip('.').replace('.', ',') }}{% endmacro %}
+{% macro pp(x) %}{% if x > 0.05 %}+{% endif %}{{ liczba(x) }} p.p.{% endmacro %}
+
+{% block tresc %}
+<div class="raport-terenu">
+    <div class="raport-terenu__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('teren.widok_projektu', projekt_id=a.id) }}">‹ {{ a.nazwa }}</a>
+        <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+    </div>
+
+    <section class="raport-terenu__strona">
+        <h1>Porównanie inwentaryzacji</h1>
+        <p><strong>A</strong> — {{ a.nazwa }} ({{ liczba_a }} punktów) · <strong>B</strong> — {{ b.nazwa }} ({{ liczba_b }} punktów)</p>
+        {% if not pola %}
+        <p class="komunikat komunikat--ostrzezenie">Projekty nie mają wspólnych pól (ta sama nazwa i typ) — nie ma czego zestawić. Do powtórzonej inwentaryzacji użyj „Utwórz podobny”.</p>
+        {% endif %}
+        {% if tylko_a or tylko_b %}<p class="wyciszony przypis">Pola tylko w A: {{ tylko_a | join(', ') or '—' }}; tylko w B: {{ tylko_b | join(', ') or '—' }} — pominięte.</p>{% endif %}
+
+        {% for z in zestawienie %}
+        <h3>{{ z.nazwa }}</h3>
+        {% if z.wiersze is defined %}
+        <div class="raport-terenu__przewijanie"><table class="tabela">
+            <tr><th>Wartość</th><th class="liczba">A</th><th class="liczba">B</th><th class="liczba">Zmiana</th></tr>
+            {% for w in z.wiersze %}
+            <tr><td>{{ w.wartosc }}</td><td class="liczba">{{ w.a.liczba }} ({{ liczba(w.a.procent) }}%)</td><td class="liczba">{{ w.b.liczba }} ({{ liczba(w.b.procent) }}%)</td><td class="liczba">{{ pp(w.zmiana_pp) }}</td></tr>
+            {% endfor %}
+        </table></div>
+        {% elif z.zmiana_sredniej is defined %}
+        <table class="tabela">
+            <tr><th></th><th class="liczba">A</th><th class="liczba">B</th></tr>
+            <tr><td>średnia</td><td class="liczba">{{ liczba(z.a.statystyki.srednia) }}</td><td class="liczba">{{ liczba(z.b.statystyki.srednia) }} <span class="wyciszony">({{ '+' if z.zmiana_sredniej > 0 }}{{ liczba(z.zmiana_sredniej) }})</span></td></tr>
+            <tr><td>mediana</td><td class="liczba">{{ liczba(z.a.statystyki.mediana) }}</td><td class="liczba">{{ liczba(z.b.statystyki.mediana) }}</td></tr>
+            <tr><td>punktów z wartością</td><td class="liczba">{{ z.a.wypelnione }}</td><td class="liczba">{{ z.b.wypelnione }}</td></tr>
+        </table>
+        {% else %}
+        <p class="wyciszony">wypełnione: A {{ z.a.wypelnione }} z {{ z.a.wszystkie }}, B {{ z.b.wypelnione }} z {{ z.b.wszystkie }}</p>
+        {% endif %}
+        {% endfor %}
+        <p class="wyciszony przypis">Procenty — udział punktów (odpowiedzi) danego projektu; zmiana w punktach procentowych (p.p.).</p>
+    </section>
+
+    <section class="raport-terenu__strona">
+        <h2>Te same miejsca</h2>
+        <p class="wyciszony">Punkty B połączone z najbliższym punktem A w promieniu {{ prog_m }} m (wzajemnie najbliższe): <strong>{{ polaczone | length }}</strong> par.</p>
+        {% for z in zmiany %}
+        <h3>{{ z.nazwa }}</h3>
+        <p>lepiej: <strong>{{ z.lepiej | length }}</strong> · gorzej: <strong>{{ z.gorzej | length }}</strong> · bez zmian: {{ z.bez_zmian }}</p>
+        {% for etykieta, lista in [('Gorzej', z.gorzej), ('Lepiej', z.lepiej)] if lista %}
+        <h4>{{ etykieta }}</h4>
+        <div class="raport-terenu__przewijanie"><table class="tabela">
+            <tr><th class="liczba">Nr w A</th><th class="liczba">Nr w B</th><th>Było</th><th>Jest</th></tr>
+            {% for x in lista %}<tr><td class="liczba">{{ x.a }}</td><td class="liczba">{{ x.b }}</td><td>{{ x.z }}</td><td>{{ x.na }}</td></tr>{% endfor %}
+        </table></div>
+        {% endfor %}
+        {% else %}
+        <p class="wyciszony">Brak wspólnych pól na skali (od najlepszej do najgorszej opcji) — zmian w tych samych miejscach nie da się ocenić.</p>
+        {% endfor %}
+        <p class="wyciszony przypis">Numery punktów jak w raportach obu projektów. Para to najbliższe sobie punkty — przy gęstych pomiarach sprawdź na mapie, czy to ten sam obiekt.</p>
+    </section>
+    {{ stopka_wydruku("Teren", "pomiary w terenie; położenie — GPS telefonu (WGS84)") }}
+</div>
+{% endblock %}

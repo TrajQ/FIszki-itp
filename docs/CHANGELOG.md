@@ -925,3 +925,6 @@
 
 ## ETAP 156 — 2026-10-02
 - Ceny: co wpływa na cenę m² — regresja na transakcjach RCN
+
+## ETAP 157 — 2026-10-02
+- Teren: porównanie dwóch inwentaryzacji — zestawienie i zmiany w tych samych miejscach

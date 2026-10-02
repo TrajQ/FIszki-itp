@@ -17,7 +17,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 
 from markupsafe import Markup
 
-from . import baza, podklad, raport
+from . import baza, podklad, porownanie, raport
 from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, odczytaj_geojson, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
@@ -117,7 +117,8 @@ def ustaw_rodzaj(projekt_id):
 
 @teren_bp.route("/projekty/<int:projekt_id>")
 def widok_projektu(projekt_id):
-    return render_template("teren/projekt.html", projekt=_projekt_albo_404(projekt_id), typy=TYPY_POL)
+    inne = [p for p in baza.projekty() if p["id"] != projekt_id]  # ETAP 157: do porównania
+    return render_template("teren/projekt.html", projekt=_projekt_albo_404(projekt_id), typy=TYPY_POL, inne=inne)
 
 
 @teren_bp.route("/projekty/<int:projekt_id>", methods=["PUT"])
@@ -322,6 +323,24 @@ def raport_projektu(projekt_id):
         kolor_brak=raport.KOLOR_BRAK,
         od=min(czasy) if czasy else None,
         do=max(czasy) if czasy else None,
+    )
+
+
+@teren_bp.route("/porownanie")
+def porownanie_projektow():
+    """ETAP 157: dwie inwentaryzacje obok siebie (?a=…&b=…)."""
+    a = _projekt_albo_404(request.args.get("a", type=int) or 0)
+    b = _projekt_albo_404(request.args.get("b", type=int) or 0)
+    if a["id"] == b["id"]:
+        abort(400)
+    punkty_a, punkty_b = raport.ponumeruj(baza.punkty(a["id"])), raport.ponumeruj(baza.punkty(b["id"]))
+    pola = porownanie.wspolne_pola(a["pola"], b["pola"])
+    polaczone = porownanie.pary(punkty_a, punkty_b)
+    return render_template(
+        "teren/porownanie.html", a=a, b=b, liczba_a=len(punkty_a), liczba_b=len(punkty_b), pola=pola,
+        zestawienie=porownanie.zestawienie_obok(pola, punkty_a, punkty_b),
+        polaczone=polaczone, zmiany=porownanie.zmiany_w_miejscach(pola, polaczone), prog_m=porownanie.PROG_M,
+        tylko_a=[p["nazwa"] for p in a["pola"] if p not in pola], tylko_b=[p["nazwa"] for p in b["pola"] if p["nazwa"] not in {x["nazwa"] for x in pola}],
     )
 
 

@@ -3343,3 +3343,22 @@ te związki. numpy dla pięciu kolumn to zbędna zależność.
 - Lokalizacja w modelu (współrzędne, dzielnice) — wymaga przemyślenia
   (efekty przestrzenne); do rozważenia później.
 - Logarytm ceny — trudniejszy do odczytania dla czytelnika raportu.
+
+## D-165 — Te same miejsca: wzajemnie najbliższe punkty w promieniu 15 m
+Data: 2026-10-02
+
+**Decyzja:** Punkty dwóch inwentaryzacji łączymy w pary, gdy są dla siebie
+nawzajem najbliższe i leżą najwyżej 15 m od siebie. Zmiany „lepiej /
+gorzej” liczymy tylko dla pól na skali, z kolejności opcji.
+
+**Uzasadnienie:** Punkty z telefonu nie mają wspólnego identyfikatora
+obiektu, a GPS ma ±5–10 m. Warunek wzajemności nie łączy jednego punktu
+z dwoma; próg 15 m pokrywa błąd GPS, a nie łączy sąsiednich drzew w
+typowym szpalerze (rozstaw 8–10 m bywa — dlatego raport prosi o sprawdzenie
+przy gęstych pomiarach).
+
+**Odrzucone alternatywy:**
+- Identyfikator obiektu wpisywany w terenie — dodatkowa praca i błędy
+  przepisywania; może później jako pole opcjonalne.
+- Optymalne przypisanie (algorytm węgierski) — przy tych skalach wynik
+  prawie ten sam, kod dużo trudniejszy.
