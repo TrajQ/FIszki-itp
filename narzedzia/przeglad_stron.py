@@ -9,7 +9,8 @@ Wymaga Playwright z Chromium — narzędzie dla autora, nie część aplikacji
 (nie ma go w requirements.txt):
     pip install playwright && playwright install chromium
     python narzedzia/przeglad_stron.py
-Ścieżkę do Chromium można podać w zmiennej CHROMIUM.
+Ścieżkę do Chromium można podać w zmiennej CHROMIUM. Zmienna ZRZUTY=katalog
+zapisuje zrzut każdej strony (np. ZRZUTY=/tmp/zrzuty) — do przejrzenia oczami.
 """
 
 import os
@@ -23,7 +24,10 @@ sys.path.insert(0, KATALOG)
 sys.path.insert(0, os.path.join(KATALOG, "tests"))
 from app import create_app
 from ceny import trasy_rcn
+from dane import bdl
+from przepisy import routes as przepisy_routes
 from test_ceny import plik_rcn, lokal, geometria_gpkg, dodaj_dzialki, dzialka
+from test_przepisy import STRONY as STRONY_AKTU
 from werkzeug.serving import make_server
 from playwright.sync_api import sync_playwright
 random.seed(3)
@@ -38,6 +42,35 @@ c.post("/teren/projekty", data={"nazwa": "Ankieta — Rynek", "wzor": "ankieta"}
 c.post("/osiedle/koncepcje", json={"nazwa": "A"})
 c.post("/ceny/transakcje/import", data={"sciezka": os.path.join(pobrane, "rcn.gpkg")})
 c.post("/ceny/transakcje/1/obszary", json={"nazwa": "Centrum", "geometria": {"type": "Polygon", "coordinates": [[[19.92, 50.05], [19.96, 50.05], [19.96, 50.07], [19.92, 50.07], [19.92, 50.05]]]}})
+
+
+def pdf_z_tekstem(tekst: bytes) -> bytes:
+    """Najmniejszy poprawny PDF z jedną linią tekstu — pdf.js go narysuje (ETAP 148)."""
+    obiekty = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+               b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>"]
+    strumien = b"BT /F1 18 Tf 20 100 Td (" + tekst + b") Tj ET"
+    obiekty += [b"<< /Length %d >>\nstream\n" % len(strumien) + strumien + b"\nendstream", b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    wynik, przesuniecia = b"%PDF-1.4\n", []
+    for i, o in enumerate(obiekty, 1):
+        przesuniecia.append(len(wynik))
+        wynik += b"%d 0 obj\n" % i + o + b"\nendobj\n"
+    xref = len(wynik)
+    wynik += b"xref\n0 %d\n0000000000 65535 f \n" % (len(obiekty) + 1) + b"".join(b"%010d 00000 n \n" % x for x in przesuniecia)
+    return wynik + b"trailer << /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(obiekty) + 1, xref)
+
+
+# ETAP 148: dane także dla stron z ETAPów 120–147 — fiszki (w tym z luką),
+# akt z notatką, raport miast GUS (usługa podmieniona), wyszukiwarka z wynikami
+import io  # noqa: E402
+c.post("/fiszki/upload", data={"plik": (io.BytesIO(pdf_z_tekstem(b"Plan miejscowy jest aktem prawa miejscowego")), "wyklad.pdf")}, content_type="multipart/form-data")
+c.post("/fiszki/1/luki", json={"strona": 1, "fragment_tekstu": "Plan miejscowy", "tekst": "Plan [[miejscowy]] jest aktem prawa"})
+przepisy_routes.strony_z_pdf = lambda sciezka: STRONY_AKTU
+c.post("/przepisy/akty", data={"plik": (io.BytesIO(b"%PDF-1.4 atrapa"), "ustawa.pdf")}, content_type="multipart/form-data")
+c.put("/przepisy/jednostki/4/notatka", json={"tekst": "Notatka do kolokwium:\nintensywność zabudowy."})
+bdl.pobierz_zmienna = lambda zid: bdl.Zmienna(zid, "Mediana cen za 1 m2 lokali mieszkalnych", "zł")
+bdl.szereg_gminy = lambda zid, jid: [{"rok": r, "wartosc": 6000 + 400 * (r - 2015) + int(jid[-4:]) % 900} for r in range(2015, 2025)]
+c.put("/ceny/zmienna", json={"id": 633})
+c.put("/ceny/zmienna", json={"id": 64428, "rodzaj": "wynagrodzenie"})
 # Brak etykiet, nazw i tekstów alternatywnych — to, co czytnik ekranu
 # przeczyta jako „przycisk”, „pole edycji” albo pominie (ETAP 130).
 SPRAWDZ_DOSTEPNOSC = """() => {
@@ -61,11 +94,13 @@ SPRAWDZ_DOSTEPNOSC = """() => {
     return p;
 }"""
 
-WYMAGAJA_PARAMETROW = ("/dostepnosc/raport", "/mpzp/raport")  # ?plik=, ?id=
+WYMAGAJA_PARAMETROW = ("/dostepnosc/raport", "/mpzp/raport", "/ceny/raport")  # ?plik=, ?id= — z parametrami niżej
 POMIN = ("favicon.ico", ".csv", ".json", ".svg", ".geojson", ".ics", ".txt", ".html", "/static", "/plik", "/telefon")
 STRONY = sorted({r.rule for r in app.url_map.iter_rules() if "GET" in r.methods and not r.arguments and not r.rule.endswith(POMIN) and "static" not in r.endpoint and r.rule not in WYMAGAJA_PARAMETROW})
 STRONY += ["/teren/projekty/1", "/teren/projekty/1/raport", "/osiedle/koncepcje/1/raport", "/ceny/transakcje?plik=1", "/ceny/transakcje?plik=1&co=dzialki",
-           "/ceny/transakcje/1/raport", "/ceny/transakcje/1/raport?co=dzialki", "/ceny/transakcje/1/wycena?lat=50.06&lng=19.94&pow=50&promien=1000&tolerancja=0.2"]
+           "/ceny/transakcje/1/raport", "/ceny/transakcje/1/raport?co=dzialki", "/ceny/transakcje/1/wycena?lat=50.06&lng=19.94&pow=50&promien=1000&tolerancja=0.2",
+           "/fiszki/1/", "/przepisy/akty/1", "/osiedle/?koncepcja=1", "/szukaj?q=plan", "/szukaj?q=centrum",
+           "/ceny/raport?id=011212161000&nazwa=Kraków&id=023216264000&nazwa=Wrocław — miasto na prawach powiatu"]
 srv = make_server("127.0.0.1", 5218, app, threaded=True); threading.Thread(target=srv.serve_forever, daemon=True).start()
 problemy = 0
 with sync_playwright() as p:
@@ -85,6 +120,10 @@ with sync_playwright() as p:
             typ = odp.headers.get("content-type", "")
             if "text/html" not in typ:
                 pg.close(); continue
+            if os.environ.get("ZRZUTY"):
+                os.makedirs(os.environ["ZRZUTY"], exist_ok=True)
+                nazwa = "".join(z if z.isalnum() else "_" for z in adres.strip("/"))[:80] or "glowna"
+                pg.screenshot(path=os.path.join(os.environ["ZRZUTY"], f"{szer}_{nazwa}.png"), full_page=True)
             sw = pg.evaluate("document.documentElement.scrollWidth")
             winni = pg.evaluate("[...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && !e.closest('nav, .leaflet-container, [class*=przewijanie], [class*=wrap], .zlozony__przewijanie, table')).slice(0,3).map(e => e.tagName + '.' + e.className)")
             # ETAP 130: podstawowa dostępność — tylko na jednej szerokości (wynik ten sam)

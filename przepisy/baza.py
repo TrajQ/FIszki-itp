@@ -229,8 +229,9 @@ def terminy(tekst: str) -> list[tuple[str, bool]]:
     Polski odmienia wyrazy, a FTS5 nie ma polskiego stemmera. Prosty
     zamiennik: dłuższe słowa szukamy po początku — od 7 liter bez 2
     ostatnich („działki” → „dział…”: działka, działce, działkami), od 5
-    liter bez ostatniej („planu” → „plan…”). Tekst w cudzysłowie to fraza
-    szukana dokładnie.
+    liter bez ostatniej („planu” → „plan…”), 4-literowe w całości jako
+    początek („plan” → planu, planie; ETAP 148). Krótsze — dokładnie (skróty
+    „mn”, „ust”). Tekst w cudzysłowie to fraza szukana dokładnie.
     """
     wynik = []
     for fraza, zwykle in re.findall(r'"([^"]+)"|([^"]+)', sprowadz(tekst)):
@@ -244,6 +245,8 @@ def terminy(tekst: str) -> list[tuple[str, bool]]:
                 wynik.append((slowo[:-2], True))
             elif len(slowo) >= 5:
                 wynik.append((slowo[:-1], True))
+            elif len(slowo) == 4 and not slowo.isdigit():
+                wynik.append((slowo, True))
             elif len(slowo) >= 2 or slowo.isdigit():
                 wynik.append((slowo, False))
     return wynik

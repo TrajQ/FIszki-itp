@@ -54,7 +54,8 @@ def test_podzial_na_jednostki():
 
 def test_zapytanie_fts_odmiana_i_fraza():
     assert zapytanie_fts("Działki budowlanej") == '"dzial"* AND "budowlan"*'
-    assert zapytanie_fts("plan ust") == '"plan" AND "ust"'
+    assert zapytanie_fts("plan ust") == '"plan"* AND "ust"'  # 4 litery — po początku (ETAP 148), 3 — dokładnie
+    assert zapytanie_fts("2003 mn") == '"2003" AND "mn"'
     assert zapytanie_fts('"działka budowlana" gminy') == '"dzialka budowlana" AND "gmin"*'
     assert zapytanie_fts("  !!  ") is None
 
@@ -515,3 +516,10 @@ def test_notatki_przy_jednostkach(client):
     with client.application.app_context():
         from przepisy import baza
         assert baza.get_db().execute("SELECT COUNT(*) FROM notatki").fetchone()[0] == 0
+
+
+def test_krotkie_slowo_znajduje_odmiane(client):
+    """ETAP 148: „plan” znajduje „planu”, „planie” — wcześniej tylko dokładne „plan”."""
+    wgraj(client)
+    wyniki = client.get("/przepisy/szukaj", query_string={"q": "plan"}).get_json()["wyniki"]
+    assert "Art. 15" in [w["oznaczenie"] for w in wyniki]

@@ -2579,3 +2579,20 @@ Status: zamknięty
 - ARCHITEKTURA.md: zasada dymków i `pytest.ini`
 - Przegląd stron: 70 stron, 0 problemów
 - `DECISIONS.md`: D-155
+
+## ETAP 148 — Przegląd stron
+Data: 2026-10-02
+Status: zamknięty
+
+- `narzedzia/przeglad_stron.py`: dane także dla stron z ETAPów 120–147
+  (PDF z tekstem i fiszką z luką, akt z notatką, raport miast GUS z
+  podmienioną usługą, wyszukiwarka z wynikami, osiedle z `?koncepcja=`);
+  `/ceny/raport` bez parametrów na liście stron wymagających parametrów;
+  opcja `ZRZUTY=katalog` — zrzut każdej strony do przejrzenia oczami
+- Wynik: 75 stron × 2 szerokości, 0 problemów; zrzuty przejrzane
+- Znalezione przy oglądaniu: wyszukiwarka przepisów nie znajdowała „plan”
+  w „planu / planie” — słowa 4-literowe szukane teraz po początku (krótsze
+  dokładnie, żeby skróty nie zalewały wyników); „1 kart.” na wydruku fiszek
+  → poprawna odmiana (karta / karty / kart)
+- Testy: krótkie słowo z odmianą, odmiana liczby kart
+- `DECISIONS.md`: D-156

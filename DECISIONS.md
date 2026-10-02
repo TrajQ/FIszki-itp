@@ -3195,3 +3195,19 @@ na stronie aplikacji, która ma dostęp do wszystkich danych użytkownika.
 **Odrzucone alternatywy:**
 - Escapowanie napisów przed `bindTooltip` — łatwo zapomnieć o nowym
   miejscu; węzeł DOM jest bezpieczny z definicji.
+
+## D-156 — Słowa 4-literowe w wyszukiwarce przepisów po początku
+Data: 2026-10-02
+
+**Decyzja:** W wyszukiwarce aktów słowo 4-literowe jest szukane jako
+początek wyrazu („plan” → plan, planu, planie, planowanie). Słowa 2–3
+literowe nadal dokładnie.
+
+**Uzasadnienie:** „plan” to jedno z najczęstszych zapytań w gospodarce
+przestrzennej, a w tekście ustawy prawie zawsze jest odmienione — zapytanie
+nie dawało wyników. Przy 2–3 literach (skróty „mn”, „ust”) prefiks
+zalewałby wyniki.
+
+**Odrzucone alternatywy:**
+- Polski stemmer — zależność spoza biblioteki standardowej dla jednej
+  wyszukiwarki; prosta reguła długości słowa wystarcza.

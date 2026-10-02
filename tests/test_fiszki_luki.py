@@ -46,3 +46,16 @@ def test_trasa_luk(client):
     assert client.post("/fiszki/1/luki", json={"strona": 3, "fragment_tekstu": fragment, "tekst": "[[a]] b", "tematy": ["x" * 40]}).status_code == 400
     assert client.post("/fiszki/9/luki", json={"strona": 3, "fragment_tekstu": fragment, "tekst": "[[a]] b"}).status_code == 404
     assert len(client.get("/fiszki/1/fiszki").get_json()) == 2  # odrzucone nic nie zapisały
+
+
+def test_druk_odmienia_liczbe_kart(client):
+    """ETAP 148: „1 karta”, „2 karty”, „5 kart” w nagłówku wydruku."""
+    def naglowek():
+        return client.get("/fiszki/druk").get_data(as_text=True)
+    zapis = {"strona": 1, "fragment_tekstu": "f", "tematy": ""}
+    client.post("/fiszki/1/luki", json={**zapis, "tekst": "[[a]] b"})
+    assert "1 karta." in naglowek()
+    client.post("/fiszki/1/luki", json={**zapis, "tekst": "[[c]] d"})
+    assert "2 karty." in naglowek()
+    client.post("/fiszki/1/luki", json={**zapis, "tekst": "[[e]] [[f]] [[g]] h"})
+    assert "5 kart." in naglowek()
