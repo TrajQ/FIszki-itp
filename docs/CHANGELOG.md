@@ -844,3 +844,7 @@
 ## ETAP 130 — 2026-10-02
 - Dostępność: etykiety pól plików, „Przejdź do treści”, ramka fokusu z
   klawiatury; automatyczne sprawdzanie w przeglądzie stron
+
+## ETAP 131 — 2026-10-02
+- Kolory tekstu i przycisków spełniają WCAG AA (kontrast ≥ 4,5:1) w jasnym
+  i ciemnym motywie; test pilnuje tego przy zmianach

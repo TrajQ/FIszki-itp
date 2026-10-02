@@ -623,7 +623,7 @@ button.wpis-historii:hover {
 
 .leaflet-container .pomiar .pomiar__przycisk--aktywny {
     background: #ff9f0a;
-    color: #ffffff;
+    color: #1d1d1f; /* ETAP 131: biały na pomarańczowym miał kontrast ok. 2:1 */
 }
 
 .pomiar__wynik {
@@ -845,7 +845,7 @@ button.wpis-zapisany {
 
 /* ---------- Kronika zmian (ETAP 64) ---------- */
 .przelacznik-kroniki button.przycisk--drugi.aktywny {
-    background: var(--akcent);
+    background: var(--akcent-wypelnienie);
     color: #ffffff;
 }
 

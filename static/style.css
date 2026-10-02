@@ -17,13 +17,16 @@
     --tlo-pola: #ffffff;
     --tlo-wyciszone: #f0f0f3;
     --tekst: #1d1d1f;
-    --tekst-drugi: #6e6e73;
+    /* ETAP 131: kolory tekstu z kontrastem co najmniej 4,5:1 (WCAG AA) na tłach
+       aplikacji; --akcent-wypelnienie — tło przycisków pod białym tekstem */
+    --tekst-drugi: #6a6a6f;
     --linia: #d2d2d7;
     --linia-slaba: #e8e8ed;
-    --akcent: #0071e3;
-    --akcent-hover: #0077ed;
-    --akcent-tlo: rgba(0, 113, 227, 0.1);
-    --sukces: #1d8a3a;
+    --akcent: #0066cc;
+    --akcent-wypelnienie: #0066cc;
+    --akcent-wypelnienie-hover: #0058b0;
+    --akcent-tlo: rgba(0, 102, 204, 0.1);
+    --sukces: #1a7f35;
     --sukces-tlo: rgba(52, 199, 89, 0.14);
     --ostrzezenie: #b25000;
     --ostrzezenie-tlo: rgba(255, 159, 10, 0.16);
@@ -52,7 +55,8 @@
         --linia: #424245;
         --linia-slaba: #2f2f32;
         --akcent: #2997ff;
-        --akcent-hover: #47a5ff;
+        --akcent-wypelnienie: #0a6ed1; /* biały tekst na #2997ff miał tylko 3:1 */
+        --akcent-wypelnienie-hover: #0b62bb;
         --akcent-tlo: rgba(41, 151, 255, 0.16);
         --sukces: #32d74b;
         --ostrzezenie: #ffb340;
@@ -305,7 +309,7 @@ button,
     padding: 0.55em 1.2em;
     border: none;
     border-radius: 980px;
-    background: var(--akcent);
+    background: var(--akcent-wypelnienie);
     color: #fff;
     font: inherit;
     font-size: 0.9rem;
@@ -317,7 +321,7 @@ button,
 
 button:hover,
 .przycisk:hover {
-    background: var(--akcent-hover);
+    background: var(--akcent-wypelnienie-hover);
     text-decoration: none;
 }
 
@@ -803,6 +807,10 @@ input[type="file"]::file-selector-button {
 
 /* ---------- wyszukiwarka globalna (ETAP 128) ---------- */
 
+.szukaj-globalnie {
+    margin-bottom: 16px;
+}
+
 .szukaj-globalnie input {
     flex: 1;
     min-width: 0;
@@ -851,12 +859,12 @@ input[type="file"]::file-selector-button {
 /* link „Przejdź do treści” — widoczny dopiero po Tab, pozwala ominąć menu */
 .do-tresci {
     position: absolute;
-    top: -40px;
+    top: -100px; /* całkiem poza ekranem, nawet z dużą czcionką */
     left: 8px;
     z-index: 2000;
     padding: 8px 14px;
     border-radius: 8px;
-    background: var(--akcent);
+    background: var(--akcent-wypelnienie);
     color: #ffffff;
 }
 

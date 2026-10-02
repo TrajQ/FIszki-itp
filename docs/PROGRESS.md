@@ -2298,3 +2298,24 @@ Status: zamknięty
   (`:focus-visible`) dla linków, przycisków i rozwijanych sekcji
 - Wynik przeglądu: 69 stron, 0 problemów; sprawdzona obsługa klawiaturą
 - `DECISIONS.md`: D-138
+
+## ETAP 131 — Kontrast kolorów w obu motywach (WCAG AA)
+Data: 2026-10-02
+Status: zamknięty
+
+- Pomiar kontrastu par tekst/tło z tokenów `static/style.css` (wzór WCAG):
+  za mało w jasnym — tekst drugorzędny na tle wyciszonym 4,46, linki na
+  tle strony 4,31, kolor sukcesu 4,42; w ciemnym — biały na niebieskim
+  przycisku 3,02
+- Jasny: akcent `#0066cc` (5,1 na tle), tekst drugorzędny `#6a6a6f`,
+  sukces `#1a7f35`; nowy token `--akcent-wypelnienie` (tło pod białym
+  tekstem): jasny `#0066cc`, ciemny `#0a6ed1` (5,0), najechanie przyciemnia
+  (`#0058b0` / `#0b62bb`) zamiast rozjaśniać
+- Przyciski, przełączniki (kronika MPZP, mieszkania/działki), „Przejdź do
+  treści” i formularze na telefon (teren, fiszki) na nowym tokenie;
+  aktywny przycisk pomiaru w MPZP: ciemny tekst na pomarańczowym
+- `tests/test_kontrast.py`: kontrast par z tokenów w obu motywach ≥ 4,5
+  — zmiana koloru, która go obniży, zatrzyma testy
+- Poprawione przy okazji: brzeg linku „Przejdź do treści” widoczny w
+  rogu, odstęp formularza wyszukiwarki od wyników
+- `DECISIONS.md`: D-139

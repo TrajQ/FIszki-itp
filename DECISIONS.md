@@ -2894,3 +2894,21 @@ klawiaturą i czytnikiem ekranu to wymaganie dostępności cyfrowej.
   aplikacji offline); podstawowe reguły wystarczą.
 - Ramka fokusu także przy kliknięciu myszą — rozprasza; `:focus-visible`
   pokazuje ją tylko z klawiatury.
+
+## D-139 — Osobny token na tło pod białym tekstem; kontrast w testach
+Data: 2026-10-02
+
+**Decyzja:** Kolor akcentu ma dwie role: tekst/link (`--akcent`) i tło
+pod białym tekstem (`--akcent-wypelnienie`). W ciemnym motywie link
+zostaje jasnoniebieski (dobry kontrast na ciemnym tle), a przyciski mają
+ciemniejszy niebieski. Kontrast par tekst/tło z tokenów sprawdza test
+(próg WCAG AA 4,5:1).
+
+**Uzasadnienie:** Jeden kolor nie spełni obu ról w ciemnym motywie —
+jasny niebieski jest czytelny jako tekst na czarnym, ale biały napis na
+nim ma kontrast 3:1. Test liczy kontrast z tego samego pliku CSS, z
+którego korzysta aplikacja.
+
+**Odrzucone alternatywy:**
+- Ciemny tekst na przyciskach w ciemnym motywie — niespójne z jasnym.
+- Ręczny audyt bez testu — kolejna zmiana koloru mogłaby wrócić do 3:1.

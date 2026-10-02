@@ -446,7 +446,7 @@
 }
 
 .przelacznik-rcn__wybrany {
-    background: var(--akcent);
+    background: var(--akcent-wypelnienie);
     color: #ffffff !important;
 }
 

@@ -14,10 +14,10 @@
 #}
 <style>
     :root { --tlo: #f5f5f7; --karta: #fff; --tekst: #1d1d1f; --drugi: #6e6e73; --linia: #d2d2d7;
-            --akcent: #0071e3; --akcent-tlo: rgba(0,113,227,.12); --ok: #1d8a3a; --srednio: #b25000; --zle: #d70015; }
+            --akcent: #0066cc; --akcent-wypelnienie: #0066cc; --akcent-tlo: rgba(0,102,204,.12); --ok: #1a7f35; --srednio: #b25000; --zle: #d70015; }
     @media (prefers-color-scheme: dark) {
         :root { --tlo: #000; --karta: #1c1c1e; --tekst: #f5f5f7; --drugi: #a1a1a6; --linia: #3a3a3c;
-                --akcent: #2997ff; --akcent-tlo: rgba(41,151,255,.18); --ok: #32d74b; --srednio: #ff9f0a; --zle: #ff6961; }
+                --akcent: #2997ff; --akcent-wypelnienie: #0a6ed1; --akcent-tlo: rgba(41,151,255,.18); --ok: #32d74b; --srednio: #ff9f0a; --zle: #ff6961; }
     }
     * { box-sizing: border-box; }
     body { margin: 0; padding: 12px 12px 110px; background: var(--tlo); color: var(--tekst);
@@ -27,7 +27,7 @@
     .karta { margin: 12px 0; padding: 16px; border-radius: 16px; background: var(--karta); }
     button { min-height: 48px; padding: 10px 16px; border: 0; border-radius: 12px; background: var(--akcent-tlo);
              color: var(--akcent); font: inherit; font-weight: 600; cursor: pointer; }
-    button.glowny { width: 100%; background: var(--akcent); color: #fff; }
+    button.glowny { width: 100%; background: var(--akcent-wypelnienie); color: #fff; }
     .liczby { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
     .liczby strong { display: block; font-size: 26px; }
     .fiszka__pytanie { font-size: 20px; font-weight: 600; white-space: pre-line; }
