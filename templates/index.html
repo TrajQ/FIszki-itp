@@ -170,9 +170,18 @@
         <p class="karta__opis wyciszony">
             {% if auto_kopia_dni > 0 %}Kopia automatyczna co {{ auto_kopia_dni }} dni przy uruchomieniu:
             {% if kopia_auto %}ostatnia {{ kopia_auto.data.strftime('%d.%m.%Y') }} — <code>{{ kopia_auto.sciezka }}</code>{% else %}jeszcze nie zrobiona{% endif %}.
-            Na innym dysku albo w chmurze jest bezpieczniejsza — skopiuj ją tam czasem.
             {% else %}Kopia automatyczna wyłączona (AUTO_KOPIA_DNI=0 w .env).{% endif %}
         </p>
+        {# ETAP 168: kopia poza tym komputerem — data z potwierdzenia użytkownika #}
+        <p class="karta__opis {{ 'kopia-przypomnienie' if poza_dyskiem.przypomnij else 'wyciszony' }}" id="kopia-poza-dyskiem">
+            Kopia poza tym komputerem (pendrive, inny dysk, chmura):
+            {% if poza_dyskiem.data %}ostatnio {{ poza_dyskiem.data.strftime('%d.%m.%Y') }}{% if poza_dyskiem.dni %} ({{ poza_dyskiem.dni }} dni temu){% endif %}{% else %}jeszcze nie zapisana{% endif %}.
+            {% if poza_dyskiem.przypomnij %}Awaria albo kradzież laptopa zabiera dane razem z kopiami na tym dysku — skopiuj kopię w inne miejsce.{% endif %}
+            {% if poza_dyskiem.ten_sam_dysk %}Folder kopii automatycznych jest na tym samym dysku co dane.{% endif %}
+        </p>
+        <form method="post" action="{{ url_for('kopia_poza_dyskiem') }}">
+            <button type="submit" class="przycisk--tekst">Skopiowałem kopię poza ten komputer</button>
+        </form>
     </div>
     <a class="przycisk przycisk--drugi" href="{{ url_for('kopia_zapasowa') }}">Pobierz kopię zapasową (ZIP)</a>
     <a class="przycisk przycisk--tekst" href="{{ url_for('przywroc_kopie') }}">Przywróć z kopii</a>

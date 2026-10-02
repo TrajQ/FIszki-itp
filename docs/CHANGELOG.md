@@ -958,3 +958,6 @@
 
 ## ETAP 167 — 2026-10-02
 - Skróty klawiszowe: „?” pokazuje listę, „/” wyszukiwanie, „m” mapa; tabela w Pomocy
+
+## ETAP 168 — 2026-10-02
+- Kopia zapasowa: sprawdzanie spójności i przypomnienie o kopii poza komputerem

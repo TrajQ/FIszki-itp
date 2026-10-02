@@ -692,6 +692,19 @@ input[type="file"]::file-selector-button {
     max-width: 44rem;
 }
 
+.dane-uzytkownika p + p {
+    margin-top: 6px;
+}
+
+.dane-uzytkownika form {
+    margin-top: 4px;
+}
+
+/* ETAP 168: przypomnienie o kopii poza tym komputerem */
+.kopia-przypomnienie {
+    color: var(--ostrzezenie);
+}
+
 /* ---------- Kalendarz na stronie głównej (ETAP 86) ---------- */
 
 .kalendarz {

@@ -112,7 +112,7 @@ def create_app(instance_path=None):
                 podsumowania[modul] = None
 
         terminy = wszystkie_terminy()
-        from kopia import ostatnia_kopia_automatyczna
+        import kopia
 
         ostatnie = ostatnio_uzywane()
         import nowosci  # ETAP 159
@@ -125,9 +125,24 @@ def create_app(instance_path=None):
         return render_template(
             "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
             ostatnie=ostatnie, pierwsze_kroki=pierwsze_kroki, nowe_etapy=nowe_etapy,
-            kopia_auto=ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
+            kopia_auto=kopia.ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
             auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
+            poza_dyskiem=_stan_kopii_poza_dyskiem(pusta),
         )
+
+    def _stan_kopii_poza_dyskiem(pusta: bool) -> dict:
+        """ETAP 168: kiedy ostatnio kopia trafiła poza ten komputer i czy
+        przypomnieć (tylko gdy są już jakieś dane)."""
+        import kopia
+
+        data = kopia.kopia_poza_dyskiem(app.instance_path)
+        dni = (datetime.now() - data).days if data else None
+        return {
+            "data": data,
+            "dni": dni,
+            "przypomnij": not pusta and (dni is None or dni >= kopia.PRZYPOMNIENIE_DNI),
+            "ten_sam_dysk": app.config["AUTO_KOPIA_DNI"] > 0 and kopia.ten_sam_dysk(app.instance_path, app.config["AUTO_KOPIA_FOLDER"]),
+        }
 
     def ostatnio_uzywane() -> list[dict]:
         """ETAP 141: każdy moduł podaje swoje ostatnio używane rzeczy (funkcja
@@ -277,6 +292,41 @@ def create_app(instance_path=None):
         app.logger.warning("Przywrócono dane z kopii (%s plików); poprzednie w %s", wynik["plikow"], wynik["stary_folder"])
         return render_template("przywracanie.html", kopie=kopie_do_przywrocenia(folder_kopii), folder_kopii=folder_kopii, wynik=wynik, blad=None)
 
+    @app.route("/kopia-zapasowa/poza-dyskiem", methods=["POST"])
+    def kopia_poza_dyskiem():
+        """ETAP 168: użytkownik potwierdza, że skopiował kopię poza ten komputer."""
+        from kopia import zapisz_kopie_poza_dyskiem
+
+        zapisz_kopie_poza_dyskiem(app.instance_path)
+        return redirect(url_for("index") + "#kopia")
+
+    @app.route("/kopia-zapasowa/sprawdz", methods=["POST"])
+    def sprawdz_kopie():
+        """ETAP 168: sprawdzenie wybranej kopii bez przywracania."""
+        from kopia import BladKopii, kopie_do_przywrocenia, sprawdz_kopie as sprawdz
+
+        folder_kopii = app.config["AUTO_KOPIA_FOLDER"]
+        dostepne = kopie_do_przywrocenia(folder_kopii)
+
+        def strona(sprawdzenie, kod=200):
+            return render_template("przywracanie.html", kopie=dostepne, folder_kopii=folder_kopii, wynik=None, blad=None, sprawdzenie=sprawdzenie), kod
+
+        nazwa = request.form.get("z_folderu")
+        if nazwa:
+            if nazwa not in {k["nazwa"] for k in dostepne}:  # tylko pliki z listy
+                return strona({"ok": False, "nazwa": "?", "opis": "Nie ma takiej kopii."}, 400)
+            zrodlo = os.path.join(folder_kopii, nazwa)
+        else:
+            plik = request.files.get("plik")
+            if plik is None or not plik.filename:
+                return strona({"ok": False, "nazwa": "?", "opis": "Wybierz kopię z listy albo plik ZIP."}, 400)
+            nazwa, zrodlo = plik.filename, plik.stream
+        try:
+            plikow = sprawdz(zrodlo)
+        except BladKopii as e:
+            return strona({"ok": False, "nazwa": nazwa, "opis": str(e)})
+        return strona({"ok": True, "nazwa": nazwa, "opis": f"Kopia jest w porządku: {plikow} plików, bazy danych bez błędów — da się z niej przywrócić dane."})
+
     @app.route("/favicon.ico")
     def favicon():
         # Przeglądarki pytają o /favicon.ico także bez <link rel="icon">.
@@ -296,7 +346,7 @@ def kopia_przy_starcie(app):
             sciezka = kopia_automatyczna(app.instance_path, Config.AUTO_KOPIA_FOLDER, Config.AUTO_KOPIA_DNI)
             if sciezka:
                 print(f"Kopia automatyczna danych: {sciezka}")
-        except OSError as e:
+        except (OSError, ValueError) as e:  # ValueError: BladKopii — kopia nie przeszła sprawdzenia (ETAP 168)
             print(f"Nie udało się zrobić kopii automatycznej: {e}")
 
     threading.Thread(target=zrob, daemon=True).start()

@@ -2908,3 +2908,24 @@ Status: zamknięty
 - Test: okno i skróty strony, pola wyszukiwania, sekcja Pomocy;
   sprawdzone w przeglądarce 1300/390 px (?, Esc, /, m, Pomoc#skroty)
 - `DECISIONS.md`: D-175
+
+## ETAP 168 — Kopia zapasowa: sprawdzanie spójności i kopia poza komputerem
+Data: 2026-10-02
+Status: zamknięty
+
+- `kopia.py`: `sprawdz_kopie` — `ZipFile.testzip()` (sumy CRC) i to samo
+  sprawdzenie co przed przywróceniem (ścieżki, `PRAGMA integrity_check`
+  baz) w folderze tymczasowym; kopia automatyczna sprawdzana przed
+  zmianą nazwy z `.tmp` — nieudana jest usuwana, błąd trafia do konsoli
+- Trasa POST `/kopia-zapasowa/sprawdz` (kopia z listy folderu albo
+  wgrany ZIP) — przycisk „Tylko sprawdź kopię” na stronie przywracania
+- Kopia poza komputerem: `instance/kopia_poza_dyskiem.txt` z datą
+  potwierdzenia (POST `/kopia-zapasowa/poza-dyskiem`), na stronie głównej
+  data, przypomnienie po 30 dniach (`PRZYPOMNIENIE_DNI`, tylko gdy są
+  dane) i uwaga, gdy folder kopii jest na tym samym dysku co dane
+  (`ten_sam_dysk` — `st_dev`)
+- Testy: uszkodzony ZIP, kopia automatyczna nie zostaje, trasa
+  sprawdzenia (bez zmiany danych, tylko nazwy z listy), przypomnienie;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: „Czy kopia jest dobra i gdzie ją trzymać?”
+- `DECISIONS.md`: D-176

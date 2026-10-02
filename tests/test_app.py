@@ -493,3 +493,77 @@ def test_okno_skrotow(client):
     for strona in ("/atlas/", "/mpzp/", "/fiszki/", "/przepisy/", "/szukaj"):
         assert "data-skrot-szukaj" in client.get(strona).get_data(as_text=True), strona
     assert 'id="skroty"' in client.get("/pomoc").get_data(as_text=True)
+
+
+# ---------- ETAP 168: sprawdzanie kopii i kopia poza komputerem ----------
+
+
+def _zip_z_uszkodzeniem() -> bytes:
+    import zipfile
+
+    b = io.BytesIO()
+    with zipfile.ZipFile(b, "w", zipfile.ZIP_STORED) as z:
+        z.writestr("PRZYWRACANIE.txt", "")
+        z.writestr("instance/notatka.txt", "abcdef-dane")
+    return b.getvalue().replace(b"abcdef-dane", b"abcdeX-dane")  # zła suma kontrolna
+
+
+def test_sprawdz_kopie(tmp_path, monkeypatch):
+    import os
+
+    import kopia
+
+    app, dane = _kopia_z_danymi(tmp_path)
+    assert kopia.sprawdz_kopie(io.BytesIO(dane)) >= 1
+    with pytest.raises(kopia.BladKopii, match="suma kontrolna"):
+        kopia.sprawdz_kopie(io.BytesIO(_zip_z_uszkodzeniem()))
+    # kopia automatyczna, która nie przeszła sprawdzenia, nie zostaje w folderze
+    monkeypatch.setattr(kopia, "utworz_kopie", lambda folder: _zip_z_uszkodzeniem())
+    with pytest.raises(kopia.BladKopii):
+        kopia.kopia_automatyczna(str(tmp_path / "instance"), str(tmp_path / "kopie"))
+    assert os.listdir(tmp_path / "kopie") == []
+    assert not [n for n in os.listdir(tmp_path) if n.startswith(".sprawdzanie_")]
+
+
+def test_trasa_sprawdzenia_kopii(tmp_path):
+    import os
+
+    app, dane = _kopia_z_danymi(tmp_path)
+    app.config["AUTO_KOPIA_FOLDER"] = str(tmp_path / "kopie")
+    os.makedirs(tmp_path / "kopie")
+    (tmp_path / "kopie" / "warsztat_auto_20261001_120000.zip").write_bytes(dane)
+    (tmp_path / "kopie" / "warsztat_auto_20260901_120000.zip").write_bytes(_zip_z_uszkodzeniem())
+    with app.test_client() as c:
+        assert 'id="sprawdz-kopie"' in c.get("/kopia-zapasowa/przywroc").get_data(as_text=True)
+        dobra = c.post("/kopia-zapasowa/sprawdz", data={"z_folderu": "warsztat_auto_20261001_120000.zip"}).get_data(as_text=True)
+        assert "komunikat--ok" in dobra and "w porządku" in dobra
+        zla = c.post("/kopia-zapasowa/sprawdz", data={"z_folderu": "warsztat_auto_20260901_120000.zip"}).get_data(as_text=True)
+        assert "komunikat--blad" in zla and "suma kontrolna" in zla
+        assert c.post("/kopia-zapasowa/sprawdz", data={"z_folderu": "../kopia.zip"}).status_code == 400
+        wgrana = c.post("/kopia-zapasowa/sprawdz", data={"plik": (io.BytesIO(dane), "moja.zip")}, content_type="multipart/form-data")
+        assert "moja.zip" in wgrana.get_data(as_text=True) and "w porządku" in wgrana.get_data(as_text=True)
+        with app.app_context():
+            from osiedle import baza as ob
+            assert [k["nazwa"] for k in ob.lista()] == ["Koncepcja z kopii"]  # sprawdzenie niczego nie zmienia
+
+
+def test_kopia_poza_komputerem(tmp_path):
+    from datetime import datetime, timedelta
+
+    import kopia
+
+    app, _ = _kopia_z_danymi(tmp_path)
+    app.config["AUTO_KOPIA_FOLDER"] = str(tmp_path / "kopie" / "jeszcze_nie_ma")
+    assert kopia.ten_sam_dysk(app.instance_path, app.config["AUTO_KOPIA_FOLDER"]) is True
+    with app.test_client() as c:
+        glowna = c.get("/").get_data(as_text=True)
+        assert "jeszcze nie zapisana" in glowna and "kopia-przypomnienie" in glowna and "tym samym dysku" in glowna
+        assert c.post("/kopia-zapasowa/poza-dyskiem").status_code == 302
+        glowna = c.get("/").get_data(as_text=True)
+        assert f"ostatnio {datetime.now():%d.%m.%Y}" in glowna and "kopia-przypomnienie" not in glowna
+        kopia.zapisz_kopie_poza_dyskiem(app.instance_path, datetime.now() - timedelta(days=45))
+        assert "45 dni temu" in c.get("/").get_data(as_text=True) and "kopia-przypomnienie" in c.get("/").get_data(as_text=True)
+
+
+def test_bez_danych_bez_przypomnienia_o_kopii(czysty_client):
+    assert "kopia-przypomnienie" not in czysty_client.get("/").get_data(as_text=True)

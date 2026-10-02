@@ -3528,3 +3528,24 @@ działają w polach tekstowych, żeby „m” czy „/” dało się wpisać.
   abstrakcja dla trzech miejsc; szablon wystarcza.
 - Skróty nawigacji „g a” (do Atlasu) itp. — menu jest zawsze widoczne,
   a dwuklawiszowe sekwencje trudno zapamiętać.
+
+## D-176 — Kopia: sprawdzana od razu, „poza dyskiem” z deklaracji użytkownika
+Data: 2026-10-02
+
+**Decyzja:** Każda kopia automatyczna przechodzi to samo sprawdzenie co
+kopia przed przywróceniem (plus sumy CRC z `testzip`), zanim dostanie
+docelową nazwę. O kopii poza komputerem Warsztat wie tylko z kliknięcia
+„Skopiowałem kopię poza ten komputer” i przypomina po 30 dniach; osobno
+ostrzega, gdy folder kopii jest na tym samym systemie plików co dane.
+
+**Uzasadnienie:** Kopia, z której nie da się przywrócić danych, daje
+fałszywe poczucie bezpieczeństwa — lepiej wiedzieć o tym od razu. Aplikacja
+działa lokalnie i nie powinna sama wysyłać danych do chmury ani szukać
+pendrive'ów; data z deklaracji wystarcza do przypomnienia. Porównanie
+`st_dev` nie wymaga uprawnień i działa na Linux Mint.
+
+**Odrzucone alternatywy:**
+- Automatyczna kopia do chmury (np. Google Drive) — dane wychodzą z
+  komputera, a klucze i zgody to nowa zależność.
+- Sprawdzanie wszystkich kopii przy każdym starcie — przy dużych kopiach
+  wydłużyłoby start bez potrzeby.

@@ -105,6 +105,11 @@ def kopia_automatyczna(folder_instance: str, folder_kopii: str, co_ile_dni: int 
     tymczasowa = sciezka + ".tmp"  # przerwana kopia nie udaje pełnej
     with open(tymczasowa, "wb") as plik:
         plik.write(utworz_kopie(folder_instance))
+    try:
+        sprawdz_kopie(tymczasowa)  # ETAP 168: w folderze zostają tylko kopie, które dają się przywrócić
+    except BladKopii:
+        os.remove(tymczasowa)
+        raise
     os.replace(tymczasowa, sciezka)
     os.utime(sciezka, (teraz, teraz))
     for stara in sorted(glob.glob(os.path.join(folder_kopii, WZOR_AUTO)), key=os.path.getmtime)[:-zostaw]:
@@ -154,6 +159,57 @@ def _sprawdz_i_rozpakuj(zip_: zipfile.ZipFile, cel: str) -> int:
                 if wynik != "ok":
                     raise BladKopii(f"Baza {nazwa} w kopii jest uszkodzona ({wynik}).")
     return len(pliki)
+
+
+def sprawdz_kopie(zrodlo) -> int:
+    """Sprawdzenie kopii bez przywracania (ETAP 168): sumy kontrolne plików
+    w ZIP, ścieżki i `PRAGMA integrity_check` każdej bazy — to samo, co przed
+    przywróceniem, w folderze tymczasowym. Zwraca liczbę plików; BladKopii,
+    gdy kopia nie nadaje się do przywrócenia."""
+    with tempfile.TemporaryDirectory(prefix=".sprawdzanie_") as tymczasowy:
+        try:
+            with zipfile.ZipFile(zrodlo) as zip_:
+                zly = zip_.testzip()
+                if zly is not None:
+                    raise BladKopii(f"Plik {zly[:80]} w kopii jest uszkodzony (zła suma kontrolna).")
+                return _sprawdz_i_rozpakuj(zip_, tymczasowy)
+        except zipfile.BadZipFile as e:
+            raise BladKopii("To nie jest plik ZIP albo jest uszkodzony.") from e
+
+
+# ---------- kopia poza tym komputerem (ETAP 168) ----------
+# Warsztat nie widzi pendrive'a ani chmury — data to deklaracja użytkownika
+# („skopiowałem kopię”), a przypomnienie wraca po PRZYPOMNIENIE_DNI.
+
+PLIK_POZA_DYSKIEM = "kopia_poza_dyskiem.txt"
+PRZYPOMNIENIE_DNI = 30
+
+
+def kopia_poza_dyskiem(folder_instance: str) -> datetime | None:
+    try:
+        with open(os.path.join(folder_instance, PLIK_POZA_DYSKIEM), encoding="utf-8") as plik:
+            return datetime.fromisoformat(plik.read().strip())
+    except (OSError, ValueError):
+        return None
+
+
+def zapisz_kopie_poza_dyskiem(folder_instance: str, teraz: datetime | None = None) -> None:
+    os.makedirs(folder_instance, exist_ok=True)
+    with open(os.path.join(folder_instance, PLIK_POZA_DYSKIEM), "w", encoding="utf-8") as plik:
+        plik.write((teraz or datetime.now()).isoformat(timespec="seconds"))
+
+
+def ten_sam_dysk(folder_instance: str, folder_kopii: str) -> bool:
+    """Czy folder kopii leży na tym samym systemie plików co dane (awaria
+    dysku zabiera wtedy jedno i drugie). Folderu kopii może jeszcze nie być —
+    sprawdzamy najbliższy istniejący folder nad nim."""
+    sciezka = os.path.abspath(folder_kopii)
+    while not os.path.exists(sciezka) and os.path.dirname(sciezka) != sciezka:
+        sciezka = os.path.dirname(sciezka)
+    try:
+        return os.stat(sciezka).st_dev == os.stat(folder_instance).st_dev
+    except OSError:
+        return False
 
 
 def _wolna_nazwa(sciezka: str) -> str:

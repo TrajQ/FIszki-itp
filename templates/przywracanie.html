@@ -20,10 +20,11 @@
 </section>
 {% else %}
 {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+{% if sprawdzenie %}<p class="komunikat {{ 'komunikat--ok' if sprawdzenie.ok else 'komunikat--blad' }}" id="wynik-sprawdzenia"><strong>{{ sprawdzenie.nazwa }}</strong>: {{ sprawdzenie.opis }}</p>{% endif %}
 <section class="karta stos">
     <h3>Co się stanie</h3>
     <ol>
-        <li>Warsztat sprawdzi kopię: czy to kopia Warsztatu i czy bazy danych nie są uszkodzone. Przy błędzie nic się nie zmieni.</li>
+        <li>Warsztat sprawdzi kopię: czy to kopia Warsztatu i czy bazy danych nie są uszkodzone. Przy błędzie nic się nie zmieni. („Tylko sprawdź kopię” robi tylko ten krok.)</li>
         <li>Zrobi kopię obecnych danych do <code>{{ folder_kopii }}</code> (plik <code>warsztat_przed_przywroceniem_…zip</code>).</li>
         <li>Przeniesie obecne dane do folderu <code>instance_stary_…</code> obok folderu danych i wstawi dane z kopii.</li>
     </ol>
@@ -43,7 +44,11 @@
     <label>Plik ZIP z kopią <input type="file" name="plik" accept=".zip"></label>
     <p class="wyciszony">Wgrać można plik do 50 MB — większą kopię skopiuj do folderu kopii i wybierz z listy.</p>
     <label class="potwierdzenie"><input type="checkbox" name="potwierdzam" value="tak" required> Rozumiem, że obecne dane zostaną zastąpione (zostaną zachowane w kopii i w folderze instance_stary).</label>
-    <div class="rzad"><button type="submit" class="przycisk--niebezpieczny">Przywróć dane z kopii</button></div>
+    <div class="rzad">
+        <button type="submit" class="przycisk--niebezpieczny">Przywróć dane z kopii</button>
+        {# ETAP 168: to samo sprawdzenie co przed przywróceniem, bez zmiany danych #}
+        <button type="submit" class="przycisk--drugi" formaction="{{ url_for('sprawdz_kopie') }}" formnovalidate id="sprawdz-kopie">Tylko sprawdź kopię</button>
+    </div>
 </form>
 {% endif %}
 {% endblock %}
