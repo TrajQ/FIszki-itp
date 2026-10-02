@@ -3307,3 +3307,20 @@ zależności (np. PyMuPDF / poppler).
 - Kolumna `obraz` w tabeli `fiszki` — moduł dokłada nowe tabele zamiast
   kolumn (bez migracji), jak tematy.
 - Obrazy w eksporcie Anki — wymaga paczki .apkg z mediami, osobny format.
+
+## D-163 — Koszty koncepcji tylko ze stawek wpisanych przez użytkownika
+Data: 2026-10-02
+
+**Decyzja:** Szacunek kosztów nie ma stawek domyślnych. Pozycje bez
+wpisanej stawki są pomijane; bez żadnej stawki sekcji nie ma w raporcie.
+
+**Uzasadnienie:** W odróżnieniu od założeń programu (osoby na mieszkanie
+zmieniają się powoli) ceny budowy zmieniają się z kwartału na kwartał i
+między regionami. Stawka wpisana w kod wyglądałaby jak dana, a byłaby
+zgadywaniem — sprzeczne z zasadą „liczby z danych”.
+
+**Odrzucone alternatywy:**
+- Stawki z publikacji (np. wskaźniki cenowe) wpisane w kod — dezaktualizują
+  się bez śladu w interfejsie.
+- Stawka gruntu z mediany cen RCN w okolicy — dobry pomysł na później,
+  ale wymaga rozróżnienia przeznaczenia działek; na razie wpis ręczny.

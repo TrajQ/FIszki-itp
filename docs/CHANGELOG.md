@@ -919,3 +919,6 @@
 
 ## ETAP 154 — 2026-10-02
 - Fiszki: fiszka z wycinkiem rysunku z PDF (mapy, schematy), także na telefonie
+
+## ETAP 155 — 2026-10-02
+- Osiedle: szacunek kosztów koncepcji ze stawek wpisanych przez użytkownika

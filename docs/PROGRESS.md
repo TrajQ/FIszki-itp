@@ -2690,3 +2690,19 @@ Status: zamknięty
 - Testy: wszystkie miejsca wyświetlania, złe obrazy, limit, ścieżki,
   sprzątanie; sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-162
+
+## ETAP 155 — Osiedle: szacunek kosztów ze stawek użytkownika
+Data: 2026-10-02
+Status: zamknięty
+
+- `osiedle/koszty.py`: osiem stawek (budowa MW/MN/U za m² pow.
+  całkowitej, KD/KS/ZP za m² terenu, garaż podziemny za brakujące
+  miejsce, grunt za m² obszaru) bez wartości domyślnych; ilość × stawka,
+  razem, na mieszkanie, na m² pow. całkowitej; walidacja 0–1 000 000
+- `bilans` zwraca `koszty` (None bez stawek); stawki w `ustawienia.koszty`
+- Panel: karta „Szacunek kosztów” (pozycja z wyliczeniem „ilość × stawka”
+  i koszt — dwie kolumny mieszczą się na telefonie), raport do druku,
+  porównanie wariantów (razem, na mieszkanie, na m²)
+- Testy: wyliczenia, pominięte puste stawki, błędne stawki, trasa,
+  raport, porównanie; sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-163

@@ -159,6 +159,22 @@
             </details>
         </section>
 
+        <section id="sekcja-kosztow" class="karta stos" hidden>
+            <h3>Szacunek kosztów</h3>
+            <p class="wyciszony opis-panelu">Wpisz stawki, które znasz (np. z cenników albo wskaźników kosztów budowy na ten rok) — Warsztat nie podsuwa stawek. Ilości liczy z koncepcji; pozycje bez stawki są pomijane.</p>
+            <div class="tabela-kosztow-wrap"><table class="tabela tabela-kosztow" id="tabela-kosztow" hidden></table></div>
+            <p id="podsumowanie-kosztow" class="wyciszony opis-panelu" hidden></p>
+            <details class="zalozenia" id="stawki-kosztow">
+                <summary>Stawki</summary>
+                <div class="zalozenia__pola">
+                    {% for klucz, s in stawki.items() %}
+                    <label>{{ s[0] }} [{{ s[1] }}]
+                        <input data-stawka="{{ klucz }}" type="number" min="0" step="any" placeholder="—"></label>
+                    {% endfor %}
+                </div>
+            </details>
+        </section>
+
         <section id="sekcja-cienia" class="karta stos" hidden>
             <h3>Odległości i cień</h3>
             <p class="wyciszony opis-panelu">Najgorszy przypadek: budynki przy samej krawędzi terenu, wysokość = kondygnacje × 3 m. Strefa możliwego cienia terenów MN, MW i U co godzinę 9–15 (czas słoneczny).</p>

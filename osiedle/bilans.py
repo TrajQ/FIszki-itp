@@ -18,6 +18,7 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
+from . import koszty as kosz
 from . import program as prog
 from . import wskazniki as wsk
 
@@ -97,13 +98,14 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     try:
         plan = wsk.ustalenia_planu(ustawienia)
         prog.zalozenia(ustawienia)  # sprawdzenie także przy pustym rysunku
+        kosz.stawki(ustawienia)  # ETAP 155
         for t in tereny:
             t["parametry"] = wsk.parametry_terenu(t["funkcja"], t["wlasciwosci"])
-    except (wsk.BladParametru, prog.BladZalozen) as e:
+    except (wsk.BladParametru, prog.BladZalozen, kosz.BladStawek) as e:
         raise BladKoncepcji(str(e)) from None
     wszystko = [t["geometria"] for t in tereny] + ([obszar] if obszar is not None else [])
     if not wszystko:
-        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None}
+        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None}
     szerokosc = unary_union(wszystko).centroid.y
 
     def pole(geometria):
@@ -150,6 +152,7 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
         1 for t in tereny if t["parametry"].get("zabudowa_proc", 0) + t["parametry"]["pbc_proc"] > 100 + 1e-9
     )
     wskazniki = wsk.wskazniki(tereny, podstawa)
+    program = prog.program(tereny, obszar_m2, ustawienia)
     return {
         "obszar_m2": round(obszar_m2, 1) if obszar_m2 is not None else None,
         "funkcje": funkcje,
@@ -157,5 +160,6 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
         "kontrole": kontrole,
         "wskazniki": wskazniki,
         "zgodnosc": wsk.zgodnosc(wskazniki, plan),
-        "program": prog.program(tereny, obszar_m2, ustawienia),
+        "program": program,
+        "koszty": kosz.koszty(tereny, obszar_m2, ustawienia, program),
     }

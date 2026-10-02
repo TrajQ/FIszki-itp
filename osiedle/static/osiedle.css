@@ -479,3 +479,28 @@ button.przycisk--niebezpieczny-tekst {
 .tabela-cen-okolicy {
     font-size: 13px;
 }
+
+/* ETAP 155: szacunek kosztów — szeroka tabela przewija się w panelu */
+.tabela-kosztow-wrap {
+    overflow-x: auto;
+}
+
+.tabela-kosztow td {
+    font-size: 13px;
+}
+
+.tabela-kosztow__wyliczenie {
+    display: block;
+    color: var(--tekst-drugi);
+    font-size: 12px;
+}
+
+.tabela-kosztow td.liczba {
+    white-space: nowrap;
+    vertical-align: top;
+}
+
+.tabela-kosztow__naglowek td {
+    color: var(--tekst-drugi);
+    font-weight: 600;
+}

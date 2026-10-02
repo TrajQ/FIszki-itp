@@ -51,6 +51,12 @@
         {% for klucz, nazwa, miejsca in [('mieszkania', 'mieszkania i domy', 0), ('mieszkancy', 'mieszkańcy', 0), ('gestosc_os_na_ha', 'gęstość [os./ha]', 1), ('miejsca_potrzebne', 'miejsca postojowe — potrzeba', 0), ('miejsca_na_terenach_ks', 'miejsca postojowe — na KS', 0), ('oddzialy_przedszkolne', 'oddziały przedszkolne', 0), ('oddzialy_szkolne', 'oddziały szkolne', 0), ('zielen_na_mieszkanca_m2', 'zieleń na mieszkańca [m²]', 1)] %}
         <tr><th>{{ nazwa }}</th>{% for w in warianty %}<td class="liczba">{{ m(w.b.program[klucz], miejsca) if w.b.program else '—' }}</td>{% endfor %}</tr>
         {% endfor %}
+        {% if warianty | selectattr('b.koszty') | list %}
+        <tr class="tabela-wariantow__grupa"><th colspan="{{ warianty | length + 1 }}">Koszty (stawki z każdej koncepcji)</th></tr>
+        {% for klucz, nazwa in [('razem', 'razem [zł]'), ('na_mieszkanie', 'na mieszkanie / dom [zł]'), ('na_m2_calkowitej', 'na m² pow. całkowitej [zł]')] %}
+        <tr><th>{{ nazwa }}</th>{% for w in warianty %}<td class="liczba">{{ m(w.b.koszty[klucz], 0) if w.b.koszty and w.b.koszty[klucz] is not none else '—' }}</td>{% endfor %}</tr>
+        {% endfor %}
+        {% endif %}
     </table>
 </section>
 {% elif wybrane_id %}

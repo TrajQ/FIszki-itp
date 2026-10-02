@@ -22,6 +22,7 @@
     const polaParametrow = document.querySelectorAll("#parametry-terenu [data-parametr]");
     const polaUstalen = document.querySelectorAll("[data-ustalenie]");
     const polaZalozen = document.querySelectorAll("[data-zalozenie]");
+    const polaStawek = document.querySelectorAll("[data-stawka]"); // ETAP 155
     const sekcjaProgramu = document.getElementById("sekcja-programu");
     const sekcjaCienia = document.getElementById("sekcja-cienia");
     const sekcjaCen = document.getElementById("sekcja-cen");
@@ -241,6 +242,7 @@
     });
     polaUstalen.forEach((pole) => pole.addEventListener("input", zapiszRysunek));
     polaZalozen.forEach((pole) => pole.addEventListener("input", zapiszRysunek));
+    polaStawek.forEach((pole) => pole.addEventListener("input", zapiszRysunek));
 
     // Puste pole = brak wpisu (ustalenie planu: nie obowiązuje; założenie: wartość typowa).
     function wpisane(pola, atrybut) {
@@ -256,6 +258,7 @@
             ...(koncepcja.ustawienia || {}),
             plan: wpisane(polaUstalen, "ustalenie"),
             program: wpisane(polaZalozen, "zalozenie"),
+            koszty: wpisane(polaStawek, "stawka"),
             teren_projekt: projektTerenu.value ? Number(projektTerenu.value) : null,
         };
     }
@@ -481,6 +484,35 @@
         if (k.parametry_ponad_100) uwaga(`Terenów, na których zabudowa i powierzchnia biologicznie czynna razem przekraczają 100%: ${k.parametry_ponad_100}.`);
         pokazWskazniki(b);
         pokazProgram(b.program);
+        pokazKoszty(b.koszty);
+    }
+
+    // ETAP 155: szacunek kosztów — ilości × stawki liczy serwer (osiedle/koszty.py)
+    function pokazKoszty(k) {
+        const sekcja = document.getElementById("sekcja-kosztow");
+        const tabela = document.getElementById("tabela-kosztow");
+        const podsumowanie = document.getElementById("podsumowanie-kosztow");
+        sekcja.hidden = false;
+        tabela.hidden = podsumowanie.hidden = !k;
+        if (!k) return;
+        const wiersz = (komorki, klasa) => {
+            const tr = element("tr", klasa);
+            komorki.forEach(([tekst, k2]) => tr.appendChild(element("td", k2 || "", tekst)));
+            return tr;
+        };
+        // dwie kolumny (pozycja z „ilość × stawka” pod spodem | koszt) — mieszczą się w wąskim panelu
+        tabela.replaceChildren(wiersz([["pozycja"], ["koszt [zł]", "liczba"]], "tabela-kosztow__naglowek"));
+        for (const p of k.pozycje) {
+            const tr = wiersz([[p.opis], [formatM2.format(p.koszt), "liczba"]]);
+            tr.firstChild.appendChild(element("span", "tabela-kosztow__wyliczenie",
+                `${formatM2.format(p.ilosc)} ${p.jednostka_ilosci} × ${formatWsk.format(p.stawka)} ${p.jednostka}`));
+            tabela.appendChild(tr);
+        }
+        tabela.appendChild(wiersz([["razem"], [formatM2.format(k.razem), "liczba"]], "tabela-programu__wazne"));
+        const czesci = [];
+        if (k.na_mieszkanie !== null) czesci.push(`${formatM2.format(k.na_mieszkanie)} zł na mieszkanie / dom`);
+        if (k.na_m2_calkowitej !== null) czesci.push(`${formatM2.format(k.na_m2_calkowitej)} zł na m² powierzchni całkowitej`);
+        podsumowanie.textContent = czesci.length ? `Średnio: ${czesci.join(", ")}.` : "";
     }
 
     function pokazProgram(p) {
@@ -664,6 +696,8 @@
         polaUstalen.forEach((pole) => (pole.value = plan[pole.dataset.ustalenie] ?? ""));
         const zalozenia = (dane.ustawienia || {}).program || {};
         polaZalozen.forEach((pole) => (pole.value = zalozenia[pole.dataset.zalozenie] ?? ""));
+        const stawki = (dane.ustawienia || {}).koszty || {};
+        polaStawek.forEach((pole) => (pole.value = stawki[pole.dataset.stawka] ?? ""));
         pokazBilans(dane.bilans);
         if (rysunek.getLayers().length) mapa.fitBounds(rysunek.getBounds(), { padding: [30, 30], maxZoom: 18 });
     }

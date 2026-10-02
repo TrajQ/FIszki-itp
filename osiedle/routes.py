@@ -12,6 +12,7 @@ from dane import uldk
 from . import baza, cien
 from .obszar_z_pliku import obszar_z_geojson
 from .bilans import FUNKCJE, OBSZAR, BladKoncepcji, bilans
+from .koszty import STAWKI
 from .program import ZALOZENIA
 from .wskazniki import DOMYSLNE, BladParametru
 
@@ -55,7 +56,7 @@ def podsumowanie() -> dict:
 def index():
     return render_template(
         "osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR, domyslne=DOMYSLNE,
-        zalozenia=ZALOZENIA,
+        zalozenia=ZALOZENIA, stawki=STAWKI,
     )
 
 

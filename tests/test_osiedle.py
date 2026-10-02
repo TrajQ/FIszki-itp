@@ -49,7 +49,7 @@ def test_bilans_z_obszarem_nakladaniem_i_wolnym_terenem():
 def test_bilans_bez_obszaru_procent_od_sumy_i_pusty():
     b = bilans(kolekcja(prostokat(0, 0, 30, 10, "MN"), prostokat(40, 0, 10, 10, "ZP")))
     assert b["obszar_m2"] is None and [f["procent"] for f in b["funkcje"]] == [75.0, 25.0]
-    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None}
+    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None}
 
 
 def test_teren_poza_obszarem():
@@ -490,3 +490,46 @@ def test_obszar_z_geojson_przypadki_brzegowe():
     s = pl2000(52.4, 16.9)
     e, n = s["y"], s["x"]
     assert obszar_z_geojson({"type": "Polygon", "coordinates": [[[e, n], [e + 50, n], [e + 50, n + 50], [e, n]]]})[1] == "PL-2000"
+
+
+# ---------- ETAP 155: szacunek kosztów ----------
+
+
+def test_koszty_koncepcji(client):
+    # obszar 100 × 100 m; MW 50 × 40 m, zabudowa 30%, 5 kondygnacji → 3000 m² pow. całkowitej; KD 50 × 10 m; KS 20 × 10 m
+    geo = kolekcja(prostokat(0, 0, 100, 100, "obszar"),
+                   prostokat(0, 0, 50, 40, "MW", zabudowa_proc=30, kondygnacje=5),
+                   prostokat(0, 40, 50, 10, "KD"), prostokat(0, 50, 20, 10, "KS"))
+    assert bilans(geo)["koszty"] is None  # bez stawek nie ma szacunku
+    b = bilans(geo, {"koszty": {"budowa_mw": 6000, "drogi_kd": 400, "miejsce_podziemne": 80000, "grunt": "", "zielen_zp": None}})
+    k = b["koszty"]
+    poz = {p["klucz"]: p for p in k["pozycje"]}
+    assert list(poz) == ["budowa_mw", "drogi_kd", "miejsce_podziemne"]  # puste stawki pominięte, kolejność stała
+    assert poz["budowa_mw"]["ilosc"] == pytest.approx(3000, rel=1e-3) and poz["budowa_mw"]["koszt"] == pytest.approx(18_000_000, rel=1e-3)
+    assert poz["drogi_kd"]["koszt"] == pytest.approx(200_000, rel=1e-3)
+    assert poz["miejsce_podziemne"]["ilosc"] == b["program"]["miejsca_brakuje"] > 0
+    assert k["razem"] == sum(p["koszt"] for p in k["pozycje"])
+    assert k["na_mieszkanie"] == round(k["razem"] / b["program"]["mieszkania"])
+    assert k["na_m2_calkowitej"] == pytest.approx(k["razem"] / 3000, rel=1e-3)
+    for zle in ({"koszty": {"budowa_mw": -1}}, {"koszty": {"nieznana": 1}}, {"koszty": {"grunt": True}}, {"koszty": [1]}):
+        with pytest.raises(BladKoncepcji):
+            bilans(geo, zle)
+    # zapis przez trasę jak inne ustawienia
+    k_id = client.post("/osiedle/koncepcje", json={"nazwa": "Koszty"}).get_json()["id"]
+    odp = client.put(f"/osiedle/koncepcje/{k_id}", json={"geojson": geo, "ustawienia": {"koszty": {"budowa_mw": 6000}}}).get_json()
+    assert odp["bilans"]["koszty"]["razem"] == pytest.approx(18_000_000, rel=1e-3)
+    assert client.put(f"/osiedle/koncepcje/{k_id}", json={"ustawienia": {"koszty": {"budowa_mw": "dużo"}}}).status_code == 400
+
+
+def test_koszty_w_raporcie_i_porownaniu(client):
+    geo = kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 50, 40, "MW", zabudowa_proc=30, kondygnacje=5))
+    ids = []
+    for nazwa, stawka in [("A", 6000), ("B", None)]:
+        k = client.post("/osiedle/koncepcje", json={"nazwa": nazwa}).get_json()["id"]
+        client.put(f"/osiedle/koncepcje/{k}", json={"geojson": geo, "ustawienia": {"koszty": {"budowa_mw": stawka} if stawka else {}}})
+        ids.append(k)
+    raport = client.get(f"/osiedle/koncepcje/{ids[0]}/raport").get_data(as_text=True)
+    assert "Szacunek kosztów" in raport and "budowa zabudowy wielorodzinnej MW" in raport and "koszty ze stawek autora" in raport
+    assert "Szacunek kosztów" not in client.get(f"/osiedle/koncepcje/{ids[1]}/raport").get_data(as_text=True)
+    por = client.get(f"/osiedle/porownanie?id={ids[0]}&id={ids[1]}").get_data(as_text=True)
+    assert "Koszty (stawki z każdej koncepcji)" in por and "17 999" in por  # pole z geometrii — ok. 18 mln

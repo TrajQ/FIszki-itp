@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 154 (Fiszki: wycinek rysunku z PDF — zamknięty)
-Ostatni ZIP: releases/warsztat_etap154_20261002.zip
-Testy: 559 passed / 0 failed
+ETAP: 155 (Osiedle: szacunek kosztów — zamknięty)
+Ostatni ZIP: releases/warsztat_etap155_20261002.zip
+Testy: 561 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -126,7 +126,21 @@
             </div>
             {% endif %}
         </div>
-        <p class="wyciszony raport-osiedla__stopka">Szacunek koncepcyjny: wskaźniki z parametrów terenów, program z założeń powyżej. Liczy kod aplikacji, nie model językowy.</p>
+        {% set k = b.koszty %}
+        {% if k %}
+        <h3>Szacunek kosztów</h3>
+        <div class="tabela-kosztow-wrap">
+        <table class="tabela raport-osiedla__koszty">
+            <tr><th>pozycja</th><th class="liczba">ilość</th><th class="liczba">stawka</th><th class="liczba">koszt [zł]</th></tr>
+            {% for poz in k.pozycje %}
+            <tr><td>{{ poz.opis }}</td><td class="liczba">{{ m(poz.ilosc, 0) }} {{ poz.jednostka_ilosci }}</td><td class="liczba">{{ m(poz.stawka, 2) }} {{ poz.jednostka }}</td><td class="liczba">{{ m(poz.koszt, 0) }}</td></tr>
+            {% endfor %}
+            <tr class="tabela-bilansu__razem"><td>razem</td><td></td><td></td><td class="liczba">{{ m(k.razem, 0) }}</td></tr>
+        </table>
+        </div>
+        <p class="wyciszony">{% if k.na_mieszkanie is not none %}{{ m(k.na_mieszkanie, 0) }} zł na mieszkanie / dom{% endif %}{% if k.na_mieszkanie is not none and k.na_m2_calkowitej is not none %} · {% endif %}{% if k.na_m2_calkowitej is not none %}{{ m(k.na_m2_calkowitej, 0) }} zł na m² powierzchni całkowitej{% endif %}. Stawki wpisane przez autora koncepcji; ilości z rysunku.</p>
+        {% endif %}
+        <p class="wyciszony raport-osiedla__stopka">Szacunek koncepcyjny: wskaźniki z parametrów terenów, program z założeń powyżej{{ ', koszty ze stawek autora' if k }}. Liczy kod aplikacji, nie model językowy.</p>
     </section>
 
     <!-- ETAP 115: ceny w okolicy z pliku RCN zaimportowanego w module Ceny (POST /ceny/okolica);
