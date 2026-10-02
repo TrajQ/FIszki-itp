@@ -745,3 +745,62 @@ def test_premia_rynku_pierwotnego():
     assert wa["premia_pierwotnego_proc"] == pytest.approx(100 * (13000 / 10250 - 1))
     assert wb["rynki"]["pierwotny"]["liczba"] == 1 and wb["premia_pierwotnego_proc"] is None  # za mało, żeby liczyć premię
     assert por["calosc"]["premia_pierwotnego_proc"] is not None
+
+
+# ---------- ETAP 156: co wpływa na cenę m² (regresja) ----------
+
+
+def test_najmniejsze_kwadraty_zgodne_z_numpy():
+    import random
+    los = random.Random(2)
+    x = [[los.uniform(0, 5), los.uniform(2, 10), float(los.randint(0, 10)), float(los.random() < 0.3)] for _ in range(300)]
+    y = [9000 + 500 * a - 120 * b + 40 * c + 900 * d + los.gauss(0, 800) for a, b, c, d in x]
+    m = rcn.najmniejsze_kwadraty(x, y)
+    for wynik, numpy_ in [(m["b"], [9146.19682, 519.048823, -143.845053, 29.288013, 865.258595]),
+                          (m["se"], [161.915563, 31.411534, 19.908428, 14.418892, 101.451606])]:
+        assert wynik == pytest.approx(numpy_, abs=1e-5)
+    assert m["r2"] == pytest.approx(0.59857238, abs=1e-7) and m["n"] == 300
+    with pytest.raises(ValueError, match="współliniowe"):
+        rcn.najmniejsze_kwadraty([[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0]], [1, 2, 3, 4])
+
+
+def test_regresja_cen():
+    import random
+    los = random.Random(7)
+    lokale = []
+    for i in range(400):
+        rok, miesiac = 2021 + i % 4, 1 + i % 12
+        pow_, kond = los.uniform(25, 90), los.randint(0, 10)
+        pierwotny = los.random() < 0.3
+        cena = 10000 + 600 * (rok - 2021 + (miesiac - 1) / 12) - 15 * pow_ + 50 * kond + 1200 * pierwotny + los.gauss(0, 300)
+        lokale.append({"data": f"{rok}-{miesiac:02d}-01", "pow_m2": pow_, "kondygnacja": kond, "rynek": "pierwotny" if pierwotny else "wtórny", "cena_m2": cena})
+    lokale += [{**lokale[0], "cena_m2": 1.0}, {**lokale[1], "cena_m2": 900000.0}]  # błędy w rejestrze
+    w = rcn.regresja_cen(lokale)
+    e = {x["zmienna"]: x for x in w["efekty"]}
+    assert list(e) == ["czas", "pow_10m2", "kondygnacja", "pierwotny"]
+    assert e["czas"]["efekt"] == pytest.approx(600, rel=0.05) and e["pow_10m2"]["efekt"] == pytest.approx(-150, rel=0.1)
+    assert e["kondygnacja"]["efekt"] == pytest.approx(50, rel=0.2) and e["pierwotny"]["efekt"] == pytest.approx(1200, rel=0.05)
+    assert all(x["istotny"] for x in e.values()) and w["r2"] > 0.8 and w["pominiete_skrajne"] >= 2
+    # bez pięter i z jednym rynkiem — te zmienne znikają
+    bez = rcn.regresja_cen([{**l, "kondygnacja": None, "rynek": "wtórny"} for l in lokale])
+    assert [x["zmienna"] for x in bez["efekty"]] == ["czas", "pow_10m2"]
+    with pytest.raises(ValueError, match="Za mało"):
+        rcn.regresja_cen(lokale[:10])
+
+
+def test_trasa_regresji(client, tmp_path, monkeypatch):
+    import random
+    los = random.Random(3)
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    plik_rcn(str(pobrane / "rcn.gpkg"), [lokal(i, dok_data=f"202{1 + i % 4}-0{1 + i % 9}-10", lok_pow_uzyt=los.randint(30, 80), lok_nr_kond=i % 6,
+                                              lok_cena_brutto=los.randint(400, 900) * 1000,
+                                              tran_rodzaj_rynku="pierwotny" if i % 3 == 0 else "wtorny") for i in range(1, 80)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / "rcn.gpkg")})
+    w = client.get("/ceny/transakcje/1/regresja").get_json()
+    assert w["n"] > 60 and {e["zmienna"] for e in w["efekty"]} == {"czas", "pow_10m2", "kondygnacja", "pierwotny"}
+    assert [e["zmienna"] for e in client.get("/ceny/transakcje/1/regresja?rynek=wtórny").get_json()["efekty"]] == ["czas", "pow_10m2", "kondygnacja"]
+    assert client.get("/ceny/transakcje/1/regresja?co=dzialki").status_code == 400
+    assert client.get("/ceny/transakcje/9/regresja").status_code == 404
+    assert "Co wpływa na cenę za m²" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)

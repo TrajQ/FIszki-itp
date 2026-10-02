@@ -922,3 +922,6 @@
 
 ## ETAP 155 — 2026-10-02
 - Osiedle: szacunek kosztów koncepcji ze stawek wpisanych przez użytkownika
+
+## ETAP 156 — 2026-10-02
+- Ceny: co wpływa na cenę m² — regresja na transakcjach RCN

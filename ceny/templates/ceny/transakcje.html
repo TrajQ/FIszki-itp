@@ -192,6 +192,19 @@
             {% endif %}
             <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK), ceny brutto z aktów notarialnych. Statystyki liczy aplikacja.</p>
         </section>
+
+        {% if co != 'dzialki' %}
+        <section class="karta stos" id="karta-regresji">
+            <div class="rzad rzad--miedzy">
+                <h3>Co wpływa na cenę za m²</h3>
+                <button type="button" id="przycisk-regresji" class="przycisk--drugi">Policz</button>
+            </div>
+            <p class="wyciszony opis-cen">Regresja liniowa na transakcjach z filtrami strony: o ile średnio zmienia się cena za m², gdy zmienia się jedna cecha, a pozostałe są takie same. To związek w danych, nie wycena i nie przyczyna — np. nowe mieszkania częściej są w lepszych lokalizacjach.</p>
+            <p id="regresja-status" class="wyciszony" hidden></p>
+            <div class="przewijanie-cen"><table class="tabela" id="tabela-regresji" hidden></table></div>
+            <p id="regresja-opis" class="wyciszony opis-cen" hidden></p>
+        </section>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

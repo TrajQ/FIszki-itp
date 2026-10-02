@@ -491,6 +491,45 @@
         return new URLSearchParams([...new FormData(filtry)].filter(([, v]) => v));
     }
 
+    // ---------- co wpływa na cenę m² (ETAP 156) — model liczy serwer (rcn.regresja_cen) ----------
+    const przyciskRegresji = document.getElementById("przycisk-regresji");
+    if (przyciskRegresji) {
+        const status = document.getElementById("regresja-status");
+        const tabela = document.getElementById("tabela-regresji");
+        const opis = document.getElementById("regresja-opis");
+        const zl = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
+        const dwa = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        przyciskRegresji.addEventListener("click", async () => {
+            przyciskRegresji.disabled = true;
+            status.hidden = false;
+            status.textContent = "Liczę…";
+            tabela.hidden = opis.hidden = true;
+            try {
+                const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/regresja?${parametryFiltrow()}`);
+                const w = await odp.json().catch(() => ({}));
+                if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+                const naglowek = el("tr");
+                for (const [t, k] of [["Cecha", ""], ["Zmiana ceny za m²", "liczba"], ["± błąd", "liczba"], ["Pewność", ""]]) naglowek.appendChild(el("th", k, t));
+                tabela.replaceChildren(naglowek);
+                for (const e of w.efekty) {
+                    const tr = el("tr");
+                    tr.append(el("td", "", e.opis), el("td", "liczba", `${e.efekt > 0 ? "+" : ""}${zl.format(e.efekt)} ${e.jednostka}`),
+                        el("td", "liczba", zl.format(e.blad)), el("td", e.istotny ? "" : "wyciszony", e.istotny ? "wyraźny związek" : "może być przypadkiem"));
+                    tabela.appendChild(tr);
+                }
+                opis.textContent = `Transakcji w modelu: ${zl.format(w.n)} (od ${w.od}; pominięte skrajne ceny: ${zl.format(w.pominiete_skrajne)}). ` +
+                    `Cechy wyjaśniają ${zl.format(w.r2 * 100)}% zróżnicowania cen (R² = ${dwa.format(w.r2)}); typowy błąd modelu ±${zl.format(w.rmse)} zł/m². ` +
+                    "„Wyraźny związek” — |t| ≥ 1,96 (ok. 5% szans na przypadek).";
+                tabela.hidden = opis.hidden = false;
+                status.hidden = true;
+            } catch (e) {
+                status.textContent = e.message;
+            } finally {
+                przyciskRegresji.disabled = false;
+            }
+        });
+    }
+
     async function szukajPodobnych() {
         warstwaPodobnych.clearLayers();
         if (!miejsce) {

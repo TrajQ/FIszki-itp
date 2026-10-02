@@ -277,6 +277,19 @@ def podobne_transakcje(plik_id):
     return jsonify(_wynik_wyceny(plik_id, p))
 
 
+@ceny_bp.route("/transakcje/<int:plik_id>/regresja")
+def regresja_transakcji(plik_id):
+    """ETAP 156: związek czasu, powierzchni, piętra i rynku z ceną m² (mieszkania, filtry strony)."""
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    try:
+        if _co() != "lokale":
+            raise ValueError("Wpływ cech liczymy dla mieszkań.")
+        return jsonify(rcn.regresja_cen(_rekordy(plik_id, "lokale", _filtry("lokale"))))
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+
+
 @ceny_bp.route("/transakcje/<int:plik_id>/wycena")
 def karta_wyceny(plik_id):
     """ETAP 113: karta wyceny porównawczej do druku — te same parametry co /podobne."""

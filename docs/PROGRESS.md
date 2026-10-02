@@ -2706,3 +2706,21 @@ Status: zamknięty
 - Testy: wyliczenia, pominięte puste stawki, błędne stawki, trasa,
   raport, porównanie; sprawdzone w przeglądarce 1300/390 px
 - `DECISIONS.md`: D-163
+
+## ETAP 156 — Ceny: wpływ cech na cenę za m² (regresja)
+Data: 2026-10-02
+Status: zamknięty
+
+- `rcn.najmniejsze_kwadraty`: OLS bez zależności (Gauss-Jordan dla XᵀX),
+  błędy standardowe, R², RMSE; zgodność z numpy do 1e-10 (wartości
+  referencyjne w teście); współliniowość → czytelny błąd
+- `rcn.regresja_cen`: czas (lata od pierwszej transakcji), powierzchnia
+  (na 10 m²), piętro (gdy znane w ≥ 80% transakcji), rynek pierwotny
+  (gdy są oba rynki); 1% skrajnych cen z każdej strony pominięty;
+  |t| ≥ 1,96 → „wyraźny związek”; min. 30 transakcji
+- Trasa `/ceny/transakcje/<id>/regresja` z filtrami strony (tylko
+  mieszkania); karta „Co wpływa na cenę za m²” z przyciskiem „Policz”
+- 100 tys. transakcji: 0,6 s
+- Testy: OLS vs numpy, odtworzenie znanych efektów, pomijanie zmiennych,
+  trasa; sprawdzone w przeglądarce 1300/390 px
+- `DECISIONS.md`: D-164

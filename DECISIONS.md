@@ -3324,3 +3324,22 @@ zgadywaniem — sprzeczne z zasadą „liczby z danych”.
   się bez śladu w interfejsie.
 - Stawka gruntu z mediany cen RCN w okolicy — dobry pomysł na później,
   ale wymaga rozróżnienia przeznaczenia działek; na razie wpis ręczny.
+
+## D-164 — Regresja cen bez numpy, z jawnym opisem ograniczeń
+Data: 2026-10-02
+
+**Decyzja:** Metoda najmniejszych kwadratów jest napisana w module
+(odwrócenie macierzy 3×3–5×5 metodą Gaussa-Jordana); poprawność sprawdzona
+z numpy w osobnym środowisku. Istotność z progu |t| ≥ 1,96 (duże próby,
+min. 30 transakcji), bez rozkładu t. Interfejs mówi wprost: związek w
+danych, nie wycena i nie przyczyna; R² pokazuje, ile cechy wyjaśniają.
+
+**Uzasadnienie:** Pytanie „ile kosztuje piętro / rynek pierwotny” wraca
+przy każdej analizie cen; mediany w grupach mieszają cechy (nowe mieszkania
+są też mniejsze i w innych miejscach). Model z kilkoma zmiennymi rozdziela
+te związki. numpy dla pięciu kolumn to zbędna zależność.
+
+**Odrzucone alternatywy:**
+- Lokalizacja w modelu (współrzędne, dzielnice) — wymaga przemyślenia
+  (efekty przestrzenne); do rozważenia później.
+- Logarytm ceny — trudniejszy do odczytania dla czytelnika raportu.
