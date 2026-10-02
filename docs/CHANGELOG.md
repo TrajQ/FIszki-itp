@@ -848,3 +848,7 @@
 ## ETAP 131 — 2026-10-02
 - Kolory tekstu i przycisków spełniają WCAG AA (kontrast ≥ 4,5:1) w jasnym
   i ciemnym motywie; test pilnuje tego przy zmianach
+
+## ETAP 132 — 2026-10-02
+- Teren: raport pokazuje rozmieszczenie punktów w heksagonach z najczęstszą
+  wartością wybranego pola

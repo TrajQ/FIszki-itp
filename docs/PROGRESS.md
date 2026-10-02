@@ -2319,3 +2319,19 @@ Status: zamknięty
 - Poprawione przy okazji: brzeg linku „Przejdź do treści” widoczny w
   rogu, odstęp formularza wyszukiwarki od wyników
 - `DECISIONS.md`: D-139
+
+## ETAP 132 — Teren: rozmieszczenie punktów w heksagonach H3 w raporcie
+Data: 2026-10-02
+Status: zamknięty
+
+- `teren/raport.py`: `heksagony` — punkty z położeniem w komórkach H3,
+  rozdzielczość dobierana (11 → 10 → 9, krawędź ok. 30 / 75 / 200 m):
+  najdrobniejsza z co najmniej 2 punktami średnio na komórkę; dla pola
+  wybranego do kolorowania — wartość najczęstsza z udziałem; od 10 punktów
+- `heksagony_svg`: komórki w pięciu odcieniach według liczby punktów,
+  liczba i numer komórki (jak w tabeli), podziałka; bez podkładu
+- Raport projektu: sekcja „Rozmieszczenie punktów” (mapa + tabela:
+  komórka, liczba, numery punktów, najczęstsza wartość)
+- Sprawdzone w przeglądarce (40 punktów w trzech skupiskach); tabela
+  przewija się na telefonie (poprawione po sprawdzeniu)
+- `DECISIONS.md`: D-140

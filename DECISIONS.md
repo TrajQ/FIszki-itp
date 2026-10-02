@@ -2912,3 +2912,20 @@ którego korzysta aplikacja.
 **Odrzucone alternatywy:**
 - Ciemny tekst na przyciskach w ciemnym motywie — niespójne z jasnym.
 - Ręczny audyt bez testu — kolejna zmiana koloru mogłaby wrócić do 3:1.
+
+## D-140 — Teren: heksagony z automatyczną wielkością, wartość najczęstsza
+Data: 2026-10-02
+
+**Decyzja:** Wielkość heksagonów w raporcie terenu dobieramy z danych:
+najdrobniejsza z trzech siatek (krawędź ok. 30 / 75 / 200 m), w której na
+komórkę przypadają średnio co najmniej 2 punkty. Dla pola wyboru
+pokazujemy wartość najczęstszą w komórce z udziałem. Sekcja od 10 punktów.
+
+**Uzasadnienie:** Inwentaryzacja obejmuje od placu po dzielnicę — stała
+wielkość komórki dałaby jedną komórkę albo same pojedyncze punkty. Wartość
+najczęstsza z udziałem jest zrozumiała bez statystyki.
+
+**Odrzucone alternatywy:**
+- Wybór wielkości przez użytkownika — raport ma działać bez ustawień.
+- Mapa ciepła (gęstość jądrowa) — wymaga parametru wygładzania i trudniej
+  ją opisać w raporcie.

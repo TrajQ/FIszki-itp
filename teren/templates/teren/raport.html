@@ -45,6 +45,21 @@
         <p class="wyciszony przypis">Mapa schematyczna: punkty z pomiaru GPS telefonu (dokładność w tabeli), bez podkładu. Numery jak w tabeli i przy zdjęciach.</p>{% endif %}
     </section>
 
+    {% if heksagony %}
+    <section class="raport-terenu__strona">
+        <h2>Rozmieszczenie {{ 'odpowiedzi' if ankieta else 'punktów' }}</h2>
+        <p class="wyciszony">Siatka heksagonów H3 o krawędzi ok. {{ heksagony.krawedz_m }} m (dobrana tak, żeby w komórce było średnio co najmniej 2 punkty); liczba w heksagonie — ile punktów w nim zebrano.</p>
+        <div class="raport-terenu__mapa">{{ mapa_heksagonow }}</div>
+        <div class="raport-terenu__przewijanie"><table class="tabela">
+            <tr><th class="liczba">Heksagon</th><th class="liczba">Punktów</th><th>Numery punktów</th>{% if pole %}<th>Najczęściej: {{ pole.nazwa }}</th>{% endif %}</tr>
+            {% for k in heksagony.komorki %}
+            <tr><td class="liczba">{{ k.nr }}</td><td class="liczba">{{ k.liczba }}</td><td>{{ k.numery | join(', ') }}</td>
+                {% if pole %}<td>{% if k.dominujaca %}{{ k.dominujaca }} ({{ k.udzial | round | int }}%){% else %}<span class="wyciszony">—</span>{% endif %}</td>{% endif %}</tr>
+            {% endfor %}
+        </table></div>
+    </section>
+    {% endif %}
+
     <section class="raport-terenu__strona">
         <h2>{{ 'Wyniki ankiety' if ankieta else 'Zestawienie' }}</h2>
         <div class="raport-terenu__zestawienie">

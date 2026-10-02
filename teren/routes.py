@@ -295,6 +295,9 @@ def raport_projektu(projekt_id):
         punkty=punkty,
         zestawienie=raport.zestawienie(p["pola"], punkty),
         mapa=Markup(raport.mapa_svg(punkty, pole)),  # tylko liczby i kolory z kodu
+        heksagony=(h := raport.heksagony(punkty, pole)),  # ETAP 132: rozmieszczenie w heksagonach H3
+        mapa_heksagonow=Markup(raport.heksagony_svg(h)) if h else None,
+        kolory_gestosci=raport.KOLORY_GESTOSCI,
         pole=pole,
         pola_do_koloru=do_koloru,
         kolory=kolory,

@@ -374,3 +374,26 @@ def test_zestawienie_ma_kolory_paskow():
     z = zestawienie(pola, [{"wartosci": {"stan": "zły", "obiekt": "drzewo"}}])
     assert [r["kolor"] for r in z[0]["rozklad"]] == [kolor_skali(i, 3) for i in range(3)]
     assert {r["kolor"] for r in z[1]["rozklad"]} == {KOLOR_PASKA}
+
+
+# ---------- ETAP 132: rozmieszczenie w heksagonach ----------
+
+
+def test_heksagony_terenu():
+    from teren import raport
+
+    pole = {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "zły"]}
+    # 12 punktów w dwóch skupiskach ok. 400 m od siebie; w pierwszym przeważa „dobry”
+    punkty = [{"nr": i + 1, "lat": 52.4 + (0 if i < 8 else 0.004) + i * 1e-6, "lng": 16.9, "wartosci": {"stan": "dobry" if i < 6 else "zły"}}
+              for i in range(12)] + [{"nr": 13, "lat": None, "lng": None, "wartosci": {}}]
+    w = raport.heksagony(punkty, pole)
+    assert w["punktow"] == 12 and len(w["komorki"]) == 2 and w["rozdzielczosc"] == 11  # najdrobniejsza siatka, średnio ≥ 2 w komórce
+    k1, k2 = w["komorki"]
+    assert (k1["nr"], k1["liczba"], k1["numery"], k1["dominujaca"], k1["udzial"]) == (1, 8, list(range(1, 9)), "dobry", 75)
+    assert (k2["liczba"], k2["dominujaca"], k2["udzial"]) == (4, "zły", 100)
+    assert raport.heksagony(punkty[:9], pole) is None  # za mało punktów z położeniem
+    rozproszone = [{"nr": i, "lat": 52.4 + i * 0.003, "lng": 16.9, "wartosci": {}} for i in range(12)]
+    assert raport.heksagony(rozproszone, None)["rozdzielczosc"] == 9  # punkty daleko od siebie → większe heksagony
+    svg = raport.heksagony_svg(w)
+    assert svg.count("<polygon") == 2 and ">8<" in svg and ">nr 2<" in svg
+    assert raport.kolor_gestosci(8, 8) == raport.KOLORY_GESTOSCI[-1] and raport.kolor_gestosci(1, 8) == raport.KOLORY_GESTOSCI[0]

@@ -8,6 +8,9 @@ lokalną skalą, północ u góry, podziałka.
 
 import math
 import statistics
+from collections import Counter
+
+import h3
 
 PALETA = ["#0a84ff", "#ff9f0a", "#30d158", "#ff375f", "#bf5af2", "#64d2ff", "#ffd60a", "#ac8e68", "#5e5ce6", "#ff6961"]
 KOLOR_BRAK = "#8e8e93"
@@ -138,5 +141,81 @@ def mapa_svg(punkty: list[dict], pole: dict | None, szerokosc: int = 1000, wysok
         f'<path d="M{xn},{margines - 30} L{xn + 7},{margines - 12} L{xn},{margines - 16} L{xn - 7},{margines - 12} Z" fill="#1d1d1f"/>'
         f'<text x="{xn}" y="{margines + 2}" text-anchor="middle" fill="#1d1d1f">N</text>'
     )
+    czesci.append("</svg>")
+    return "".join(czesci)
+
+
+# ---------- rozmieszczenie punktów w heksagonach H3 (ETAP 132) ----------
+
+ROZDZIELCZOSCI = (11, 10, 9)  # krawędź ok. 30 / 75 / 200 m — teren to zwykle setki metrów
+MIN_PUNKTOW_HEKSAGONOW = 10
+SREDNIO_W_KOMORCE = 2  # wybieramy najdrobniejszą siatkę z co najmniej tyloma punktami na komórkę
+KOLORY_GESTOSCI = ["#dbeafe", "#93c5fd", "#60a5fa", "#2563eb", "#1e3a8a"]
+
+
+def heksagony(punkty: list[dict], pole: dict | None) -> dict | None:
+    """Punkty z położeniem w komórkach H3: liczba punktów, ich numery i (dla
+    wybranego pola) wartość najczęstsza z udziałem. Rozdzielczość dobierana
+    tak, żeby komórka miała średnio co najmniej 2 punkty."""
+    z_polozeniem = [p for p in punkty if p["lat"] is not None]
+    if len(z_polozeniem) < MIN_PUNKTOW_HEKSAGONOW:
+        return None
+    for r in ROZDZIELCZOSCI:
+        po_komorce: dict = {}
+        for p in z_polozeniem:
+            po_komorce.setdefault(h3.latlng_to_cell(p["lat"], p["lng"], r), []).append(p)
+        if len(z_polozeniem) / len(po_komorce) >= SREDNIO_W_KOMORCE:
+            break
+    komorki = []
+    for komorka, czlonkowie in sorted(po_komorce.items(), key=lambda kv: (-len(kv[1]), kv[0])):
+        dominujaca = udzial = None
+        if pole is not None:
+            wartosci = [_tekst(p["wartosci"][pole["nazwa"]]) for p in czlonkowie if pole["nazwa"] in p["wartosci"]]
+            if wartosci:
+                dominujaca, ile = max(Counter(wartosci).items(), key=lambda kv: (kv[1], kv[0]))
+                udzial = 100 * ile / len(czlonkowie)
+        komorki.append({"nr": len(komorki) + 1, "h3": komorka, "granica": h3.cell_to_boundary(komorka), "liczba": len(czlonkowie),
+                        "numery": sorted(p["nr"] for p in czlonkowie), "dominujaca": dominujaca, "udzial": udzial})
+    liczby = sorted({k["liczba"] for k in komorki})
+    return {"rozdzielczosc": r, "krawedz_m": round(h3.average_hexagon_edge_length(r, unit="m")), "komorki": komorki,
+            "maks": liczby[-1], "punktow": len(z_polozeniem)}
+
+
+def kolor_gestosci(liczba: int, maks: int) -> str:
+    """Pięć odcieni niebieskiego od 1 do maks punktów w komórce."""
+    return KOLORY_GESTOSCI[min(len(KOLORY_GESTOSCI) - 1, int((liczba - 1) * len(KOLORY_GESTOSCI) / max(1, maks)))]
+
+
+def heksagony_svg(wynik: dict, szerokosc: int = 1000, wysokosc: int = 560) -> str:
+    """Mapa komórek: liczba punktów (duża) i numer komórki jak w tabeli raportu (mały)."""
+    wierzcholki = [w for k in wynik["komorki"] for w in k["granica"]]
+    szer_geo = sum(w[0] for w in wierzcholki) / len(wierzcholki)
+    fi = math.radians(szer_geo)
+    m_lat = 111132.954 - 559.822 * math.cos(2 * fi) + 1.175 * math.cos(4 * fi)
+    m_lng = 111412.84 * math.cos(fi) - 93.5 * math.cos(3 * fi)
+    xy = [(lng * m_lng, lat * m_lat) for lat, lng in wierzcholki]
+    minx, maxx = min(x for x, _ in xy), max(x for x, _ in xy)
+    miny, maxy = min(y for _, y in xy), max(y for _, y in xy)
+    margines, pole_dol = 40, 40
+    skala = max(maxx - minx, maxy - miny) / min(szerokosc - 2 * margines, wysokosc - 2 * margines - pole_dol)
+    sx, sy = (minx + maxx) / 2, (miny + maxy) / 2
+
+    def piksel(lat, lng):
+        return szerokosc / 2 + (lng * m_lng - sx) / skala, (wysokosc - pole_dol) / 2 - (lat * m_lat - sy) / skala
+
+    czesci = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc} {wysokosc}" width="{szerokosc}" height="{wysokosc}" '
+              f'font-family="sans-serif" font-size="12"><rect width="100%" height="100%" fill="#ffffff"/>']
+    for k in wynik["komorki"]:
+        punkty = " ".join(f"{a:.1f},{b:.1f}" for a, b in (piksel(lat, lng) for lat, lng in k["granica"]))
+        cx, cy = piksel(*h3.cell_to_latlng(k["h3"]))
+        jasne_tlo = KOLORY_GESTOSCI.index(kolor_gestosci(k["liczba"], wynik["maks"])) < 3
+        czesci.append(f'<polygon points="{punkty}" fill="{kolor_gestosci(k["liczba"], wynik["maks"])}" stroke="#ffffff" stroke-width="2"/>'
+                      f'<text x="{cx:.1f}" y="{cy + 3:.1f}" text-anchor="middle" font-size="15" font-weight="700" fill="{"#1d1d1f" if jasne_tlo else "#ffffff"}">{k["liczba"]}</text>'
+                      f'<text x="{cx:.1f}" y="{cy + 17:.1f}" text-anchor="middle" font-size="10" fill="{"#1d1d1f" if jasne_tlo else "#ffffff"}">nr {k["nr"]}</text>')
+    dlugosc_m = max((d for d in KROKI_PODZIALKI_M if d / skala <= szerokosc / 4), default=KROKI_PODZIALKI_M[0])
+    dl = dlugosc_m / skala
+    y0 = wysokosc - 18
+    czesci.append(f'<g stroke="#1d1d1f" stroke-width="2"><line x1="{margines}" y1="{y0}" x2="{margines + dl:.1f}" y2="{y0}"/></g>'
+                  f'<text x="{margines + dl + 6:.1f}" y="{y0 + 4}" fill="#1d1d1f">{dlugosc_m} m</text>')
     czesci.append("</svg>")
     return "".join(czesci)

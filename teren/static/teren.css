@@ -450,3 +450,8 @@ button.przycisk--niebezpieczny-tekst {
     gap: 4px;
     font-size: 13px;
 }
+
+/* ETAP 132: tabela heksagonów przewija się na telefonie */
+.raport-terenu__przewijanie {
+    overflow-x: auto;
+}
