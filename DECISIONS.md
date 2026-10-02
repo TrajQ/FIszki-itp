@@ -3211,3 +3211,18 @@ zalewałby wyniki.
 **Odrzucone alternatywy:**
 - Polski stemmer — zależność spoza biblioteki standardowej dla jednej
   wyszukiwarki; prosta reguła długości słowa wystarcza.
+
+## D-157 — Liczby w portfolio liczone z repozytorium przy każdej aktualizacji
+Data: 2026-10-02
+
+**Decyzja:** Sekcja „Liczby” w PORTFOLIO podaje stan na konkretny ETAP i
+jest liczona poleceniami (wiersze z `git ls-files`, liczba testów z
+pytest, decyzji z `DECISIONS.md`, stron z przeglądu), nie przepisywana.
+
+**Uzasadnienie:** README mówił o „siedmiu” narzędziach przez kilkadziesiąt
+ETAPów po dodaniu ósmego modułu. Opis do portfolio jest czytany przez
+obce osoby — liczby muszą się zgadzać z kodem.
+
+**Odrzucone alternatywy:**
+- Liczby generowane automatycznie w dokumencie — kolejny skrypt do
+  utrzymania przy aktualizacji raz na kilkadziesiąt ETAPów.

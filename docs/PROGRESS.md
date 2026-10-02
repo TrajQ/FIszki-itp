@@ -2596,3 +2596,20 @@ Status: zamknięty
   → poprawna odmiana (karta / karty / kart)
 - Testy: krótkie słowo z odmianą, odmiana liczby kart
 - `DECISIONS.md`: D-156
+
+## ETAP 149 — Dokumentacja: portfolio, Pomoc, README po ETAPach 120–148
+Data: 2026-10-02
+Status: zamknięty
+
+- README: „ośmioma” narzędziami (było „siedmioma”); funkcje z ETAPów
+  120–148 w opisach modułów (typologia, DXF, fiszki z luką, obszar z
+  GeoJSON, słowniczek, odesłania, notatki, heksagony i import w Terenie,
+  projekt na wzór, piętro, premia rynku pierwotnego, nowsza wersja pliku
+  RCN, raport miast); wspólne: wyszukiwarka, „Wróć do pracy”, „Pierwsze
+  kroki”, diagnostyka, przywracanie kopii, stopka wydruków; tabela „Gdzie
+  co jest w kodzie” uzupełniona o nowe pliki
+- PORTFOLIO: moduły i umiejętności, zasady (import/eksport GIS i CAD),
+  liczby (stan: ETAP 149 — 16,5 tys. wierszy Pythona, 554 testy, pokrycie
+  95%, 75 stron w przeglądzie), dwa nowe zrzuty do zrobienia, English summary
+- Pomoc: wpisy do funkcji z ETAPów 120–148 dodawane na bieżąco — sprawdzone
+- `DECISIONS.md`: D-157

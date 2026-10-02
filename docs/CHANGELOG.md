@@ -901,3 +901,6 @@
 
 ## ETAP 148 — 2026-10-02
 - Przegląd stron z danymi; wyszukiwarka przepisów: „plan” znajduje „planu”; odmiana „karta/karty/kart”
+
+## ETAP 149 — 2026-10-02
+- Dokumentacja: README i portfolio po ETAPach 120–148
