@@ -3129,3 +3129,18 @@ zeszło do jednego miejsca.
 - Dłuższe przechowywanie statycznych plików w pamięci przeglądarki
   (`SEND_FILE_MAX_AGE_DEFAULT`) — lokalnie zysk znikomy, a po aktualizacji
   stary CSS/JS zostawałby w przeglądarce.
+
+## D-152 — Pokrycie mierzone doraźnie, bez progu w testach
+Data: 2026-10-02
+
+**Decyzja:** `coverage` uruchamiamy z osobnego środowiska przy przeglądach
+(instrukcja w README), nie dodajemy go do `requirements.txt` ani nie
+ustawiamy progu, poniżej którego testy „nie przechodzą”.
+
+**Uzasadnienie:** Liczba procent sama nie mówi, czy testy sprawdzają to, co
+ważne — przegląd luk pokazał np. nieprzetestowany parser odpowiedzi modelu,
+a to on decyduje, co trafia do fiszki. Próg kusiłby testami „dla procentu”.
+
+**Odrzucone alternatywy:**
+- pytest-cov w zależnościach — kolejny pakiet w instalacji użytkownika
+  tylko dla narzędzia deweloperskiego.

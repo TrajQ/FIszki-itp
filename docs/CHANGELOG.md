@@ -886,3 +886,6 @@
 
 ## ETAP 143 — 2026-10-02
 - Wydajność: start aplikacji o połowę szybszy (Gemini ładowane przy pierwszym użyciu)
+
+## ETAP 144 — 2026-10-02
+- Testy: warstwa Gemini, mapy druku Atlasu, import obszaru, aktualizacja (pokrycie 95%)

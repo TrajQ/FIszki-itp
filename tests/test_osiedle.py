@@ -459,3 +459,34 @@ def test_dxf_koncepcji(client):
     assert client.get(f"/osiedle/koncepcje/{k['id']}.dxf?uklad=wgs84").status_code == 400
     pusta = client.post("/osiedle/koncepcje", json={"nazwa": "Pusta"}).get_json()
     assert _pary_dxf(client.get(f"/osiedle/koncepcje/{pusta['id']}.dxf").get_data(as_text=True))[-1] == ("  0", "EOF")
+
+
+def test_obszar_z_geojson_przypadki_brzegowe():
+    """ETAP 144: formy pliku i błędy rozpoznawania układu (bez trasy)."""
+    from mpzp.uklady import pl2000
+    from osiedle.obszar_z_pliku import MAKS_OBIEKTOW, obszar_z_geojson
+
+    kwadrat = prostokat(0, 0, 100, 100, "x")
+    # pojedynczy Feature, crs CRS84 i EPSG:4326 → WGS84
+    assert obszar_z_geojson(kwadrat)[1] == "WGS84"
+    for nazwa in ("urn:ogc:def:crs:OGC:1.3:CRS84", "EPSG:4326"):
+        assert obszar_z_geojson({**kolekcja(kwadrat), "crs": {"type": "name", "properties": {"name": nazwa}}})[1] == "WGS84"
+    # MultiPolygon i wielobok z dziurą zostają powierzchnią
+    multi = {"type": "MultiPolygon", "coordinates": [kwadrat["geometry"]["coordinates"], prostokat(200, 0, 50, 50, "x")["geometry"]["coordinates"]]}
+    assert obszar_z_geojson(multi)[0].geom_type == "MultiPolygon"
+    for zly, komunikat in [
+        ([1, 2], "nie jest plik"),
+        ({"type": "FeatureCollection", "features": "x"}, "nie jest plik"),
+        (kolekcja(*[kwadrat] * (MAKS_OBIEKTOW + 1)), "Najwyżej"),
+        ({"type": "Polygon", "coordinates": [[[1, 2]]]}, "Uszkodzona"),
+        ({"type": "Polygon", "coordinates": []}, "puste"),
+        # wschód 9 xxx xxx — strefa PL-2000 „9” nie istnieje
+        ({"type": "Polygon", "crs": {"type": "name", "properties": {"name": "EPSG:2178"}},
+          "coordinates": [[[9_400_000, 5_550_000], [9_400_100, 5_550_000], [9_400_100, 5_550_100], [9_400_000, 5_550_000]]]}, "strefy PL-2000"),
+    ]:
+        with pytest.raises(BladKoncepcji, match=komunikat):
+            obszar_z_geojson(zly)
+    # PL-2000 rozpoznany po liczbach (bez crs)
+    s = pl2000(52.4, 16.9)
+    e, n = s["y"], s["x"]
+    assert obszar_z_geojson({"type": "Polygon", "coordinates": [[[e, n], [e + 50, n], [e + 50, n + 50], [e, n]]]})[1] == "PL-2000"

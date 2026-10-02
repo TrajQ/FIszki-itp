@@ -29,6 +29,8 @@ Postęp prac: [docs/PROGRESS.md](docs/PROGRESS.md), decyzje:
 
 Testy: `.venv/bin/python -m pytest -q`
 
+Pokrycie (doraźnie, bez dodawania zależności): `python3 -m venv --system-site-packages /tmp/cov && /tmp/cov/bin/pip install coverage && /tmp/cov/bin/coverage run --source=. --omit='tests/*' -m pytest -q && /tmp/cov/bin/coverage report --sort=cover`
+
 ## Gdzie co jest w kodzie
 
 Każdy moduł to osobny katalog z blueprintem Flaska. Plik `routes.py`

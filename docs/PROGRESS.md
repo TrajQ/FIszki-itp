@@ -2506,3 +2506,22 @@ Status: zamknięty
 - Test: start nie ładuje `google.genai`; test opisu gminy podmienia
   klienta w `google.genai`
 - `DECISIONS.md`: D-151
+
+## ETAP 144 — Testy: pokrycie i luki
+Data: 2026-10-02
+Status: zamknięty
+
+- Pomiar `coverage` (osobne środowisko, nie zależność projektu): 94% →
+  95% instrukcji; najsłabszy plik 48% → 85%
+- `tests/test_gemini.py`: warstwa Gemini z udawanym klientem —
+  co trafia do modelu (treść, instrukcja, JSON), parser „PYTANIE/ODPOWIEDZ”
+  (wcześniej bez testu), listy fiszek, odrzucanie obcych liczb, błąd API
+  → BladGemini, brak klucza we wszystkich 6 funkcjach
+- Atlas: mapa do druku w trybie zmiany i LISA (siatka 3×3 gmin);
+  w teście czyszczony cache sąsiedztwa per województwo
+- Osiedle: przypadki brzegowe importu obszaru (Feature, MultiPolygon,
+  CRS84, za dużo obiektów, uszkodzona geometria, zła strefa PL-2000)
+- Aktualizacja: zapis sumy requirements jak w `uruchom.sh`, nieudany pip,
+  port z `.env`
+- Instrukcja pomiaru w README
+- `DECISIONS.md`: D-152

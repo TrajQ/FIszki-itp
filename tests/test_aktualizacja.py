@@ -7,6 +7,8 @@ import pytest
 
 import aktualizacja as akt
 
+PRAWDZIWE_ZALEZNOSCI = akt.zaleznosci  # fikstura `projekt` je podmienia
+
 
 def zrob_zip(sciezka, pliki: dict[str, str]):
     with zipfile.ZipFile(sciezka, "w") as z:
@@ -83,3 +85,41 @@ def test_brak_zipa_i_zepsuty_zip(projekt, tmp_path, capsys):
     zepsuty.write_bytes(b"PK\x03\x04niepelne")
     assert akt.main([str(zepsuty)], katalog=str(projekt), dom=str(tmp_path)) == 1
     assert "niepełne pobieranie" in capsys.readouterr().out
+
+
+# ---------- ETAP 144: zależności i port ----------
+
+
+def _udawany_pip(katalog, kod_wyjscia: int):
+    """.venv/bin/pip jako skrypt powłoki — zapisuje argumenty i kończy się podanym kodem."""
+    pip = katalog / ".venv" / "bin" / "pip"
+    pip.parent.mkdir(parents=True)
+    pip.write_text(f'#!/bin/sh\necho "$@" > "{katalog}/pip_argumenty.txt"\nexit {kod_wyjscia}\n')
+    pip.chmod(0o755)
+
+
+def test_zaleznosci_zapisuja_sume_jak_uruchom_sh(tmp_path, capsys):
+    import hashlib
+    (tmp_path / "requirements.txt").write_text("flask\n")
+    PRAWDZIWE_ZALEZNOSCI(str(tmp_path))
+    assert "Brak .venv" in capsys.readouterr().out  # bez .venv tylko podpowiedź
+    _udawany_pip(tmp_path, 0)
+    PRAWDZIWE_ZALEZNOSCI(str(tmp_path))
+    assert "-r" in (tmp_path / "pip_argumenty.txt").read_text()
+    assert (tmp_path / ".venv" / ".requirements.sha256").read_text().strip() == hashlib.sha256(b"flask\n").hexdigest()
+
+
+def test_nieudana_instalacja_zaleznosci(projekt, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(akt, "zaleznosci", PRAWDZIWE_ZALEZNOSCI)
+    (projekt / "requirements.txt").write_text("flask\n")
+    _udawany_pip(projekt, 1)
+    sciezka = zrob_zip(tmp_path / "warsztat_etap99.zip", {"warsztat/app.py": "nowa", "warsztat/requirements.txt": "flask\n"})
+    assert akt.main([sciezka], katalog=str(projekt), dom=str(tmp_path)) == 1
+    assert "instalacja zależności się nie udała" in capsys.readouterr().out
+    assert (projekt / "app.py").read_text() == "nowa"  # pliki już podmienione — komunikat mówi, co dalej
+
+
+def test_port_z_env(tmp_path):
+    assert akt.port_z_env(str(tmp_path)) == 5000  # bez .env — domyślny
+    (tmp_path / ".env").write_text("GEMINI_API_KEY=x\nPORT=5123\n")
+    assert akt.port_z_env(str(tmp_path)) == 5123

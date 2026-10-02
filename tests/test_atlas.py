@@ -857,8 +857,35 @@ def test_endpoint_mapy_do_druku(client, monkeypatch):
     assert "attachment" in pobranie.headers["Content-Disposition"]
     assert client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=zmiana").status_code == 400  # bez roku bazowego
     assert client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=cos").status_code == 400
+    # ETAP 144: mapa zmiany i klastrów LISA do druku
+    zmiana = client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=zmiana&rok_bazowy=2013")
+    assert zmiana.status_code == 200
+    svg = zmiana.get_data(as_text=True)
+    assert "Zmiana 2013–2023" in svg and "Zmiana wartości" in svg and "%" in svg
+    lisa = client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=lisa")  # dwie gminy to za mało na autokorelację
+    assert lisa.status_code == 400 and "co najmniej 5" in lisa.get_json()["blad"]
     strona = client.get(f"/atlas/druk?{ZAPYTANIE}&tryb=wartosc").get_data(as_text=True)
     assert "Pobierz SVG" in strona and "mapa.svg?" in strona
+
+
+def test_mapa_lisa_do_druku(client, monkeypatch):
+    """ETAP 144: kartogram klastrów LISA — siatka 3 × 3 gmin, bogaty róg."""
+    siatka = [(f"12{i:02d}011", i % 3, i // 3) for i in range(9)]
+    cechy = [{"type": "Feature", "properties": {"teryt": t, "nazwa": f"Gmina {t}"},
+              "geometry": {"type": "Polygon", "coordinates": [[[19 + x, 50 + y], [20 + x, 50 + y], [20 + x, 51 + y], [19 + x, 51 + y], [19 + x, 50 + y]]]}}
+             for t, x, y in siatka]
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {"type": "FeatureCollection", "features": cechy})
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", lambda z, rok, woj: [
+        bdl.Wartosc(f"0112{t}", t, f"Gmina {t}", float(100 - 10 * (x + y))) for t, x, y in siatka])
+    # sąsiedztwo gmin jest pamiętane per województwo na czas działania aplikacji —
+    # inne testy liczyły je dla innych „granic” tego samego województwa
+    atlas_routes._sasiedzi_wojewodztw.clear()
+    odp = client.get(f"/atlas/mapa.svg?{ZAPYTANIE}&tryb=lisa")
+    atlas_routes._sasiedzi_wojewodztw.clear()
+    assert odp.status_code == 200
+    svg = odp.get_data(as_text=True)
+    assert "Klastry LISA (p &lt; 0,05)" in svg or "Klastry LISA (p < 0,05)" in svg
+    assert "I Morana = 0," in svg and "permutacji), sąsiedztwo queen." in svg
 
 
 # ---------- ETAP 52: na tle kraju ----------
