@@ -12,7 +12,7 @@ import csv
 import io
 from dataclasses import asdict
 
-from flask import Blueprint, Response, jsonify, render_template, request
+from flask import Blueprint, Response, jsonify, render_template, request, url_for
 
 from dane import bdl
 from dane.bdl import BladBDL
@@ -193,6 +193,23 @@ def porownanie_csv():
         )
 
     return _obsluz_bledy(plik)
+
+
+# ---------- wyszukiwarka globalna (ETAP 128) ----------
+
+
+def wyszukaj(fraza: str) -> list[dict]:
+    """Zaimportowane pliki RCN i narysowane w nich obszary (dzielnice)."""
+    szukane = fraza.casefold()
+    wyniki = []
+    for p in baza.pliki_rcn():
+        url = url_for("ceny.transakcje", plik=p["id"])
+        if szukane in p["nazwa"].casefold():
+            wyniki.append({"tytul": p["nazwa"], "opis": f"plik RCN: {p['liczba']} lokali, {p['liczba_dzialek']} działek", "url": url})
+        for o in baza.obszary_rcn(p["id"]):
+            if szukane in o["nazwa"].casefold():
+                wyniki.append({"tytul": o["nazwa"], "opis": f"obszar porównania w pliku {p['nazwa']}", "url": url})
+    return wyniki[:10]
 
 
 from . import trasy_rcn  # noqa: E402, F401

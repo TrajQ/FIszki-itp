@@ -730,6 +730,8 @@
     } catch (e) {
         // bez localStorage zaczynamy od listy
     }
+    // ETAP 128: link z wyszukiwarki otwiera wskazaną koncepcję (?koncepcja=<id>)
+    ostatnia = new URLSearchParams(location.search).get("koncepcja") || ostatnia;
     // Najpierw lista projektów terenowych — otwarta koncepcja ustawia z niej swój wybór.
     wczytajProjektyTerenu().then(() => wczytajListe(ostatnia).catch(() => wczytajListe().catch((e) => pokazKomunikat(e.message))));
 

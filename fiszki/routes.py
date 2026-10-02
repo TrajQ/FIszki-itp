@@ -336,3 +336,21 @@ def usun_pdf(pdf_id):
 # Pozostałe trasy modułu — w osobnych plikach, rejestrują się na fiszki_bp.
 # Import na końcu, bo tamte pliki importują fiszki_bp z tego modułu.
 from . import trasy_nauka, trasy_telefon, trasy_wymiana  # noqa: E402, F401
+
+
+# ---------- wyszukiwarka globalna (ETAP 128) ----------
+
+MAKS_WYNIKOW_GLOBALNYCH = 10
+
+
+def wyszukaj(fraza: str) -> list[dict]:
+    """Fiszki z frazą w pytaniu, odpowiedzi albo fragmencie (bez wielkości liter)."""
+    szukane = fraza.casefold()
+    wyniki = []
+    for f in _fiszki_do_eksportu():
+        if szukane in " ".join((f["pytanie"], f["odpowiedz"], f["fragment_tekstu"] or "")).casefold():
+            wyniki.append({"tytul": f["pytanie"], "opis": f"{f['nazwa_oryginalna']}, s. {f['strona']} — {f['odpowiedz'][:120]}",
+                           "url": url_for("fiszki.widok_pdf", pdf_id=f["pdf_id"])})
+            if len(wyniki) == MAKS_WYNIKOW_GLOBALNYCH:
+                break
+    return wyniki

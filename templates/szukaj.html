@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block tytul %}{{ ('„' ~ fraza ~ '” — ') if fraza }}Szukaj — Warsztat{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Szukaj</h1>
+        <p>W fiszkach, przepisach, zapisanych działkach, koncepcjach osiedli, projektach terenowych i plikach cen — naraz.</p>
+    </div>
+</div>
+
+<form class="karta rzad szukaj-globalnie" method="get" action="{{ url_for('szukaj') }}" role="search">
+    <input type="search" name="q" value="{{ fraza }}" placeholder="np. intensywność zabudowy, Kazimierz, 123/4" aria-label="Czego szukasz" minlength="2" required autofocus>
+    <button type="submit">Szukaj</button>
+</form>
+
+{% if fraza and fraza | length < 2 %}
+<p class="karta wyciszony">Wpisz co najmniej 2 znaki.</p>
+{% elif fraza %}
+{% if not grupy and not bledy %}
+<p class="karta wyciszony">Nic nie znaleziono dla „{{ fraza }}”.</p>
+{% endif %}
+{% for g in grupy %}
+<section class="karta stos">
+    <h3>{{ g.nazwa }} <span class="wyciszony">{{ g.wyniki | length }}{{ '+' if g.wyniki | length >= 10 }}</span></h3>
+    <ul class="wyniki-globalne">
+        {% for w in g.wyniki %}
+        <li><a href="{{ w.url }}">{{ w.tytul }}</a><div class="wyciszony">{{ w.opis }}</div></li>
+        {% endfor %}
+    </ul>
+</section>
+{% endfor %}
+{% if bledy %}<p class="wyciszony">Nie udało się przeszukać: {{ bledy | join(', ') }} (szczegóły w diagnostyce).</p>{% endif %}
+{% endif %}
+{% endblock %}

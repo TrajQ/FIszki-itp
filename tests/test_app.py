@@ -304,3 +304,37 @@ def test_dziennik_bledow(tmp_path):
     # kolejna aplikacja (np. w testach) zastępuje plik dziennika, nie dokłada drugiego
     create_app(instance_path=str(tmp_path / "inna"))
     assert sum(1 for h in app.logger.handlers if getattr(h, "warsztat", False)) == 1
+
+
+# ---------- ETAP 128: wyszukiwarka globalna ----------
+
+
+def test_wyszukiwarka_globalna(tmp_path, monkeypatch):
+    app = create_app(instance_path=str(tmp_path))
+    with app.app_context():
+        from ceny import baza as ceny_baza
+        from osiedle import baza as osiedle_baza
+        from przepisy import baza as przepisy_baza
+        from teren import baza as teren_baza
+
+        osiedle_baza.utworz("Kazimierz — wariant A")
+        teren_baza.utworz_projekt("Inwentaryzacja Kazimierza", [])
+        przepisy_baza.dodaj_akt("Ustawa o planowaniu", "u.pdf", 1, [
+            {"oznaczenie": "Art. 15", "naglowek": None, "strona_od": 1, "strona_do": 1, "tekst": "Art. 15. Maksymalna intensywność zabudowy na Kazimierzu."}])
+        plik_id = ceny_baza.zapisz_plik_rcn("krakow.gpkg", [], {})
+        ceny_baza.dodaj_obszar_rcn(plik_id, "Kazimierz", {"type": "Polygon", "coordinates": [[[19.9, 50.0], [20.0, 50.0], [20.0, 50.1], [19.9, 50.0]]]})
+    with app.test_client() as c:
+        html = c.get("/szukaj?q=kazimier").get_data(as_text=True)
+        for oczekiwane in ("Kazimierz — wariant A", "/osiedle/?koncepcja=1", "Inwentaryzacja Kazimierza", "/teren/projekty/1",
+                           "Art. 15 — Ustawa o planowaniu", "/przepisy/akty/1#j", "obszar porównania w pliku krakow.gpkg", "/ceny/transakcje?plik=1"):
+            assert oczekiwane in html, oczekiwane
+        assert "\x02" not in html  # znaczniki trafień z wyszukiwarki przepisów usunięte
+        assert "Nic nie znaleziono" in c.get("/szukaj?q=zzzzqqq").get_data(as_text=True)
+        assert "co najmniej 2 znaki" in c.get("/szukaj?q=a").get_data(as_text=True)  # za krótka fraza — bez szukania
+        # błąd jednego modułu nie blokuje pozostałych
+        import teren.routes
+
+        monkeypatch.setattr(teren.routes, "wyszukaj", lambda fraza: 1 / 0)
+        html = c.get("/szukaj?q=kazimier").get_data(as_text=True)
+        assert "Nie udało się przeszukać: Teren" in html and "Kazimierz — wariant A" in html
+        assert 'href="/szukaj"' in c.get("/pomoc").get_data(as_text=True)  # link w nawigacji

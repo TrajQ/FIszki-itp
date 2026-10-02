@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from flask import Blueprint, Response, abort, jsonify, render_template, request
+from flask import Blueprint, Response, abort, jsonify, render_template, request, url_for
 from shapely.errors import GEOSException
 from shapely.geometry import Point, mapping
 
@@ -560,3 +560,18 @@ def porownanie():
 # Pozostałe trasy modułu — w osobnych plikach, rejestrują się na mpzp_bp.
 # Import na końcu, bo tamte pliki importują mpzp_bp z tego modułu.
 from . import trasy_kronika, trasy_narzedzia, trasy_zapisane  # noqa: E402, F401
+
+
+# ---------- wyszukiwarka globalna (ETAP 128) ----------
+
+
+def wyszukaj(fraza: str) -> list[dict]:
+    """Zapisane działki („Moje działki”): numer, przeznaczenie, notatka."""
+    szukane = fraza.casefold()
+    wyniki = []
+    for d in zapisane():
+        if szukane in " ".join((d["dzialka_id"], d["przeznaczenie"] or "", d["notatka"] or "")).casefold():
+            opis = ", ".join(x for x in (d["przeznaczenie"], d["notatka"][:120] if d["notatka"] else None) if x)
+            wyniki.append({"tytul": f"Działka {d['dzialka_id']}", "opis": opis or "zapisana działka",
+                           "url": url_for("mpzp.raport", id=d["dzialka_id"])})
+    return wyniki[:10]

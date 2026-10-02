@@ -832,3 +832,6 @@
 ## ETAP 127 — 2026-10-01
 - Błędy aplikacji zapisują się w pliku (`instance/logi/`) i są widoczne w
   Diagnostyce — zostają po zamknięciu okna terminala
+
+## ETAP 128 — 2026-10-02
+- Wyszukiwarka globalna (⌕ Szukaj w menu) — wszystkie moduły naraz

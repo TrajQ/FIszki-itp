@@ -316,3 +316,16 @@ def fiszki_z_jednostki(jednostka_id):
             return jsonify({"blad": str(e)}), 400
         pdf_id = wynik["pdf_id"]
     return jsonify({"dodane": len(wybrane), "url": url_for("fiszki.widok_pdf", pdf_id=pdf_id)}), 201
+
+
+# ---------- wyszukiwarka globalna (ETAP 128) ----------
+
+
+def wyszukaj(fraza: str) -> list[dict]:
+    """Jednostki aktów (wyszukiwarka pełnotekstowa modułu), najlepsze pierwsze."""
+    return [
+        {"tytul": f"{w['oznaczenie']} — {w['nazwa_aktu']}",
+         "opis": w["podglad"].replace(baza.ZNACZNIK_OD, "").replace(baza.ZNACZNIK_DO, ""),
+         "url": url_for("przepisy.widok_aktu", akt_id=w["akt_id"]) + f"#j{w['id']}"}
+        for w in baza.szukaj(fraza)[:10]
+    ]

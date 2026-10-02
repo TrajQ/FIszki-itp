@@ -800,3 +800,23 @@ input[type="file"]::file-selector-button {
     font-size: 12px;
     white-space: pre-wrap;
 }
+
+/* ---------- wyszukiwarka globalna (ETAP 128) ---------- */
+
+.szukaj-globalnie input {
+    flex: 1;
+    min-width: 0;
+}
+
+.wyniki-globalne {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.wyniki-globalne .wyciszony {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}

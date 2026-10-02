@@ -129,6 +129,32 @@ def create_app(instance_path=None):
         """Krótkie przepisy „jak zrobić…” dla każdego modułu (ETAP 87)."""
         return render_template("pomoc.html")
 
+    @app.route("/szukaj")
+    def szukaj():
+        """Wyszukiwarka globalna (ETAP 128): każdy moduł przeszukuje swoje dane
+        (funkcja wyszukaj w routes modułu), tu tylko zbieramy wyniki."""
+        from ceny.routes import wyszukaj as w_cenach
+        from fiszki.routes import wyszukaj as w_fiszkach
+        from mpzp.routes import wyszukaj as w_mpzp
+        from osiedle.routes import wyszukaj as w_osiedlu
+        from przepisy.routes import wyszukaj as w_przepisach
+        from teren.routes import wyszukaj as w_terenie
+
+        fraza = " ".join((request.args.get("q") or "").split())[:100]
+        grupy, bledy = [], []
+        if len(fraza) >= 2:
+            for nazwa, funkcja in [("Fiszki", w_fiszkach), ("Przepisy", w_przepisach), ("MPZP — moje działki", w_mpzp),
+                                   ("Osiedle", w_osiedlu), ("Teren", w_terenie), ("Ceny", w_cenach)]:
+                try:
+                    wyniki = funkcja(fraza)
+                except Exception:
+                    app.logger.exception("Wyszukiwarka: błąd w module %s", nazwa)
+                    bledy.append(nazwa)
+                    continue
+                if wyniki:
+                    grupy.append({"nazwa": nazwa, "wyniki": wyniki})
+        return render_template("szukaj.html", fraza=fraza, grupy=grupy, bledy=bledy)
+
     @app.route("/diagnostyka")
     def diagnostyka():
         """Stan konfiguracji, danych i wersji (ETAP 126); usługi — na żądanie."""

@@ -302,3 +302,16 @@ def raport_projektu(projekt_id):
         od=min(czasy) if czasy else None,
         do=max(czasy) if czasy else None,
     )
+
+
+# ---------- wyszukiwarka globalna (ETAP 128) ----------
+
+
+def wyszukaj(fraza: str) -> list[dict]:
+    """Projekty inwentaryzacji po nazwie."""
+    szukane = fraza.casefold()
+    return [
+        {"tytul": p["nazwa"], "opis": f"projekt terenowy, {p['liczba_punktow']} punktów",
+         "url": url_for("teren.widok_projektu", projekt_id=p["id"])}
+        for p in baza.projekty() if szukane in p["nazwa"].casefold()
+    ][:10]

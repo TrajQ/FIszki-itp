@@ -20,6 +20,7 @@
                        class="{{ 'aktywny' if request.blueprint == modul }}">{{ nazwa }}</a>
                 </li>
                 {% endfor %}
+                <li><a href="{{ url_for('szukaj') }}" class="{{ 'aktywny' if request.endpoint == 'szukaj' }}" title="Szukaj we wszystkich modułach" aria-label="Szukaj">⌕ Szukaj</a></li>
                 <li><a href="{{ url_for('pomoc') }}" class="{{ 'aktywny' if request.endpoint == 'pomoc' }}" title="Jak zrobić…">Pomoc</a></li>
             </ul>
         </nav>

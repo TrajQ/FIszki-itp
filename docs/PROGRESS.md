@@ -2245,3 +2245,19 @@ Status: zamknięty
 - Sprawdzone: nieobsłużony wyjątek strony (500) trafia do pliku z pełnym
   tracebackiem, a nadal widać go w terminalu
 - `DECISIONS.md`: D-135
+
+## ETAP 128 — Wyszukiwarka globalna
+Data: 2026-10-02
+Status: zamknięty
+
+- Każdy moduł ma `wyszukaj(fraza)` (najwyżej 10 wyników `{tytul, opis,
+  url}`): fiszki (pytanie, odpowiedź, fragment), przepisy (wyszukiwarka
+  pełnotekstowa modułu, bez znaczników trafień), MPZP (zapisane działki →
+  karta działki), osiedle (koncepcje → edytor), teren (projekty), ceny
+  (pliki RCN i narysowane obszary)
+- `app.py`: strona `/szukaj` zbiera wyniki jak strona główna podsumowania
+  — błąd jednego modułu trafia do dziennika i nie blokuje reszty
+- Osiedle otwiera koncepcję z adresu `?koncepcja=<id>`
+- Menu: „⌕ Szukaj”; pole z fokusem; fraza od 2 znaków
+- Sprawdzone w przeglądarce (1300 i 390 px): wynik → otwarta koncepcja
+- `DECISIONS.md`: D-136

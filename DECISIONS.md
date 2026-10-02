@@ -2836,3 +2836,21 @@ powiedzieć, co się stało. Rotacja chroni dysk.
 - Dziennik w bazie SQLite — błąd bazy uniemożliwiłby zapis błędu.
 - Dziennik w kopii zapasowej — to nie dane użytkownika, a może zawierać
   ścieżki z komputera.
+
+## D-136 — Wyszukiwarka globalna: funkcja w każdym module, zbieranie w app.py
+Data: 2026-10-02
+
+**Decyzja:** Każdy moduł przeszukuje swoje dane własną funkcją
+`wyszukaj(fraza)` (ten sam wzorzec co `podsumowanie()` dla strony
+głównej) i zwraca proste wyniki z adresem; `app.py` je zbiera i grupuje.
+Przepisy używają istniejącej wyszukiwarki pełnotekstowej, reszta —
+zawierania frazy bez wielkości liter. Bez wspólnego indeksu.
+
+**Uzasadnienie:** Moduły zostają niezależne (osobne bazy), a nowy moduł
+dokłada jedną funkcję. Przy danych jednej osoby (setki rekordów) prosty
+przegląd jest natychmiastowy.
+
+**Odrzucone alternatywy:**
+- Wspólny indeks FTS dla wszystkich modułów — synchronizacja przy każdej
+  zmianie w każdym module.
+- Wyszukiwanie gmin w BDL — wymaga sieci; Atlas ma własny wybór gminy.

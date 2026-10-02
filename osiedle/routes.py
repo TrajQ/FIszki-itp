@@ -2,7 +2,7 @@
 
 import json
 
-from flask import Blueprint, Response, abort, jsonify, render_template, request
+from flask import Blueprint, Response, abort, jsonify, render_template, request, url_for
 from shapely.geometry import mapping
 from shapely.ops import unary_union
 from werkzeug.utils import secure_filename
@@ -176,3 +176,16 @@ def eksport_geojson(koncepcja_id):
 # Raport, szkic i porównanie — w osobnym pliku, rejestruje się na osiedle_bp.
 # Import na końcu, bo tamten plik importuje osiedle_bp z tego modułu.
 from . import trasy_druk  # noqa: E402, F401
+
+
+# ---------- wyszukiwarka globalna (ETAP 128) ----------
+
+
+def wyszukaj(fraza: str) -> list[dict]:
+    """Koncepcje po nazwie; link otwiera koncepcję w edytorze (?koncepcja=)."""
+    szukane = fraza.casefold()
+    return [
+        {"tytul": k["nazwa"], "opis": f"koncepcja osiedla, zmieniona {k['data_zmiany'][:10]}",
+         "url": url_for("osiedle.index", koncepcja=k["id"])}
+        for k in baza.lista() if szukane in k["nazwa"].casefold()
+    ][:10]
