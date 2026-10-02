@@ -2353,3 +2353,16 @@ Status: zamknięty
 - Strona projektu: opis importu, komunikat z niedopasowanymi atrybutami
 - Sprawdzone w przeglądarce (5 punktów, ponowny import w teście)
 - `DECISIONS.md`: D-141
+
+## ETAP 134 — Teren: nowy projekt na wzór istniejącego
+Data: 2026-10-02
+Status: zamknięty
+
+- Trasa POST `/teren/projekty/<id>/podobny`: nowy projekt „<nazwa>
+  (kopia)” z tymi samymi polami, rodzajem i obszarem mapy offline; bez
+  punktów i terminu; nowy klucz pliku z telefonu (pliki z dwóch projektów
+  się nie pomylą)
+- Przycisk „Utwórz podobny” na stronie projektu
+- Test: pola, rodzaj, obszar skopiowane; punkty nie; osobny klucz; 404
+- Przegląd stron: 69 stron, 0 problemów
+- `DECISIONS.md`: D-142

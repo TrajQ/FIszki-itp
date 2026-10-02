@@ -93,6 +93,17 @@ def nowy_projekt():
     return redirect(url_for("teren.widok_projektu", projekt_id=baza.utworz_projekt(nazwa, pola, rodzaj)))
 
 
+@teren_bp.route("/projekty/<int:projekt_id>/podobny", methods=["POST"])
+def podobny_projekt(projekt_id):
+    """ETAP 134: nowy projekt z tymi samymi polami, rodzajem i obszarem mapy — bez punktów i terminu."""
+    p = _projekt_albo_404(projekt_id)
+    nazwa = f"{p['nazwa']} (kopia)"[:MAKS_DLUGOSC_NAZWY]
+    nowy = baza.utworz_projekt(nazwa, p["pola"], p.get("rodzaj") or "inwentaryzacja")
+    if p.get("obszar"):
+        baza.ustaw_obszar(nowy, p["obszar"])
+    return redirect(url_for("teren.widok_projektu", projekt_id=nowy))
+
+
 @teren_bp.route("/projekty/<int:projekt_id>/rodzaj", methods=["POST"])
 def ustaw_rodzaj(projekt_id):
     """Inwentaryzacja albo ankieta (ETAP 93) — zmienia wygląd formularza na telefon i raportu."""

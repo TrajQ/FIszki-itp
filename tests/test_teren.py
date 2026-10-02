@@ -440,3 +440,26 @@ def test_import_geojson_przez_trase(client):
     assert (wynik["dodane"], wynik["pominiete"], wynik["niedopasowane"]) == (2, 0, ["nazwa_z_qgis"])
     ponownie = client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(dane), "punkty.geojson")}, content_type="multipart/form-data").get_json()
     assert (ponownie["dodane"], ponownie["pominiete"]) == (0, 2)
+
+
+# ---------- ETAP 134: projekt jako wzór ----------
+
+
+def test_podobny_projekt(client):
+    client.post("/teren/projekty", data={"nazwa": "Ławki — Rynek", "wzor": "lawki"})
+    client.post("/teren/projekty/1/rodzaj", data={"rodzaj": "ankieta"})
+    with client.application.app_context():
+        from teren import baza
+        baza.ustaw_obszar(1, [52.40, 16.92, 52.41, 16.94])
+        baza.zapisz_punkty(1, [{"uid": "abcdefgh1", "lat": 52.405, "lng": 16.93, "dokladnosc_m": 3, "czas": "2026-09-30T10:00:00",
+                                "wartosci": {}, "uwagi": "", "zdjecie": None}])
+    odp = client.post("/teren/projekty/1/podobny")
+    assert odp.status_code == 302 and odp.headers["Location"].endswith("/teren/projekty/2")
+    with client.application.app_context():
+        from teren import baza
+        stary, nowy = baza.projekt(1), baza.projekt(2)
+        assert nowy["nazwa"] == "Ławki — Rynek (kopia)" and nowy["pola"] == stary["pola"] and nowy["rodzaj"] == "ankieta"
+        assert nowy["obszar"] == stary["obszar"] and nowy["klucz"] != stary["klucz"]  # osobny klucz pliku z telefonu
+        assert baza.punkty(2) == [] and len(baza.punkty(1)) == 1
+    assert client.post("/teren/projekty/99/podobny").status_code == 404
+    assert "Utwórz podobny" in client.get("/teren/projekty/1").get_data(as_text=True)

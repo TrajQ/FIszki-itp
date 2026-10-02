@@ -856,3 +856,6 @@
 ## ETAP 133 — 2026-10-02
 - Teren: import punktów z GeoJSON (np. z QGIS) — atrybuty do pól projektu
 - Pomoc: opis
+
+## ETAP 134 — 2026-10-02
+- Teren: „Utwórz podobny” — nowy projekt z polami i obszarem istniejącego

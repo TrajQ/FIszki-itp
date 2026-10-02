@@ -20,6 +20,9 @@
         <a class="przycisk przycisk--drugi" href="{{ url_for('teren.raport_projektu', projekt_id=projekt.id) }}">Raport do druku</a>
         <a class="przycisk przycisk--drugi" href="{{ url_for('teren.eksport_geojson', projekt_id=projekt.id) }}" title="Punkty z położeniem — przeciągnij do QGIS">GeoJSON</a>
         <a class="przycisk przycisk--drugi" href="{{ url_for('teren.eksport_csv', projekt_id=projekt.id) }}">CSV</a>
+        <form method="post" action="{{ url_for('teren.podobny_projekt', projekt_id=projekt.id) }}" title="Nowy projekt z tymi samymi polami, rodzajem i obszarem mapy — bez punktów">
+            <button type="submit" class="przycisk--tekst">Utwórz podobny</button>
+        </form>
     </div>
 </div>
 

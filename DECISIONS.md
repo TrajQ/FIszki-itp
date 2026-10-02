@@ -2949,3 +2949,19 @@ gorsza niż zapis w uwagach.
   operacji; zmiana nazwy atrybutu w QGIS jest prosta.
 - Przeliczanie z PL-1992/PL-2000 — GeoJSON (RFC 7946) jest w WGS84;
   QGIS zapisuje go tak domyślnie.
+
+## D-142 — Projekt podobny: kopiujemy definicję, nie dane
+Data: 2026-10-02
+
+**Decyzja:** „Utwórz podobny” kopiuje to, co opisuje formularz (pola,
+rodzaj, obszar mapy), a nie wyniki (punkty, zdjęcia) ani termin. Nowy
+projekt ma własny klucz, więc plik z telefonu z jednego projektu nie da
+się zaimportować do drugiego.
+
+**Uzasadnienie:** Powtarzalne inwentaryzacje (ten sam formularz w innym
+kwartale, kolejny rok) wymagały dotąd ręcznego przepisywania pól.
+
+**Odrzucone alternatywy:**
+- Kopiowanie z punktami — mieszałoby pomiary z różnych terminów.
+- Osobna biblioteka „szablonów” — wzorce wbudowane już są; projekt jako
+  wzór wystarcza bez nowego miejsca w interfejsie.
