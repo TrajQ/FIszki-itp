@@ -49,7 +49,8 @@ def test_bilans_z_obszarem_nakladaniem_i_wolnym_terenem():
 def test_bilans_bez_obszaru_procent_od_sumy_i_pusty():
     b = bilans(kolekcja(prostokat(0, 0, 30, 10, "MN"), prostokat(40, 0, 10, 10, "ZP")))
     assert b["obszar_m2"] is None and [f["procent"] for f in b["funkcje"]] == [75.0, 25.0]
-    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None}
+    assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None,
+                                     "budynki": None}
 
 
 def test_teren_poza_obszarem():
@@ -533,3 +534,41 @@ def test_koszty_w_raporcie_i_porownaniu(client):
     assert "Szacunek kosztów" not in client.get(f"/osiedle/koncepcje/{ids[1]}/raport").get_data(as_text=True)
     por = client.get(f"/osiedle/porownanie?id={ids[0]}&id={ids[1]}").get_data(as_text=True)
     assert "Koszty (stawki z każdej koncepcji)" in por and "17 999" in por  # pole z geometrii — ok. 18 mln
+
+
+# ---------- ETAP 173: budynki ----------
+
+
+def test_budynki_w_bilansie():
+    rysunek = kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 60, 100, "MW"), prostokat(60, 0, 40, 100, "ZP"),
+                       prostokat(10, 10, 20, 10, "budynek", kondygnacje=5),       # na MW
+                       prostokat(10, 40, 20, 10, "budynek"),                      # domyślnie 2 kondygnacje
+                       prostokat(70, 10, 10, 10, "budynek", kondygnacje=1),       # na zieleni
+                       prostokat(97, 50, 10, 10, "budynek", kondygnacje=3))       # w 70% poza obszarem
+    b = bilans(rysunek)
+    assert {f["funkcja"] for f in b["funkcje"]} == {"MW", "ZP"}  # budynek nie jest funkcją terenu
+    assert b["kontrole"]["nakladanie_m2"] < 1  # budynki nie „nakładają się” na tereny w bilansie
+    bud = b["budynki"]
+    assert bud["liczba"] == 4 and [x["kondygnacje"] for x in bud["lista"]] == [5, 2, 1, 3]
+    assert [x["teren"] for x in bud["lista"]] == ["MW", "MW", "ZP", None]  # ostatni: głównie poza terenami
+    assert bud["zabudowa_m2"] == pytest.approx(200 + 200 + 100 + 100, rel=1e-3)
+    assert bud["calkowita_m2"] == pytest.approx(1000 + 400 + 100 + 300, rel=1e-3)
+    assert bud["poza_terenem_zabudowy"] == 2 and bud["poza_obszarem"] == 1
+    assert bilans(kolekcja(prostokat(0, 0, 10, 10, "MN")))["budynki"] is None
+    for zle in (0, 51, "dużo"):
+        with pytest.raises(BladKoncepcji):
+            bilans(kolekcja(prostokat(0, 0, 10, 10, "budynek", kondygnacje=zle)))
+
+
+def test_budynki_na_szkicu_i_w_eksporcie(client):
+    from osiedle.rysunek_svg import szkic_svg
+
+    rysunek = kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 60, 100, "MW"), prostokat(10, 10, 20, 10, "budynek", kondygnacje=4))
+    svg = szkic_svg(rysunek, numery=True)
+    assert svg.index('fill="#3a3a3c"') > svg.index('fill="#ff9f0a"')  # budynek nad terenem
+    assert svg.count("<circle") == 1  # numer tylko dla terenu (jak w tabeli cienia)
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "B"}).get_json()["id"]
+    assert client.put(f"/osiedle/koncepcje/{k}", json={"geojson": rysunek}).get_json()["bilans"]["budynki"]["liczba"] == 1
+    eksport = client.get(f"/osiedle/koncepcje/{k}.geojson").get_json()
+    assert [c["properties"].get("nazwa_funkcji") for c in eksport["features"]][-1] == "budynek"
+    assert 'value="budynek"' in client.get("/osiedle/").get_data(as_text=True)

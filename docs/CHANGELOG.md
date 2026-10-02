@@ -973,3 +973,6 @@
 
 ## ETAP 172 — 2026-10-02
 - Fiszki: luka w trybie pisania — wpis w miejscu „[…]” z porównaniem (literówka, bez polskich znaków)
+
+## ETAP 173 — 2026-10-02
+- Osiedle: budynki jako obrysy z kondygnacjami (rzut, powierzchnia całkowita, kontrole)

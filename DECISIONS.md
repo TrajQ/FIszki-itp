@@ -3626,3 +3626,24 @@ jest poprawnym synonimem; zostaje zasada „oceń się sam” z ETAPu 39
   pole jest jedno.
 - Ocena automatyczna „umiem”, gdy wpis się zgadza — mniej kontroli,
   a błąd porównania psułby harmonogram.
+
+## D-181 — Budynek jako osobny obiekt rysunku, nie funkcja terenu
+Data: 2026-10-02
+
+**Decyzja:** Budynek to obiekt rysunku z `funkcja: "budynek"`, czytany
+osobno (`wczytaj_budynki`) i pomijany przez `wczytaj_tereny`. Bilans
+terenu, program, cień i koszty liczą się dalej z terenów; budynki mają
+własne zestawienie i kontrole.
+
+**Uzasadnienie:** Budynek stoi na terenie MW/MN/U — gdyby był funkcją
+terenu, bilans liczyłby jego pole podwójnie albo „wycinał” je z terenu
+zabudowy, a kontrola nakładania się zgłaszałaby każdy budynek. Osobny
+obiekt w tym samym GeoJSON nie wymaga zmiany bazy ani formatu zapisu,
+a starsze koncepcje (bez budynków) liczą się jak dotąd. Wskaźniki z
+budynków obok wskaźników z parametrów terenów — w następnym ETAPie.
+
+**Odrzucone alternatywy:**
+- Osobna tabela budynków w bazie — drugi zapis do zsynchronizowania z
+  rysunkiem.
+- Budynek jako „podteren” z hierarchią — komplikuje rysowanie w
+  Leaflet.draw bez zysku na tym etapie.

@@ -3000,3 +3000,25 @@ Status: zamknięty
   fiszka z polem tekstowym)
 - Pomoc: „Luka w trybie pisania”
 - `DECISIONS.md`: D-180
+
+## ETAP 173 — Osiedle: budynki jako obrysy z liczbą kondygnacji
+Data: 2026-10-02
+Status: zamknięty
+
+- `osiedle/bilans.py`: obiekt `funkcja: "budynek"` (nie funkcja terenu —
+  pomijany w `wczytaj_tereny`, więc bilans, cień i program bez zmian);
+  `wczytaj_budynki` (kondygnacje 1–50, puste = 2) i zestawienie w
+  `bilans()["budynki"]`: rzut, kondygnacje, powierzchnia całkowita, teren
+  pod większością budynku, kontrole „nie na terenie zabudowy” i „poza
+  obszarem opracowania”
+- Mapa: „budynek” w „Co rysujesz” i w funkcji zaznaczonego obiektu, pole
+  kondygnacji, ciemny styl; obszar zawsze pod spodem, budynki na wierzchu
+  (`ulozWarstwy`); karta „Budynki” z tabelą i kontrolami
+- Szkic SVG (raport, porównanie): budynki nad terenami, numery tylko dla
+  terenów (jak w tabeli cienia); GeoJSON: `nazwa_funkcji` „budynek”;
+  DXF: warstwa `OSIEDLE_BUDYNEK` (domyślny kolor)
+- Testy: zestawienie budynków, kontrole, walidacja kondygnacji, szkic,
+  eksport; sprawdzone w przeglądarce 1300/390 px (klik w budynek, zmiana
+  kondygnacji)
+- Pomoc: „Budynki”
+- `DECISIONS.md`: D-181

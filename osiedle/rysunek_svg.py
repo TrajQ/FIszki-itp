@@ -8,7 +8,7 @@ się porównać ich wielkość na oko. W SVG są tylko liczby i kolory z kodu �
 
 from shapely.geometry import shape
 
-from .bilans import FUNKCJE, OBSZAR, _w_metrach
+from .bilans import BUDYNEK, FUNKCJE, KOLOR_BUDYNKU, OBSZAR, _w_metrach
 
 MARGINES_PX = 24
 KROKI_PODZIALKI_M = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000]
@@ -30,13 +30,14 @@ def _szerokosc(cechy) -> float:
 
 
 def _geometrie_w_metrach(geojson: dict) -> list[tuple[str, object]]:
-    """[(funkcja, geometria w metrach)] — obszar opracowania na początku (pod spodem)."""
+    """[(funkcja, geometria w metrach)] — obszar opracowania na początku (pod spodem),
+    budynki na końcu (nad terenami, ETAP 173)."""
     cechy = _cechy(geojson)
     if not cechy:
         return []
     szerokosc = _szerokosc(cechy)
     wynik = [(f, _w_metrach(g, szerokosc)) for f, g in cechy]
-    return sorted(wynik, key=lambda p: p[0] != OBSZAR)
+    return sorted(wynik, key=lambda p: 0 if p[0] == OBSZAR else 2 if p[0] == BUDYNEK else 1)
 
 
 def zasieg_m(geojson: dict) -> tuple[float, float]:
@@ -117,6 +118,8 @@ def szkic_svg(
         d = _sciezka(g, przelicz)
         if funkcja == OBSZAR:
             czesci.append(f'<path d="{d}" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-dasharray="8 5"/>')
+        elif funkcja == BUDYNEK:
+            czesci.append(f'<path d="{d}" fill="{KOLOR_BUDYNKU}" fill-opacity="0.85" stroke="#ffffff" stroke-width="1" fill-rule="evenodd"/>')
         else:
             kolor = FUNKCJE.get(funkcja, {}).get("kolor", "#8e8e93")
             czesci.append(f'<path d="{d}" fill="{kolor}" fill-opacity="0.75" stroke="{kolor}" stroke-width="1" fill-rule="evenodd"/>')
@@ -125,7 +128,7 @@ def szkic_svg(
         d = _sciezka(_w_metrach(shape(strefa_cienia), szerokosc), przelicz)
         czesci.append(f'<path d="{d}" fill="#1d1d1f" fill-opacity="0.22" stroke="#48484a" stroke-width="1" stroke-dasharray="4 3" fill-rule="nonzero"/>')
     if numery:
-        tereny = [g for f, g in cechy if f != OBSZAR]  # kolejność z zapisu — jak w tabeli cienia
+        tereny = [g for f, g in cechy if f not in (OBSZAR, BUDYNEK)]  # kolejność z zapisu — jak w tabeli cienia
         for nr, g in enumerate(tereny, start=1):
             x, y = przelicz(_w_metrach(g, szerokosc).representative_point().coords[0])
             czesci.append(

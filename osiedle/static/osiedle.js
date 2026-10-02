@@ -190,6 +190,9 @@
         if (funkcja === OBSZAR) {
             return { color: "#1d1d1f", weight: wybrany ? 4 : 2.5, dashArray: "8 6", fill: false };
         }
+        if (funkcja === BUDYNEK) {
+            return { color: wybrany ? "#0071e3" : "#ffffff", weight: wybrany ? 3 : 1.5, fillColor: KOLOR_BUDYNKU, fillOpacity: 0.85, fill: true };
+        }
         const kolor = (FUNKCJE[funkcja] || {}).kolor || "#8e8e93";
         return { color: wybrany ? "#1d1d1f" : kolor, weight: wybrany ? 3 : 1.5, fillColor: kolor, fillOpacity: 0.55, fill: true };
     }
@@ -201,9 +204,16 @@
             L.DomEvent.stopPropagation(e);
             zaznacz(warstwa);
         });
-        // Obszar opracowania pod spodem — żeby dało się klikać tereny w środku.
-        if (funkcja === OBSZAR) warstwa.bringToBack();
         rysunek.addLayer(warstwa);
+        ulozWarstwy();
+    }
+
+    // Obszar pod spodem, budynki na wierzchu (ETAP 173) — każdy da się kliknąć
+    function ulozWarstwy() {
+        rysunek.eachLayer((w) => {
+            if (w.funkcja === OBSZAR) w.bringToBack();
+            else if (w.funkcja === BUDYNEK) w.bringToFront();
+        });
     }
 
     function zaznacz(warstwa) {
@@ -352,6 +362,7 @@
         if (!wybranaWarstwa) return;
         wybranaWarstwa.funkcja = funkcjaTerenu.value;
         wybranaWarstwa.setStyle(styl(wybranaWarstwa.funkcja, true));
+        ulozWarstwy();
         pokazParametry(wybranaWarstwa);
         zapiszRysunek();
     });
@@ -485,6 +496,30 @@
         pokazWskazniki(b);
         pokazProgram(b.program);
         pokazKoszty(b.koszty);
+        pokazBudynki(b.budynki);
+    }
+
+    // ETAP 173: zestawienie budynków — rzut, kondygnacje, powierzchnia całkowita, teren pod budynkiem
+    function pokazBudynki(bud) {
+        const sekcja = document.getElementById("sekcja-budynkow");
+        sekcja.hidden = !bud;
+        if (!bud) return;
+        document.getElementById("podsumowanie-budynkow").textContent =
+            `${bud.liczba} ${bud.liczba === 1 ? "budynek" : bud.liczba < 5 ? "budynki" : "budynków"}: powierzchnia zabudowy ${formatM2.format(bud.zabudowa_m2)} m², całkowita ${formatM2.format(bud.calkowita_m2)} m².`;
+        const tabela = document.getElementById("tabela-budynkow");
+        const glowa = element("tr");
+        glowa.append(element("th", "", "Nr"), element("th", "", "Teren"), element("th", "liczba", "Rzut m²"), element("th", "liczba", "Kond."), element("th", "liczba", "Całkowita m²"));
+        tabela.replaceChildren(glowa);
+        for (const b of bud.lista) {
+            const tr = element("tr");
+            tr.append(element("td", "", String(b.nr)), element("td", b.teren ? "" : "wyciszony", b.teren || "—"),
+                element("td", "liczba", formatM2.format(b.pole_m2)), element("td", "liczba", String(b.kondygnacje)), element("td", "liczba", formatM2.format(b.calkowita_m2)));
+            tabela.appendChild(tr);
+        }
+        const kontrole = document.getElementById("kontrole-budynkow");
+        kontrole.replaceChildren();
+        if (bud.poza_terenem_zabudowy) kontrole.appendChild(element("li", "", `Budynków nie na terenie zabudowy (MN, MW, U): ${bud.poza_terenem_zabudowy}.`));
+        if (bud.poza_obszarem) kontrole.appendChild(element("li", "", `Budynków wychodzących poza obszar opracowania: ${bud.poza_obszarem}.`));
     }
 
     // ETAP 164: podpowiedź stawki gruntu — mediana działek niezabudowanych z RCN (moduł Ceny).

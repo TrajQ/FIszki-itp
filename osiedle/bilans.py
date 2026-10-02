@@ -23,6 +23,11 @@ from . import program as prog
 from . import wskazniki as wsk
 
 OBSZAR = "obszar"
+# ETAP 173: budynek — obrys z liczbą kondygnacji, rysowany na terenach.
+# Nie jest funkcją terenu: nie wchodzi do bilansu terenu (leży na MN/MW/U).
+BUDYNEK = "budynek"
+DOMYSLNE_KONDYGNACJE_BUDYNKU = 2
+KOLOR_BUDYNKU = "#3a3a3c"
 
 # Funkcje terenu: nazwa, kolor na mapie, czy to teren zabudowy
 # (powierzchnię zabudowy i kondygnacje liczymy tylko dla tych — wskazniki.py).
@@ -83,6 +88,8 @@ def wczytaj_tereny(geojson: dict) -> tuple[BaseGeometry | None, list[dict]]:
         funkcja = wlasciwosci.get("funkcja")
         if funkcja == OBSZAR:
             obszar = geometria if obszar is None else obszar.union(geometria)
+        elif funkcja == BUDYNEK:
+            continue  # budynki czyta wczytaj_budynki
         elif funkcja in FUNKCJE:
             tereny.append({"funkcja": funkcja, "geometria": geometria, "wlasciwosci": wlasciwosci})
         else:
@@ -90,11 +97,65 @@ def wczytaj_tereny(geojson: dict) -> tuple[BaseGeometry | None, list[dict]]:
     return obszar, tereny
 
 
+def wczytaj_budynki(geojson: dict) -> list[dict]:
+    """Budynki z rysunku (po wczytaj_tereny, więc kolekcja jest już
+    sprawdzona): [{"geometria", "kondygnacje", "wlasciwosci"}]."""
+    budynki = []
+    for i, cecha in enumerate(geojson.get("features") or [], start=1):
+        wlasciwosci = cecha.get("properties") or {}
+        if wlasciwosci.get("funkcja") != BUDYNEK:
+            continue
+        geometria = shape(cecha["geometry"])
+        if not geometria.is_valid:
+            geometria = geometria.buffer(0)
+        kondygnacje = wlasciwosci.get("kondygnacje")
+        if kondygnacje is None or kondygnacje == "":
+            kondygnacje = DOMYSLNE_KONDYGNACJE_BUDYNKU
+        else:
+            try:
+                kondygnacje = wsk._liczba(kondygnacje, f"Budynek (obiekt {i}), kondygnacje")
+            except wsk.BladParametru as e:
+                raise BladKoncepcji(str(e)) from None
+            if not 1 <= kondygnacje <= wsk.ZAKRESY["kondygnacje"][1]:
+                raise BladKoncepcji(f"Budynek (obiekt {i}): kondygnacje muszą być w zakresie 1–{wsk.ZAKRESY['kondygnacje'][1]}.")
+        budynki.append({"geometria": geometria, "kondygnacje": kondygnacje, "wlasciwosci": wlasciwosci})
+    return budynki
+
+
+def _budynki(budynki: list[dict], tereny: list[dict], obszar, pole) -> dict | None:
+    """Zestawienie budynków (ETAP 173): powierzchnia zabudowy (rzut) i
+    całkowita (rzut × kondygnacje), teren, na którym leży większość
+    budynku, i kontrole: budynek nie na terenie zabudowy, poza obszarem."""
+    if not budynki:
+        return None
+    lista, poza_zabudowa, poza_obszarem = [], 0, 0
+    for nr, b in enumerate(budynki, start=1):
+        rzut = pole(b["geometria"])
+        nakladanie = [(pole(b["geometria"].intersection(t["geometria"])), t["funkcja"]) for t in tereny if b["geometria"].intersects(t["geometria"])]
+        teren = max(nakladanie, default=(0.0, None))
+        funkcja = teren[1] if teren[0] > rzut / 2 else None
+        if funkcja is None or not FUNKCJE[funkcja]["zabudowa"]:
+            poza_zabudowa += 1
+        if obszar is not None and pole(b["geometria"].difference(obszar)) > max(1.0, rzut * 0.01):
+            poza_obszarem += 1
+        lista.append({"nr": nr, "pole_m2": round(rzut, 1), "kondygnacje": b["kondygnacje"],
+                      "calkowita_m2": round(rzut * b["kondygnacje"], 1), "teren": funkcja})
+    return {
+        "liczba": len(lista),
+        "zabudowa_m2": round(sum(b["pole_m2"] for b in lista), 1),
+        "calkowita_m2": round(sum(b["calkowita_m2"] for b in lista), 1),
+        "lista": lista,
+        "poza_terenem_zabudowy": poza_zabudowa,
+        "poza_obszarem": poza_obszarem,
+    }
+
+
 def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     """Bilans terenu: m² i % dla każdej funkcji, kontrole rysunku,
     wskaźniki zabudowy, zgodność z ustaleniami planu i program osiedla
     (ustalenia i założenia programu — z ustawień koncepcji)."""
     obszar, tereny = wczytaj_tereny(geojson)
+    budynki = wczytaj_budynki(geojson)
     try:
         plan = wsk.ustalenia_planu(ustawienia)
         prog.zalozenia(ustawienia)  # sprawdzenie także przy pustym rysunku
@@ -103,9 +164,10 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
             t["parametry"] = wsk.parametry_terenu(t["funkcja"], t["wlasciwosci"])
     except (wsk.BladParametru, prog.BladZalozen, kosz.BladStawek) as e:
         raise BladKoncepcji(str(e)) from None
-    wszystko = [t["geometria"] for t in tereny] + ([obszar] if obszar is not None else [])
+    wszystko = [t["geometria"] for t in tereny] + [b["geometria"] for b in budynki] + ([obszar] if obszar is not None else [])
     if not wszystko:
-        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None}
+        return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None,
+                "budynki": None}
     szerokosc = unary_union(wszystko).centroid.y
 
     def pole(geometria):
@@ -162,4 +224,5 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
         "zgodnosc": wsk.zgodnosc(wskazniki, plan),
         "program": program,
         "koszty": kosz.koszty(tereny, obszar_m2, ustawienia, program),
+        "budynki": _budynki(budynki, tereny, obszar, pole),
     }

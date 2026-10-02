@@ -54,6 +54,9 @@
             <div id="funkcje" class="funkcje">
                 <label class="funkcja"><input type="radio" name="funkcja" value="{{ obszar }}" checked>
                     <span class="funkcja__probka funkcja__probka--obszar"></span> obszar opracowania</label>
+                {# ETAP 173: budynek — obrys na terenie MN / MW / U, z liczbą kondygnacji #}
+                <label class="funkcja"><input type="radio" name="funkcja" value="{{ budynek }}">
+                    <span class="funkcja__probka" style="background: {{ kolor_budynku }}"></span> <strong>budynek</strong> obrys z kondygnacjami</label>
                 {% for kod, f in funkcje.items() %}
                 <label class="funkcja"><input type="radio" name="funkcja" value="{{ kod }}">
                     <span class="funkcja__probka" style="background: {{ f.kolor }}"></span> <strong>{{ kod }}</strong> {{ f.nazwa }}</label>
@@ -75,6 +78,7 @@
                 <h4>Zaznaczony teren</h4>
                 <select id="funkcja-terenu" aria-label="Funkcja zaznaczonego terenu">
                     <option value="{{ obszar }}">obszar opracowania</option>
+                    <option value="{{ budynek }}">budynek</option>
                     {% for kod, f in funkcje.items() %}<option value="{{ kod }}">{{ kod }} — {{ f.nazwa }}</option>{% endfor %}
                 </select>
                 <div id="parametry-terenu" class="parametry-terenu">
@@ -104,6 +108,13 @@
                 <tbody id="tabela-bilansu"></tbody>
             </table>
             <ul id="kontrole" class="kontrole"></ul>
+        </section>
+
+        <section id="sekcja-budynkow" class="karta stos" hidden>
+            <h3>Budynki</h3>
+            <p id="podsumowanie-budynkow" class="opis-panelu"></p>
+            <div class="przewijanie-osiedla"><table class="tabela tabela-budynkow" id="tabela-budynkow"></table></div>
+            <ul id="kontrole-budynkow" class="kontrole"></ul>
         </section>
 
         <section id="sekcja-wskaznikow" class="karta stos" hidden>
@@ -214,6 +225,8 @@
     const URL_KONCEPCJE = "{{ url_for('osiedle.lista_koncepcji') }}";
     const URL_CENY_OKOLICA = "{{ url_for('ceny.okolica') }}"; // ETAP 109: zaimportowane pliki RCN (moduł ceny)
     const OBSZAR = {{ obszar | tojson }};
+    const BUDYNEK = {{ budynek | tojson }};
+    const KOLOR_BUDYNKU = {{ kolor_budynku | tojson }};
     const FUNKCJE = {{ funkcje | tojson }};
     const DOMYSLNE = {{ domyslne | tojson }};
     const URL_WARSTWY_KRAJOWE = "{{ url_for('mpzp.warstwy_krajowe') }}";
