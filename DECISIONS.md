@@ -4303,3 +4303,24 @@ klucza API.
 - Wyjaśnienie z wiedzy ogólnej modelu — nie da się sprawdzić w źródle.
 - Generowanie przy każdym odsłonięciu — koszt, opóźnienie i za każdym
   razem inny tekst.
+
+## D-216 — Notatki na nowy tekst: dopasowanie po oznaczeniu, raport zamiast zgadywania
+Data: 2026-10-03
+
+**Decyzja:** Notatki i „Moje przepisy” przenosimy na jednostkę nowego
+aktu o tym samym oznaczeniu („Art. 15”, „§ 4”). Gdy oznaczenia nie ma
+albo występuje kilka razy, nie przenosimy, tylko wypisujemy je w
+raporcie; zmieniony tekst artykułu też jest w raporcie. Istniejącej
+notatki nie nadpisujemy — stara jest dopisywana pod nią.
+
+**Uzasadnienie:** Numeracja artykułów w tekście jednolitym jest stała
+(uchylone zostają jako „uchylony”, nowe dostają litery), więc oznaczenie
+jest pewnym kluczem. Dopasowanie po podobieństwie treści mogłoby
+przypiąć notatkę do innego przepisu bez wiedzy użytkownika. Nic nie
+ginie: stary akt zostaje bez zmian.
+
+**Odrzucone alternatywy:**
+- Dopasowanie po podobieństwie tekstu — ryzyko cichej pomyłki przy
+  przepisach o podobnej treści.
+- Automatyczne przeniesienie przy pobraniu — użytkownik może chcieć
+  zachować notatki osobno; karta z wybranym źródłem to jeden klik.

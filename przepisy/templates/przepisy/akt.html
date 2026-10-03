@@ -22,6 +22,19 @@
 </div>
 <p id="komunikat" class="komunikat komunikat--blad" hidden></p>
 <div id="aktualnosc" class="karta stos aktualnosc-aktu" hidden></div>
+{% if zrodla_przeniesienia %}
+<details class="karta stos przeniesienie-notatek" id="przeniesienie-notatek"{{ ' open' if z_aktu in zrodla_przeniesienia | map(attribute='id') | list }}>
+    <summary>Przenieś notatki i „Moje przepisy” z innego tekstu</summary>
+    <p class="wyciszony">Np. po pobraniu nowszego tekstu jednolitego: notatki i jednostki z „Moich przepisów” trafią do artykułów i paragrafów o tym samym oznaczeniu w tym akcie. Gdy jednostka ma już notatkę, stara zostanie dopisana pod nią. Stary akt się nie zmienia.</p>
+    <div class="rzad">
+        <select id="zrodlo-przeniesienia" aria-label="Akt, z którego przenieść notatki">
+            {% for z in zrodla_przeniesienia %}<option value="{{ z.id }}" {{ 'selected' if z.id == z_aktu }}>{{ z.nazwa | truncate(90) }} — notatek {{ z.notatek }}, w Moich {{ z.moich }}</option>{% endfor %}
+        </select>
+        <button id="przenies-notatki" type="button" class="przycisk--drugi">Przenieś</button>
+    </div>
+    <div id="wynik-przeniesienia" class="stos" hidden></div>
+</details>
+{% endif %}
 
 {% if slowniczek %}
 <details class="karta slowniczek" id="slowniczek">
@@ -79,6 +92,8 @@
     const URL_AKTU = "{{ url_for('przepisy.usun_akt', akt_id=akt.id) }}";
     const URL_LISTY = "{{ url_for('przepisy.index') }}";
     const URL_AKTUALNOSC = "{{ url_for('przepisy.aktualnosc_aktu', akt_id=akt.id) }}";
+    const AKT_ID = {{ akt.id }}; // ETAP 208
+    const URL_PRZENIES = "{{ url_for('przepisy.przenies_notatki', akt_id=akt.id, stary_id=0) }}";
     const URL_SEJM_POBIERZ = "{{ url_for('przepisy.pobierz_z_sejmu') }}";
     const MAKS_NOTATKI = {{ maks_notatki }}; // ETAP 140
     const URL_DRUKU = "{{ url_for('przepisy.druk_aktu', akt_id=akt.id) }}"; // ETAP 158

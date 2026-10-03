@@ -3640,3 +3640,24 @@ Status: zamknięty
   podmieniony)
 - Pomoc: akapit „Wyjaśnienie po odsłonięciu”
 - `DECISIONS.md`: D-215
+
+## ETAP 208 — Przepisy: przeniesienie notatek i „Moich przepisów” na nowszy tekst
+Data: 2026-10-03
+Status: zamknięty
+
+- Przegląd planu: sprawdzanie nowszego tekstu jednolitego działa od
+  ETAPu 101 — pozycja 208 zastąpiona (D-198) tym, czego po pobraniu
+  nowszego tekstu brakowało: notatki zostawały przy starym akcie
+- `przepisy/przeniesienie.py`: `przenies` — jednostki dopasowane po
+  oznaczeniu (bez wielkości liter i nadmiarowych spacji); notatka
+  kopiowana albo dopisywana pod istniejącą (bez dublowania przy
+  powtórzeniu), „Moje przepisy” dodawane (z limitem zbioru); raport:
+  liczby, bez odpowiednika, niejednoznaczne, zmieniony tekst
+- `POST /przepisy/akty/<id>/przenies-z/<stary_id>`; strona aktu: karta
+  przeniesienia ze źródłami (akty z notatkami albo „Moimi”), otwarta z
+  `?z=` po pobraniu nowszego tekstu z Dziennika Ustaw
+- Test: przeniesienie, dopisanie, uchylony i zmieniony artykuł, stary
+  akt bez zmian, powtórzenie, błędy; sprawdzone w przeglądarce
+  1300/390 px
+- Pomoc: akapit „Notatki na nowy tekst”; PLAN: pozycja 208
+- `DECISIONS.md`: D-216

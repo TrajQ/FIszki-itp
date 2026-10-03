@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 from dane import gemini, sejm
 from fiszki import zewnetrzne as fiszki_zewnetrzne
 
-from . import baza, porownanie, pytania
+from . import baza, porownanie, przeniesienie, pytania
 from .odeslania import mapa_jednostek, z_odeslaniami
 from .slowniczek import slowniczek
 from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
@@ -109,6 +109,17 @@ def aktualnosc_aktu(akt_id):
         return jsonify({"blad": str(e)}), 422 if "pobranych z Dziennika" in str(e) else 502
 
 
+@przepisy_bp.route("/akty/<int:akt_id>/przenies-z/<int:stary_id>", methods=["POST"])
+def przenies_notatki(akt_id, stary_id):
+    """ETAP 208: notatki i „Moje przepisy” ze starszego tekstu aktu na ten akt."""
+    _akt_albo_404(akt_id)
+    stary = _akt_albo_404(stary_id)
+    try:
+        return jsonify(przeniesienie.przenies(baza.get_db(), stary_id, akt_id, stary["nazwa"]))
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+
+
 @przepisy_bp.route("/sejm/pobierz", methods=["POST"])
 def pobierz_z_sejmu():
     """Pobiera urzędowy PDF aktu i dodaje go jak wgrany plik."""
@@ -140,8 +151,15 @@ def widok_aktu(akt_id):
     mapa = mapa_jednostek(jednostki)
     for j in jednostki:  # ETAP 121: „art. 15 ust. 2” → odnośnik do artykułu tego aktu
         j["tekst_html"] = z_odeslaniami(j["tekst"], mapa, j["id"])
+    # ETAP 208: inne akty z notatkami albo „Moimi przepisami” — źródła do przeniesienia
+    zrodla = [dict(w) for w in baza.get_db().execute(
+        """SELECT a.id, a.nazwa,
+                  (SELECT COUNT(*) FROM notatki WHERE akt_id = a.id) AS notatek,
+                  (SELECT COUNT(*) FROM moje_przepisy WHERE akt_id = a.id) AS moich
+           FROM akty a WHERE a.id != ? ORDER BY a.data_dodania DESC""", (akt_id,)) if w["notatek"] or w["moich"]]
     return render_template("przepisy/akt.html", akt=akt, jednostki=jednostki, slowniczek=slowniczek(jednostki),
-                           notatki=baza.notatki_aktu(akt_id), maks_notatki=baza.MAKS_NOTATKI, moje=baza.moje_w_akcie(akt_id))
+                           notatki=baza.notatki_aktu(akt_id), maks_notatki=baza.MAKS_NOTATKI, moje=baza.moje_w_akcie(akt_id),
+                           zrodla_przeniesienia=zrodla, z_aktu=request.args.get("z", type=int))
 
 
 @przepisy_bp.route("/akty/<int:akt_id>/druk")

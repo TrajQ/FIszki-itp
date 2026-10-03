@@ -562,3 +562,41 @@ def test_moje_przepisy(client):
     with client.application.app_context():
         from przepisy import baza
         assert baza.get_db().execute("SELECT COUNT(*) FROM moje_przepisy").fetchone()[0] == 0
+
+
+# ---------- ETAP 208: przeniesienie notatek na nowszy tekst ----------
+
+
+def test_przeniesienie_notatek_na_nowszy_tekst(client, monkeypatch):
+    from przepisy.baza import get_db
+
+    wgraj(client, nazwa="stara.pdf")
+    nowe_strony = [STRONY[0], STRONY[1].replace("Wójt sporządza", "Wójt albo burmistrz sporządza").replace("Art. 15a. Uchwała w sprawie planu ogólnego gminy.\n", "")]
+    monkeypatch.setattr(routes, "strony_z_pdf", lambda sciezka: nowe_strony)
+    wgraj(client, nazwa="nowa.pdf")
+
+    def jednostka(akt, oznaczenie):
+        with client.application.app_context():
+            return get_db().execute("SELECT id FROM jednostki WHERE akt_id = ? AND oznaczenie = ?", (akt, oznaczenie)).fetchone()[0]
+
+    client.put(f"/przepisy/jednostki/{jednostka(1, 'Art. 15')}/notatka", json={"tekst": "Stara: intensywność obowiązkowo"})
+    client.put(f"/przepisy/jednostki/{jednostka(1, 'Art. 15a')}/notatka", json={"tekst": "Plan ogólny"})
+    client.put(f"/przepisy/jednostki/{jednostka(1, 'Art. 1')}/notatka", json={"tekst": "Zasady"})
+    client.put(f"/przepisy/jednostki/{jednostka(2, 'Art. 1')}/notatka", json={"tekst": "Już w nowym"})
+    client.post(f"/przepisy/jednostki/{jednostka(1, 'Art. 2')}/moje")
+    strona = client.get("/przepisy/akty/2?z=1").get_data(as_text=True)
+    assert 'id="przeniesienie-notatek" open' in strona and "notatek 3, w Moich 1" in strona
+    r = client.post("/przepisy/akty/2/przenies-z/1").get_json()
+    assert r["notatki"] == 2 and r["moje"] == 1
+    assert r["bez_odpowiednika"] == ["Art. 15a"] and r["zmieniony_tekst"] == ["Art. 15"] and r["niejednoznaczne"] == []
+    with client.application.app_context():
+        notatki = {w[0]: w[1] for w in get_db().execute(
+            "SELECT j.oznaczenie, n.tekst FROM notatki n JOIN jednostki j ON j.id = n.jednostka_id WHERE n.akt_id = 2")}
+        assert notatki["Art. 15"] == "Stara: intensywność obowiązkowo"
+        assert notatki["Art. 1"].startswith("Już w nowym\n\n[z: ") and notatki["Art. 1"].endswith("Zasady")
+        assert get_db().execute("SELECT COUNT(*) FROM moje_przepisy WHERE akt_id = 2").fetchone()[0] == 1
+        assert get_db().execute("SELECT COUNT(*) FROM notatki WHERE akt_id = 1").fetchone()[0] == 3  # stary bez zmian
+    assert client.post("/przepisy/akty/2/przenies-z/1").get_json()["notatki"] == 0  # drugi raz nic nie dubluje
+    assert client.post("/przepisy/akty/2/przenies-z/2").status_code == 400
+    assert client.post("/przepisy/akty/2/przenies-z/99").status_code == 404
+    assert "przeniesienie-notatek\" open" not in client.get("/przepisy/akty/1").get_data(as_text=True)  # bez ?z= — zwinięte

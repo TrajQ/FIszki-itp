@@ -1078,3 +1078,6 @@
 
 ## ETAP 207 — 2026-10-03
 - Fiszki: wyjaśnienie po odsłonięciu odpowiedzi — własne albo z Gemini (tylko z fragmentu źródła, liczby sprawdzane)
+
+## ETAP 208 — 2026-10-03
+- Przepisy: przeniesienie notatek i „Moich przepisów” na nowszy tekst aktu (dopasowanie po oznaczeniu artykułu)

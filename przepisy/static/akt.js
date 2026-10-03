@@ -284,7 +284,7 @@
             });
             const dane = await odp.json().catch(() => ({}));
             if (!odp.ok) throw new Error(dane.blad || `Błąd ${odp.status}`);
-            location.href = dane.url;
+            location.href = `${dane.url}?z=${AKT_ID}`; // ETAP 208: nowy akt zaproponuje przeniesienie notatek
         } catch (e) {
             guzik.disabled = false;
             guzik.textContent = "Pobierz";
@@ -346,3 +346,38 @@ document.querySelectorAll(".przycisk-moje").forEach((przycisk) => {
         }
     });
 });
+
+// ---------- przeniesienie notatek i „Moich przepisów” z innego tekstu (ETAP 208) ----------
+(function () {
+    "use strict";
+    const przycisk = document.getElementById("przenies-notatki");
+    if (!przycisk) return;
+    const wynik = document.getElementById("wynik-przeniesienia");
+    const p = (tekst, klasa) => {
+        const e = document.createElement("p");
+        if (klasa) e.className = klasa;
+        e.textContent = tekst;
+        return e;
+    };
+    przycisk.addEventListener("click", async () => {
+        const zrodlo = document.getElementById("zrodlo-przeniesienia").value;
+        przycisk.disabled = true;
+        wynik.hidden = false;
+        wynik.replaceChildren(p("Przenoszę…", "wyciszony"));
+        try {
+            const odp = await fetch(URL_PRZENIES.replace(/\/0$/, `/${zrodlo}`), { method: "POST" });
+            const r = await odp.json().catch(() => ({}));
+            if (!odp.ok) throw new Error(r.blad || `Błąd ${odp.status}`);
+            const czesci = [p(`Przeniesiono notatek: ${r.notatki}, jednostek do „Moich przepisów”: ${r.moje}.${r.notatki || r.moje ? " Odśwież stronę, żeby je zobaczyć." : ""}`)];
+            if (r.zmieniony_tekst.length) czesci.push(p(`Tekst się zmienił — przeczytaj notatki jeszcze raz: ${r.zmieniony_tekst.join(", ")}.`, "komunikat"));
+            if (r.bez_odpowiednika.length) czesci.push(p(`Bez odpowiednika w tym akcie (np. uchylone) — zostały przy starym: ${r.bez_odpowiednika.join(", ")}.`, "komunikat"));
+            if (r.niejednoznaczne.length) czesci.push(p(`Oznaczenie występuje tu kilka razy — nie przeniesiono: ${r.niejednoznaczne.join(", ")}.`, "komunikat"));
+            if (r.pelny_zbior) czesci.push(p("„Moje przepisy” są pełne — część jednostek nie została dodana.", "komunikat"));
+            wynik.replaceChildren(...czesci);
+        } catch (e) {
+            wynik.replaceChildren(p(e.message, "komunikat komunikat--blad"));
+        } finally {
+            przycisk.disabled = false;
+        }
+    });
+})();
