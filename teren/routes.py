@@ -314,12 +314,16 @@ def raport_projektu(projekt_id):
     po_nazwie = {x["nazwa"]: x for x in krzyzowe}
     krzyz_a, krzyz_b = po_nazwie.get(request.args.get("krzyz_a")), po_nazwie.get(request.args.get("krzyz_b"))
     tabela_krzyzowa = raport.tabela_krzyzowa(krzyz_a, krzyz_b, punkty) if krzyz_a and krzyz_b and krzyz_a is not krzyz_b else None
+    kolory_krzyzowe = raport.kolory_kolumn(krzyz_b) if tabela_krzyzowa else []
+    wykres_krzyzowy = Markup(raport.wykres_krzyzowy_svg(tabela_krzyzowa, kolory_krzyzowe)) if tabela_krzyzowa and tabela_krzyzowa["n"] else None  # ETAP 180
     return render_template(
         "teren/raport.html",
         pola_krzyzowe=krzyzowe,
         krzyz_a=krzyz_a,
         krzyz_b=krzyz_b,
         tabela_krzyzowa=tabela_krzyzowa,
+        wykres_krzyzowy=wykres_krzyzowy,
+        kolory_krzyzowe=kolory_krzyzowe,
         projekt=p,
         punkty=punkty,
         zestawienie=raport.zestawienie(p["pola"], punkty),

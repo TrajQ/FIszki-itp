@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 179 (Teren: tabela krzyżowa dwóch pytań ankiety — zamknięty)
-Ostatni ZIP: releases/warsztat_etap179_20261003.zip
-Testy: 596 passed / 0 failed
+ETAP: 180 (Teren: wykres rozkładu odpowiedzi w grupach — zamknięty)
+Ostatni ZIP: releases/warsztat_etap180_20261003.zip
+Testy: 597 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

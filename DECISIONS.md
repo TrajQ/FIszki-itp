@@ -3765,3 +3765,22 @@ to nie przyczyna” jest w Pomocy.
   tabel 2×2; ostrzeżenie wystarcza na tym etapie.
 - Pytania wielokrotne jako osobne kolumny tak/nie — do rozważenia przy
   wykresach ankiety (ETAP 180).
+
+## D-188 — Wykres tabeli krzyżowej: słupki 100%, numery zamiast nazw w SVG
+Data: 2026-10-03
+
+**Decyzja:** Zależność dwóch pytań pokazujemy skumulowanymi słupkami 100%
+(rozkład kolumn w każdym wierszu). SVG zawiera tylko numery wierszy,
+procenty i kolory; nazwy odpowiedzi są w legendzie i liście HTML.
+
+**Uzasadnienie:** Słupki 100% porównują grupy różnej liczności (ten sam
+punkt odniesienia), czego nie dają liczby bezwzględne. Zasada „SVG tylko
+z liczb i kolorów z kodu” chroni wydruk przed wstrzyknięciem
+tekstu z formularza do SVG wstawianego przez `Markup` (jak mapa do
+druku, D-048).
+
+**Odrzucone alternatywy:**
+- Słupki grupowane (obok siebie) — przy 4×4 odpowiedziach 16 słupków,
+  trudno porównać udziały.
+- Wykres w JS na stronie — raport jest stroną do druku, SVG z serwera
+  drukuje się tak samo jak mapa.

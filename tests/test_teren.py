@@ -619,3 +619,18 @@ def test_tabela_krzyzowa_w_raporcie(client):
     wynik = client.get("/teren/projekty/1/raport?krzyz_a=wiek&krzyz_b=czy+czujesz+się+tu+bezpiecznie").get_data(as_text=True)
     assert "Test chi-kwadrat" in wynik and "V Craméra" in wynik and "liczność oczekiwana" in wynik
     assert "Test chi-kwadrat" not in client.get("/teren/projekty/1/raport?krzyz_a=wiek&krzyz_b=wiek").get_data(as_text=True)
+
+
+def test_wykres_tabeli_krzyzowej():
+    from teren import raport as r
+
+    a = {"nazwa": "wiek", "typ": "wybor", "opcje": ["młodzi", "starsi", "dzieci"]}
+    b = {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "zły"], "skala": True}
+    punkty = [{"wartosci": {"wiek": w, "stan": s}} for w, s in [("młodzi", "dobry")] * 3 + [("młodzi", "zły")] + [("starsi", "zły")] * 2]
+    t = r.tabela_krzyzowa(a, b, punkty)
+    kolory = r.kolory_kolumn(b)
+    assert kolory == [r.kolor_skali(0, 2), r.kolor_skali(1, 2)]
+    svg = r.wykres_krzyzowy_svg(t, kolory)
+    assert svg.count("<rect") == 1 + 3  # tło + młodzi (2 części) + starsi (1); „dzieci” bez odpowiedzi pominięte
+    assert ">75%<" in svg and ">100%<" in svg and ">2</text>" in svg
+    assert r.kolory_kolumn({"nazwa": "x", "typ": "tak_nie", "opcje": []}) == r.PALETA[:2]

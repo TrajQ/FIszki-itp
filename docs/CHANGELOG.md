@@ -994,3 +994,6 @@
 
 ## ETAP 179 — 2026-10-03
 - Teren: tabela krzyżowa dwóch pytań ankiety z testem chi-kwadrat i V Craméra
+
+## ETAP 180 — 2026-10-03
+- Teren: wykres rozkładu odpowiedzi w grupach (słupki 100%) pod tabelą krzyżową

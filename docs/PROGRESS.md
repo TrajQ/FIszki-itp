@@ -3133,3 +3133,21 @@ Status: zamknięty
   przeglądarce 1300/390 px
 - Pomoc: „Czy odpowiedzi na dwa pytania są ze sobą związane?”
 - `DECISIONS.md`: D-187
+
+## ETAP 180 — Teren: wykres tabeli krzyżowej w raporcie ankiety
+Data: 2026-10-03
+Status: zamknięty
+
+- `teren/raport.py`: `wykres_krzyzowy_svg` — skumulowane słupki 100%
+  dla każdego wiersza z odpowiedziami, procenty w słupkach (od ok. 4%
+  szerokości), oś 0–100%; `kolory_kolumn` — skala zielony→czerwony dla
+  pola-skali (ETAP 70), inaczej paleta raportu
+- Raport: „Rozkład odpowiedzi w grupach” pod tabelą krzyżową — legenda
+  kolumn i opis numerów wierszy w HTML (tekst użytkownika poza SVG)
+- Procenty w tabeli krzyżowej z jednym miejscem po przecinku
+- Słupki pojedynczych pytań są w zestawieniu od ETAPu 99 — ten ETAP
+  dokłada wykres zależności dwóch pytań
+- Test: liczba słupków, procenty, kolory; sprawdzone w przeglądarce
+  1300/390 px
+- Pomoc: akapit o tabeli krzyżowej
+- `DECISIONS.md`: D-188

@@ -515,3 +515,46 @@ button.przycisk--niebezpieczny-tekst {
         display: none;
     }
 }
+
+/* ---------- wykres tabeli krzyżowej (ETAP 180) ---------- */
+.legenda-krzyzowa {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+}
+
+.legenda-krzyzowa li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.probka-krzyzowa {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.wykres-krzyzowy svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.opis-wierszy {
+    margin: 0;
+    padding-left: 22px;
+    font-size: 13px;
+    columns: 2;
+}
+
+@media print {
+    .probka-krzyzowa {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

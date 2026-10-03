@@ -107,12 +107,20 @@
             <tr><th></th>{% for k in t.kolumny %}<th class="liczba">{{ k }}</th>{% endfor %}<th class="liczba">razem</th></tr>
             {% for w in t.wiersze %}{% set i = loop.index0 %}
             <tr><th>{{ w }}</th>
-                {% for k in t.kolumny %}<td class="liczba">{{ t.liczby[i][loop.index0] }}{% if t.procent_w_wierszu[i][loop.index0] is not none %} <span class="wyciszony">{{ liczba(t.procent_w_wierszu[i][loop.index0]) }}%</span>{% endif %}</td>{% endfor %}
+                {% for k in t.kolumny %}<td class="liczba">{{ t.liczby[i][loop.index0] }}{% if t.procent_w_wierszu[i][loop.index0] is not none %} <span class="wyciszony">{{ liczba(t.procent_w_wierszu[i][loop.index0] | round(1)) }}%</span>{% endif %}</td>{% endfor %}
                 <td class="liczba"><strong>{{ t.w_razem[i] }}</strong></td></tr>
             {% endfor %}
             <tr><th>razem</th>{% for s in t.k_razem %}<td class="liczba"><strong>{{ s }}</strong></td>{% endfor %}<td class="liczba"><strong>{{ t.n }}</strong></td></tr>
         </table>
         </div>
+        {% if wykres_krzyzowy %}
+        <h3>Rozkład odpowiedzi w grupach</h3>
+        <ul class="legenda-krzyzowa">
+            {% for k in t.kolumny %}<li><span class="probka-krzyzowa" style="background: {{ kolory_krzyzowe[loop.index0] }}"></span>{{ k }}</li>{% endfor %}
+        </ul>
+        <div class="wykres-krzyzowy">{{ wykres_krzyzowy }}</div>
+        <ol class="opis-wierszy wyciszony">{% for w in t.wiersze %}{% if t.w_razem[loop.index0] %}<li>{{ w }} ({{ t.w_razem[loop.index0] }})</li>{% endif %}{% endfor %}</ol>
+        {% endif %}
         {% if t.chi2 is not none %}
         <p>Test chi-kwadrat niezależności: χ² = {{ liczba(t.chi2) }}, df = {{ t.df }}, p {{ ('= ' ~ ('%.3f' % t.p)) | replace('.', ',') if t.p >= 0.001 else '< 0,001' }} —
             {{ 'odpowiedzi na oba pytania są ze sobą związane (p < 0,05)' if t.p < 0.05 else 'brak podstaw, by twierdzić, że odpowiedzi są ze sobą związane (p ≥ 0,05)' }}.

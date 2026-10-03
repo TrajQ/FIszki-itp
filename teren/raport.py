@@ -148,6 +148,43 @@ def tabela_krzyzowa(pole_a: dict, pole_b: dict, punkty: list[dict]) -> dict:
     return wynik
 
 
+def wykres_krzyzowy_svg(t: dict, kolory: list[str], szerokosc: int = 900) -> str:
+    """ETAP 180: skumulowane słupki 100% — rozkład kolumn w każdym wierszu
+    tabeli krzyżowej (wiersze bez odpowiedzi pominięte). Numery i liczby z
+    kodu; opisy wierszy i kolumn są w HTML obok (tekst użytkownika)."""
+    wiersze = [i for i, s in enumerate(t["w_razem"]) if s]
+    wys_slupka, odstep, lewy, prawy = 26, 12, 34, 16
+    wysokosc = len(wiersze) * (wys_slupka + odstep) + 26
+    czesci = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc} {wysokosc}" width="{szerokosc}" height="{wysokosc}" '
+              f'font-family="sans-serif" font-size="12"><rect width="100%" height="100%" fill="#ffffff"/>']
+    pole = szerokosc - lewy - prawy
+    for nr, i in enumerate(wiersze):
+        y = nr * (wys_slupka + odstep) + 4
+        czesci.append(f'<text x="{lewy - 8}" y="{y + wys_slupka / 2 + 4}" text-anchor="end" fill="#1d1d1f" font-weight="700">{nr + 1}</text>')
+        x = lewy
+        for j, liczba in enumerate(t["liczby"][i]):
+            if not liczba:
+                continue
+            w = pole * liczba / t["w_razem"][i]
+            czesci.append(f'<rect x="{x:.1f}" y="{y}" width="{w:.1f}" height="{wys_slupka}" fill="{kolory[j % len(kolory)]}" stroke="#ffffff" stroke-width="1"/>')
+            if w >= 34:
+                czesci.append(f'<text x="{x + w / 2:.1f}" y="{y + wys_slupka / 2 + 4}" text-anchor="middle" fill="#ffffff" font-weight="600">{round(100 * liczba / t["w_razem"][i])}%</text>')
+            x += w
+    os_y = len(wiersze) * (wys_slupka + odstep) + 2
+    for proc in (0, 25, 50, 75, 100):
+        xp = lewy + pole * proc / 100
+        czesci.append(f'<line x1="{xp:.1f}" x2="{xp:.1f}" y1="{os_y - 4}" y2="{os_y}" stroke="#86868b"/>'
+                      f'<text x="{xp:.1f}" y="{os_y + 14}" text-anchor="middle" fill="#6e6e73">{proc}%</text>')
+    czesci.append("</svg>")
+    return "".join(czesci)
+
+
+def kolory_kolumn(pole: dict) -> list[str]:
+    """Kolory odpowiedzi w kolumnach: skala zielony→czerwony dla pola-skali, inaczej paleta."""
+    opcje = _opcje(pole)
+    return [kolor_skali(i, len(opcje)) for i in range(len(opcje))] if pole.get("skala") else PALETA[:len(opcje)]
+
+
 def kolor_skali(i: int, liczba: int) -> str:
     """Kolor i-tej opcji skali od najlepszej (zielony) do najgorszej
     (czerwony) — odcień HSL od 130° do 0°. Ten sam wzór jest w teren.js."""
