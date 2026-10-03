@@ -1093,3 +1093,6 @@
 
 ## ETAP 212 — 2026-10-03
 - Kosz: usunięte pliki PDF z fiszkami, fiszki, koncepcje i projekty terenowe można przywrócić przez 30 dni
+
+## ETAP 213 — 2026-10-03
+- Osiedle: koncepcja jako GeoPackage dla QGIS (warstwy w PL-1992 ze stylami)

@@ -3742,3 +3742,26 @@ Status: zamknięty
   projektów; sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Kosz”
 - `DECISIONS.md`: D-220
+
+## ETAP 213 — Osiedle: koncepcja jako GeoPackage dla QGIS
+Data: 2026-10-03
+Status: zamknięty
+
+- `dane/geopaczka.py`: zapis GeoPackage przez sqlite3 (bez GDAL):
+  wymagane tabele (`gpkg_spatial_ref_sys` z EPSG:4326 i 2180,
+  `gpkg_contents`, `gpkg_geometry_columns`), warstwy z blobem „GP” +
+  WKB, tabela `layer_styles` ze stylem QML domyślnym dla warstwy
+- `osiedle/gpkg_koncepcji.py`: warstwy tereny, budynki, obszar,
+  linia_zabudowy w PL-1992 (`gauss_kruger` jak w DXF), atrybuty
+  (funkcja, numer, parametry, etap, pole), style QML: tereny
+  kategoryzowane po funkcji w kolorach aplikacji, budynki, kontur obszaru,
+  czerwona przerywana linia
+- Trasa `/osiedle/koncepcje/<id>.gpkg`, link „QGIS (GPKG)” przy koncepcji
+- Sprawdzenie poza testami: plik czytany przez GDAL 3.12 (pyogrio w
+  osobnym środowisku, nie zależność projektu) — warstwy, typy, EPSG:2180,
+  atrybuty; przeliczenie PL-1992 zgodne z pyproj (poniżej 1 mm). Wygląd
+  stylów w samym QGIS niesprawdzony (brak QGIS w środowisku)
+- Test: struktura pliku, układ, nagłówek bloba, pola, style jako
+  poprawny XML; sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Do QGIS”; PLAN: pozycje 213–214
+- `DECISIONS.md`: D-221

@@ -746,3 +746,47 @@ def test_kosz_koncepcji(client):
         baza.get_db().commit()
     assert client.get("/osiedle/kosz").get_json() == []
     assert client.post(f"/osiedle/koncepcje/{k_id}/przywroc").status_code == 404
+
+
+# ---------- ETAP 213: GeoPackage dla QGIS ----------
+
+
+def test_gpkg_koncepcji(client, tmp_path):
+    import sqlite3
+    import struct
+    import xml.etree.ElementTree as ET
+
+    import shapely
+
+    geo = kolekcja(prostokat(0, 0, 200, 150, "obszar"), prostokat(0, 0, 100, 60, "MW", zabudowa_proc=30, kondygnacje=5, etap=1),
+                   prostokat(100, 0, 100, 60, "ZP"), prostokat(10, 10, 40, 14, "budynek", kondygnacje=6), linia([(0, 70), (200, 70)]))
+    k_id = client.post("/osiedle/koncepcje", json={"nazwa": "Wariant <A>"}).get_json()["id"]
+    client.put(f"/osiedle/koncepcje/{k_id}", json={"geojson": geo})
+    r = client.get(f"/osiedle/koncepcje/{k_id}.gpkg")
+    assert r.mimetype == "application/geopackage+sqlite3" and "koncepcja_1_Wariant_A.gpkg" in r.headers["Content-Disposition"]
+    sciezka = tmp_path / "k.gpkg"
+    sciezka.write_bytes(r.data)
+    db = sqlite3.connect(sciezka)
+    try:
+        assert db.execute("PRAGMA application_id").fetchone()[0] == 0x47504B47
+        warstwy = dict(db.execute("SELECT table_name, data_type FROM gpkg_contents"))
+        assert warstwy == {"tereny": "features", "budynki": "features", "obszar": "features", "linia_zabudowy": "features", "layer_styles": "attributes"}
+        assert db.execute("SELECT organization, organization_coordsys_id FROM gpkg_spatial_ref_sys WHERE srs_id = 2180").fetchone() == ("EPSG", 2180)
+        assert dict(db.execute("SELECT table_name, geometry_type_name FROM gpkg_geometry_columns"))["linia_zabudowy"] == "LINESTRING"
+        tereny = db.execute("SELECT funkcja, etap, pole_m2, geom FROM tereny ORDER BY nr").fetchall()
+        assert [(t[0], t[1]) for t in tereny] == [("MW", 1), ("ZP", None)]
+        blob = tereny[0][3]
+        assert blob[:2] == b"GP" and struct.unpack("<i", blob[4:8])[0] == 2180
+        g = shapely.from_wkb(blob[40:])  # nagłówek 8 B + obwiednia 4 × 8 B
+        assert g.geom_type == "MultiPolygon" and g.area == pytest.approx(tereny[0][2], abs=0.06)
+        assert 6000 * 0.997 < g.area < 6000  # 100 × 60 m, skala układu 0,9993 zmniejsza pole
+        assert db.execute("SELECT rzut_m2, calkowita_m2 FROM budynki").fetchone() == pytest.approx((560 * 0.99858, 560 * 0.99858 * 6), rel=2e-3)
+        style = dict(db.execute("SELECT f_table_name, styleQML FROM layer_styles WHERE useAsDefault = 1"))
+        assert set(style) == {"tereny", "budynki", "obszar", "linia_zabudowy"}
+        for qml in style.values():
+            ET.fromstring(qml.split(">", 1)[1])  # bez deklaracji DOCTYPE — poprawny XML
+        assert 'value="MW"' in style["tereny"] and "255,159,10" in style["tereny"]  # kolor MW jak w aplikacji
+    finally:
+        db.close()
+    pusta = client.post("/osiedle/koncepcje", json={"nazwa": "Pusta"}).get_json()["id"]
+    assert client.get(f"/osiedle/koncepcje/{pusta}.gpkg").status_code == 200

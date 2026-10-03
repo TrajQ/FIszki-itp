@@ -854,6 +854,7 @@
         linkGeojson.href = `${URL_KONCEPCJE}/${id}.geojson`;
         document.getElementById("link-ods").href = `${URL_KONCEPCJE}/${id}.ods`; // ETAP 189
         document.getElementById("link-dxf").href = `${URL_KONCEPCJE}/${id}.dxf`; // ETAP 122
+        document.getElementById("link-gpkg").href = `${URL_KONCEPCJE}/${id}.gpkg`; // ETAP 213
         linkRaport.href = `${URL_KONCEPCJE}/${id}/raport`;
         stanZapisu.textContent = "";
         const plan = (dane.ustawienia || {}).plan || {};

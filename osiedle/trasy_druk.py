@@ -67,6 +67,17 @@ def dxf_koncepcji(koncepcja_id):
                     headers={"Content-Disposition": f"attachment; filename={nazwa}", "X-Uklad-Wspolrzednych": opis_ukladu})
 
 
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>.gpkg")
+def gpkg_koncepcji(koncepcja_id):
+    """ETAP 213: koncepcja jako GeoPackage dla QGIS — warstwy w PL-1992 ze stylami."""
+    from .gpkg_koncepcji import koncepcja_gpkg
+
+    k = _koncepcja_albo_404(koncepcja_id)
+    nazwa = secure_filename(f"koncepcja_{k['id']}_{k['nazwa']}.gpkg") or "koncepcja.gpkg"
+    return Response(koncepcja_gpkg(k["geojson"], k["nazwa"]), mimetype="application/geopackage+sqlite3",
+                    headers={"Content-Disposition": f"attachment; filename={nazwa}"})
+
+
 @osiedle_bp.route("/porownanie")
 def porownanie():
     """Warianty obok siebie: bilans, wskaźniki, program, szkice w jednej skali."""

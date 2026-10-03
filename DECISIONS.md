@@ -4404,3 +4404,24 @@ zachowuje pliki bez przenoszenia.
   CLAUDE.md; bazy modułów są osobne.
 - Kosz bez limitu czasu — dane usunięte celowo powinny kiedyś zniknąć;
   30 dni wystarcza na zauważenie pomyłki, a kopia zapasowa sięga dalej.
+
+## D-221 — GeoPackage ze stylami zamiast pliku projektu .qgs
+Data: 2026-10-03
+
+**Decyzja:** Zamiast projektu QGIS (.qgs) zapisujemy jeden plik
+GeoPackage: warstwy w PL-1992 i style QML w tabeli `layer_styles`
+(oznaczone jako domyślne). Plik składamy przez sqlite3, bez GDAL-a.
+
+**Uzasadnienie:** Projekt .qgs odwołuje się do osobnych plików danych
+ścieżkami i ma rozbudowany, wersjonowany format — ręcznie pisany łatwo
+psuje się po cichu, a w tym środowisku nie ma QGIS-a, żeby go sprawdzić.
+GeoPackage to standard OGC: jeden plik z danymi i stylem, czytany przez
+QGIS, ArcGIS i GDAL; jego poprawność sprawdziliśmy GDAL-em. Style w
+`layer_styles` to mechanizm QGIS-a; gdyby się nie wczytały, warstwy i
+atrybuty i tak są w pliku (Pomoc mówi, jak wybrać styl z bazy).
+
+**Odrzucone alternatywy:**
+- Plik .qgs z GeoJSON-em w ZIP-ie — dwa pliki i ścieżki względne; bez
+  QGIS-a nie da się sprawdzić, czy projekt się otwiera.
+- GDAL/fiona jako zależność — duża biblioteka binarna dla zapisu, który
+  sqlite3 robi w kilkudziesięciu wierszach (jak DXF i ODS).
