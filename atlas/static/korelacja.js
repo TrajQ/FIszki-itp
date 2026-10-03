@@ -100,6 +100,7 @@
             rok: daneMapy.rok,
             woj: daneMapy.wojewodztwo.bdl_id,
         });
+        if (daneMapy.poziom === "powiaty") parametry.set("poziom", "powiaty"); // ETAP 216
         if (daneMapy.zmienna.mianownik) {
             parametry.set("mianownik", daneMapy.zmienna.mianownik.id);
             parametry.set("mnoznik", daneMapy.zmienna.mnoznik);

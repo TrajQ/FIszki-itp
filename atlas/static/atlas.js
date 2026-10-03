@@ -343,6 +343,8 @@
         przyciskPokaz.textContent = "Pobieranie…";
         try {
             const parametry = new URLSearchParams({ zmienna: wybranaZmienna.id, rok: poleRok.value, woj: poleWoj.value });
+            const powiaty = document.getElementById("pole-poziom").value === "powiaty"; // ETAP 216
+            if (powiaty) parametry.set("poziom", "powiaty");
             if (poleRokBazowy.value) parametry.set("rok_bazowy", poleRokBazowy.value);
             if (mianownik) {
                 parametry.set("mianownik", mianownik.id);
@@ -355,11 +357,12 @@
             if (numer !== numerZapytania) return;
             if (dane.gminy.length === 0) {
                 wynikiEl.hidden = true;
-                pokazKomunikat(`Brak danych dla gmin w roku ${poleRok.value}. Spróbuj innego roku.`);
+                pokazKomunikat(`Brak danych dla ${powiaty ? "powiatów" : "gmin"} w roku ${poleRok.value}. Spróbuj innego roku.`);
                 return;
             }
             biezaceDane = dane;
             biezaceParametry = parametryDanych;
+            ustawJednostki(powiaty);
             resetujMorana();
             numerKlas += 1; // starsze odpowiedzi /klasy dotyczą poprzednich danych
             wybranyWskaznikEl.textContent = `Na mapie: ${dane.zmienna.nazwa} [${dane.zmienna.jednostka || "–"}], ${dane.rok}`;
@@ -742,7 +745,8 @@
         komunikatMapy.hidden = true;
         granice = null;
         try {
-            const wynik = await pobierzJson(URL_GRANICE.replace("/00", `/${terytWoj}`));
+            const url = biezaceDane && biezaceDane.poziom === "powiaty" ? URL_GRANICE_POWIATOW : URL_GRANICE; // ETAP 216
+            const wynik = await pobierzJson(url.replace("/00", `/${terytWoj}`));
             if (numer === numerZapytania) granice = wynik;
         } catch (e) {
             komunikatMapy.textContent = `Kartogram niedostępny: ${e.message}. Ranking i statystyki obok są kompletne.`;
@@ -900,7 +904,16 @@
         return div;
     }
 
+    // ETAP 216: powiaty — bez profilu gminy (raport i wykres w czasie są dla gmin) i bez trendu gmin
+    function ustawJednostki(powiaty) {
+        document.getElementById("naglowek-rankingu").textContent = powiaty ? "Ranking powiatów" : "Ranking gmin";
+        document.getElementById("filtr-rankingu").placeholder = powiaty ? "Szukaj powiatu…" : "Szukaj gminy…";
+        for (const id of ["link-trend", "link-gminy-czas"]) document.getElementById(id).hidden = powiaty;
+        if (powiaty) profilEl.hidden = true;
+    }
+
     async function pokazProfil(teryt) {
+        if (biezaceDane && biezaceDane.poziom === "powiaty") return; // profil i raport są dla gmin
         const gmina = biezaceDane.gminy.find((g) => g.teryt === teryt);
         if (!gmina) return;
         const numer = ++numerProfilu;
@@ -991,6 +1004,7 @@
             zapytanie.mnoznik = biezaceDane.zmienna.mnoznik;
         }
         if (biezaceDane.porownanie) zapytanie.rok_bazowy = biezaceDane.porownanie.rok_bazowy;
+        if (biezaceDane.poziom === "powiaty") zapytanie.poziom = "powiaty"; // ETAP 216
         try {
             const odpowiedz = await fetch(URL_OPIS, {
                 method: "POST",

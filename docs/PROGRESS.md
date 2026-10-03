@@ -3809,3 +3809,27 @@ Status: zamknięty
   testach Atlasu przyjmują poziom; strona Atlasu sprawdzona w
   przeglądarce bez zmian 1300/390 px
 - `DECISIONS.md`: D-223
+
+## ETAP 216 — Atlas: przełącznik gminy/powiaty w kartogramie i rankingu
+Data: 2026-10-03
+Status: zamknięty
+
+- Atlas: pole „Jednostki: gminy | powiaty”; w trybie powiatów dane z
+  `poziom=powiaty`, granice z `/atlas/granice-powiatow/` (ETAP 215),
+  nagłówek i wyszukiwarka rankingu „powiatów”, bez profilu gminy, „Gminy
+  w czasie” i trendu (są dla gmin)
+- `atlas/routes.py`: `_granice_poziomu`; poziom w `/klasy`,
+  `/autokorelacja` (sąsiedztwo powiatów w osobnym kluczu cache),
+  `/korelacja`, `/eksport.geojson`; opis Gemini z faktami o powiatach
+  (`statystyki.fakty_do_opisu(…, poziom)`, `JEDNOSTKI_OPISU`)
+- `atlas/trasy_druk.py`: mapa do druku i małe mapy w latach z granicami
+  poziomu, podpis „Powiaty województwa …”, sąsiedztwo LISA/Gi* dla
+  powiatów; usunięte zbędne importy
+- `atlas/static/korelacja.js`: poziom w zapytaniu korelacji
+- Poprawka z przeglądarki: `granice_powiatow` tworzy folder cache przed
+  zapisem
+- Testy: klasy, autokorelacja z granic powiatów (gminy nie są pobierane),
+  GeoJSON, mapa do druku, fakty opisu, pole na stronie, folder cache;
+  sprawdzone w przeglądarce 1300/390 px (przełączanie w obie strony)
+- Pomoc: „Powiaty zamiast gmin”
+- `DECISIONS.md`: D-224

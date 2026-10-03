@@ -4464,3 +4464,23 @@ Szczeliny po osobnym uproszczeniu sąsiednich gmin domykamy buforem
   będzie można potwierdzić usługę.
 - Osobny moduł / strona dla powiatów — ten sam interfejs Atlasu działa,
   gdy dane mają ten sam kształt (lista jednostek z TERYT i wartością).
+
+## D-224 — Powiaty w tym samym interfejsie Atlasu, funkcje gminne ukryte
+Data: 2026-10-03
+
+**Decyzja:** Tryb powiatów korzysta z tych samych tras i widoków co
+gminy (parametr `poziom`, dane w tym samym kształcie). Funkcje z natury
+gminne — profil i raport gminy, „Gminy w czasie”, trend w gminach —
+w trybie powiatów są ukryte, a nie przerabiane.
+
+**Uzasadnienie:** Analizy (klasy, LQ, Moran, korelacja, druk) działają
+na liście jednostek z TERYT i wartością, bez względu na ich rodzaj —
+jeden parametr daje cały Atlas dla powiatów. Raport gminy i porównanie
+gmin w czasie mają treść i źródła dla gmin; ich wersje powiatowe to
+osobne funkcje, nie przełącznik. Wartości powiatów bierzemy z GUS dla
+powiatów (nie sumujemy gmin), bo wskaźniki względne i średnie nie są
+sumowalne.
+
+**Odrzucone alternatywy:**
+- Osobna strona „Atlas powiatów” — powielenie interfejsu i tras.
+- Wartości powiatów jako suma gmin — błędne dla wskaźników względnych.

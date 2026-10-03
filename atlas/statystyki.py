@@ -298,9 +298,14 @@ def format_liczby(liczba: float) -> str:
     return tekst.replace(",", " ").replace(".", ",")
 
 
-def fakty_do_opisu(zmienna: dict, rok: int, wojewodztwo: str, stat: dict) -> list[str]:
+# ETAP 216: odmiana nazwy jednostek w faktach: (mianownik l.mn., dopełniacz l.mn.)
+JEDNOSTKI_OPISU = {"gminy": ("gminy", "gmin"), "powiaty": ("powiaty", "powiatów")}
+
+
+def fakty_do_opisu(zmienna: dict, rok: int, wojewodztwo: str, stat: dict, poziom: str = "gminy") -> list[str]:
     """Lista zdań-faktów z liczbami w polskim zapisie — wejście dla Gemini."""
     jednostka = f" {zmienna['jednostka']}" if zmienna.get("jednostka") else ""
+    mn, dop = JEDNOSTKI_OPISU[poziom]
 
     def z_jednostka(liczba):
         return f"{format_liczby(liczba)}{jednostka}"
@@ -309,16 +314,16 @@ def fakty_do_opisu(zmienna: dict, rok: int, wojewodztwo: str, stat: dict) -> lis
         f"Wskaźnik: {zmienna['nazwa']}",
         f"Jednostka: {zmienna.get('jednostka') or 'brak'}",
         f"Rok: {rok}",
-        f"Obszar: gminy województwa {wojewodztwo}",
-        f"Liczba gmin z danymi: {stat['liczba_gmin']}",
+        f"Obszar: {mn} województwa {wojewodztwo}",
+        f"Liczba {dop} z danymi: {stat['liczba_gmin']}",
         f"Wartość najwyższa: {stat['max']['nazwa']} — {z_jednostka(stat['max']['wartosc'])}",
         f"Wartość najniższa: {stat['min']['nazwa']} — {z_jednostka(stat['min']['wartosc'])}",
         f"Mediana: {z_jednostka(stat['mediana'])}",
-        f"Średnia arytmetyczna (nieważona) gmin: {z_jednostka(stat['srednia'])}",
+        f"Średnia arytmetyczna (nieważona) {dop}: {z_jednostka(stat['srednia'])}",
         *_fakty_zroznicowania(stat.get("zroznicowanie", {})),
-        "3 gminy o najwyższej wartości: "
+        f"3 {mn} o najwyższej wartości: "
         + "; ".join(f"{w['nazwa']} ({z_jednostka(w['wartosc'])})" for w in stat["najwyzsze"]),
-        "3 gminy o najniższej wartości: "
+        f"3 {mn} o najniższej wartości: "
         + "; ".join(f"{w['nazwa']} ({z_jednostka(w['wartosc'])})" for w in stat["najnizsze"]),
     ]
     return fakty

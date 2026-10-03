@@ -1573,6 +1573,7 @@ def test_granice_powiatow_z_gmin(tmp_path, monkeypatch):
     assert powiat.area == pytest.approx(0.02, rel=0.01)
     granice.granice_powiatow("12", str(tmp_path))
     assert wywolania == ["12"]  # drugi raz z pliku cache
+    assert granice.granice_powiatow("12", str(tmp_path / "nowy" / "folder"))["features"]  # folder cache tworzony w razie potrzeby
 
 
 def test_dane_dla_powiatow(client, monkeypatch):
@@ -1592,3 +1593,38 @@ def test_dane_dla_powiatow(client, monkeypatch):
     assert "Powiat 5" in csv_tekst
     monkeypatch.setattr(atlas_routes.granice, "granice_powiatow", lambda teryt, folder: {"type": "FeatureCollection", "features": []})
     assert client.get("/atlas/granice-powiatow/12").status_code == 200 and client.get("/atlas/granice-powiatow/x1").status_code == 400
+
+
+# ---------- ETAP 216: powiaty na stronie Atlasu ----------
+
+
+def test_powiaty_klasy_autokorelacja_eksport_druk_opis(client, monkeypatch):
+    from shapely.geometry import box, mapping
+
+    def wartosci(zid, rok, woj, poziom="gminy"):
+        assert poziom == "powiaty"
+        return [{"bdl_id": f"0112{i:08d}", "teryt": f"12{i:02d}", "nazwa": f"Powiat {i}", "wartosc": float(v)}
+                for i, v in zip(range(1, 7), [10, 12, 30, 33, 50, 55])]
+
+    powiaty = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {"teryt": f"12{i:02d}", "nazwa": ""}, "geometry": mapping(box(19 + (i - 1) % 3 * 0.1, 50 + (i - 1) // 3 * 0.1,
+                                                                                                         19.1 + (i - 1) % 3 * 0.1, 50.1 + (i - 1) // 3 * 0.1))}
+        for i in range(1, 7)]}
+    monkeypatch.setattr(atlas_routes, "_wartosci", wartosci)
+    monkeypatch.setattr(atlas_routes, "_wojewodztwa", lambda: [{"bdl_id": "011200000000", "nazwa": "MAŁOPOLSKIE", "teryt": "12"}])
+    monkeypatch.setattr(atlas_routes, "_opis_zmiennej", lambda *a: {"id": 1, "nazwa": "ludność", "jednostka": "osoba"})
+    monkeypatch.setattr(atlas_routes.granice, "granice_powiatow", lambda teryt, folder: powiaty)
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda *a: (_ for _ in ()).throw(AssertionError("gminy nie powinny być pobierane")))
+    p = "zmienna=1&rok=2023&woj=011200000000&poziom=powiaty"
+    assert client.get(f"/atlas/klasy?{p}&metoda=kwantyle&klasy=3").status_code == 200
+    moran = client.get(f"/atlas/autokorelacja?{p}").get_json()
+    assert moran["liczba_gmin"] == 6 and moran["pominiete"] == 0  # sąsiedztwo z granic powiatów (gminy nie są pobierane)
+    geo = client.get(f"/atlas/eksport.geojson?{p}").get_json()
+    assert len(geo["features"]) == 6 and geo["features"][0]["properties"]["teryt"] == "1201"
+    druk = client.get(f"/atlas/mapa.svg?{p}").get_data(as_text=True)
+    assert "Powiaty województwa MAŁOPOLSKIE" in druk
+    otrzymane = []
+    monkeypatch.setattr(atlas_routes, "opisz_wskaznik", lambda fakty: otrzymane.extend(fakty) or "Opis.")
+    client.post("/atlas/opis", json={"zmienna": 1, "rok": 2023, "woj": "011200000000", "poziom": "powiaty"})
+    assert "Obszar: powiaty województwa MAŁOPOLSKIE" in otrzymane and any(f.startswith("3 powiaty o najwyższej") for f in otrzymane)
+    assert 'id="pole-poziom"' in client.get("/atlas/").get_data(as_text=True)

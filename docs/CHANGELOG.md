@@ -1102,3 +1102,6 @@
 
 ## ETAP 215 — 2026-10-03
 - Atlas: dane i granice powiatów (podstawa przełącznika gminy/powiaty)
+
+## ETAP 216 — 2026-10-03
+- Atlas: powiaty zamiast gmin — kartogram, ranking, analizy, druk i eksport

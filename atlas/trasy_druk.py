@@ -5,15 +5,13 @@ atlas/routes.py na końcu pliku). Dane i parametry liczy ten sam kod co
 mapa na ekranie (_policz_dane, _parametry_zapytania).
 """
 
-import os
 
 from flask import Response, jsonify, render_template, request
 
 from dane.bdl import BladBDL
 
 from . import autokorelacja, granice, mapa_svg, statystyki
-from .baza import folder_modulu
-from .routes import _parametry_klasyfikacji, _parametry_zapytania, _policz_dane, _sasiedzi_wojewodztw, atlas_bp
+from .routes import _granice_poziomu, _parametry_klasyfikacji, _parametry_zapytania, _policz_dane, _sasiedzi_wojewodztw, atlas_bp
 
 
 # ---------- Mapa do druku (ETAP 42) ----------
@@ -62,17 +60,19 @@ def _mapa_do_druku(argumenty) -> tuple[str, dict]:
     if not wynik["gminy"]:
         raise LookupError("Brak danych dla gmin w tym roku.")
     teryt_woj = wynik["wojewodztwo"]["teryt"]
-    kolekcja = granice.granice_gmin(teryt_woj, os.path.join(folder_modulu(), "granice"))
+    kolekcja = _granice_poziomu(teryt_woj, parametry["poziom"])  # ETAP 216: gminy albo powiaty
+    jednostki = "Powiaty" if parametry["poziom"] == "powiaty" else "Gminy"
+    klucz_sasiadow = teryt_woj + (":powiaty" if parametry["poziom"] == "powiaty" else "")
     zmienna = wynik["zmienna"]
     jednostka = zmienna.get("jednostka") or ""
     tytul = zmienna["nazwa"]
-    podtytul = f"Gminy województwa {wynik['wojewodztwo']['nazwa']}, {wynik['rok']}"
+    podtytul = f"{jednostki} województwa {wynik['wojewodztwo']['nazwa']}, {wynik['rok']}"
     przypisy = ["Źródło: GUS, Bank Danych Lokalnych; granice: PRG, GUGiK. Opracowanie własne w aplikacji Warsztat."]
 
     if tryb == "zmiana":
         porownanie = wynik["porownanie"]
         progi = porownanie["progi_zmiany_proc"]
-        podtytul = f"Zmiana {porownanie['rok_bazowy']}–{wynik['rok']}, gminy województwa {wynik['wojewodztwo']['nazwa']}"
+        podtytul = f"Zmiana {porownanie['rok_bazowy']}–{wynik['rok']}, {jednostki.lower()} województwa {wynik['wojewodztwo']['nazwa']}"
         kolory = {
             g["teryt"]: KOLORY_ZMIANY[_numer_klasy(g["zmiana_proc"], progi)]
             for g in porownanie["gminy"]
@@ -94,12 +94,12 @@ def _mapa_do_druku(argumenty) -> tuple[str, dict]:
         ile = [sum(1 for g in lq["gminy"] if g["klasa"] == i) for i in range(len(KOLORY_LQ))]
         legenda = [(KOLORY_LQ[i], opis, ile[i]) for i, opis in enumerate(lq["opisy"])]
         tytul_legendy = "Iloraz lokalizacji"
-        podtytul = f"Iloraz lokalizacji, gminy województwa {wynik['wojewodztwo']['nazwa']}, {wynik['rok']}"
+        podtytul = f"Iloraz lokalizacji, {jednostki.lower()} województwa {wynik['wojewodztwo']['nazwa']}, {wynik['rok']}"
         udzial = statystyki.format_liczby(round(lq["udzial_wojewodztwa"] * zmienna.get("mnoznik", 1), 3))
         przypisy.append(f"LQ = wskaźnik gminy / wskaźnik województwa ({udzial}); 1 — jak w województwie.")
     elif tryb == "gi":
-        teryt_sasiedzi = _sasiedzi_wojewodztw.get(teryt_woj) or autokorelacja.sasiedzi(kolekcja)
-        _sasiedzi_wojewodztw[teryt_woj] = teryt_sasiedzi
+        teryt_sasiedzi = _sasiedzi_wojewodztw.get(klucz_sasiadow) or autokorelacja.sasiedzi(kolekcja)
+        _sasiedzi_wojewodztw[klucz_sasiadow] = teryt_sasiedzi
         analiza = autokorelacja.analiza({g["teryt"]: g["wartosc"] for g in wynik["gminy"]}, teryt_sasiedzi)
         kolory = {g["teryt"]: KOLORY_GI[g["kategoria"]] for g in analiza["gi"]}
         ile = {k: 0 for k in KOLORY_GI}
@@ -109,8 +109,8 @@ def _mapa_do_druku(argumenty) -> tuple[str, dict]:
         tytul_legendy = "Gorące i zimne punkty Gi*"
         przypisy.append("Getis-Ord Gi*: wagi binarne z samą gminą, sąsiedztwo queen; z-score, progi 90/95/99%.")
     elif tryb == "lisa":
-        teryt_sasiedzi = _sasiedzi_wojewodztw.get(teryt_woj) or autokorelacja.sasiedzi(kolekcja)
-        _sasiedzi_wojewodztw[teryt_woj] = teryt_sasiedzi
+        teryt_sasiedzi = _sasiedzi_wojewodztw.get(klucz_sasiadow) or autokorelacja.sasiedzi(kolekcja)
+        _sasiedzi_wojewodztw[klucz_sasiadow] = teryt_sasiedzi
         analiza = autokorelacja.analiza({g["teryt"]: g["wartosc"] for g in wynik["gminy"]}, teryt_sasiedzi)
         kolory = {l["teryt"]: KOLORY_LISA[l["kategoria"]] for l in analiza["lisa"]}
         ile = {k: 0 for k in KOLORY_LISA}
@@ -205,8 +205,9 @@ def _mapy_w_latach(argumenty) -> tuple[str, dict]:
                 f"Klasyfikacja: {k['nazwa_metody']}, {liczba} klas wspólnych dla wszystkich lat (z wartości gmin ze wszystkich map)."]
     if brakujace:
         przypisy.append(f"Bez danych GUS w latach: {', '.join(map(str, brakujace))} — pominięte.")
-    kolekcja = granice.granice_gmin(pierwszy["wojewodztwo"]["teryt"], os.path.join(folder_modulu(), "granice"))
-    svg = mapa_svg.male_mapy_svg(kolekcja, mapy, zmienna["nazwa"], f"Gminy województwa {pierwszy['wojewodztwo']['nazwa']}, {', '.join(map(str, wyniki))}",
+    kolekcja = _granice_poziomu(pierwszy["wojewodztwo"]["teryt"], pierwszy["poziom"])
+    jednostki = "Powiaty" if pierwszy["poziom"] == "powiaty" else "Gminy"
+    svg = mapa_svg.male_mapy_svg(kolekcja, mapy, zmienna["nazwa"], f"{jednostki} województwa {pierwszy['wojewodztwo']['nazwa']}, {', '.join(map(str, wyniki))}",
                                  legenda, zmienna.get("jednostka") or "Wartość", przypisy)
     return svg, pierwszy
 

@@ -93,7 +93,7 @@ def klasy():
         wartosci = [
             g["wartosc"]
             for g in _wartosci_wskaznika(
-                parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"]
+                parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"], parametry["poziom"]
             )
         ]
         return jsonify(statystyki.klasyfikuj(wartosci, metoda, liczba_klas))
@@ -103,8 +103,14 @@ def klasy():
         return jsonify({"blad": str(e)}), 502
 
 
-# Sąsiedztwo gmin województwa liczy się z granic raz na uruchomienie aplikacji.
+# Sąsiedztwo gmin (albo powiatów) województwa liczy się z granic raz na uruchomienie aplikacji.
 _sasiedzi_wojewodztw: dict[str, dict] = {}
+
+
+def _granice_poziomu(teryt_woj: str, poziom: str) -> dict:
+    """ETAP 216: granice jednostek mapy — gminy albo powiaty (z połączonych gmin)."""
+    folder = os.path.join(folder_modulu(), "granice")
+    return granice.granice_powiatow(teryt_woj, folder) if poziom == "powiaty" else granice.granice_gmin(teryt_woj, folder)
 
 
 @atlas_bp.route("/autokorelacja")
@@ -119,13 +125,12 @@ def autokorelacja_przestrzenna():
         return jsonify({"blad": "Nie znaleziono takiego województwa w BDL."}), 404
     try:
         gminy = _wartosci_wskaznika(
-            parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"]
+            parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"], parametry["poziom"]
         )
-        teryt = wojewodztwo["teryt"]
-        if teryt not in _sasiedzi_wojewodztw:
-            kolekcja = granice.granice_gmin(teryt, os.path.join(folder_modulu(), "granice"))
-            _sasiedzi_wojewodztw[teryt] = autokorelacja.sasiedzi(kolekcja)
-        wynik = autokorelacja.analiza({g["teryt"]: g["wartosc"] for g in gminy}, _sasiedzi_wojewodztw[teryt])
+        klucz = wojewodztwo["teryt"] + (":powiaty" if parametry["poziom"] == "powiaty" else "")
+        if klucz not in _sasiedzi_wojewodztw:
+            _sasiedzi_wojewodztw[klucz] = autokorelacja.sasiedzi(_granice_poziomu(wojewodztwo["teryt"], parametry["poziom"]))
+        wynik = autokorelacja.analiza({g["teryt"]: g["wartosc"] for g in gminy}, _sasiedzi_wojewodztw[klucz])
     except BladBDL as e:
         return jsonify({"blad": str(e)}), 502
     except granice.BladGranic as e:
@@ -213,7 +218,7 @@ def opis():
         return jsonify({"blad": "Brak danych do opisania."}), 404
 
     fakty = statystyki.fakty_do_opisu(
-        wynik["zmienna"], wynik["rok"], wynik["wojewodztwo"]["nazwa"], wynik["statystyki"]
+        wynik["zmienna"], wynik["rok"], wynik["wojewodztwo"]["nazwa"], wynik["statystyki"], wynik["poziom"]
     )
     if "porownanie" in wynik:
         fakty += statystyki.fakty_zmiany(
@@ -415,9 +420,9 @@ def korelacja():
         return jsonify({"blad": "Wybierz inny wskaźnik niż ten na mapie."}), 400
     try:
         gminy_x = _wartosci_wskaznika(
-            parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"]
+            parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"], parametry["poziom"]
         )
-        gminy_y = _wartosci(zmienna2, parametry["rok"], parametry["woj_bdl_id"])
+        gminy_y = _wartosci(zmienna2, parametry["rok"], parametry["woj_bdl_id"], parametry["poziom"])
         zmienna_x = _opis_zmiennej(parametry["zmienna_id"], parametry["mianownik"], parametry["mnoznik"])
         zmienna_y = z_cache(f"zmienna:{zmienna2}", lambda: asdict(bdl.pobierz_zmienna(zmienna2)))
     except BladBDL as e:
@@ -433,9 +438,7 @@ def eksport_geojson():
     try:
         parametry = _parametry_zapytania(request.args)
         wynik = _policz_dane(**parametry)
-        kolekcja = granice.granice_gmin(
-            wynik["wojewodztwo"]["teryt"], os.path.join(folder_modulu(), "granice")
-        )
+        kolekcja = _granice_poziomu(wynik["wojewodztwo"]["teryt"], parametry["poziom"])
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
     except (BladBDL, granice.BladGranic) as e:

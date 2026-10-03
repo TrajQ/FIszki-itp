@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 215 (Atlas: powiaty — dane i granice — zamknięty)
-Ostatni ZIP: releases/warsztat_etap215_20261003.zip
-Testy: 642 passed / 0 failed
+ETAP: 216 (Atlas: powiaty w kartogramie i rankingu — zamknięty)
+Ostatni ZIP: releases/warsztat_etap216_20261003.zip
+Testy: 643 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -89,6 +89,7 @@ def granice_powiatow(teryt_wojewodztwa: str, folder_cache: str) -> dict:
         cechy.append({"type": "Feature", "properties": {"teryt": teryt, "nazwa": nazwa},
                       "geometry": mapping(_bez_drobnych_dziur(g).simplify(TOLERANCJA_UPRASZCZANIA / 2, preserve_topology=True))})
     kolekcja = {"type": "FeatureCollection", "features": cechy}
+    os.makedirs(folder_cache, exist_ok=True)
     with open(sciezka, "w", encoding="utf-8") as plik:
         json.dump(kolekcja, plik)
     return kolekcja

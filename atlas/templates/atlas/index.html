@@ -36,6 +36,9 @@
     <label>Województwo
         <select id="pole-woj" required><option value="">Wczytywanie…</option></select>
     </label>
+    <label title="Gminy albo powiaty województwa (ETAP 216); granice powiatów to połączone gminy">Jednostki
+        <select id="pole-poziom"><option value="gminy">gminy</option><option value="powiaty">powiaty</option></select>
+    </label>
     <label>Rok
         <select id="pole-rok"></select>
     </label>
@@ -202,7 +205,7 @@
 
     <section class="karta ranking">
         <div class="rzad rzad--miedzy">
-            <h3>Ranking gmin</h3>
+            <h3 id="naglowek-rankingu">Ranking gmin</h3>
             <input id="filtr-rankingu" type="search" placeholder="Szukaj gminy…" class="filtr-rankingu">
         </div>
         <ol id="lista-rankingu" class="lista-rankingu"></ol>
@@ -216,6 +219,7 @@
     const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
     const URL_DANE = "{{ url_for('atlas.dane') }}";
     const URL_GRANICE = "{{ url_for('atlas.granice_wojewodztwa', teryt_woj='00') }}";
+    const URL_GRANICE_POWIATOW = "{{ url_for('atlas.granice_powiatow', teryt_woj='00') }}"; // ETAP 216
     const URL_TLO = "{{ url_for('atlas.tlo_wojewodztw') }}";
     const URL_OPIS = "{{ url_for('atlas.opis') }}";
     const URL_EKSPORT = "{{ url_for('atlas.eksport_csv') }}";
