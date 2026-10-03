@@ -306,6 +306,7 @@
             parametry.append("nazwa", w.nazwa);
         }
         link.href = `${URL_CENY}porownanie.csv?${parametry}`;
+        document.getElementById("link-ods").href = `${URL_CENY}porownanie.ods?${parametry}`; // ETAP 189
         document.getElementById("link-raport-miast").href = `${URL_CENY}raport?${parametry}`; // ETAP 137
     }
 

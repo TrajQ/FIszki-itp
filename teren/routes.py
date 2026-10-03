@@ -272,20 +272,38 @@ def eksport_geojson(projekt_id):
     )
 
 
+def _wiersze_punktow(p: dict) -> list[list]:
+    """Tabela punktów projektu — wspólna dla CSV i ODS (ETAP 189)."""
+    nazwy_pol = [pole["nazwa"] for pole in p["pola"]]
+    wiersze = [["id", "czas", "szerokosc", "dlugosc", "dokladnosc_m", "polozenie_reczne", *nazwy_pol, "uwagi", "zdjecie"]]
+    for pt in baza.punkty(p["id"]):
+        wartosci = []
+        for nazwa in nazwy_pol:
+            w = pt["wartosci"].get(nazwa, "")
+            wartosci.append("tak" if w is True else "nie" if w is False else "; ".join(w) if isinstance(w, list) else w)
+        wiersze.append([pt["id"], pt["czas"], pt["lat"], pt["lng"], pt["dokladnosc_m"], "tak" if pt["polozenie_reczne"] else "nie",
+                        *wartosci, pt["uwagi"], pt["zdjecie"] or ""])
+    return wiersze
+
+
+@teren_bp.route("/projekty/<int:projekt_id>.ods")
+def eksport_ods(projekt_id):
+    """ETAP 189: punkty projektu jako arkusz ODS (liczby jako liczby)."""
+    from dane.arkusz import arkusz_ods
+
+    p = _projekt_albo_404(projekt_id)
+    plik = arkusz_ods([{"nazwa": "Punkty", "wiersze": _wiersze_punktow(p),
+                        "przypisy": [f"Projekt „{p['nazwa']}” — inwentaryzacja w terenie (moduł Teren aplikacji Warsztat)."]}])
+    return Response(plik, mimetype="application/vnd.oasis.opendocument.spreadsheet",
+                    headers={"Content-Disposition": f"attachment; filename=teren_{_nazwa_pliku(p['nazwa'])}.ods"})
+
+
 @teren_bp.route("/projekty/<int:projekt_id>.csv")
 def eksport_csv(projekt_id):
     p = _projekt_albo_404(projekt_id)
     wyjscie = io.StringIO()
     zapis = csv.writer(wyjscie, delimiter=";")
-    nazwy_pol = [pole["nazwa"] for pole in p["pola"]]
-    zapis.writerow(["id", "czas", "szerokosc", "dlugosc", "dokladnosc_m", "polozenie_reczne", *nazwy_pol, "uwagi", "zdjecie"])
-    for pt in baza.punkty(projekt_id):
-        wartosci = []
-        for nazwa in nazwy_pol:
-            w = pt["wartosci"].get(nazwa, "")
-            wartosci.append("tak" if w is True else "nie" if w is False else "; ".join(w) if isinstance(w, list) else w)
-        zapis.writerow([pt["id"], pt["czas"], pt["lat"], pt["lng"], pt["dokladnosc_m"], "tak" if pt["polozenie_reczne"] else "nie",
-                        *wartosci, pt["uwagi"], pt["zdjecie"] or ""])
+    zapis.writerows(_wiersze_punktow(p))
     return Response(
         "﻿" + wyjscie.getvalue(),  # BOM — Excel otworzy polskie znaki poprawnie
         mimetype="text/csv",

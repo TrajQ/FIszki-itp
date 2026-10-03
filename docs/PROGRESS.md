@@ -3291,3 +3291,20 @@ Status: zamknięty
   typy komórek, escapowanie), eksport Atlasu; sprawdzone w przeglądarce
 - Pomoc: „Arkusz ODS”
 - `DECISIONS.md`: D-196
+
+## ETAP 189 — Arkusz ODS w Cenach, Osiedlu i Terenie
+Data: 2026-10-03
+Status: zamknięty
+
+- Ceny: `/ceny/porownanie.ods` — te same szeregi miast co CSV
+  (`_tabela_porownania`, wspólna funkcja), link „ODS” obok „CSV”
+- Teren: `/teren/projekty/<id>.ods` — tabela punktów jak CSV
+  (`_wiersze_punktow`), link „ODS” na stronie projektu
+- Osiedle: `/osiedle/koncepcje/<id>.ods` — zakładki Bilans, Wskaźniki
+  (z terenów i z budynków, zgodność z planem), Program, Koszty, Budynki
+  (`arkusze_koncepcji`); link „ODS” przy koncepcji
+- CSV bez zmian w treści (wspólne funkcje wierszy dla obu formatów)
+- Testy: arkusze Osiedla (nazwy zakładek, treść), Terenu (liczby jako
+  liczby), Cen
+- Pomoc: akapit „Arkusz ODS”
+- `DECISIONS.md`: D-197

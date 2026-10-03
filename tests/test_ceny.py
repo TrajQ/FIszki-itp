@@ -896,3 +896,16 @@ def test_nietypowe_transakcje(client, tmp_path, monkeypatch):
     assert d["liczba"] == 1 and d["transakcje"][0]["cena"] == 200000
     assert client.get("/ceny/transakcje/9/nietypowe").status_code == 404
     assert 'id="karta-nietypowych"' in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)
+
+
+def test_porownanie_ods(client):
+    """ETAP 189: to samo zestawienie miast co CSV, jako arkusz."""
+    import io
+    import zipfile
+
+    client.put("/ceny/zmienna", json={"id": 633})
+    odp = client.get(f"/ceny/porownanie.ods?id={KRAKOW}&nazwa=Kraków&id={WIELICKI}&nazwa=wielicki")
+    assert odp.mimetype == "application/vnd.oasis.opendocument.spreadsheet"
+    tresc = zipfile.ZipFile(io.BytesIO(odp.data)).read("content.xml").decode()
+    assert "Kraków" in tresc and 'office:value="10000' in tresc and "Bank Danych Lokalnych" in tresc
+    assert client.get("/ceny/porownanie.ods").status_code == 400

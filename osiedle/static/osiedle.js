@@ -794,6 +794,7 @@
         projektTerenu.value = [...projektTerenu.options].some((o) => o.value === String(zapisanyTeren)) ? String(zapisanyTeren) : "";
         pokazTeren();
         linkGeojson.href = `${URL_KONCEPCJE}/${id}.geojson`;
+        document.getElementById("link-ods").href = `${URL_KONCEPCJE}/${id}.ods`; // ETAP 189
         document.getElementById("link-dxf").href = `${URL_KONCEPCJE}/${id}.dxf`; // ETAP 122
         linkRaport.href = `${URL_KONCEPCJE}/${id}/raport`;
         stanZapisu.textContent = "";

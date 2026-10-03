@@ -3936,3 +3936,20 @@ rozwiązują znany problem CSV: przecinek dziesiętny i kodowanie w Excelu.
   zależnościami; Excel czyta ODS.
 - Formatowanie liczb (miejsca po przecinku, separatory) w stylach ODS —
   zostawione arkuszowi; dane pozostają dokładne.
+
+## D-197 — Jedna lista wierszy dla CSV i ODS w każdym module
+Data: 2026-10-03
+
+**Decyzja:** Każdy eksport ma jedną funkcję budującą wiersze tabeli
+(`_wiersze_eksportu`, `_tabela_porownania`, `_wiersze_punktow`,
+`arkusze_koncepcji`), a CSV i ODS różnią się tylko zapisem. Osiedle,
+które nie miało CSV, dostało od razu arkusz z zakładkami.
+
+**Uzasadnienie:** Ten sam eksport w dwóch formatach nie może się
+rozjechać — wspólna lista wierszy to gwarantuje. Funkcje są w modułach
+(nie jedna wspólna „eksportująca”), bo tabele są różne (CLAUDE.md: bez
+uniwersalnych abstrakcji); wspólny jest tylko format w `dane/arkusz.py`.
+
+**Odrzucone alternatywy:**
+- Zastąpienie CSV przez ODS — CSV czytają QGIS, R i Python bez
+  dodatkowych bibliotek; zostaje.

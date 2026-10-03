@@ -1021,3 +1021,6 @@
 
 ## ETAP 188 — 2026-10-03
 - Eksport do arkusza ODS (LibreOffice/Excel) bez nowej zależności — tabela Atlasu
+
+## ETAP 189 — 2026-10-03
+- Arkusz ODS także w Cenach (porównanie miast), Terenie (punkty) i Osiedlu (bilans, wskaźniki, program, koszty)

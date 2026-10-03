@@ -183,6 +183,59 @@ def usun_koncepcje(koncepcja_id):
     return jsonify({"ok": True})
 
 
+# ETAP 189: arkusz ODS — opisy wierszy jak w raporcie
+OPISY_WSKAZNIKOW = [("powierzchnia_zabudowy_m2", "powierzchnia zabudowy [m²]"), ("powierzchnia_calkowita_m2", "powierzchnia całkowita [m²]"),
+                    ("zabudowa_proc", "wskaźnik zabudowy [%]"), ("intensywnosc", "intensywność zabudowy"),
+                    ("pbc_proc", "powierzchnia biologicznie czynna [%]"), ("max_kondygnacje", "najwyższa zabudowa [kond.]")]
+OPISY_PROGRAMU = [("mieszkania_mw", "mieszkania MW"), ("mieszkania_mn", "domy MN"), ("mieszkancy", "mieszkańcy"),
+                  ("gestosc_os_na_ha", "gęstość [os./ha]"), ("powierzchnia_uslug_m2", "powierzchnia usług [m²]"),
+                  ("miejsca_potrzebne", "miejsca postojowe — potrzeba"), ("miejsca_na_terenach_ks", "miejsca postojowe — na KS"),
+                  ("miejsca_brakuje", "miejsca postojowe — brakuje"), ("oddzialy_przedszkolne", "oddziały przedszkolne"),
+                  ("oddzialy_szkolne", "oddziały szkolne"), ("zielen_na_mieszkanca_m2", "zieleń na mieszkańca [m²]")]
+
+
+def arkusze_koncepcji(k: dict, b: dict) -> list[dict]:
+    """Bilans, wskaźniki (z terenów i budynków), program, koszty i budynki jako arkusze ODS."""
+    zrodlo = [f"Koncepcja „{k['nazwa']}” — opracowanie w aplikacji Warsztat (moduł Osiedle); liczby z rysunku i wpisanych założeń."]
+    bilans_w = [["funkcja", "nazwa", "powierzchnia [m²]", "udział [%]"]] + [[f["funkcja"], f["nazwa"], f["powierzchnia_m2"], f["procent"]] for f in b["funkcje"]]
+    if b["obszar_m2"] is not None:
+        bilans_w.append(["obszar", "obszar opracowania", b["obszar_m2"], 100])
+    arkusze = [{"nazwa": "Bilans", "wiersze": bilans_w, "przypisy": zrodlo}]
+    if b["wskazniki"]:
+        wb = b.get("wskazniki_budynkow")
+        wiersze = [["wskaźnik", "z terenów", *(["z budynków"] if wb else [])]]
+        wiersze += [[opis, b["wskazniki"][klucz], *([wb[klucz]] if wb else [])] for klucz, opis in OPISY_WSKAZNIKOW]
+        zgodnosc = [[f"plan: {z['nazwa']} {z['rodzaj']} {z['granica']}", z["wartosc"], "zgodne" if z["spelnione"] else "niezgodne"] for z in b["zgodnosc"]]
+        arkusze.append({"nazwa": "Wskaźniki", "wiersze": wiersze + ([[]] + zgodnosc if zgodnosc else []), "przypisy": zrodlo})
+    if b["program"]:
+        arkusze.append({"nazwa": "Program", "wiersze": [["pozycja", "wartość"]] + [[opis, b["program"][klucz]] for klucz, opis in OPISY_PROGRAMU],
+                        "przypisy": zrodlo})
+    if b["koszty"]:
+        kz = b["koszty"]
+        wiersze = [["pozycja", "ilość", "jednostka", "stawka [zł]", "za", "koszt [zł]"]]
+        wiersze += [[p["opis"], p["ilosc"], p["jednostka_ilosci"], p["stawka"], p["jednostka"], p["koszt"]] for p in kz["pozycje"]]
+        wiersze += [["razem", None, None, None, None, kz["razem"]], ["na mieszkanie", None, None, None, None, kz["na_mieszkanie"]],
+                    ["na m² powierzchni całkowitej", None, None, None, None, kz["na_m2_calkowitej"]]]
+        arkusze.append({"nazwa": "Koszty", "wiersze": wiersze, "przypisy": ["Stawki wpisane przez użytkownika.", *zrodlo]})
+    if b.get("budynki"):
+        wiersze = [["nr", "teren", "rzut [m²]", "kondygnacje", "powierzchnia całkowita [m²]"]]
+        wiersze += [[x["nr"], x["teren"], x["pole_m2"], x["kondygnacje"], x["calkowita_m2"]] for x in b["budynki"]["lista"]]
+        arkusze.append({"nazwa": "Budynki", "wiersze": wiersze, "przypisy": zrodlo})
+    return arkusze
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>.ods")
+def eksport_ods(koncepcja_id):
+    """ETAP 189: liczby koncepcji jako arkusz ODS z zakładkami."""
+    from dane.arkusz import arkusz_ods
+
+    k = _koncepcja_albo_404(koncepcja_id)
+    b = bilans(k["geojson"], k["ustawienia"])
+    nazwa = secure_filename(f"koncepcja_{k['id']}_{k['nazwa']}.ods") or "koncepcja.ods"
+    return Response(arkusz_ods(arkusze_koncepcji(k, b)), mimetype="application/vnd.oasis.opendocument.spreadsheet",
+                    headers={"Content-Disposition": f"attachment; filename={nazwa}"})
+
+
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>.geojson")
 def eksport_geojson(koncepcja_id):
     """Rysunek koncepcji do QGIS (funkcja jako atrybut)."""

@@ -172,26 +172,45 @@ def dostepnosc(powiat_id):
     return _obsluz_bledy(wynik)
 
 
+def _tabela_porownania() -> tuple[list[list], str]:
+    """Szeregi wybranych miast obok siebie (rok; miasto 1; …) i opis źródła — CSV i ODS (ETAP 189)."""
+    zmienna = _wymagana_zmienna()
+    identyfikatory = [_id_bdl(i) for i in request.args.getlist("id")[:MAKS_MIAST]]
+    nazwy = request.args.getlist("nazwa")[: len(identyfikatory)]
+    if not identyfikatory:
+        raise ValueError("Wybierz co najmniej jedno miasto.")
+    szeregi = [{p["rok"]: p["wartosc"] for p in _szereg(zmienna["id"], i)} for i in identyfikatory]
+    lata = sorted({rok for s in szeregi for rok in s})
+    naglowek = [" ".join(n.split())[:80] for n in nazwy] + identyfikatory[len(nazwy):]
+    wiersze = [["rok", *naglowek]] + [[rok, *(s.get(rok, "") for s in szeregi)] for rok in lata]
+    return wiersze, f"{zmienna['nazwa']} [{zmienna['jednostka']}]. Źródło: GUS, Bank Danych Lokalnych."
+
+
+@ceny_bp.route("/porownanie.ods")
+def porownanie_ods():
+    """ETAP 189: to samo zestawienie co porownanie.csv jako arkusz ODS."""
+    from dane.arkusz import arkusz_ods
+
+    def plik():
+        wiersze, przypis = _tabela_porownania()
+        return Response(arkusz_ods([{"nazwa": "Ceny w czasie", "wiersze": wiersze, "przypisy": [przypis]}]),
+                        mimetype="application/vnd.oasis.opendocument.spreadsheet",
+                        headers={"Content-Disposition": "attachment; filename=ceny_porownanie.ods"})
+
+    return _obsluz_bledy(plik)
+
+
 @ceny_bp.route("/porownanie.csv")
 def porownanie_csv():
     """Szeregi wybranych miast obok siebie: rok; miasto 1; miasto 2; …"""
 
     def plik():
-        zmienna = _wymagana_zmienna()
-        identyfikatory = [_id_bdl(i) for i in request.args.getlist("id")[:MAKS_MIAST]]
-        nazwy = request.args.getlist("nazwa")[: len(identyfikatory)]
-        if not identyfikatory:
-            raise ValueError("Wybierz co najmniej jedno miasto.")
-        szeregi = [{p["rok"]: p["wartosc"] for p in _szereg(zmienna["id"], i)} for i in identyfikatory]
-        lata = sorted({rok for s in szeregi for rok in s})
+        wiersze, przypis = _tabela_porownania()
         bufor = io.StringIO()
         zapis = csv.writer(bufor, delimiter=";")
-        naglowek = [" ".join(n.split())[:80] for n in nazwy] + identyfikatory[len(nazwy):]
-        zapis.writerow(["rok", *naglowek])
-        for rok in lata:
-            zapis.writerow([rok, *(s.get(rok, "") for s in szeregi)])
+        zapis.writerows(wiersze)
         zapis.writerow([])
-        zapis.writerow([f"{zmienna['nazwa']} [{zmienna['jednostka']}]. Źródło: GUS, Bank Danych Lokalnych."])
+        zapis.writerow([przypis])
         return Response(
             "﻿" + bufor.getvalue(),
             mimetype="text/csv",
