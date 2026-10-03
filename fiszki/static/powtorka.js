@@ -200,10 +200,62 @@
         }
         poleOdpowiedzi.hidden = true;
         poleOdpowiedzi.blur(); // żeby działały skróty 1/2/3
+        pokazWyjasnienie(kolejka[0]);
         odpowiedzBlok.hidden = false;
         przyciskPokaz.hidden = true;
         przyciskiOceny.hidden = false;
     }
+
+    // ---------- ETAP 207: wyjaśnienie po odsłonięciu (własne albo z Gemini — fiszki/wyjasnienia.py) ----------
+    const wyjasnienieNaglowek = document.getElementById("wyjasnienie-naglowek");
+    const wyjasnienieTekst = document.getElementById("wyjasnienie-tekst");
+    const edycjaWyjasnienia = document.getElementById("edycja-wyjasnienia");
+    const poleWyjasnienia = document.getElementById("pole-wyjasnienia");
+    const stanWyjasnienia = document.getElementById("stan-wyjasnienia");
+    const przyciskGemini = document.getElementById("wyjasnij-gemini");
+    const przyciskWlasne = document.getElementById("wyjasnienie-wlasne");
+    const przyciskUsunWyjasnienie = document.getElementById("usun-wyjasnienie");
+    const urlWyjasnienia = (id) => URL_WYJASNIENIE_WZOR.replace(/\/0$/, `/${id}`);
+
+    function pokazWyjasnienie(fiszka) {
+        const w = fiszka.wyjasnienie;
+        wyjasnienieNaglowek.hidden = wyjasnienieTekst.hidden = !w;
+        wyjasnienieTekst.textContent = w ? w.tekst : "";
+        document.getElementById("zrodlo-wyjasnienia").textContent = w ? (w.zrodlo === "gemini" ? "· Gemini, z fragmentu źródła" : "· własne") : "";
+        przyciskGemini.textContent = w ? "Wyjaśnij jeszcze raz (Gemini)" : "Wyjaśnij z fragmentu (Gemini)";
+        przyciskWlasne.textContent = w ? "Popraw wyjaśnienie" : "Własne wyjaśnienie";
+        edycjaWyjasnienia.hidden = stanWyjasnienia.hidden = true;
+        przyciskUsunWyjasnienie.hidden = !w;
+    }
+
+    async function wyslijWyjasnienie(url, opcje, opisCzekania) {
+        const fiszka = kolejka[0];
+        stanWyjasnienia.hidden = false;
+        stanWyjasnienia.textContent = opisCzekania;
+        przyciskGemini.disabled = true;
+        try {
+            const odp = await fetch(url, opcje);
+            const dane = odp.status === 204 ? null : await odp.json().catch(() => ({}));
+            if (!odp.ok) throw new Error((dane && dane.blad) || `Błąd ${odp.status}`);
+            fiszka.wyjasnienie = dane;
+            if (kolejka[0] === fiszka) pokazWyjasnienie(fiszka);
+        } catch (e) {
+            stanWyjasnienia.textContent = e.message;
+        } finally {
+            przyciskGemini.disabled = false;
+        }
+    }
+
+    przyciskGemini.addEventListener("click", () => wyslijWyjasnienie(`${urlWyjasnienia(kolejka[0].id)}/gemini`, { method: "POST" }, "Gemini czyta fragment źródła…"));
+    przyciskWlasne.addEventListener("click", () => {
+        edycjaWyjasnienia.hidden = !edycjaWyjasnienia.hidden;
+        poleWyjasnienia.value = kolejka[0].wyjasnienie ? kolejka[0].wyjasnienie.tekst : "";
+        if (!edycjaWyjasnienia.hidden) poleWyjasnienia.focus();
+    });
+    document.getElementById("zapisz-wyjasnienie").addEventListener("click", () => wyslijWyjasnienie(urlWyjasnienia(kolejka[0].id), {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tekst: poleWyjasnienia.value }),
+    }, "Zapisuję…"));
+    przyciskUsunWyjasnienie.addEventListener("click", () => wyslijWyjasnienie(urlWyjasnienia(kolejka[0].id), { method: "DELETE" }, "Usuwam…"));
 
     // ---------- porównanie wpisanej odpowiedzi ----------
     // Bez oceniania „na procenty” — tylko podświetlamy w poprawnej

@@ -147,6 +147,38 @@ def sparsuj_liste_fiszek(tekst: str) -> list[dict]:
     return wynik
 
 
+# ---------- Fiszki: wyjaśnienie odpowiedzi (ETAP 207) ----------
+
+PROMPT_WYJASNIENIA = (
+    "Jesteś korepetytorem studenta gospodarki przestrzennej. Dostajesz fiszkę "
+    "(pytanie i odpowiedź) oraz fragment podręcznika, z którego powstała. "
+    "Wyjaśnij po polsku w 2–4 zdaniach, dlaczego ta odpowiedź jest poprawna "
+    "i jak ją zapamiętać, opierając się WYŁĄCZNIE na fragmencie.\n"
+    "ZASADY BEZWZGLĘDNE:\n"
+    "- Nie dodawaj faktów, liczb, dat ani nazw, których nie ma we fragmencie, "
+    "pytaniu ani odpowiedzi.\n"
+    "- Jeśli fragment nie wystarcza do wyjaśnienia, napisz jedno zdanie: "
+    "„Fragment źródła nie wyjaśnia tej odpowiedzi.”\n"
+    "- Zwykły tekst, bez nagłówków i list."
+)
+
+
+def wyjasnij_fiszke(pytanie: str, odpowiedz: str, fragment: str) -> str:
+    """Krótkie wyjaśnienie odpowiedzi z fragmentu źródła. Każda liczba w
+    wyjaśnieniu musi wystąpić w pytaniu, odpowiedzi albo fragmencie —
+    inaczej BladGemini (jak opisy w Atlasie)."""
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env).")
+    zrodla = [pytanie, odpowiedz, fragment]
+    response = _generuj(f"PYTANIE: {pytanie}\nODPOWIEDŹ: {odpowiedz}\n\nFRAGMENT ŹRÓDŁA:\n{fragment}",
+                        system_instruction=PROMPT_WYJASNIENIA)
+    tekst = (response.text or "").strip()
+    if not tekst:
+        raise BladGemini("Gemini zwrócił puste wyjaśnienie.")
+    sprawdz_liczby(tekst, zrodla)
+    return tekst[:1500]
+
+
 # ---------- Atlas: opis wskaźnika (ETAP 7) ----------
 
 PROMPT_OPISU = (

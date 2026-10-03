@@ -1225,3 +1225,18 @@ button.przycisk--ocena-trudne:hover {
     margin: 6px 0 0;
     font-size: 12px;
 }
+
+/* ETAP 207: wyjaśnienie po odsłonięciu odpowiedzi */
+.wyjasnienie-fiszki {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--linia);
+}
+
+.wyjasnienie-fiszki__akcje {
+    flex-wrap: wrap;
+}
+
+.wyjasnienie-fiszki textarea {
+    width: 100%;
+}

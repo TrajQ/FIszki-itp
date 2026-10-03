@@ -54,6 +54,22 @@
                 <img id="obraz-tyl" class="obraz-fiszki" alt="Wycinek rysunku z PDF-a" hidden>
                 <p id="odpowiedz-powtorki" class="karta-powtorki__odpowiedz"></p>
                 <blockquote id="fragment-powtorki" class="karta-powtorki__fragment"></blockquote>
+                <div id="wyjasnienie-blok" class="wyjasnienie-fiszki">
+                    <p id="wyjasnienie-naglowek" class="karta-powtorki__etykieta" hidden>Wyjaśnienie <span id="zrodlo-wyjasnienia" class="wyciszony"></span></p>
+                    <p id="wyjasnienie-tekst" hidden></p>
+                    <div class="rzad wyjasnienie-fiszki__akcje">
+                        <button id="wyjasnij-gemini" type="button" class="przycisk--tekst" title="Gemini wyjaśni odpowiedź tylko na podstawie fragmentu źródła powyżej; liczby spoza źródła są odrzucane">Wyjaśnij z fragmentu (Gemini)</button>
+                        <button id="wyjasnienie-wlasne" type="button" class="przycisk--tekst">Własne wyjaśnienie</button>
+                    </div>
+                    <div id="edycja-wyjasnienia" class="stos" hidden>
+                        <textarea id="pole-wyjasnienia" rows="3" maxlength="1500" aria-label="Własne wyjaśnienie odpowiedzi"></textarea>
+                        <div class="rzad">
+                            <button id="zapisz-wyjasnienie" type="button" class="przycisk--drugi">Zapisz wyjaśnienie</button>
+                            <button id="usun-wyjasnienie" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst" hidden>Usuń</button>
+                        </div>
+                    </div>
+                    <p id="stan-wyjasnienia" class="wyciszony" hidden></p>
+                </div>
             </div>
         </div>
         <div class="karta-powtorki__akcje">
@@ -87,6 +103,7 @@
     const TRYB_EGZAMINU = {{ 'true' if wszystkie else 'false' }};
     const URL_POWTORKA = "{{ url_for('fiszki.powtorka') }}";
     const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
+    const URL_WYJASNIENIE_WZOR = "{{ url_for('fiszki.zapisz_wyjasnienie', fiszka_id=0) }}";
 </script>
 <script src="{{ url_for('fiszki.static', filename='zaslona.js') }}"></script>
 <script src="{{ url_for('fiszki.static', filename='powtorka.js') }}"></script>

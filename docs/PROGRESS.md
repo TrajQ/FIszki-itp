@@ -3618,3 +3618,25 @@ Status: zamknięty
   przeglądarce 1300/390 px
 - Pomoc: akapit „Przeplataj tematy”
 - `DECISIONS.md`: D-214
+
+## ETAP 207 — Fiszki: wyjaśnienie po odsłonięciu odpowiedzi
+Data: 2026-10-03
+Status: zamknięty
+
+- `fiszki/baza.py`: tabela `wyjasnienia_fiszek` (jedno na fiszkę, źródło
+  „wlasne” albo „gemini”, kasowane z fiszką)
+- `fiszki/wyjasnienia.py`: `wszystkie`, `zapisz` (normalizacja spacji, do
+  1500 znaków), `usun`
+- `dane/gemini.py`: `wyjasnij_fiszke` — prompt tylko z pytaniem,
+  odpowiedzią i fragmentem źródła; `sprawdz_liczby` odrzuca liczby spoza
+  nich
+- `fiszki/trasy_nauka.py`: `POST/DELETE /fiszki/wyjasnienie/<id>` i
+  `POST /fiszki/wyjasnienie/<id>/gemini`; kolejka powtórki zwraca
+  `wyjasnienie`
+- Powtórka: blok „Wyjaśnienie” po odsłonięciu (źródło przy nagłówku),
+  przyciski Gemini i własnego, edycja i usuwanie
+- Test: własne, walidacja, Gemini z liczbą ze źródła i obcą, brak klucza,
+  usuwanie, kaskada; sprawdzone w przeglądarce 1300/390 px (Gemini
+  podmieniony)
+- Pomoc: akapit „Wyjaśnienie po odsłonięciu”
+- `DECISIONS.md`: D-215

@@ -216,3 +216,43 @@ def test_kolejka_z_przeplataniem(client):
     assert [f["id"] for f in client.get("/fiszki/powtorka/kolejka?przeplatanie=1&temat=prawo").get_json()] == ids[3:5]
     assert "tryb-przeplatania" in client.get("/fiszki/powtorka").get_data(as_text=True)
     assert "tryb-przeplatania" not in client.get("/fiszki/powtorka?temat=prawo").get_data(as_text=True)
+
+
+# ---------- ETAP 207: wyjaśnienie po odsłonięciu ----------
+
+
+def test_wyjasnienie_wlasne_i_gemini(client, monkeypatch):
+    from types import SimpleNamespace
+
+    from config import Config
+    from dane import gemini
+
+    wgraj_pdf(client)
+    odp = client.post("/fiszki/1/fiszki", json={"strona": 1, "fragment_tekstu": "Plan miejscowy uchwala rada gminy w 2 etapach.",
+                                                 "pytanie": "Kto uchwala plan?", "odpowiedz": "Rada gminy."})
+    fid = odp.get_json()["id"]
+    assert client.get("/fiszki/powtorka/kolejka").get_json()[0]["wyjasnienie"] is None
+    assert client.post(f"/fiszki/wyjasnienie/{fid}", json={"tekst": "  Bo   uchwała  "}).get_json() == {"tekst": "Bo uchwała", "zrodlo": "wlasne"}
+    assert client.get("/fiszki/powtorka/kolejka").get_json()[0]["wyjasnienie"]["tekst"] == "Bo uchwała"
+    assert client.post(f"/fiszki/wyjasnienie/{fid}", json={"tekst": " "}).status_code == 400
+    assert client.post(f"/fiszki/wyjasnienie/{fid}", json={"tekst": "x" * 1501}).status_code == 400
+    assert client.post("/fiszki/wyjasnienie/999", json={"tekst": "a"}).status_code == 404
+    # Gemini: liczba ze źródła przechodzi, obca — odrzucona; bez klucza — komunikat
+    monkeypatch.setattr(Config, "GEMINI_API_KEY", "test")
+    odpowiedzi = iter(["Plan uchwala rada gminy w 2 etapach, więc to ona.", "Rada gminy, 3 razy w roku."])
+    monkeypatch.setattr(gemini, "_generuj", lambda *a, **k: SimpleNamespace(text=next(odpowiedzi)))
+    w = client.post(f"/fiszki/wyjasnienie/{fid}/gemini").get_json()
+    assert w["zrodlo"] == "gemini" and "2 etapach" in w["tekst"]
+    r = client.post(f"/fiszki/wyjasnienie/{fid}/gemini")
+    assert r.status_code == 502 and "3" in r.get_json()["blad"]
+    assert client.get("/fiszki/powtorka/kolejka").get_json()[0]["wyjasnienie"]["zrodlo"] == "gemini"  # odrzucone nie nadpisuje
+    monkeypatch.setattr(Config, "GEMINI_API_KEY", "")
+    assert "GEMINI_API_KEY" in client.post(f"/fiszki/wyjasnienie/{fid}/gemini").get_json()["blad"]
+    assert client.delete(f"/fiszki/wyjasnienie/{fid}").status_code == 204
+    assert client.get("/fiszki/powtorka/kolejka").get_json()[0]["wyjasnienie"] is None
+    # usunięcie fiszki usuwa wyjaśnienie (ON DELETE CASCADE)
+    client.post(f"/fiszki/wyjasnienie/{fid}", json={"tekst": "a"})
+    client.delete(f"/fiszki/1/fiszki/{fid}")
+    with client.application.app_context():
+        from fiszki.baza import get_db
+        assert get_db().execute("SELECT COUNT(*) FROM wyjasnienia_fiszek").fetchone()[0] == 0

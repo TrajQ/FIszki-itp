@@ -4283,3 +4283,23 @@ testowana jak reszta systemu Leitnera.
   gubi kolejność pudełek.
 - Przeplatanie w JavaScripcie — druga implementacja do utrzymania (także
   w formularzu na telefon), bez testów pytest.
+
+## D-215 — Wyjaśnienie z Gemini tylko z fragmentu źródła, zapisane przy fiszce
+Data: 2026-10-03
+
+**Decyzja:** Model dostaje pytanie, odpowiedź i fragment PDF-a, z którego
+powstała fiszka (kotwica w źródle), i ma wyjaśnić odpowiedź tylko na ich
+podstawie. Wynik z liczbą spoza tych tekstów jest odrzucany
+(`sprawdz_liczby`, jak w Atlasie). Wyjaśnienie zapisujemy przy fiszce —
+generowane raz, nie przy każdej powtórce; użytkownik może je zastąpić
+własnym.
+
+**Uzasadnienie:** Zasada „model tłumaczy, nie dodaje faktów” — fragment
+źródła jest jedyną wiedzą, jaką dostaje. Zapis oszczędza zapytania i
+pozwala poprawić tekst. Własne wyjaśnienie (skojarzenie) działa bez
+klucza API.
+
+**Odrzucone alternatywy:**
+- Wyjaśnienie z wiedzy ogólnej modelu — nie da się sprawdzić w źródle.
+- Generowanie przy każdym odsłonięciu — koszt, opóźnienie i za każdym
+  razem inny tekst.

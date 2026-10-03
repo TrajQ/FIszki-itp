@@ -1075,3 +1075,6 @@
 
 ## ETAP 206 — 2026-10-03
 - Fiszki: powtórka z przeplataniem tematów (przełącznik, temat na karcie)
+
+## ETAP 207 — 2026-10-03
+- Fiszki: wyjaśnienie po odsłonięciu odpowiedzi — własne albo z Gemini (tylko z fragmentu źródła, liczby sprawdzane)

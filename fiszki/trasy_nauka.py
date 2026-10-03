@@ -9,7 +9,9 @@ import random
 
 from flask import abort, jsonify, redirect, render_template, request, url_for
 
-from . import egzaminy, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
+from dane import gemini
+
+from . import egzaminy, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy, wyjasnienia
 from .baza import get_db
 from .routes import (
     _WARUNEK_DO_POWTORKI,
@@ -114,7 +116,9 @@ def kolejka_powtorki():
     obrazki = obrazy.obrazy_fiszek(db)  # ETAP 154
     zaslony = obrazy.zaslony_fiszek(db)  # ETAP 185
     po_fiszce = tematy.tematy_fiszek(db)  # ETAP 206: tematy na karcie i do przeplatania
-    fiszki = [{**dict(w), "obraz": url_obrazu(obrazki.get(w["id"])), "zaslona": zaslony.get(w["id"]), "tematy": po_fiszce.get(w["id"], [])}
+    objasnione = wyjasnienia.wszystkie(db)  # ETAP 207
+    fiszki = [{**dict(w), "obraz": url_obrazu(obrazki.get(w["id"])), "zaslona": zaslony.get(w["id"]), "tematy": po_fiszce.get(w["id"], []),
+               "wyjasnienie": objasnione.get(w["id"])}
               for w in wiersze]
     if wszystkie:
         random.shuffle(fiszki)
@@ -122,6 +126,44 @@ def kolejka_powtorki():
     if request.args.get("przeplatanie") == "1" and not temat:
         fiszki = powtorki.przeplec(fiszki, lambda f: f["tematy"][0] if f["tematy"] else f"plik:{f['pdf_id']}")
     return jsonify(fiszki)
+
+
+# ---------- Wyjaśnienie odpowiedzi (ETAP 207) ----------
+
+
+def _fiszka_albo_404(fiszka_id: int):
+    fiszka = get_db().execute("SELECT * FROM fiszki WHERE id = ?", (fiszka_id,)).fetchone()
+    if fiszka is None:
+        abort(404)
+    return fiszka
+
+
+@fiszki_bp.route("/wyjasnienie/<int:fiszka_id>", methods=["POST"])
+def zapisz_wyjasnienie(fiszka_id):
+    """JSON {tekst} — własne wyjaśnienie (zastępuje poprzednie)."""
+    _fiszka_albo_404(fiszka_id)
+    try:
+        return jsonify(wyjasnienia.zapisz(get_db(), fiszka_id, (request.get_json(silent=True) or {}).get("tekst"), "wlasne"))
+    except wyjasnienia.BladWyjasnienia as e:
+        return jsonify({"blad": str(e)}), 400
+
+
+@fiszki_bp.route("/wyjasnienie/<int:fiszka_id>/gemini", methods=["POST"])
+def wyjasnienie_gemini(fiszka_id):
+    """Wyjaśnienie z Gemini — tylko z fragmentu źródła fiszki; liczby sprawdzone."""
+    f = _fiszka_albo_404(fiszka_id)
+    try:
+        tekst = gemini.wyjasnij_fiszke(f["pytanie"], f["odpowiedz"], f["fragment_tekstu"])
+        return jsonify(wyjasnienia.zapisz(get_db(), fiszka_id, tekst, "gemini"))
+    except (gemini.BladGemini, wyjasnienia.BladWyjasnienia) as e:
+        return jsonify({"blad": str(e)}), 502
+
+
+@fiszki_bp.route("/wyjasnienie/<int:fiszka_id>", methods=["DELETE"])
+def usun_wyjasnienie(fiszka_id):
+    _fiszka_albo_404(fiszka_id)
+    wyjasnienia.usun(get_db(), fiszka_id)
+    return "", 204
 
 
 @fiszki_bp.route("/powtorka/<int:fiszka_id>", methods=["POST"])

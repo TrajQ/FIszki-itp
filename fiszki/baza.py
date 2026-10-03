@@ -91,6 +91,15 @@ CREATE TABLE IF NOT EXISTS zaslony_fiszek (
     x REAL NOT NULL, y REAL NOT NULL, w REAL NOT NULL, h REAL NOT NULL
 );
 
+-- ETAP 207: wyjaśnienie po odsłonięciu odpowiedzi — własne albo z Gemini
+-- (tylko z fragmentu źródła, liczby sprawdzone); jedno na fiszkę.
+CREATE TABLE IF NOT EXISTS wyjasnienia_fiszek (
+    fiszka_id INTEGER PRIMARY KEY REFERENCES fiszki(id) ON DELETE CASCADE,
+    tekst TEXT NOT NULL,
+    zrodlo TEXT NOT NULL CHECK (zrodlo IN ('wlasne', 'gemini')),
+    data TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,
