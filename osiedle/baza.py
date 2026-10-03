@@ -22,6 +22,14 @@ CREATE TABLE IF NOT EXISTS koncepcje (
     data_utworzenia TEXT NOT NULL,
     data_zmiany TEXT NOT NULL
 );
+
+-- ETAP 218: własne zestawy założeń programu (np. „normatywy gminy X”) do użycia w wielu koncepcjach
+CREATE TABLE IF NOT EXISTS zestawy_zalozen (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nazwa TEXT NOT NULL UNIQUE,
+    zalozenia TEXT NOT NULL,
+    data_zmiany TEXT NOT NULL
+);
 """
 
 PUSTY_RYSUNEK = {"type": "FeatureCollection", "features": []}
@@ -108,6 +116,32 @@ def usun(koncepcja_id: int):
     db = get_db()
     db.execute("UPDATE koncepcje SET usunieto = ? WHERE id = ?", (datetime.now().isoformat(timespec="seconds"), koncepcja_id))
     db.commit()
+
+
+MAKS_ZESTAWOW = 30
+
+
+def zestawy() -> list[dict]:
+    return [{**dict(w), "zalozenia": json.loads(w["zalozenia"])}
+            for w in get_db().execute("SELECT * FROM zestawy_zalozen ORDER BY nazwa COLLATE NOCASE")]
+
+
+def zapisz_zestaw(nazwa: str, zalozenia: dict) -> int:
+    """Nowy zestaw albo zastąpienie zestawu o tej samej nazwie → id."""
+    db = get_db()
+    teraz = datetime.now().isoformat(timespec="seconds")
+    db.execute("""INSERT INTO zestawy_zalozen (nazwa, zalozenia, data_zmiany) VALUES (?, ?, ?)
+                  ON CONFLICT(nazwa) DO UPDATE SET zalozenia = excluded.zalozenia, data_zmiany = excluded.data_zmiany""",
+               (nazwa, json.dumps(zalozenia, ensure_ascii=False), teraz))
+    db.commit()
+    return db.execute("SELECT id FROM zestawy_zalozen WHERE nazwa = ?", (nazwa,)).fetchone()[0]
+
+
+def usun_zestaw(zestaw_id: int) -> bool:
+    db = get_db()
+    usuniete = db.execute("DELETE FROM zestawy_zalozen WHERE id = ?", (zestaw_id,)).rowcount
+    db.commit()
+    return bool(usuniete)
 
 
 def w_koszu() -> list[dict]:

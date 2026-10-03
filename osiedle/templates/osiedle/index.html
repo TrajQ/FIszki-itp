@@ -180,6 +180,12 @@
             <p id="uwaga-parkingi" class="komunikat komunikat--ostrzezenie" hidden></p>
             <details class="zalozenia">
                 <summary>Założenia (typowe wartości — zmień pod swoją gminę)</summary>
+                <div class="rzad zestawy-zalozen">
+                    <select id="zestaw-zalozen" aria-label="Własny zestaw założeń"><option value="">— własne zestawy —</option></select>
+                    <button id="zastosuj-zestaw" type="button" class="przycisk--tekst" disabled>Zastosuj</button>
+                    <button id="usun-zestaw" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst" disabled>Usuń</button>
+                    <button id="zapisz-zestaw" type="button" class="przycisk--tekst" title="Wpisane założenia pod nazwą — do użycia w innych koncepcjach (np. normatywy gminy)">Zapisz bieżące jako zestaw…</button>
+                </div>
                 <div class="zalozenia__pola">
                     {% for klucz, z in zalozenia.items() %}
                     <label>{{ z[0] }}{% if z[2] %} [{{ z[2] }}]{% endif %}
@@ -250,6 +256,7 @@
 <script>
     const URL_KONCEPCJE = "{{ url_for('osiedle.lista_koncepcji') }}";
     const URL_KOSZ = "{{ url_for('osiedle.kosz_koncepcji') }}"; // ETAP 212
+    const URL_ZESTAWY = "{{ url_for('osiedle.lista_zestawow') }}"; // ETAP 218
     const URL_CENY_OKOLICA = "{{ url_for('ceny.okolica') }}"; // ETAP 109: zaimportowane pliki RCN (moduł ceny)
     const OBSZAR = {{ obszar | tojson }};
     const BUDYNEK = {{ budynek | tojson }};

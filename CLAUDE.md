@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 217 (MPZP: Moje działki do ODS — zamknięty)
-Ostatni ZIP: releases/warsztat_etap217_20261003.zip
-Testy: 644 passed / 0 failed
+ETAP: 218 (Osiedle: własne zestawy założeń — zamknięty)
+Ostatni ZIP: releases/warsztat_etap218_20261003.zip
+Testy: 645 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

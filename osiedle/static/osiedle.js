@@ -946,6 +946,49 @@
         }
     });
 
+    // ---------- własne zestawy założeń programu (ETAP 218) ----------
+    const wyborZestawu = document.getElementById("zestaw-zalozen");
+    let zestawy = [];
+
+    async function wczytajZestawy(wybierz) {
+        zestawy = await zapytaj(URL_ZESTAWY).catch(() => []);
+        wyborZestawu.replaceChildren(new Option(zestawy.length ? "— własne zestawy —" : "— brak zapisanych zestawów —", ""));
+        for (const z of zestawy) wyborZestawu.appendChild(new Option(`${z.nazwa} (${Object.keys(z.zalozenia).length})`, z.id));
+        if (wybierz) wyborZestawu.value = String(wybierz);
+        wyborZestawu.dispatchEvent(new Event("change"));
+    }
+
+    wyborZestawu.addEventListener("change", () => {
+        document.getElementById("zastosuj-zestaw").disabled = document.getElementById("usun-zestaw").disabled = !wyborZestawu.value;
+    });
+    document.getElementById("zastosuj-zestaw").addEventListener("click", () => {
+        const z = zestawy.find((x) => String(x.id) === wyborZestawu.value);
+        if (!z || !koncepcja) return;
+        // zestaw zastępuje wszystkie założenia: czego w nim nie ma — wraca do wartości typowej
+        polaZalozen.forEach((pole) => (pole.value = z.zalozenia[pole.dataset.zalozenie] ?? ""));
+        zapiszRysunek();
+    });
+    document.getElementById("zapisz-zestaw").addEventListener("click", async () => {
+        const zalozenia = wpisane(polaZalozen, "zalozenie");
+        if (!Object.keys(zalozenia).length) return pokazKomunikat("Wpisz co najmniej jedno założenie, zanim zapiszesz zestaw.");
+        const wybrany = zestawy.find((x) => String(x.id) === wyborZestawu.value);
+        const nazwa = (prompt("Nazwa zestawu (ta sama nazwa zastąpi zestaw):", wybrany ? wybrany.nazwa : "") || "").trim();
+        if (!nazwa) return;
+        try {
+            const z = await zapytaj(URL_ZESTAWY, { method: "POST", body: JSON.stringify({ nazwa, zalozenia }) });
+            await wczytajZestawy(z.id);
+        } catch (err) {
+            pokazKomunikat(err.message);
+        }
+    });
+    document.getElementById("usun-zestaw").addEventListener("click", async () => {
+        const z = zestawy.find((x) => String(x.id) === wyborZestawu.value);
+        if (!z || !confirm(`Usunąć zestaw „${z.nazwa}”? Koncepcje zachowają swoje założenia.`)) return;
+        await zapytaj(`${URL_ZESTAWY}/${z.id}`, { method: "DELETE" }).catch((err) => pokazKomunikat(err.message));
+        await wczytajZestawy();
+    });
+    wczytajZestawy();
+
     // ---------- kosz (ETAP 212) — usunięte koncepcje do przywrócenia ----------
     async function wczytajKosz() {
         const lista = await zapytaj(URL_KOSZ).catch(() => []);

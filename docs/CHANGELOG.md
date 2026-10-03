@@ -1108,3 +1108,6 @@
 
 ## ETAP 217 — 2026-10-03
 - MPZP: „Moje działki” do arkusza ODS (lista i zestawienie według przeznaczenia)
+
+## ETAP 218 — 2026-10-03
+- Osiedle: własne zestawy założeń programu do użycia w wielu koncepcjach

@@ -4500,3 +4500,20 @@ filtrować bez zamiany przecinków jak w CSV.
 **Odrzucone alternatywy:**
 - Rozszerzenie CSV o kolumny PL-2000 — CSV i tak zostaje dla prostych
   zastosowań; dwie zakładki wymagają formatu arkusza.
+
+## D-226 — Zestaw założeń kopiowany do koncepcji, nie łączony
+Data: 2026-10-03
+
+**Decyzja:** Zastosowanie zestawu wpisuje jego wartości do założeń
+koncepcji (jak ręczne wpisanie). Koncepcja nie pamięta, z którego zestawu
+pochodzą; zmiana albo usunięcie zestawu nie zmienia zapisanych koncepcji.
+
+**Uzasadnienie:** Koncepcja ma dawać ten sam wynik po roku — także gdy
+zestaw (np. normatywy gminy) zostanie poprawiony dla nowych prac. Kopia
+jest jawna: wartości widać w polach i w raporcie („Przyjęte założenia”).
+
+**Odrzucone alternatywy:**
+- Odwołanie do zestawu (koncepcja zmienia się razem z nim) — wyniki
+  starych wariantów zmieniałyby się po cichu.
+- Zestawy w pliku poza bazą — trudniej o walidację i kopię zapasową;
+  baza modułu jest w kopii.

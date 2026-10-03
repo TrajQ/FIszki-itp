@@ -3850,3 +3850,22 @@ Status: zamknięty
   przeglądarce 1300/390 px
 - Pomoc: zdanie przy zestawieniu działek
 - `DECISIONS.md`: D-225
+
+## ETAP 218 — Osiedle: własne zestawy założeń programu (normatywy)
+Data: 2026-10-03
+Status: zamknięty
+
+- `osiedle/baza.py`: tabela `zestawy_zalozen` (nazwa unikalna, założenia
+  JSON), `zestawy`, `zapisz_zestaw` (ta sama nazwa zastępuje),
+  `usun_zestaw`, `MAKS_ZESTAWOW=30`
+- `osiedle/routes.py`: `GET/POST /osiedle/zestawy`, `DELETE
+  /osiedle/zestawy/<id>`; tylko wpisane założenia, walidacja kluczy i
+  zakresów przez `program.zalozenia`
+- Osiedle: w „Założeniach” lista zestawów, „Zastosuj” (wypełnia pola i
+  zapisuje koncepcję — założenia zostają w jej ustawieniach), „Usuń”,
+  „Zapisz bieżące jako zestaw…”
+- Test: zapis, zastąpienie, walidacja, usuwanie; sprawdzone w
+  przeglądarce 1300/390 px (zapis, wyczyszczenie, zastosowanie —
+  przeliczony program)
+- Pomoc: „Własne założenia programu (normatywy)”
+- `DECISIONS.md`: D-226

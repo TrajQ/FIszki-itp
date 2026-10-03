@@ -790,3 +790,28 @@ def test_gpkg_koncepcji(client, tmp_path):
         db.close()
     pusta = client.post("/osiedle/koncepcje", json={"nazwa": "Pusta"}).get_json()["id"]
     assert client.get(f"/osiedle/koncepcje/{pusta}.gpkg").status_code == 200
+
+
+# ---------- ETAP 218: własne zestawy założeń ----------
+
+
+def test_zestawy_zalozen(client):
+    r = client.post("/osiedle/zestawy", json={"nazwa": "  Normy   Poznań ", "zalozenia": {"metraz_mw_m2": 60, "osoby_na_mieszkanie": "", "miejsca_na_mieszkanie_mw": 1.5}})
+    assert r.status_code == 201 and r.get_json()["zalozenia"] == {"metraz_mw_m2": 60.0, "miejsca_na_mieszkanie_mw": 1.5}
+    zid = r.get_json()["id"]
+    lista = client.get("/osiedle/zestawy").get_json()
+    assert [(z["nazwa"], z["zalozenia"]) for z in lista] == [("Normy Poznań", {"metraz_mw_m2": 60.0, "miejsca_na_mieszkanie_mw": 1.5})]
+    # ta sama nazwa zastępuje zestaw
+    r = client.post("/osiedle/zestawy", json={"nazwa": "Normy Poznań", "zalozenia": {"metraz_mw_m2": 58}})
+    assert r.get_json()["id"] == zid and len(client.get("/osiedle/zestawy").get_json()) == 1
+    for zle in ({"nazwa": "", "zalozenia": {"metraz_mw_m2": 60}}, {"nazwa": "A", "zalozenia": {}}, {"nazwa": "A", "zalozenia": {"metraz_mw_m2": 5}},
+                {"nazwa": "A", "zalozenia": {"nieznane": 1}}, {"nazwa": "A", "zalozenia": [1]}):
+        assert client.post("/osiedle/zestawy", json=zle).status_code == 400
+    # zestaw w koncepcji = zwykłe założenia programu (zapisane w ustawieniach koncepcji)
+    k_id = client.post("/osiedle/koncepcje", json={"nazwa": "K"}).get_json()["id"]
+    geo = kolekcja(prostokat(0, 0, 50, 40, "MW", zabudowa_proc=30, kondygnacje=5))
+    b = client.put(f"/osiedle/koncepcje/{k_id}", json={"geojson": geo, "ustawienia": {"program": {"metraz_mw_m2": 58}}}).get_json()["bilans"]
+    assert b["program"]["zalozenia"]["metraz_mw_m2"] == 58
+    assert client.delete(f"/osiedle/zestawy/{zid}").get_json() == {"ok": True}
+    assert client.get("/osiedle/zestawy").get_json() == [] and client.delete(f"/osiedle/zestawy/{zid}").status_code == 404
+    assert 'id="zestaw-zalozen"' in client.get("/osiedle/").get_data(as_text=True)

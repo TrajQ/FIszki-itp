@@ -535,3 +535,10 @@ button.przycisk--niebezpieczny-tekst {
     padding: 4px 0;
     border-top: 1px solid var(--linia);
 }
+
+/* ETAP 218: własne zestawy założeń */
+.zestawy-zalozen {
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 8px;
+}

@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from dane import uldk
 
 from . import baza, cien
+from . import program as prog
 from .obszar_z_pliku import obszar_z_geojson
 from .bilans import BUDYNEK, DOMYSLNE_KONDYGNACJE_BUDYNKU, FUNKCJE, KOLOR_BUDYNKU, KOLOR_LINII, LINIA, OBSZAR, BladKoncepcji, bilans
 from .koszty import STAWKI
@@ -64,6 +65,41 @@ def index():
 @osiedle_bp.route("/koncepcje")
 def lista_koncepcji():
     return jsonify(baza.lista())
+
+
+# ---------- własne zestawy założeń programu (ETAP 218) ----------
+
+
+@osiedle_bp.route("/zestawy")
+def lista_zestawow():
+    return jsonify(baza.zestawy())
+
+
+@osiedle_bp.route("/zestawy", methods=["POST"])
+def zapisz_zestaw():
+    """JSON {nazwa, zalozenia: {klucz: liczba}} — tylko wpisane założenia, sprawdzone jak w koncepcji."""
+    dane = request.get_json(silent=True) or {}
+    nazwa = " ".join(str(dane.get("nazwa") or "").split())[:60]
+    wpisane = dane.get("zalozenia")
+    try:
+        if not nazwa:
+            raise prog.BladZalozen("Podaj nazwę zestawu.")
+        if not isinstance(wpisane, dict) or not any(v not in (None, "") for v in wpisane.values()):
+            raise prog.BladZalozen("Zestaw musi mieć co najmniej jedno wpisane założenie.")
+        pelne = prog.zalozenia({"program": wpisane})  # walidacja kluczy i zakresów
+        if nazwa not in {z["nazwa"] for z in baza.zestawy()} and len(baza.zestawy()) >= baza.MAKS_ZESTAWOW:
+            raise prog.BladZalozen(f"Najwyżej {baza.MAKS_ZESTAWOW} zestawów — usuń któryś.")
+    except prog.BladZalozen as e:
+        return jsonify({"blad": str(e)}), 400
+    zalozenia = {k: pelne[k] for k, v in wpisane.items() if v not in (None, "")}
+    return jsonify({"id": baza.zapisz_zestaw(nazwa, zalozenia), "nazwa": nazwa, "zalozenia": zalozenia}), 201
+
+
+@osiedle_bp.route("/zestawy/<int:zestaw_id>", methods=["DELETE"])
+def usun_zestaw(zestaw_id):
+    if not baza.usun_zestaw(zestaw_id):
+        abort(404)
+    return jsonify({"ok": True})
 
 
 @osiedle_bp.route("/kosz")
