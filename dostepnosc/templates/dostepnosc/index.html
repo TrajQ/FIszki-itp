@@ -46,7 +46,7 @@
             </form>
             <details class="format-pliku">
                 <summary>Format pliku</summary>
-                <p>CSV z kolumną <code>h3</code> (indeks komórki) i kolumnami liczbowymi. Kolumny kończące się na <code>_min</code> albo zaczynające od <code>czas</code> to czas dojścia w minutach.</p>
+                <p>CSV z kolumną <code>h3</code> (indeks komórki) i kolumnami liczbowymi. Kolumny kończące się na <code>_min</code> albo zaczynające od <code>czas</code> to czas dojścia w minutach. Kolumna <code>ludnosc</code> — mieszkańcy komórki; kolumny <code>ludnosc_…</code> albo <code>wiek_…</code> — grupy mieszkańców (np. <code>ludnosc_65+</code>).</p>
                 <pre>h3,czas_przystanek_min
 891e24aa52fffff,4.5</pre>
             </details>
@@ -61,6 +61,11 @@
                 <button id="zakoncz-porownanie" type="button" class="przycisk--tekst">Zakończ</button>
             </div>
             <div id="kafelki" class="kafelki-dostepnosci"></div>
+            <div id="grupy-mieszkancow" class="stos" hidden>
+                <h3>Grupy mieszkańców</h3>
+                <div class="przewijanie-dzielnic"><table class="tabela" id="tabela-grup"></table></div>
+                <p class="wyciszony">Z kolumn pliku o nazwach zaczynających się od ludnosc_, mieszkancy_ albo wiek_ (np. ludnosc_65+). Mediana — czas, w którym dociera połowa grupy.</p>
+            </div>
             <div id="ogniwo" class="ogniwo" hidden>
                 <h4>Najsłabsze ogniwo</h4>
                 <p class="wyciszony">Usługa, do której z danej komórki idzie się najdłużej.</p>

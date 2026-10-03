@@ -3558,3 +3558,23 @@ Status: zamknięty
   raport; sprawdzone w przeglądarce 1300/390 px
 - Pomoc: zdanie przy tabeli pięter
 - `DECISIONS.md`: D-211
+
+## ETAP 204 — Dostępność: dostępność według grup mieszkańców (wiek)
+Data: 2026-10-03
+Status: zamknięty
+
+- `dostepnosc/wyniki.py`: kolumny z prefiksami `PREFIKSY_GRUP`
+  (`ludnosc_`, `mieszkancy_`, `wiek_`…) czytane jako wagi, nie wskaźniki
+  (do `MAKS_GRUP=8`, bez wartości ujemnych); `udzialy_grup` — dla każdej
+  grupy liczba i procent osób w zasięgu progów 5–30 min oraz mediana
+  czasu ważona liczbą osób (`_mediana_wazona`); w statystykach czasu
+  (także łącznego) klucz `grupy`
+- `dostepnosc/model.py`: `csv_wynikow` przepisuje kolumny grup — szybki
+  model ich nie gubi
+- Strona: tabela „Grupy mieszkańców” pod kafelkami; raport do druku:
+  wiersze grup w tabeli „Udział w zasięgu”; opis formatu pliku
+- Test: wczytanie, udziały, mediana ważona, pominięte komórki bez czasu,
+  limity, szybki model, trasa i raport; sprawdzone w przeglądarce
+  1300/390 px na pliku przykładowym z dodanymi grupami
+- Pomoc: „Dostępność dla dzieci, seniorów i innych grup”
+- `DECISIONS.md`: D-212

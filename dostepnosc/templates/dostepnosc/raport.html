@@ -41,6 +41,10 @@
             {% if r.progi_raportu[0].procent_ludnosci is defined %}
             <tr><td>Mieszkańcy</td>{% for p in r.progi_raportu %}<td class="liczba">{{ liczba(p.procent_ludnosci) }}% <span class="wyciszony">({{ tys(p.ludnosc) }})</span></td>{% endfor %}</tr>
             {% endif %}
+            {# ETAP 204: grupy mieszkańców z pliku (np. wiek) — progi te same co kolumny tabeli #}
+            {% for g in s.grupy or [] %}
+            <tr><td>{{ g.nazwa }}</td>{% for u in g.udzialy %}<td class="liczba">{{ liczba(u.procent) }}%</td>{% endfor %}</tr>
+            {% endfor %}
         </table>
         {% endif %}
 

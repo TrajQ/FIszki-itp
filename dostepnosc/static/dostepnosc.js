@@ -135,6 +135,36 @@
         return div;
     }
 
+    // ETAP 204: dostępność w grupach mieszkańców (wyniki.udzialy_grup)
+    function pokazGrupy(grupy) {
+        const blok = document.getElementById("grupy-mieszkancow");
+        blok.hidden = !grupy || !grupy.length;
+        if (blok.hidden) return;
+        const tabela = document.getElementById("tabela-grup");
+        const glowa = document.createElement("tr");
+        const progi = grupy[0].udzialy.filter((u) => u.prog <= 15).map((u) => u.prog);
+        for (const [t, k] of [["Grupa", ""], ["Osób", "liczba"], ...progi.map((p) => [`≤ ${p} min`, "liczba"]), ["Mediana", "liczba"]]) {
+            const th = document.createElement("th");
+            th.className = k;
+            th.textContent = t;
+            glowa.appendChild(th);
+        }
+        tabela.replaceChildren(glowa);
+        for (const g of grupy) {
+            const tr = document.createElement("tr");
+            const komorki = [[g.nazwa, ""], [formatLiczby.format(g.razem), "liczba"],
+                ...g.udzialy.filter((u) => u.prog <= 15).map((u) => [u.procent === null ? "—" : `${formatLiczby.format(u.procent)}%`, "liczba"]),
+                [g.mediana_min === null ? "—" : `${formatLiczby.format(g.mediana_min)} min`, "liczba"]];
+            for (const [t, k] of komorki) {
+                const td = document.createElement("td");
+                td.className = k;
+                td.textContent = t;
+                tr.appendChild(td);
+            }
+            tabela.appendChild(tr);
+        }
+    }
+
     function pokazStatystyki(analiza) {
         const s = analiza.statystyki;
         const jednostka = analiza.minuty ? " min" : "";
@@ -157,6 +187,7 @@
                 }
             }
         }
+        pokazGrupy(s.grupy);
         kafelki.appendChild(kafelek("Mediana", formatLiczby.format(s.mediana) + jednostka));
         kafelki.appendChild(kafelek("Maksimum", formatLiczby.format(s.max) + jednostka));
         kafelki.appendChild(kafelek("Komórki", formatLiczby.format(s.liczba_komorek)));

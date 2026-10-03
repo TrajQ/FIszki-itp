@@ -28,6 +28,9 @@ import h3
 KOLUMNA_H3 = "h3"
 # Kolumna z liczbą mieszkańców komórki — wtedy udziały liczymy też w ludności.
 NAZWY_LUDNOSCI = {"ludnosc", "ludność", "populacja", "mieszkancy", "mieszkańcy"}
+# ETAP 204: kolumny z liczbą mieszkańców w grupach (np. wiek) — wagi jak ludność, nie wskaźniki.
+PREFIKSY_GRUP = ("ludnosc_", "ludność_", "mieszkancy_", "mieszkańcy_", "wiek_")
+MAKS_GRUP = 8
 MAKS_KOMOREK = 100_000
 PROGI_MINUT = [5, 10, 15, 20, 30]
 LICZBA_KLAS_KWANTYLOWYCH = 5
@@ -96,6 +99,17 @@ def wczytaj_csv(tekst: str) -> dict:
                 raise BladWynikow(f"Kolumna „{nazwa}” ma wartości ujemne.")
             break
 
+    # ETAP 204: grupy mieszkańców (np. ludnosc_0_14, ludnosc_65+) — wagi, nie wskaźniki.
+    grupy = {}
+    for nazwa in list(kolumny):
+        if nazwa.lower().startswith(PREFIKSY_GRUP):
+            wartosci = [v or 0.0 for v in kolumny.pop(nazwa)]
+            if any(v < 0 for v in wartosci):
+                raise BladWynikow(f"Kolumna „{nazwa}” ma wartości ujemne.")
+            grupy[nazwa] = wartosci
+    if len(grupy) > MAKS_GRUP:
+        raise BladWynikow(f"Najwyżej {MAKS_GRUP} kolumn grup mieszkańców (ludnosc_…, wiek_…).")
+
     # Zostawiamy tylko kolumny, które mają przynajmniej jedną wartość.
     kolumny = {n: w for n, w in kolumny.items() if any(v is not None for v in w)}
     if not kolumny:
@@ -110,6 +124,7 @@ def wczytaj_csv(tekst: str) -> dict:
         "kolumny": kolumny,
         "rozdzielczosc": rozdzielczosci.pop(),
         "ludnosc": ludnosc,
+        "grupy": grupy or None,
     }
 
 
@@ -179,6 +194,8 @@ def analiza_kolumny(wyniki: dict, kolumna: str) -> dict:
                 w_zasiegu = sum(l for _, w, l in trojki if w <= udzial["prog"])
                 udzial["ludnosc"] = w_zasiegu
                 udzial["procent_ludnosci"] = 100 * w_zasiegu / razem if razem else None
+        if wyniki.get("grupy"):
+            stat["grupy"] = udzialy_grup(wyniki, kolumna)
         stat["krzywa"] = krzywa_dostepnosci(trojki, wyniki.get("ludnosc") is not None)
         stat["luki"] = luki(trojki, wyniki.get("ludnosc") is not None)
 
@@ -189,6 +206,38 @@ def analiza_kolumny(wyniki: dict, kolumna: str) -> dict:
         "statystyki": stat,
         "geojson": {"type": "FeatureCollection", "features": cechy},
     }
+
+
+def _mediana_wazona(pary: list[tuple[float, float]]) -> float | None:
+    """Mediana czasu ważona liczbą osób: czas, do którego dociera połowa grupy."""
+    razem = sum(w for _, w in pary)
+    if not razem:
+        return None
+    narastajaco = 0.0
+    for czas, waga in sorted(pary):
+        narastajaco += waga
+        if narastajaco >= razem / 2:
+            return czas
+    return None
+
+
+def udzialy_grup(wyniki: dict, kolumna: str, progi: tuple = tuple(PROGI_MINUT)) -> list[dict]:
+    """ETAP 204: dla każdej grupy mieszkańców — ilu jest w zasięgu progów
+    minut i mediana czasu ważona liczbą osób. Komórki bez czasu pomijamy
+    (jak przy ludności ogółem)."""
+    czasy = wyniki["kolumny"][kolumna]
+    wynik = []
+    for nazwa, osoby in (wyniki.get("grupy") or {}).items():
+        pary = [(c, o) for c, o in zip(czasy, osoby) if c is not None]
+        razem = sum(o for _, o in pary)
+        wynik.append({
+            "nazwa": nazwa,
+            "razem": razem,
+            "udzialy": [{"prog": p, "ludnosc": (w := sum(o for c, o in pary if c <= p)), "procent": 100 * w / razem if razem else None}
+                        for p in progi],
+            "mediana_min": _mediana_wazona(pary),
+        })
+    return wynik
 
 
 def krzywa_dostepnosci(trojki: list[tuple], z_ludnoscia: bool) -> list[dict]:

@@ -189,13 +189,14 @@ def z_punktow():
             komorki = wyniki["komorki"]
             kolumny = dict(wyniki["kolumny"])
             ludnosc = wyniki.get("ludnosc")
+            grupy = wyniki.get("grupy")
             rdzen = str(baza)[: -len(".csv")]
         else:
             obszar = dane.get("obszar") or []
             if len(obszar) != 4:
                 raise model.BladModelu("Brak obszaru mapy (południe, zachód, północ, wschód).")
             komorki = model.siatka_obszaru(*(float(v) for v in obszar))
-            kolumny, ludnosc, rdzen = {}, None, "nowa_siatka"
+            kolumny, ludnosc, grupy, rdzen = {}, None, None, "nowa_siatka"
     except (model.BladModelu, BladWynikow) as e:
         return jsonify({"blad": str(e)}), 400
     except (TypeError, ValueError):
@@ -214,7 +215,7 @@ def z_punktow():
     if polacz:
         czasy, maska = model.polacz_z_istniejacymi(wyniki["kolumny"][kolumna], czasy_nowych)
     kolumny[kolumna] = czasy
-    tekst = model.csv_wynikow(komorki, kolumny, ludnosc)
+    tekst = model.csv_wynikow(komorki, kolumny, ludnosc, grupy)
     wyniki_h3.wczytaj_csv(tekst)  # ten sam format co wgrane pliki — sprawdzamy
 
     nazwa = secure_filename(str(dane.get("nazwa_pliku") or f"{rdzen}_{kolumna[len('czas_'):-len('_min')]}"))

@@ -553,3 +553,39 @@ def test_dzielnice_w_porownaniu(client):
                                                                    "po": "przyklad_poznan_nowa_szkola_syntetyczny.csv"}).get_json()
     assert d["porownanie"] and "zmiana_srednia" in d["obszary"][0] and d["obszary"][0]["po"]["srednia"] <= d["obszary"][0]["przed"]["srednia"]
     assert client.post(f"/dostepnosc/plik/{przyklad}/obszary", json={"kolumna": "czas_szkola_min", "obszary": [obszar], "po": "nie_ma.csv"}).status_code >= 400
+
+
+# ---------- ETAP 204: grupy mieszkańców ----------
+
+
+def csv_z_grupami():
+    wiersze = ["h3,czas_szkola_min,ludnosc,ludnosc_0_14,ludnosc_65+"]
+    for i, komorka in enumerate(SASIEDZI):  # czasy 0, 4, 8, 12, 16, 20, 24
+        dzieci, seniorzy = (100, 0) if i < 3 else (0, 50)
+        wiersze.append(f"{komorka},{'' if i == 6 else i * 4},{dzieci + seniorzy + 10},{dzieci},{seniorzy}")
+    return "\n".join(wiersze)
+
+
+def test_grupy_mieszkancow(client):
+    w = wyniki.wczytaj_csv(csv_z_grupami())
+    assert set(w["kolumny"]) == {"czas_szkola_min"} and list(w["grupy"]) == ["ludnosc_0_14", "ludnosc_65+"]
+    g = {x["nazwa"]: x for x in wyniki.analiza_kolumny(w, "czas_szkola_min")["statystyki"]["grupy"]}
+    dzieci, seniorzy = g["ludnosc_0_14"], g["ludnosc_65+"]
+    assert dzieci["razem"] == 300 and dzieci["udzialy"][1] == {"prog": 10, "ludnosc": 300, "procent": 100.0} and dzieci["mediana_min"] == 4
+    # seniorzy w komórkach 12, 16, 20 min (komórka bez czasu pominięta): ≤15 min — 50 z 150
+    assert seniorzy["razem"] == 150 and seniorzy["udzialy"][2]["procent"] == pytest.approx(100 / 3) and seniorzy["mediana_min"] == 16
+    assert "grupy" not in wyniki.analiza_kolumny(wyniki.wczytaj_csv(csv_testowy()), "czas_przystanek_min")["statystyki"]
+    with pytest.raises(BladWynikow, match="ujemne"):
+        wyniki.wczytaj_csv(csv_z_grupami().replace(",100,0", ",-1,0", 1))
+    with pytest.raises(BladWynikow, match="Najwyżej 8"):
+        wyniki.wczytaj_csv("h3,czas_min," + ",".join(f"wiek_{i}" for i in range(9)) + f"\n{SRODEK},1," + ",".join("1" * 9))
+    # szybki model przepisuje grupy do nowego pliku
+    from dostepnosc import model
+    ponownie = wyniki.wczytaj_csv(model.csv_wynikow(w["komorki"], w["kolumny"], w["ludnosc"], w["grupy"]))
+    assert ponownie["grupy"] == w["grupy"]
+    # trasa i raport
+    wgraj(client, csv_z_grupami(), "grupy.csv")
+    analiza = client.get("/dostepnosc/plik/grupy.csv/czas_szkola_min").get_json()
+    assert [x["nazwa"] for x in analiza["statystyki"]["grupy"]] == ["ludnosc_0_14", "ludnosc_65+"]
+    raport = client.get("/dostepnosc/raport?plik=grupy.csv&kolumna=czas_szkola_min").get_data(as_text=True)
+    assert "ludnosc_65+" in raport and "33,3%" in raport

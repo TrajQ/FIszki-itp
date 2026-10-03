@@ -1066,3 +1066,6 @@
 
 ## ETAP 203 — 2026-10-03
 - Ceny: premia rynku pierwotnego w latach (tabela na stronie transakcji i w raporcie)
+
+## ETAP 204 — 2026-10-03
+- Dostępność: grupy mieszkańców z pliku (np. wiek) — udział w zasięgu i mediana czasu dla każdej grupy

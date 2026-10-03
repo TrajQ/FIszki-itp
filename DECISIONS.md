@@ -4224,3 +4224,22 @@ jeden. Próg chroni przed premią z dwóch transakcji.
   na rok wymaga dużo więcej transakcji, a wynik trudniej wyjaśnić.
 - Premia w kwartałach — za mało transakcji pierwotnych w kwartale w
   typowym powiecie.
+
+## D-212 — Grupy mieszkańców rozpoznawane po prefiksie nazwy kolumny
+Data: 2026-10-03
+
+**Decyzja:** Kolumny zaczynające się od `ludnosc_`, `mieszkancy_` albo
+`wiek_` są wagami (liczbą osób w grupie), jak kolumna `ludnosc` z ETAPu
+21 — nie trafiają na listę wskaźników. Dla każdej grupy liczymy udział w
+zasięgu progów i medianę czasu ważoną liczbą osób.
+
+**Uzasadnienie:** Format pliku zostaje prostym CSV bez osobnego pliku
+opisu; prefiks jest czytelny w QGIS i w arkuszu. Mediana ważona mówi,
+w jakim czasie dociera połowa seniorów albo dzieci — porównywalne między
+grupami bez zakładania progu.
+
+**Odrzucone alternatywy:**
+- Wybór kolumn grup w interfejsie po wgraniu — dodatkowy krok przy
+  każdym pliku i stan do zapamiętania.
+- Grupy z GUS (BDL) dla obszaru — dane gminne, nie na siatce H3; podział
+  na komórki byłby założeniem.

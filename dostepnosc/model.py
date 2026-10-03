@@ -165,12 +165,14 @@ def obszary_obslugi(
     return wynik
 
 
-def csv_wynikow(komorki: list[str], kolumny: dict[str, list], ludnosc: list[float] | None) -> str:
-    """Plik wyników w formacie, który czyta wyniki.wczytaj_csv."""
+def csv_wynikow(komorki: list[str], kolumny: dict[str, list], ludnosc: list[float] | None, grupy: dict[str, list] | None = None) -> str:
+    """Plik wyników w formacie, który czyta wyniki.wczytaj_csv (grupy
+    mieszkańców z ETAPu 204 przepisywane bez zmian)."""
     bufor = io.StringIO()
     zapis = csv.writer(bufor)
+    grupy = grupy or {}
     nazwy = list(kolumny)
-    zapis.writerow(["h3", *nazwy, *(["ludnosc"] if ludnosc is not None else [])])
+    zapis.writerow(["h3", *nazwy, *(["ludnosc"] if ludnosc is not None else []), *grupy])
     for i, komorka in enumerate(komorki):
         wiersz = [komorka]
         for nazwa in nazwy:
@@ -178,6 +180,7 @@ def csv_wynikow(komorki: list[str], kolumny: dict[str, list], ludnosc: list[floa
             wiersz.append("" if wartosc is None else f"{wartosc:g}")
         if ludnosc is not None:
             wiersz.append(f"{ludnosc[i]:g}")
+        wiersz += [f"{osoby[i]:g}" for osoby in grupy.values()]
         zapis.writerow(wiersz)
     return bufor.getvalue()
 
