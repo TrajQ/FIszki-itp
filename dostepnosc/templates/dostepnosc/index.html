@@ -121,7 +121,7 @@
                 <tbody id="lista-obszarow"></tbody>
             </table>
             <button id="edytuj-punkty" type="button" class="przycisk--drugi">Edytuj te punkty i policz ponownie</button>
-            <p id="edytuj-punkty-opis" class="przypis" hidden></p>
+            <p id="edytuj-punkty-opis" class="wyciszony model__opis" hidden></p>
         </section>
 
         <section class="karta stos" id="karta-dzielnic">
@@ -174,7 +174,7 @@
             </details>
             <label class="model__plik">Albo wczytaj punkty z pliku CSV
                 <input id="model-plik" type="file" accept=".csv,.txt,text/csv" aria-label="Plik CSV z punktami usług">
-                <span class="wyciszony">Kolumny lat i lon w stopniach (EPSG:4326), opcjonalnie nazwa. Z QGIS: eksport warstwy punktowej do CSV z geometrią jako X/Y w EPSG:4326.</span>
+                <span class="wyciszony">Kolumny lat i lon w stopniach (EPSG:4326), opcjonalnie nazwa i usługa (kilka rodzajów naraz — każdy da osobną kolumnę czasu). Z QGIS: eksport warstwy punktowej do CSV z geometrią jako X/Y w EPSG:4326.</span>
             </label>
             <div class="rzad">
                 <button id="model-wstawiaj" type="button" class="przycisk--drugi">Wstawiaj punkty</button>

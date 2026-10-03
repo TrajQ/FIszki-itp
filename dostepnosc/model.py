@@ -138,6 +138,26 @@ def polacz_z_istniejacymi(stare: list, nowe: list[float]) -> tuple[list[float], 
     return polaczone, lepiej
 
 
+MAKS_USLUG = 8
+
+
+def grupy_uslug(punkty: list, usluga: str, uslugi) -> list[dict]:
+    """ETAP 223: punkty podzielone według usługi → [{"usluga", "kolumna",
+    "indeksy"}] w kolejności pierwszego wystąpienia. Usługa punktu pusta albo
+    brak listy — usługa wspólna z pola „Usługa”. Różne zapisy tej samej usługi
+    („Szkoła”, „szkola”) dają jedną kolumnę."""
+    uslugi = uslugi if isinstance(uslugi, list) else []
+    grupy: dict[str, dict] = {}
+    for i in range(len(punkty)):
+        wlasna = str(uslugi[i]).strip() if i < len(uslugi) and uslugi[i] is not None else ""
+        nazwa = wlasna or usluga.strip()
+        kolumna = nazwa_kolumny(nazwa)
+        grupy.setdefault(kolumna, {"usluga": nazwa, "kolumna": kolumna, "indeksy": []})["indeksy"].append(i)
+    if len(grupy) > MAKS_USLUG:
+        raise BladModelu(f"Najwyżej {MAKS_USLUG} rodzajów usług w jednym liczeniu.")
+    return list(grupy.values())
+
+
 def obszary_obslugi(
     punkty: list[tuple[float, float]],
     czasy: list[float],
@@ -190,6 +210,7 @@ def csv_wynikow(komorki: list[str], kolumny: dict[str, list], ludnosc: list[floa
 NAGLOWKI_SZEROKOSCI = {"lat", "latitude", "szerokosc", "szerokość", "y", "szer"}
 NAGLOWKI_DLUGOSCI = {"lon", "lng", "long", "longitude", "dlugosc", "długość", "x", "dl"}
 NAGLOWKI_NAZWY = {"nazwa", "name", "opis", "placowka", "placówka"}
+NAGLOWKI_USLUGI = {"usluga", "usługa", "rodzaj", "typ", "kategoria"}  # ETAP 223
 MAKS_DLUGOSC_NAZWY = 60
 
 
@@ -201,10 +222,10 @@ def _liczba_wsp(tekst: str) -> float:
 
 
 def punkty_z_csv(tekst: str) -> tuple[list[dict], list[str]]:
-    """CSV z punktami w WGS84 → ([{"lat", "lon", "nazwa"}], błędy wierszy).
+    """CSV z punktami w WGS84 → ([{"lat", "lon", "nazwa", "usluga"}], błędy wierszy).
 
     Kolumny rozpoznajemy po nagłówku (lat/lon, szerokosc/dlugosc, y/x,
-    nazwa). Bez nagłówka: dwie pierwsze kolumny to współrzędne, a która
+    nazwa, usługa — od ETAPu 223, np. „szkoła”, „przedszkole”). Bez nagłówka: dwie pierwsze kolumny to współrzędne, a która
     jest szerokością, poznajemy po zakresie (Polska: szerokość 49–55°,
     długość 14–24,2° — zakresy się nie nakładają).
     """
@@ -220,11 +241,12 @@ def punkty_z_csv(tekst: str) -> tuple[list[dict], list[str]]:
     kol_lat = next((i for i, n in enumerate(naglowek) if n in NAGLOWKI_SZEROKOSCI), None)
     kol_lon = next((i for i, n in enumerate(naglowek) if n in NAGLOWKI_DLUGOSCI), None)
     kol_nazwa = next((i for i, n in enumerate(naglowek) if n in NAGLOWKI_NAZWY), None)
+    kol_usluga = next((i for i, n in enumerate(naglowek) if n in NAGLOWKI_USLUGI), None)
     if kol_lat is not None and kol_lon is not None:
         dane, pierwszy_nr = wiersze[1:], 2
     else:
         dane, pierwszy_nr, kol_lat, kol_lon = wiersze, 1, 0, 1
-        kol_nazwa = 2  # opcjonalna trzecia kolumna
+        kol_nazwa, kol_usluga = 2, None  # opcjonalna trzecia kolumna
 
     punkty, bledy = [], []
     for nr, wiersz in enumerate(dane, start=pierwszy_nr):
@@ -240,7 +262,8 @@ def punkty_z_csv(tekst: str) -> tuple[list[dict], list[str]]:
             bledy.append(f"wiersz {nr}: współrzędne poza zakresem — potrzebne stopnie WGS84 (EPSG:4326)")
             continue
         nazwa = wiersz[kol_nazwa].strip()[:MAKS_DLUGOSC_NAZWY] if kol_nazwa is not None and kol_nazwa < len(wiersz) else ""
-        punkty.append({"lat": a, "lon": b, "nazwa": nazwa})
+        usluga = wiersz[kol_usluga].strip()[:40] if kol_usluga is not None and kol_usluga < len(wiersz) else ""
+        punkty.append({"lat": a, "lon": b, "nazwa": nazwa, "usluga": usluga})
         if len(punkty) > MAKS_PUNKTOW:
             raise BladModelu(f"Za dużo punktów w pliku (limit {MAKS_PUNKTOW}).")
     if not punkty:

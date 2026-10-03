@@ -3952,3 +3952,26 @@ Status: zamknięty
   policzenie, powrót do edycji na pliku bazowym
 - Pomoc: „Poprawianie punktów usług w szybkim modelu”
 - `DECISIONS.md`: D-230
+
+## ETAP 223 — Dostępność: kilka rodzajów usług w jednym liczeniu szybkiego modelu
+Data: 2026-10-03
+Status: zamknięty
+
+- `dostepnosc/model.py`: `grupy_uslug` (punkty według usługi, ta sama
+  kolumna dla różnych zapisów, `MAKS_USLUG=8`); `punkty_z_csv` czyta
+  kolumnę usługi (`NAGLOWKI_USLUGI`)
+- `dostepnosc/routes.py`: `z_punktow` liczy kolumnę dla każdej grupy
+  (łączenie z istniejącymi — każda kolumna musi być w pliku bazowym),
+  nazwa domyślna `…_N_uslugi`; plik punktów: wierzch = pierwsza usługa
+  (zgodność wstecz) + lista `grupy`; `grupa_kolumny` — raport bierze
+  obszary obsługi drukowanej kolumny
+- Strona: pole usługi przy każdym punkcie (podpowiedzi z pliku), kolor
+  punktu według usługi, „Obszary obsługi” z nagłówkiem usługi; „Edytuj te
+  punkty” przenosi usługi punktów; opis pod przyciskiem zwykłą czcionką
+  (poprawka po ETAPie 222)
+- Testy: grupy usług, dwie usługi → dwie kolumny + wskaźnik łączny, raport
+  drugiej usługi, łączenie bez kolumny, plik punktów sprzed ETAPu 223,
+  kolumna usługi w CSV; przeglądarka 1300/390 px (błąd przebudowy listy
+  przy „change” znaleziony i poprawiony)
+- Pomoc: „Kilka rodzajów usług naraz w szybkim modelu”
+- `DECISIONS.md`: D-231

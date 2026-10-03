@@ -432,8 +432,12 @@ button.model__wstawiaj--aktywny {
     cursor: crosshair;
 }
 
-.punkt-uslugi {
+/* ETAP 223: kolor na wewnętrznym <span> — inny dla każdej usługi */
+.punkt-uslugi span {
     display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
     align-items: center;
     justify-content: center;
     border: 2px solid #ffffff;
@@ -681,4 +685,13 @@ button.lista-punktow-modelu__nr {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     color: #ffffff;
     font: 700 12px/1 var(--czcionka);
+}
+
+.lista-punktow-modelu input.lista-punktow-modelu__usluga {
+    flex: 0 1 34%;
+}
+
+.tabela-obszarow th.tabela-obszarow__usluga {
+    padding-top: 10px;
+    text-align: left;
 }

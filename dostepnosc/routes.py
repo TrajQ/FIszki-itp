@@ -133,6 +133,14 @@ def _punkty_pliku(nazwa: str) -> dict | None:
         return json.load(plik)
 
 
+def grupa_kolumny(punkty_pliku: dict | None, kolumna: str) -> dict | None:
+    """ETAP 223: usługa z pliku punktów liczona do tej kolumny (pliki sprzed
+    ETAPu 223 mają jedną — na wierzchu, bez listy „grupy”)."""
+    if not punkty_pliku:
+        return None
+    return next((g for g in punkty_pliku.get("grupy") or [punkty_pliku] if g["kolumna"] == kolumna), None)
+
+
 def _wolna_nazwa(nazwa: str) -> str:
     """Nie nadpisujemy istniejących plików: „x.csv” → „x_2.csv” itd."""
     podstawa = nazwa[: -len(".csv")]
@@ -179,46 +187,63 @@ def z_punktow():
     """
     dane = request.get_json(silent=True) or {}
     try:
-        kolumna = model.nazwa_kolumny(str(dane.get("usluga") or ""))
         predkosc = _liczba(dane.get("predkosc_kmh"), model.PREDKOSC_DOMYSLNA_KMH)
         kretosc = _liczba(dane.get("kretosc"), model.KRETOSC_DOMYSLNA)
         punkty = model.sprawdz_parametry(dane.get("punkty"), predkosc, kretosc)
+        # ETAP 223: każdy punkt może mieć własną usługę (puste — usługa z pola „Usługa”)
+        grupy = model.grupy_uslug(punkty, str(dane.get("usluga") or ""), dane.get("uslugi"))
         baza = dane.get("baza")
         if baza:
             wyniki = _wczytaj(str(baza))
             komorki = wyniki["komorki"]
             kolumny = dict(wyniki["kolumny"])
             ludnosc = wyniki.get("ludnosc")
-            grupy = wyniki.get("grupy")
+            grupy_wieku = wyniki.get("grupy")
             rdzen = str(baza)[: -len(".csv")]
         else:
             obszar = dane.get("obszar") or []
             if len(obszar) != 4:
                 raise model.BladModelu("Brak obszaru mapy (południe, zachód, północ, wschód).")
             komorki = model.siatka_obszaru(*(float(v) for v in obszar))
-            kolumny, ludnosc, grupy, rdzen = {}, None, None, "nowa_siatka"
+            kolumny, ludnosc, grupy_wieku, rdzen = {}, None, None, "nowa_siatka"
     except (model.BladModelu, BladWynikow) as e:
         return jsonify({"blad": str(e)}), 400
     except (TypeError, ValueError):
         return jsonify({"blad": "Prędkość, krętość i obszar muszą być liczbami."}), 400
 
-    czasy, najblizsze = model.czasy_dojscia(komorki, punkty, predkosc, kretosc)
     # „Dodaj do istniejących”: nowa szkoła obok obecnych — czas do najbliższej
     # z nich; obszary obsługi tylko tam, gdzie nowy punkt coś zmienił.
-    polacz = bool(dane.get("polacz")) and bool(baza) and kolumna in wyniki["kolumny"]
-    if bool(dane.get("polacz")) and not polacz:
-        return jsonify(
-            {"blad": f"Plik bazowy nie ma wskaźnika „{kolumna}” — nie ma z czym połączyć. Wybierz istniejącą usługę albo odznacz „dodaj do istniejących”."}
-        ), 400
-    maska = None
-    czasy_nowych = czasy
-    if polacz:
-        czasy, maska = model.polacz_z_istniejacymi(wyniki["kolumny"][kolumna], czasy_nowych)
-    kolumny[kolumna] = czasy
-    tekst = model.csv_wynikow(komorki, kolumny, ludnosc, grupy)
+    polacz = bool(dane.get("polacz")) and bool(baza)
+    if bool(dane.get("polacz")):
+        brakujace = [g["kolumna"] for g in grupy if not baza or g["kolumna"] not in wyniki["kolumny"]]
+        if brakujace:
+            return jsonify(
+                {"blad": f"Plik bazowy nie ma wskaźnika „{', '.join(brakujace)}” — nie ma z czym połączyć. Wybierz istniejącą usługę albo odznacz „dodaj do istniejących”."}
+            ), 400
+    nazwy = dane.get("nazwy") if isinstance(dane.get("nazwy"), list) else []
+    opisy_grup = []
+    for g in grupy:
+        punkty_grupy = [punkty[i] for i in g["indeksy"]]
+        czasy, najblizsze = model.czasy_dojscia(komorki, punkty_grupy, predkosc, kretosc)
+        maska = None
+        czasy_nowych = czasy
+        if polacz:
+            czasy, maska = model.polacz_z_istniejacymi(wyniki["kolumny"][g["kolumna"]], czasy_nowych)
+        kolumny[g["kolumna"]] = czasy
+        obszary_grupy = model.obszary_obslugi(punkty_grupy, czasy_nowych, najblizsze, ludnosc, maska)
+        # Nazwy punktów (np. z pliku CSV) — tylko do tabeli obszarów obsługi.
+        for obszar, i in zip(obszary_grupy, g["indeksy"]):
+            if i < len(nazwy) and nazwy[i]:
+                obszar["nazwa"] = str(nazwy[i]).strip()[: model.MAKS_DLUGOSC_NAZWY]
+        opisy_grup.append({"usluga": g["usluga"], "kolumna": g["kolumna"], "polaczone": polacz, "obszary": obszary_grupy})
+    tekst = model.csv_wynikow(komorki, kolumny, ludnosc, grupy_wieku)
     wyniki_h3.wczytaj_csv(tekst)  # ten sam format co wgrane pliki — sprawdzamy
 
-    nazwa = secure_filename(str(dane.get("nazwa_pliku") or f"{rdzen}_{kolumna[len('czas_'):-len('_min')]}"))
+    if len(grupy) == 1:
+        domyslna = f"{rdzen}_{grupy[0]['kolumna'][len('czas_'):-len('_min')]}"
+    else:
+        domyslna = f"{rdzen}_{len(grupy)}_uslugi"
+    nazwa = secure_filename(str(dane.get("nazwa_pliku") or domyslna))
     if not nazwa:
         nazwa = "wyniki"
     if not nazwa.lower().endswith(".csv"):
@@ -227,20 +252,15 @@ def z_punktow():
     with open(os.path.join(_folder_wynikow(), nazwa), "w", encoding="utf-8") as cel:
         cel.write(tekst)
 
+    # Pola na wierzchu — pierwsza usługa, jak w plikach sprzed ETAPu 223;
+    # „grupy” — wszystkie usługi (przy jednej: ta sama jedna).
     punkty_pliku = {
-        "usluga": str(dane.get("usluga")).strip(),
-        "kolumna": kolumna,
+        **opisy_grup[0],
         "predkosc_kmh": predkosc,
         "kretosc": kretosc,
         "baza": baza or None,
-        "polaczone": polacz,
-        "obszary": model.obszary_obslugi(punkty, czasy_nowych, najblizsze, ludnosc, maska),
+        "grupy": opisy_grup,
     }
-    # Nazwy punktów (np. z pliku CSV) — tylko do tabeli obszarów obsługi.
-    nazwy = dane.get("nazwy") if isinstance(dane.get("nazwy"), list) else []
-    for obszar, nazwa_punktu in zip(punkty_pliku["obszary"], nazwy):
-        if nazwa_punktu:
-            obszar["nazwa"] = str(nazwa_punktu).strip()[: model.MAKS_DLUGOSC_NAZWY]
     with open(_sciezka_punktow(nazwa), "w", encoding="utf-8") as cel:
         json.dump(punkty_pliku, cel, ensure_ascii=False)
     return jsonify({"plik": nazwa, **punkty_pliku})
@@ -471,7 +491,8 @@ def _raport(plik: str, kolumna: str) -> dict:
         tytul = f"Czas dojścia: {kolumna}" if analiza["minuty"] else f"Wskaźnik: {kolumna}"
     stat = analiza["statystyki"]
     punkty_pliku = _punkty_pliku(plik)
-    punkty = punkty_pliku["obszary"] if punkty_pliku and punkty_pliku["kolumna"] == kolumna else None
+    grupa = grupa_kolumny(punkty_pliku, kolumna)
+    punkty = grupa["obszary"] if grupa else None
 
     przypisy = []
     if plik in PLIKI_PRZYKLADOWE:
@@ -494,7 +515,7 @@ def _raport(plik: str, kolumna: str) -> dict:
         "podtytul": f"{plik} · rozdzielczość H3 {stat['rozdzielczosc']} · komórek: {stat['liczba_komorek']}",
         "przypisy": przypisy,
         "punkty": punkty,
-        "punkty_pliku": punkty_pliku if punkty else None,
+        "punkty_pliku": {**punkty_pliku, **grupa} if punkty else None,
         "legenda": druk.legenda(analiza),
         "progi_raportu": [_punkt_krzywej(krzywa, m) for m in PROGI_RAPORTU_MIN] if krzywa else [],
     }

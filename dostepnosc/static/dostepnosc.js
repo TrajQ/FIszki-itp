@@ -841,8 +841,29 @@
     const punktyModelu = []; // [{latlng, znacznik}]
     let wstawianie = false;
 
-    function ikonaPunktu(nr) {
-        return L.divIcon({ className: "punkt-uslugi", html: `<span>${nr}</span>`, iconSize: [26, 26] });
+    // ETAP 223: kolor punktu według usługi (pierwsza usługa — fiolet jak dotąd)
+    const KOLORY_USLUG = ["#5e5ce6", "#ff9f0a", "#30b0c7", "#ff375f", "#34c759", "#8e6e4e", "#bf5af2", "#1d1d1f"];
+
+    function ikonaPunktu(nr, kolor = KOLORY_USLUG[0]) {
+        return L.divIcon({ className: "punkt-uslugi", html: `<span style="background:${kolor}">${nr}</span>`, iconSize: [26, 26] });
+    }
+
+    // klucz usługi jak nazwa kolumny na serwerze (model.nazwa_kolumny) — tylko do kolorów
+    function kluczUslugi(nazwa) {
+        return nazwa.trim().toLowerCase().replace(/[ąćęłńóśźż]/g, (z) => "acelnoszz"["ąćęłńóśźż".indexOf(z)]).replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+    }
+
+    function uslugaPunktu(wpis) {
+        return wpis.usluga || modelUsluga.value;
+    }
+
+    function koloryUslug() {
+        const kolory = new Map();
+        for (const p of punktyModelu) {
+            const k = kluczUslugi(uslugaPunktu(p));
+            if (!kolory.has(k)) kolory.set(k, KOLORY_USLUG[kolory.size % KOLORY_USLUG.length]);
+        }
+        return kolory;
     }
 
     const listaPunktow = document.getElementById("lista-punktow-modelu");
@@ -876,7 +897,7 @@
             const nazwa = document.createElement("input");
             nazwa.type = "text";
             nazwa.maxLength = 60;
-            nazwa.placeholder = "nazwa (opcjonalnie)";
+            nazwa.placeholder = "nazwa";
             nazwa.value = wpis.nazwa || "";
             nazwa.setAttribute("aria-label", `Nazwa punktu ${i + 1}`);
             nazwa.addEventListener("input", () => {
@@ -890,19 +911,41 @@
             usun.title = "Usuń punkt";
             usun.setAttribute("aria-label", `Usuń punkt ${i + 1}`);
             usun.addEventListener("click", () => usunPunkt(wpis));
-            li.append(nr, nazwa, usun);
+            const usluga = document.createElement("input"); // ETAP 223: własna usługa punktu
+            usluga.type = "text";
+            usluga.maxLength = 40;
+            usluga.className = "lista-punktow-modelu__usluga";
+            usluga.placeholder = modelUsluga.value || "usługa";
+            usluga.value = wpis.usluga || "";
+            usluga.setAttribute("list", "model-uslugi");
+            usluga.setAttribute("aria-label", `Usługa punktu ${i + 1} (puste — jak w polu „Usługa”)`);
+            usluga.addEventListener("change", () => {
+                wpis.usluga = usluga.value.trim();
+                odswiezKolory(); // bez przebudowy listy — „change” przychodzi przy opuszczaniu pola
+            });
+            li.append(nr, nazwa, usluga, usun);
             return li;
         }));
     }
 
+    function odswiezKolory() {
+        const kolory = koloryUslug();
+        punktyModelu.forEach((p, i) => {
+            const kolor = kolory.get(kluczUslugi(uslugaPunktu(p)));
+            p.znacznik.setIcon(ikonaPunktu(i + 1, kolor));
+            const nr = listaPunktow.children[i] && listaPunktow.children[i].querySelector(".lista-punktow-modelu__nr");
+            if (nr) nr.style.background = kolor;
+        });
+    }
+
     function odswiezPunkty() {
-        punktyModelu.forEach((p, i) => p.znacznik.setIcon(ikonaPunktu(i + 1)));
         modelStan.textContent = wstawianie
             ? `Punkty: ${punktyModelu.length} — klikaj na mapie; klik w punkt go usuwa, przeciągnięcie przesuwa.`
             : punktyModelu.length ? `Punkty: ${punktyModelu.length} — przeciągnij punkt, żeby go przesunąć.` : "Punkty: 0";
         modelWyczysc.hidden = punktyModelu.length === 0;
         modelPolicz.disabled = punktyModelu.length === 0;
         odswiezListe();
+        odswiezKolory();
     }
 
     function ustawWstawianie(wlacz) {
@@ -914,9 +957,9 @@
         odswiezPunkty();
     }
 
-    function dodajPunkt(latlng, nazwa = "") {
+    function dodajPunkt(latlng, nazwa = "", usluga = "") {
         const znacznik = L.marker(latlng, { icon: ikonaPunktu(punktyModelu.length + 1), keyboard: false, draggable: true }).addTo(warstwaPunktow);
-        const wpis = { latlng, znacznik, nazwa };
+        const wpis = { latlng, znacznik, nazwa, usluga };
         podpisz(wpis);
         znacznik.on("click", () => {
             if (wstawianie) usunPunkt(wpis);
@@ -927,6 +970,8 @@
         punktyModelu.push(wpis);
         odswiezPunkty();
     }
+
+    modelUsluga.addEventListener("input", odswiezPunkty); // ETAP 223: kolory i podpowiedzi usług punktów
 
     // Kliknięcie w heksagon w trybie wstawiania ma dodać punkt, a nie
     // otwierać okienko komórki — sprawdzamy tryb w obu miejscach.
@@ -946,7 +991,7 @@
             const odpowiedz = await fetch(URL_PUNKTY_Z_PLIKU, { method: "POST", body: formularz });
             const dane = await odpowiedz.json();
             if (!odpowiedz.ok) throw new Error(dane.blad || `Błąd ${odpowiedz.status}`);
-            for (const p of dane.punkty) dodajPunkt(L.latLng(p.lat, p.lon), p.nazwa);
+            for (const p of dane.punkty) dodajPunkt(L.latLng(p.lat, p.lon), p.nazwa, p.usluga || "");
             mapa.fitBounds(L.latLngBounds(punktyModelu.map((p) => p.latlng)), { padding: [40, 40], maxZoom: 15 });
             if (dane.liczba_bledow) {
                 modelBlad.textContent = `Pominięte wiersze (${dane.liczba_bledow}): ${dane.bledy.join("; ")}.`;
@@ -999,6 +1044,7 @@
             usluga: modelUsluga.value,
             punkty: punktyModelu.map((p) => [p.latlng.lat, p.latlng.lng]),
             nazwy: punktyModelu.map((p) => p.nazwa || ""),
+            uslugi: punktyModelu.map((p) => p.usluga || ""), // ETAP 223
             predkosc_kmh: modelPredkosc.value,
             kretosc: modelKretosc.value,
         };
@@ -1029,9 +1075,11 @@
         const sekcja = document.getElementById("obszary-obslugi");
         sekcja.hidden = !punkty;
         if (!punkty) return;
+        const grupy = punkty.grupy || [punkty]; // ETAP 223: pliki sprzed — jedna usługa na wierzchu
         const zLudnoscia = punkty.obszary.length > 0 && punkty.obszary[0].ludnosc !== undefined;
         document.getElementById("obszary-opis").textContent =
-            `Usługa „${punkty.usluga}” (${punkty.kolumna}), ${formatLiczby.format(punkty.predkosc_kmh)} km/h, krętość ${formatLiczby.format(punkty.kretosc)}. ` +
+            (grupy.length > 1 ? `Usługi: ${grupy.map((g) => `„${g.usluga}” (${g.kolumna})`).join(", ")}` : `Usługa „${punkty.usluga}” (${punkty.kolumna})`) +
+            `, ${formatLiczby.format(punkty.predkosc_kmh)} km/h, krętość ${formatLiczby.format(punkty.kretosc)}. ` +
             (punkty.polaczone
                 ? "Nowe punkty dodane do istniejących usług. W tabeli tylko komórki, którym nowy punkt skrócił dojście"
                 : "Każda komórka należy do obszaru najbliższego punktu") +
@@ -1043,23 +1091,36 @@
         lista.replaceChildren();
         const warstwa = L.layerGroup().addTo(mapa);
         warstwaObszarowObslugi = warstwa;
-        for (const o of punkty.obszary) {
-            const tr = document.createElement("tr");
-            tr.title = `Komórek w obszarze: ${o.komorki}`;
-            const komorki = [
-                o.nazwa ? `${o.nr}. ${o.nazwa}` : `${o.nr}`,
-                zLudnoscia ? formatLiczby.format(o.ludnosc) : "—",
-                o.sredni_czas_min === null ? "—" : `${formatLiczby.format(o.sredni_czas_min)} / ${formatLiczby.format(o.maks_czas_min)} min`,
-            ];
-            komorki.forEach((tekst, i) => {
-                const td = document.createElement("td");
-                if (i > 0) td.className = "liczba";
-                td.textContent = tekst;
-                tr.appendChild(td);
-            });
-            lista.appendChild(tr);
-            L.marker([o.lat, o.lon], { icon: ikonaPunktu(o.nr), interactive: false, keyboard: false }).addTo(warstwa);
-        }
+        grupy.forEach((g, nrGrupy) => {
+            const kolor = KOLORY_USLUG[nrGrupy % KOLORY_USLUG.length];
+            if (grupy.length > 1) {
+                const naglowek = document.createElement("tr");
+                const th = document.createElement("th");
+                th.colSpan = 3;
+                th.className = "tabela-obszarow__usluga";
+                th.style.color = kolor;
+                th.textContent = g.usluga;
+                naglowek.appendChild(th);
+                lista.appendChild(naglowek);
+            }
+            for (const o of g.obszary) {
+                const tr = document.createElement("tr");
+                tr.title = `Komórek w obszarze: ${o.komorki}`;
+                const komorki = [
+                    o.nazwa ? `${o.nr}. ${o.nazwa}` : `${o.nr}`,
+                    zLudnoscia ? formatLiczby.format(o.ludnosc) : "—",
+                    o.sredni_czas_min === null ? "—" : `${formatLiczby.format(o.sredni_czas_min)} / ${formatLiczby.format(o.maks_czas_min)} min`,
+                ];
+                komorki.forEach((tekst, i) => {
+                    const td = document.createElement("td");
+                    if (i > 0) td.className = "liczba";
+                    td.textContent = tekst;
+                    tr.appendChild(td);
+                });
+                lista.appendChild(tr);
+                L.marker([o.lat, o.lon], { icon: ikonaPunktu(o.nr, kolor), interactive: false, keyboard: false }).addTo(warstwa);
+            }
+        });
     }
 
     // ---------- ETAP 222: punkty policzonego pliku z powrotem do edycji ----------
@@ -1080,7 +1141,8 @@
             const zestaw = {
                 usluga: punkty.usluga, predkosc_kmh: punkty.predkosc_kmh, kretosc: punkty.kretosc,
                 polacz: Boolean(punkty.polaczone && cel !== NAZWA_PLIKU),
-                punkty: punkty.obszary.map((o) => ({ lat: o.lat, lon: o.lon, nazwa: o.nazwa || "" })),
+                // ETAP 223: usługa pierwszej grupy w polu „Usługa”, pozostałe przy punktach
+                punkty: (punkty.grupy || [punkty]).flatMap((g, i) => g.obszary.map((o) => ({ lat: o.lat, lon: o.lon, nazwa: o.nazwa || "", usluga: i ? g.usluga : "" }))),
             };
             if (!cel || cel === NAZWA_PLIKU) return wczytajDoEdycji(zestaw);
             try {
@@ -1103,7 +1165,7 @@
         modelSiatka.value = "plik";
         modelSiatka.dispatchEvent(new Event("change"));
         document.getElementById("model-polacz").checked = Boolean(zestaw.polacz);
-        for (const p of zestaw.punkty) dodajPunkt(L.latLng(p.lat, p.lon), p.nazwa);
+        for (const p of zestaw.punkty) dodajPunkt(L.latLng(p.lat, p.lon), p.nazwa, p.usluga || "");
         if (punktyModelu.length) mapa.fitBounds(L.latLngBounds(punktyModelu.map((p) => p.latlng)), { padding: [40, 40], maxZoom: 15 });
         modelStan.scrollIntoView({ behavior: "smooth", block: "center" });
     }

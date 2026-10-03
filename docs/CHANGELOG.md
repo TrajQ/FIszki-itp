@@ -1123,3 +1123,6 @@
 
 ## ETAP 222 — 2026-10-03
 - Dostępność: nazwy, przesuwanie i ponowna edycja punktów w szybkim modelu
+
+## ETAP 223 — 2026-10-03
+- Dostępność: kilka rodzajów usług naraz w szybkim modelu (kolumna na usługę)

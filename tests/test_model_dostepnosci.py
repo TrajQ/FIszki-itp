@@ -189,13 +189,15 @@ import io  # noqa: E402
 
 def test_punkty_z_csv_naglowki_przecinek_i_kolejnosc():
     punkty, bledy = model.punkty_z_csv("nazwa;lat;lon\nSP 1;52,40;16,92\nzły;a;b\n")
-    assert punkty == [{"lat": 52.40, "lon": 16.92, "nazwa": "SP 1"}]
+    assert punkty == [{"lat": 52.40, "lon": 16.92, "nazwa": "SP 1", "usluga": ""}]
     assert bledy == ["wiersz 3: brak liczbowych współrzędnych"]
     # bez nagłówka, kolejność x,y (długość, szerokość) — rozpoznana po zakresie
     punkty, _ = model.punkty_z_csv("16.92,52.40,Szkoła\n")
-    assert punkty == [{"lat": 52.40, "lon": 16.92, "nazwa": "Szkoła"}]
+    assert punkty == [{"lat": 52.40, "lon": 16.92, "nazwa": "Szkoła", "usluga": ""}]
     # nagłówek QGIS: X = długość, Y = szerokość
-    assert model.punkty_z_csv("X,Y,name\n16.9,52.4,A\n")[0][0] == {"lat": 52.4, "lon": 16.9, "nazwa": "A"}
+    assert model.punkty_z_csv("X,Y,name\n16.9,52.4,A\n")[0][0] == {"lat": 52.4, "lon": 16.9, "nazwa": "A", "usluga": ""}
+    # ETAP 223: kolumna usługi
+    assert [p["usluga"] for p in model.punkty_z_csv("lat;lon;nazwa;rodzaj\n52,4;16,9;SP 1;szkoła\n52,41;16,91;P 7;przedszkole\n")[0]] == ["szkoła", "przedszkole"]
 
 
 def test_punkty_z_csv_bledy():
@@ -214,7 +216,7 @@ def test_endpoint_punktow_z_pliku_i_nazwy_w_obszarach(client):
         content_type="multipart/form-data",
     )
     punkty = odpowiedz.get_json()["punkty"]
-    assert punkty == [{"lat": 52.4064, "lon": 16.9252, "nazwa": "SP 1"}]
+    assert punkty == [{"lat": 52.4064, "lon": 16.9252, "nazwa": "SP 1", "usluga": ""}]
 
     wynik = client.post(
         "/dostepnosc/z-punktow",
@@ -242,3 +244,45 @@ def test_punkty_pliku_mowia_czy_baza_istnieje(client, tmp_path):
     przyklad = client.post("/dostepnosc/z-punktow", json={"usluga": "Szkoła", "punkty": [list(SRODEK)], "baza": PRZYKLAD}).get_json()["plik"]
     assert client.get(f"/dostepnosc/plik/{przyklad}").get_json()["punkty"]["baza_istnieje"] is True
     assert 'id="lista-punktow-modelu"' in client.get("/dostepnosc/").get_data(as_text=True)
+
+
+# ---------- ETAP 223: kilka rodzajów usług w jednym liczeniu ----------
+
+
+def test_grupy_uslug():
+    p = [SRODEK] * 4
+    grupy = model.grupy_uslug(p, "Szkoła", ["", "przedszkole", "szkola", None])
+    assert [(g["usluga"], g["kolumna"], g["indeksy"]) for g in grupy] == [
+        ("Szkoła", "czas_szkola_min", [0, 2, 3]), ("przedszkole", "czas_przedszkole_min", [1])]
+    assert len(model.grupy_uslug(p, "x", None)) == 1
+    with pytest.raises(model.BladModelu):
+        model.grupy_uslug(p, "", ["a", "", "", ""])  # punkt bez usługi i puste pole „Usługa”
+    with pytest.raises(model.BladModelu, match="Najwyżej"):
+        model.grupy_uslug([SRODEK] * 9, "x", [f"u{i}" for i in range(9)])
+
+
+def test_kilka_uslug_daje_kilka_kolumn_i_wskaznik_laczny(client):
+    daleko = (SRODEK[0] + 0.01, SRODEK[1] + 0.01)
+    dane = client.post("/dostepnosc/z-punktow", json={
+        "usluga": "Szkoła", "punkty": [list(SRODEK), list(daleko), list(daleko)],
+        "uslugi": ["", "przedszkole", ""], "nazwy": ["SP 1", "P 7", "SP 2"], "baza": PRZYKLAD}).get_json()
+    assert dane["plik"] == "przyklad_poznan_syntetyczny_2_uslugi.csv"
+    assert [g["kolumna"] for g in dane["grupy"]] == ["czas_szkola_min", "czas_przedszkole_min"]
+    assert [o["nazwa"] for o in dane["grupy"][0]["obszary"]] == ["SP 1", "SP 2"] and dane["grupy"][1]["obszary"][0]["nazwa"] == "P 7"
+    assert dane["kolumna"] == "czas_szkola_min" and dane["obszary"] == dane["grupy"][0]["obszary"]  # wierzch jak przed ETAPem 223
+    meta = client.get(f"/dostepnosc/plik/{dane['plik']}").get_json()
+    nazwy = [k["nazwa"] for k in meta["kolumny"]]
+    assert "czas_szkola_min" in nazwy and "czas_przedszkole_min" in nazwy and meta["laczny_dostepny"]
+    # raport drugiej usługi bierze jej obszary obsługi
+    raport = client.get(f"/dostepnosc/raport?plik={dane['plik']}&kolumna=czas_przedszkole_min").get_data(as_text=True)
+    assert "Obszary obsługi — przedszkole" in raport and "P 7" in raport and "SP 1" not in raport
+    # łączenie wymaga każdej kolumny w pliku bazowym
+    r = client.post("/dostepnosc/z-punktow", json={"usluga": "Szkoła", "punkty": [list(SRODEK)] * 2, "uslugi": ["", "basen"],
+                                                   "baza": PRZYKLAD, "polacz": True})
+    assert r.status_code == 400 and "czas_basen_min" in r.get_json()["blad"]
+
+
+def test_plik_punktow_sprzed_etapu_223_dziala_w_raporcie():
+    from dostepnosc.routes import grupa_kolumny
+    stary = {"usluga": "x", "kolumna": "czas_x_min", "obszary": [{"nr": 1}]}
+    assert grupa_kolumny(stary, "czas_x_min") is stary and grupa_kolumny(stary, "czas_y_min") is None and grupa_kolumny(None, "a") is None

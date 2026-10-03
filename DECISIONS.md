@@ -4597,3 +4597,22 @@ nadpisania: warianty „przed/po przesunięciu” porównuje się tym samym
 - Nadpisanie pliku wynikowego — traci się wariant do porównania.
 - Przenoszenie przez parametr w adresie — do 100 punktów z nazwami to
   długi adres; sessionStorage trzyma zestaw tylko na jedno przejście.
+
+## D-231 — Jedno liczenie, kolumna na usługę; plik punktów zgodny wstecz
+Data: 2026-10-03
+
+**Decyzja:** Punkty szybkiego modelu mogą mieć różne usługi; jedno
+liczenie zapisuje jeden plik z kolumną czasu dla każdej usługi. W pliku
+punktów pola na wierzchu opisują pierwszą usługę (jak przed ETAPem 223),
+a lista `grupy` — wszystkie.
+
+**Uzasadnienie:** „Miasto 15-minutowe” wymaga kilku usług w jednym pliku
+— wcześniej trzeba było liczyć je po kolei, każdą na wyniku poprzedniej.
+Wierzch bez zmian: stare pliki punktów i kod, który czyta tylko
+`kolumna`/`obszary`, działają dalej; nowy kod szuka grupy po kolumnie.
+
+**Odrzucone alternatywy:**
+- Osobny plik na usługę — wskaźnik łączny potrzebuje wszystkich kolumn w
+  jednym pliku.
+- Nowy format pliku punktów bez pól na wierzchu — wymagałby konwersji
+  zapisanych plików.
