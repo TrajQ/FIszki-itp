@@ -3308,3 +3308,22 @@ Status: zamknięty
   liczby), Cen
 - Pomoc: akapit „Arkusz ODS”
 - `DECISIONS.md`: D-197
+
+## ETAP 190 — Przegląd i dokumentacja po ETAPach 171–189
+Data: 2026-10-03
+Status: zamknięty
+
+- Przegląd: testy 609/0, pokrycie 95% (najsłabsze jak dotąd: ULDK,
+  granice PRG — gałęzie błędów usług), pyflakes: zbędny import `BUDYNEK`
+  w `osiedle/dxf_koncepcji.py` usunięty
+- Przegląd stron w Chromium: 90 stron, 0 problemów; `/atlas/gminy-w-czasie`
+  dopisana do stron wymagających parametrów, dodany raport z tabelą
+  krzyżową
+- README: funkcje z ETAPów 171–189 w tabeli modułów, ODS w opisie
+  eksportów, nowe pliki w „Gdzie co jest w kodzie”
+- ARCHITEKTURA: `dane/arkusz.py`, powiązanie MPZP → `/teren/okolica`
+- PORTFOLIO: liczby na ETAP 190 (18 900 wierszy Pythona, 9 200 testów,
+  9 500 JS, 609 testów, 90 stron)
+- PLAN 171–250: podsumowanie serii; pozycja 217 zastąpiona (punkty z
+  Terenu przy działce zrobione w ETAPie 176)
+- `DECISIONS.md`: D-198

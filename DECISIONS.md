@@ -3953,3 +3953,18 @@ uniwersalnych abstrakcji); wspólny jest tylko format w `dane/arkusz.py`.
 **Odrzucone alternatywy:**
 - Zastąpienie CSV przez ODS — CSV czytają QGIS, R i Python bez
   dodatkowych bibliotek; zostaje.
+
+## D-198 — Pozycja planu zrobiona wcześniej zostaje zastąpiona, nie przesunięta
+Data: 2026-10-03
+
+**Decyzja:** Gdy ETAP planu okazuje się już zrobiony w ramach innego
+ETAPu (tu 217 w 176), w planie zostaje przekreślony z odnośnikiem, a w
+jego miejsce wchodzi pokrewna, mała funkcja tego samego modułu. Numeracja
+ETAPów się nie przesuwa.
+
+**Uzasadnienie:** Stała numeracja pozwala odnosić się do ETAPów w
+DECISIONS i PROGRESS bez przeliczania; przekreślenie zostawia ślad,
+dlaczego plan się zmienił (D-178).
+
+**Odrzucone alternatywy:**
+- Przenumerowanie dalszych ETAPów — psuje odnośniki w dokumentacji.

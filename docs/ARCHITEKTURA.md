@@ -88,6 +88,8 @@ Moduły nie sięgają nawzajem do swoich baz. Wyjątki są nieliczne i jawne:
 - Osiedle pokazuje punkty projektu z Terenu, pytając trasy Terenu (D-073).
 - Osiedle podpowiada stawkę gruntu z tej samej trasy `/ceny/okolica`
   (tylko działki niezabudowane, D-172).
+- Karta działki w MPZP pobiera punkty inwentaryzacji z `POST /teren/okolica`
+  (D-184) — jak ceny, przez trasę.
 
 ## Warstwa `dane/`
 
@@ -100,6 +102,7 @@ Moduły nie sięgają nawzajem do swoich baz. Wyjątki są nieliczne i jawne:
 | `gemini.py` | jedyne miejsce, które rozmawia z modelem (`_generuj`) |
 | `siec.py` | czytelne komunikaty błędów sieci |
 | `dxf.py` | zapis DXF R12 (CAD) — format, nie usługa (D-130) |
+| `arkusz.py` | zapis arkusza ODS (LibreOffice, Excel) — format, bez biblioteki (D-196) |
 
 Usługi WFS planów miejscowych i KIMPZP są w `mpzp/wfs.py` i
 `mpzp/krajowe.py`. Wyłącznie API i WFS — bez scrapowania stron.

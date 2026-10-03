@@ -108,14 +108,15 @@ SPRAWDZ_DOSTEPNOSC = """() => {
     return p;
 }"""
 
-WYMAGAJA_PARAMETROW = ("/dostepnosc/raport", "/mpzp/raport", "/ceny/raport", "/teren/porownanie")  # ?plik=, ?id= — z parametrami niżej
+WYMAGAJA_PARAMETROW = ("/dostepnosc/raport", "/mpzp/raport", "/ceny/raport", "/teren/porownanie", "/atlas/gminy-w-czasie")  # ?plik=, ?id= — z parametrami niżej
 POMIN = ("favicon.ico", ".csv", ".json", ".svg", ".geojson", ".ics", ".txt", ".html", "/static", "/plik", "/telefon")
 STRONY = sorted({r.rule for r in app.url_map.iter_rules() if "GET" in r.methods and not r.arguments and not r.rule.endswith(POMIN) and "static" not in r.endpoint and r.rule not in WYMAGAJA_PARAMETROW})
 STRONY += ["/teren/projekty/1", "/teren/projekty/1/raport", "/osiedle/koncepcje/1/raport", "/ceny/transakcje?plik=1", "/ceny/transakcje?plik=1&co=dzialki",
            "/ceny/transakcje/1/raport", "/ceny/transakcje/1/raport?co=dzialki", "/ceny/transakcje/1/wycena?lat=50.06&lng=19.94&pow=50&promien=1000&tolerancja=0.2",
            "/fiszki/1/", "/przepisy/akty/1", "/osiedle/?koncepcja=1", "/szukaj?q=plan", "/szukaj?q=centrum",
            "/ceny/raport?id=011212161000&nazwa=Kraków&id=023216264000&nazwa=Wrocław — miasto na prawach powiatu",
-           "/teren/porownanie?a=1&b=2", "/przepisy/akty/1/druk?notatki=1", "/przepisy/akty/1/druk?j=2&j=4", "/fiszki/powtorka", "/fiszki/druk"]
+           "/teren/porownanie?a=1&b=2", "/przepisy/akty/1/druk?notatki=1", "/przepisy/akty/1/druk?j=2&j=4", "/fiszki/powtorka", "/fiszki/druk",
+           "/teren/projekty/1/raport?krzyz_a=stan&krzyz_b=obiekt"]
 srv = make_server("127.0.0.1", 5218, app, threaded=True); threading.Thread(target=srv.serve_forever, daemon=True).start()
 problemy = 0
 with sync_playwright() as p:

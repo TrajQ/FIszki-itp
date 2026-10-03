@@ -14,7 +14,7 @@ from shapely.ops import unary_union
 from dane.dxf import KOLORY_ACI, dxf
 from mpzp.uklady import gauss_kruger, strefa_pl2000
 
-from .bilans import BUDYNEK, FUNKCJE, LINIA, OBSZAR
+from .bilans import FUNKCJE, LINIA, OBSZAR
 
 KOLORY_FUNKCJI = {"MN": "zolty", "MW": "pomaranczowy", "U": "czerwony", "ZP": "zielony", "KD": "szary",
                   "KS": "jasnoszary", "WS": "niebieski", OBSZAR: "bialy", LINIA: "czerwony"}

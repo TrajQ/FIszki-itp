@@ -1024,3 +1024,6 @@
 
 ## ETAP 189 — 2026-10-03
 - Arkusz ODS także w Cenach (porównanie miast), Terenie (punkty) i Osiedlu (bilans, wskaźniki, program, koszty)
+
+## ETAP 190 — 2026-10-03
+- Przegląd i dokumentacja po ETAPach 171–189
