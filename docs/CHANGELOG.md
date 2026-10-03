@@ -1090,3 +1090,6 @@
 
 ## ETAP 211 — 2026-10-03
 - Strona główna: przypięte rzeczy (📌 przy „Wróć do pracy”, sekcja „Przypięte”)
+
+## ETAP 212 — 2026-10-03
+- Kosz: usunięte pliki PDF z fiszkami, fiszki, koncepcje i projekty terenowe można przywrócić przez 30 dni

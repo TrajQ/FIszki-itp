@@ -9,7 +9,7 @@ wielobokach to ułamek sekundy, a model danych zostaje prosty.
 import json
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import current_app, g
 
@@ -42,9 +42,15 @@ def close_db(exception=None):
         db.close()
 
 
+# ETAP 212: kosz — usunięta koncepcja ma datę usunięcia i znika z list; po DNI_W_KOSZU dniach — na dobre
+DNI_W_KOSZU = 30
+
+
 def init_db():
     db = get_db()
     db.executescript(SCHEMAT)
+    if "usunieto" not in {w[1] for w in db.execute("PRAGMA table_info(koncepcje)")}:
+        db.execute("ALTER TABLE koncepcje ADD COLUMN usunieto TEXT")
     db.commit()
 
 
@@ -57,13 +63,13 @@ def _na_slownik(wiersz) -> dict:
 
 def lista() -> list[dict]:
     wiersze = get_db().execute(
-        "SELECT id, nazwa, data_utworzenia, data_zmiany FROM koncepcje ORDER BY data_zmiany DESC, id DESC"
+        "SELECT id, nazwa, data_utworzenia, data_zmiany FROM koncepcje WHERE usunieto IS NULL ORDER BY data_zmiany DESC, id DESC"
     ).fetchall()
     return [dict(w) for w in wiersze]
 
 
 def pobierz(koncepcja_id: int) -> dict | None:
-    wiersz = get_db().execute("SELECT * FROM koncepcje WHERE id = ?", (koncepcja_id,)).fetchone()
+    wiersz = get_db().execute("SELECT * FROM koncepcje WHERE id = ? AND usunieto IS NULL", (koncepcja_id,)).fetchone()
     return _na_slownik(wiersz) if wiersz else None
 
 
@@ -98,6 +104,23 @@ def zapisz(koncepcja_id: int, nazwa: str | None = None, geojson: dict | None = N
 
 
 def usun(koncepcja_id: int):
+    """Do kosza (ETAP 212) — rysunek zostaje, koncepcja znika z list."""
     db = get_db()
-    db.execute("DELETE FROM koncepcje WHERE id = ?", (koncepcja_id,))
+    db.execute("UPDATE koncepcje SET usunieto = ? WHERE id = ?", (datetime.now().isoformat(timespec="seconds"), koncepcja_id))
     db.commit()
+
+
+def w_koszu() -> list[dict]:
+    """Usunięte koncepcje (najpierw najnowsze); starsze niż DNI_W_KOSZU dni usuwa na dobre."""
+    db = get_db()
+    granica = (datetime.now() - timedelta(days=DNI_W_KOSZU)).isoformat(timespec="seconds")
+    db.execute("DELETE FROM koncepcje WHERE usunieto IS NOT NULL AND usunieto < ?", (granica,))
+    db.commit()
+    return [dict(w) for w in db.execute("SELECT id, nazwa, usunieto FROM koncepcje WHERE usunieto IS NOT NULL ORDER BY usunieto DESC")]
+
+
+def przywroc(koncepcja_id: int) -> bool:
+    db = get_db()
+    zmienione = db.execute("UPDATE koncepcje SET usunieto = NULL WHERE id = ? AND usunieto IS NOT NULL", (koncepcja_id,)).rowcount
+    db.commit()
+    return bool(zmienione)

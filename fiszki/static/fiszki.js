@@ -436,8 +436,10 @@ async function odswiezListeFiszek() {
         if (fiszka.obraz && !fiszka.zaslona) akcje.appendChild(przycisk("Zasłoń fragmenty", "przycisk--tekst", () => pokazEdytorZaslon(li, fiszka)));
         akcje.appendChild(
             przycisk("Usuń", "przycisk--niebezpieczny", async () => {
-                await fetch(`${URL_FISZKI}/${fiszka.id}`, { method: "DELETE" });
+                const odp = await fetch(`${URL_FISZKI}/${fiszka.id}`, { method: "DELETE" });
+                const { kosz_id: koszId } = await odp.json().catch(() => ({}));
                 await odswiezListeFiszek();
+                if (koszId) pokazCofniecie(koszId, fiszka.pytanie); // ETAP 212
             })
         );
 
@@ -806,3 +808,29 @@ async function start() {
 }
 
 start();
+
+// ---------- ETAP 212: cofnięcie usunięcia fiszki (kosz — fiszki/kosz.py) ----------
+function pokazCofniecie(koszId, pytanie) {
+    document.getElementById("cofniecie-fiszki")?.remove();
+    const pasek = document.createElement("p");
+    pasek.id = "cofniecie-fiszki";
+    pasek.className = "komunikat cofniecie-fiszki";
+    pasek.setAttribute("role", "status");
+    pasek.append(`Usunięto fiszkę „${pytanie.slice(0, 60)}”. `);
+    const cofnij = document.createElement("button");
+    cofnij.type = "button";
+    cofnij.className = "przycisk--tekst";
+    cofnij.textContent = "Cofnij";
+    cofnij.addEventListener("click", async () => {
+        cofnij.disabled = true;
+        const odp = await fetch(URL_PRZYWROC.replace(/\/0\/przywroc$/, `/${koszId}/przywroc`), { method: "POST", headers: { Accept: "application/json" } });
+        if (odp.ok) {
+            pasek.remove();
+            await odswiezListeFiszek();
+        } else {
+            pasek.textContent = (await odp.json().catch(() => ({}))).blad || `Błąd ${odp.status}`;
+        }
+    });
+    pasek.appendChild(cofnij);
+    listaFiszekEl.before(pasek);
+}

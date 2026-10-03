@@ -3,6 +3,7 @@
 import base64
 import io
 import json
+import os
 import re
 
 import pytest
@@ -111,7 +112,7 @@ def test_pelny_obieg(client, tmp_path):
 
     assert client.delete("/teren/projekty/1").get_json() == {"ok": True}
     assert client.get("/teren/projekty/1").status_code == 404
-    assert list((tmp_path / "teren" / "zdjecia").iterdir()) == []
+    assert len(list((tmp_path / "teren" / "zdjecia").iterdir())) == 2  # ETAP 212: zdjęcia czekają w koszu 30 dni
 
 
 def test_zly_import_i_nazwa(client):
@@ -704,3 +705,32 @@ def test_formularz_z_punktami_do_sprawdzenia(client):
     assert "<b>stara" not in html  # tekst użytkownika w JSON jest zabezpieczony (<)
     assert 'id="karta-do-sprawdzenia"' in html
     assert client.get("/teren/projekty/1/formularz.html?do_sprawdzenia=a,b").status_code == 400
+
+
+# ---------- ETAP 212: kosz projektów ----------
+
+
+def test_kosz_projektow(client, tmp_path):
+    from datetime import datetime, timedelta
+
+    client.post("/teren/projekty", data={"nazwa": "Zieleń <Wilda>", "wzor": "zielen"})
+    klucz = re.search(r'"klucz": "([^"]+)"', client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)).group(1)
+    client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(json.dumps(plik(klucz, punkt())).encode()), "t.json")},
+                content_type="multipart/form-data")
+    folder = tmp_path / "teren" / "zdjecia"
+    assert len(os.listdir(folder)) == 1
+    client.delete("/teren/projekty/1")
+    strona = client.get("/teren/").get_data(as_text=True)
+    assert "Kosz (1)" in strona and "Zieleń &lt;Wilda&gt;" in strona and client.get("/teren/projekty/1").status_code == 404
+    assert client.get("/teren/projekty.json").get_json() == [] and len(os.listdir(folder)) == 1  # zdjęcie czeka w koszu
+    r = client.post("/teren/projekty/1/przywroc")
+    assert r.status_code == 302 and r.headers["Location"].endswith("/teren/projekty/1")
+    assert len(client.get("/teren/projekty/1/punkty").get_json()) == 1
+    assert client.post("/teren/projekty/1/przywroc").status_code == 404
+    client.delete("/teren/projekty/1")
+    with client.application.app_context():
+        from teren import baza
+        baza.get_db().execute("UPDATE projekty SET usunieto = ?", ((datetime.now() - timedelta(days=31)).isoformat(),))
+        baza.get_db().commit()
+    assert "Kosz (" not in client.get("/teren/").get_data(as_text=True)
+    assert os.listdir(folder) == []  # na dobre — ze zdjęciem

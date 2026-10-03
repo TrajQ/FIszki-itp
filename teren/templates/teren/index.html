@@ -42,6 +42,19 @@
     {% else %}
     <p class="wyciszony">Jeszcze nie ma projektów.</p>
     {% endif %}
+    {% if kosz %}
+    <details class="kosz-projektow">
+        <summary>Kosz ({{ kosz | length }}) — usunięte w ostatnich 30 dniach</summary>
+        <ul class="lista-projektow">
+            {% for p in kosz %}
+            <li>
+                <span>{{ p.nazwa }} <span class="wyciszony">· {{ p.liczba_punktow }} pkt · usunięty {{ p.usunieto[:10] }}</span></span>
+                <form method="post" action="{{ url_for('teren.przywroc_projekt', projekt_id=p.id) }}"><button type="submit" class="przycisk--tekst">Przywróć</button></form>
+            </li>
+            {% endfor %}
+        </ul>
+    </details>
+    {% endif %}
 </section>
 
 <section class="karta stos">

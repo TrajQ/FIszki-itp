@@ -104,7 +104,7 @@ def test_zapis_i_usuwanie_fiszki(client):
     assert lista[0]["pytanie"] == "Co to jest X?"
 
     usuniecie = client.delete(f"/fiszki/1/fiszki/{fiszka_id}")
-    assert usuniecie.status_code == 204
+    assert usuniecie.status_code == 200 and usuniecie.get_json()["kosz_id"] == 1  # ETAP 212: do kosza
 
     lista_po = client.get("/fiszki/1/fiszki").get_json()
     assert lista_po == []

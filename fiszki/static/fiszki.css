@@ -1240,3 +1240,24 @@ button.przycisk--ocena-trudne:hover {
 .wyjasnienie-fiszki textarea {
     width: 100%;
 }
+
+/* ETAP 212: kosz i cofnięcie usunięcia */
+.lista-kosza {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lista-kosza li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding: 6px 0;
+    border-top: 1px solid var(--linia);
+}
+
+.lista-kosza form {
+    margin: 0;
+}

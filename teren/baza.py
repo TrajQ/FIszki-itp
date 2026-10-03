@@ -10,7 +10,7 @@ import json
 import os
 import secrets
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import current_app, g
 
@@ -55,8 +55,11 @@ KOLUMNY_DODANE = {
         "termin": "TEXT",
         # ETAP 93: inwentaryzacja albo ankieta
         "rodzaj": "TEXT NOT NULL DEFAULT 'inwentaryzacja'",
+        # ETAP 212: kosz — data usunięcia; projekt z punktami i zdjęciami zostaje DNI_W_KOSZU dni
+        "usunieto": "TEXT",
     },
 }
+DNI_W_KOSZU = 30
 
 
 def folder() -> str:
@@ -124,13 +127,14 @@ def projekty() -> list[dict]:
     wiersze = get_db().execute(
         """SELECT projekty.*, COUNT(punkty.id) AS liczba_punktow, MAX(punkty.czas) AS ostatni_pomiar
            FROM projekty LEFT JOIN punkty ON punkty.projekt_id = projekty.id
+           WHERE projekty.usunieto IS NULL
            GROUP BY projekty.id ORDER BY projekty.id DESC"""
     ).fetchall()
     return [_projekt(w) for w in wiersze]
 
 
 def projekt(projekt_id: int) -> dict | None:
-    wiersz = get_db().execute("SELECT * FROM projekty WHERE id = ?", (projekt_id,)).fetchone()
+    wiersz = get_db().execute("SELECT * FROM projekty WHERE id = ? AND usunieto IS NULL", (projekt_id,)).fetchone()
     return _projekt(wiersz) if wiersz else None
 
 
@@ -160,6 +164,32 @@ def _usun_pliki(nazwy):
 
 
 def usun_projekt(projekt_id: int):
+    """Do kosza (ETAP 212): projekt znika z list, punkty i zdjęcia zostają."""
+    db = get_db()
+    db.execute("UPDATE projekty SET usunieto = ? WHERE id = ?", (datetime.now().isoformat(timespec="seconds"), projekt_id))
+    db.commit()
+
+
+def w_koszu() -> list[dict]:
+    """Usunięte projekty (najnowsze najpierw); starsze niż DNI_W_KOSZU dni — usuwa na dobre ze zdjęciami."""
+    db = get_db()
+    granica = (datetime.now() - timedelta(days=DNI_W_KOSZU)).isoformat(timespec="seconds")
+    for (projekt_id,) in db.execute("SELECT id FROM projekty WHERE usunieto IS NOT NULL AND usunieto < ?", (granica,)).fetchall():
+        _usun_na_dobre(projekt_id)
+    return [dict(w) for w in db.execute(
+        """SELECT projekty.id, projekty.nazwa, projekty.usunieto, COUNT(punkty.id) AS liczba_punktow
+           FROM projekty LEFT JOIN punkty ON punkty.projekt_id = projekty.id
+           WHERE projekty.usunieto IS NOT NULL GROUP BY projekty.id ORDER BY projekty.usunieto DESC""")]
+
+
+def przywroc_projekt(projekt_id: int) -> bool:
+    db = get_db()
+    zmienione = db.execute("UPDATE projekty SET usunieto = NULL WHERE id = ? AND usunieto IS NOT NULL", (projekt_id,)).rowcount
+    db.commit()
+    return bool(zmienione)
+
+
+def _usun_na_dobre(projekt_id: int):
     db = get_db()
     zdjecia = [w["zdjecie"] for w in db.execute("SELECT zdjecie FROM punkty WHERE projekt_id = ?", (projekt_id,))]
     db.execute("DELETE FROM punkty WHERE projekt_id = ?", (projekt_id,))
@@ -242,6 +272,7 @@ def ostatnio_zmienione(limit: int) -> list[dict]:
         """SELECT projekty.id, projekty.nazwa, COUNT(punkty.id) AS liczba_punktow,
                   MAX(projekty.data_utworzenia, COALESCE(MAX(punkty.data_importu), '')) AS kiedy
            FROM projekty LEFT JOIN punkty ON punkty.projekt_id = projekty.id
+           WHERE projekty.usunieto IS NULL
            GROUP BY projekty.id ORDER BY kiedy DESC LIMIT ?""", (limit,)
     ).fetchall()
     return [dict(w) for w in wiersze]

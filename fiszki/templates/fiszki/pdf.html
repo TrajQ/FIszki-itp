@@ -16,7 +16,7 @@
     </div>
     <div class="rzad">
         <form method="post" action="{{ url_for('fiszki.usun_pdf', pdf_id=pdf['id']) }}"
-              onsubmit="return confirm('Usunąć ten plik razem ze wszystkimi jego fiszkami? Tego nie da się cofnąć.')">
+              onsubmit="return confirm('Usunąć ten plik razem ze wszystkimi jego fiszkami? Przez 30 dni można go przywrócić z kosza na stronie Fiszek.')">
             <button type="submit" class="przycisk--niebezpieczny">Usuń plik</button>
         </form>
         <a class="przycisk przycisk--drugi" href="{{ url_for('fiszki.druk', pdf_id=pdf['id']) }}">Drukuj karty</a>
@@ -127,6 +127,7 @@
     const URL_PLIK = "{{ url_for('fiszki.plik_pdf', pdf_id=pdf['id']) }}";
     const URL_IMPORT = "{{ url_for('fiszki.importuj', pdf_id=pdf['id']) }}";
     const URL_FISZKI = "{{ url_for('fiszki.lista_fiszek', pdf_id=pdf['id']) }}";
+    const URL_PRZYWROC = "{{ url_for('fiszki.przywroc_z_kosza', kosz_id=0) }}"; // ETAP 212
     const URL_SZKIC = "{{ url_for('fiszki.szkic_fiszki', pdf_id=pdf['id']) }}";
     const URL_LUKI = "{{ url_for('fiszki.zapisz_luki', pdf_id=pdf['id']) }}"; // ETAP 139
     const URL_SZKICE_STRONY = "{{ url_for('fiszki.szkice_strony', pdf_id=pdf['id']) }}";

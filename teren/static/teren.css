@@ -565,3 +565,16 @@ button.przycisk--niebezpieczny-tekst {
     font-weight: 600;
     font-size: 12px;
 }
+
+/* ETAP 212: kosz projektów */
+.kosz-projektow li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 12px;
+}
+
+.kosz-projektow form {
+    margin: 0;
+}

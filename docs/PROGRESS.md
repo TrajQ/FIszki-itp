@@ -3716,3 +3716,29 @@ Status: zamknięty
   plik; sprawdzone w przeglądarce 1300/390 px
 - Pomoc: zdanie o przypinaniu
 - `DECISIONS.md`: D-219
+
+## ETAP 212 — Kosz: cofnięcie usunięcia (fiszki, koncepcje, projekty)
+Data: 2026-10-03
+Status: zamknięty
+
+- `fiszki/kosz.py`: usunięty PDF albo fiszka — wiersze powiązanych tabel
+  (`TABELE_PDF`, `TABELE_FISZKI`) jako JSON w tabeli `kosz`, pliki (PDF,
+  wycinki) w `instance/fiszki/kosz/`; wycinek wspólny z innymi fiszkami
+  (zasłony) kopiowany, nie przenoszony; przywrócenie z tymi samymi
+  numerami; `TABELE_ZOSTAJA` — historia odpowiedzi i wyniki z telefonu
+  (bez kaskady) zostają; `wyczysc_stare` po 30 dniach
+- Fiszki: `DELETE` fiszki zwraca `kosz_id`, „Cofnij” po usunięciu,
+  `POST /fiszki/kosz/<id>/przywroc`, sekcja „Kosz” na stronie Fiszek,
+  potwierdzenie usunięcia pliku mówi o koszu
+- Osiedle: kolumna `usunieto` (koncepcja znika z list, rysunek zostaje),
+  `GET /osiedle/kosz`, `POST /osiedle/koncepcje/<id>/przywroc`, kosz w
+  karcie koncepcji
+- Teren: kolumna `usunieto` w projektach (punkty i zdjęcia zostają),
+  `POST /teren/projekty/<id>/przywroc`, kosz na liście projektów;
+  usunięcie na dobre (ze zdjęciami) po 30 dniach
+- Testy: kosz fiszki i PDF-a (z tematami, powtórkami, wyjaśnieniem,
+  egzaminem, obrazem), kolejność przywracania, wygaśnięcie, kontrola, że
+  każda tabela z `fiszka_id`/`pdf_id` jest w koszu; kosz koncepcji i
+  projektów; sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Kosz”
+- `DECISIONS.md`: D-220

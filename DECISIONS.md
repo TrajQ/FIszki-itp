@@ -4380,3 +4380,27 @@ Adres strony działa dla każdego modułu bez zmian w nim; plik w
   modułach; „Wróć do pracy” ma już wszystko, co trzeba przypiąć.
 - Gdy przypięty obiekt zostanie usunięty, link prowadzi do strony
   błędu — akceptowalne, ✕ usuwa go z listy.
+
+## D-220 — Kosz: migawka w Fiszkach, znacznik usunięcia w Osiedlu i Terenie
+Data: 2026-10-03
+
+**Decyzja:** Każdy moduł ma własny kosz (bez wspólnej abstrakcji).
+Osiedle i Teren dostają kolumnę `usunieto` na głównym obiekcie — kilka
+zapytań filtruje usunięte, a przywrócenie czyści datę; pliki zostają do
+usunięcia na dobre. Fiszki zapisują migawkę: wiersze wszystkich tabel
+powiązanych z PDF-em albo fiszką jako JSON i pliki w folderze kosza, po
+czym usuwają jak dotąd; przywrócenie wstawia te same wiersze.
+
+**Uzasadnienie:** W Fiszkach z fiszkami pracuje ponad dwadzieścia
+zapytań (powtórki, quiz, statystyki, egzaminy, telefon, wyszukiwarka) —
+znacznik usunięcia trzeba by dopisać w każdym, a jeden pominięty pokazałby
+usunięte fiszki w powtórce. Migawka nie zmienia żadnego z nich. Test
+pilnuje, żeby nowa tabela z `fiszka_id` albo `pdf_id` trafiła na listę.
+W Osiedlu i Terenie zapytań jest kilka, więc znacznik jest prostszy i
+zachowuje pliki bez przenoszenia.
+
+**Odrzucone alternatywy:**
+- Jedna tabela kosza dla wszystkich modułów — wspólna abstrakcja wbrew
+  CLAUDE.md; bazy modułów są osobne.
+- Kosz bez limitu czasu — dane usunięte celowo powinny kiedyś zniknąć;
+  30 dni wystarcza na zauważenie pomyłki, a kopia zapasowa sięga dalej.

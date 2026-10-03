@@ -205,6 +205,19 @@
 </section>
 {% endif %}
 
+{% if kosz %}
+{# ETAP 212: usunięte pliki i fiszki — do przywrócenia przez 30 dni #}
+<details class="karta stos kosz-fiszek" id="kosz">
+    <summary>Kosz ({{ kosz | length }}) — usunięte w ostatnich 30 dniach</summary>
+    <ul class="lista-kosza">
+        {% for k in kosz %}
+        <li><span><span class="etykieta">{{ 'plik' if k.rodzaj == 'pdf' else 'fiszka' }}</span> {{ k.opis }} <span class="wyciszony">· {{ k.data[:10] }}</span></span>
+            <form method="post" action="{{ url_for('fiszki.przywroc_z_kosza', kosz_id=k.id) }}"><button type="submit" class="przycisk--tekst">Przywróć</button></form></li>
+        {% endfor %}
+    </ul>
+</details>
+{% endif %}
+
 {% if najtrudniejsze %}
 <section class="karta stos trudne">
     <h3>Najtrudniejsze fiszki</h3>

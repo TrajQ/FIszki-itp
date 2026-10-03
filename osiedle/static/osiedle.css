@@ -519,3 +519,19 @@ button.przycisk--niebezpieczny-tekst {
 .pasek-chlonnosci span.pasek-chlonnosci--ponad {
     background: var(--blad);
 }
+
+/* ETAP 212: kosz koncepcji */
+.lista-kosza-koncepcji {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lista-kosza-koncepcji li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    padding: 4px 0;
+    border-top: 1px solid var(--linia);
+}

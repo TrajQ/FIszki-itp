@@ -561,7 +561,7 @@
     });
 
     document.getElementById("usun-projekt").addEventListener("click", async () => {
-        if (!confirm(`Usunąć projekt „${PROJEKT.nazwa}” razem ze wszystkimi punktami i zdjęciami?`)) return;
+        if (!confirm(`Usunąć projekt „${PROJEKT.nazwa}” razem ze wszystkimi punktami i zdjęciami? Przez 30 dni można go przywrócić z kosza na liście projektów.`)) return;
         try {
             await zapytaj(URL_PROJEKTU, { method: "DELETE" });
             location.href = URL_LISTY;

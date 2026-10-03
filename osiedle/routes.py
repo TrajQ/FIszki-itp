@@ -66,6 +66,19 @@ def lista_koncepcji():
     return jsonify(baza.lista())
 
 
+@osiedle_bp.route("/kosz")
+def kosz_koncepcji():
+    """ETAP 212: usunięte koncepcje (do 30 dni)."""
+    return jsonify(baza.w_koszu())
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>/przywroc", methods=["POST"])
+def przywroc_koncepcje(koncepcja_id):
+    if not baza.przywroc(koncepcja_id):
+        abort(404)
+    return jsonify({"ok": True, "id": koncepcja_id})
+
+
 @osiedle_bp.route("/koncepcje", methods=["POST"])
 def nowa_koncepcja():
     dane = request.get_json(silent=True) or {}

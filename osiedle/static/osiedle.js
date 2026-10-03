@@ -934,15 +934,44 @@
     });
 
     document.getElementById("usun-koncepcje").addEventListener("click", async () => {
-        if (!koncepcja || !window.confirm(`Usunąć koncepcję „${koncepcja.nazwa}” razem z rysunkiem?`)) return;
+        if (!koncepcja || !window.confirm(`Usunąć koncepcję „${koncepcja.nazwa}” razem z rysunkiem? Przez 30 dni można ją przywrócić z kosza.`)) return;
         try {
             await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}`, { method: "DELETE" });
             await otworz("");
             await wczytajListe();
+            await wczytajKosz();
         } catch (err) {
             pokazKomunikat(err.message);
         }
     });
+
+    // ---------- kosz (ETAP 212) — usunięte koncepcje do przywrócenia ----------
+    async function wczytajKosz() {
+        const lista = await zapytaj(URL_KOSZ).catch(() => []);
+        const kosz = document.getElementById("kosz-koncepcji");
+        kosz.hidden = !lista.length;
+        document.getElementById("liczba-kosza").textContent = String(lista.length);
+        const ul = document.getElementById("lista-kosza-koncepcji");
+        ul.replaceChildren();
+        for (const k of lista) {
+            const li = element("li");
+            const przywroc = element("button", "przycisk--tekst", "Przywróć");
+            przywroc.type = "button";
+            przywroc.addEventListener("click", async () => {
+                try {
+                    await zapytaj(`${URL_KONCEPCJE}/${k.id}/przywroc`, { method: "POST" });
+                    await wczytajListe(k.id);
+                    await otworz(String(k.id));
+                    await wczytajKosz();
+                } catch (err) {
+                    pokazKomunikat(err.message);
+                }
+            });
+            li.append(element("span", "", k.nazwa), element("span", "wyciszony", ` · ${k.usunieto.slice(0, 10)}`), przywroc);
+            ul.appendChild(li);
+        }
+    }
+    wczytajKosz();
 
     let ostatnia = null;
     try {

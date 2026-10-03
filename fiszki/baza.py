@@ -100,6 +100,17 @@ CREATE TABLE IF NOT EXISTS wyjasnienia_fiszek (
     data TEXT NOT NULL
 );
 
+-- ETAP 212: kosz — usunięty PDF albo fiszka (wiersze powiązanych tabel jako JSON,
+-- pliki w instance/fiszki/kosz/); przywrócenie wstawia je z powrotem (fiszki/kosz.py).
+CREATE TABLE IF NOT EXISTS kosz (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rodzaj TEXT NOT NULL CHECK (rodzaj IN ('pdf', 'fiszka')),
+    opis TEXT NOT NULL,
+    dane_json TEXT NOT NULL,
+    pliki_json TEXT NOT NULL,
+    data TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,

@@ -72,7 +72,8 @@ def terminy() -> list[dict]:
 
 @teren_bp.route("/")
 def index():
-    return render_template("teren/index.html", projekty=baza.projekty(), wzory=WZORY, blad=request.args.get("blad"))
+    return render_template("teren/index.html", projekty=baza.projekty(), wzory=WZORY, blad=request.args.get("blad"),
+                           kosz=baza.w_koszu())  # ETAP 212
 
 
 @teren_bp.route("/projekty.json")
@@ -159,6 +160,14 @@ def ustaw_obszar(projekt_id):
         return jsonify({"blad": str(e)}), 400
     baza.ustaw_obszar(projekt_id, obszar)
     return jsonify({"obszar": obszar})
+
+
+@teren_bp.route("/projekty/<int:projekt_id>/przywroc", methods=["POST"])
+def przywroc_projekt(projekt_id):
+    """ETAP 212: projekt z kosza wraca z punktami i zdjęciami."""
+    if not baza.przywroc_projekt(projekt_id):
+        abort(404)
+    return redirect(url_for("teren.widok_projektu", projekt_id=projekt_id))
 
 
 @teren_bp.route("/projekty/<int:projekt_id>", methods=["DELETE"])

@@ -721,3 +721,28 @@ def test_chlonnosc_wg_ustalen_planu(client):
     client.put(f"/osiedle/koncepcje/{k_id}", json={"geojson": geo, "ustawienia": {"plan": {"max_intensywnosc": 1.2}}})
     raport = client.get(f"/osiedle/koncepcje/{k_id}/raport").get_data(as_text=True)
     assert "Chłonność terenu" in raport and "12 000" in raport
+
+
+# ---------- ETAP 212: kosz koncepcji ----------
+
+
+def test_kosz_koncepcji(client):
+    from datetime import datetime, timedelta
+
+    k_id = client.post("/osiedle/koncepcje", json={"nazwa": "Wariant A"}).get_json()["id"]
+    client.put(f"/osiedle/koncepcje/{k_id}", json={"geojson": kolekcja(prostokat(0, 0, 50, 40, "MW"))})
+    assert client.delete(f"/osiedle/koncepcje/{k_id}").get_json() == {"ok": True}
+    assert client.get("/osiedle/koncepcje").get_json() == [] and client.get(f"/osiedle/koncepcje/{k_id}").status_code == 404
+    kosz = client.get("/osiedle/kosz").get_json()
+    assert [k["nazwa"] for k in kosz] == ["Wariant A"]
+    assert client.post(f"/osiedle/koncepcje/{k_id}/przywroc").get_json() == {"ok": True, "id": k_id}
+    assert len(client.get(f"/osiedle/koncepcje/{k_id}").get_json()["geojson"]["features"]) == 1  # rysunek wrócił
+    assert client.post(f"/osiedle/koncepcje/{k_id}/przywroc").status_code == 404  # już nie w koszu
+    # po 30 dniach — na dobre
+    client.delete(f"/osiedle/koncepcje/{k_id}")
+    with client.application.app_context():
+        from osiedle import baza
+        baza.get_db().execute("UPDATE koncepcje SET usunieto = ?", ((datetime.now() - timedelta(days=31)).isoformat(),))
+        baza.get_db().commit()
+    assert client.get("/osiedle/kosz").get_json() == []
+    assert client.post(f"/osiedle/koncepcje/{k_id}/przywroc").status_code == 404

@@ -43,6 +43,11 @@
                 <button id="zmien-nazwe" type="button" class="przycisk--tekst">Zmień nazwę</button>
                 <button id="usun-koncepcje" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń koncepcję</button>
             </div>
+            <details id="kosz-koncepcji" class="kosz-koncepcji" hidden>
+                <summary>Kosz (<span id="liczba-kosza">0</span>)</summary>
+                <p class="wyciszony opis-panelu">Usunięte koncepcje z rysunkiem — przez 30 dni można je przywrócić.</p>
+                <ul id="lista-kosza-koncepcji" class="lista-kosza-koncepcji"></ul>
+            </details>
             <label id="warstwa-terenu" class="warstwa-terenu" hidden>Punkty z inwentaryzacji (moduł Teren)
                 <select id="projekt-terenu"><option value="">— nie pokazuj —</option></select>
             </label>
@@ -243,6 +248,7 @@
 {% block skrypty %}
 <script>
     const URL_KONCEPCJE = "{{ url_for('osiedle.lista_koncepcji') }}";
+    const URL_KOSZ = "{{ url_for('osiedle.kosz_koncepcji') }}"; // ETAP 212
     const URL_CENY_OKOLICA = "{{ url_for('ceny.okolica') }}"; // ETAP 109: zaimportowane pliki RCN (moduł ceny)
     const OBSZAR = {{ obszar | tojson }};
     const BUDYNEK = {{ budynek | tojson }};

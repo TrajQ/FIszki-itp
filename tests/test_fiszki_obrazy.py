@@ -110,3 +110,71 @@ def test_zasloniete_fragmenty(client):
         assert client.post(f"/fiszki/1/fiszki/{nowe[0]['id']}/zaslony", json=zle).status_code == 400, zle
     bez_obrazu = fiszka(client).get_json()
     assert client.post(f"/fiszki/1/fiszki/{bez_obrazu['id']}/zaslony", json={"prostokaty": [[0.1, 0.1, 0.2, 0.2]], "odpowiedzi": ["x"]}).status_code == 404
+
+
+# ---------- ETAP 212: kosz ----------
+
+
+def test_kosz_fiszki_i_pdf(client):
+    from datetime import datetime, timedelta
+
+    from fiszki import kosz
+    from fiszki.baza import get_db
+
+    f1 = fiszka(client, obraz=data_url(png()), tematy="planowanie").get_json()
+    f2 = fiszka(client, pytanie="Drugie?").get_json()
+    client.post(f"/fiszki/powtorka/{f1['id']}", json={"wynik": "umiem"})
+    client.post(f"/fiszki/wyjasnienie/{f1['id']}", json={"tekst": "Bo tak."})
+    plik_obrazu = f1["obraz"].rsplit("/", 1)[1]
+    folder_obrazow = os.path.join(str(client.tmp), "fiszki", "obrazy")
+    # usunięcie fiszki → kosz, plik obrazu przeniesiony; przywrócenie — wszystko wraca
+    kosz_id = client.delete(f"/fiszki/1/fiszki/{f1['id']}").get_json()["kosz_id"]
+    assert not os.path.exists(os.path.join(folder_obrazow, plik_obrazu))
+    assert [f["id"] for f in client.get("/fiszki/1/fiszki").get_json()] == [f2["id"]]
+    assert "Kosz (1)" in client.get("/fiszki/").get_data(as_text=True)
+    r = client.post(f"/fiszki/kosz/{kosz_id}/przywroc", headers={"Accept": "application/json"})
+    assert r.get_json() == {"rodzaj": "fiszka", "pdf_id": 1}
+    przywrocona = next(f for f in client.get("/fiszki/1/fiszki").get_json() if f["id"] == f1["id"])
+    assert przywrocona["tematy"] == ["planowanie"] and przywrocona["obraz"] == f1["obraz"]
+    assert os.path.exists(os.path.join(folder_obrazow, plik_obrazu))
+    kolejka = {f["id"]: f for f in client.get("/fiszki/powtorka/kolejka?wszystkie=1").get_json()}
+    assert kolejka[f1["id"]]["pudelko"] == 2 and kolejka[f1["id"]]["wyjasnienie"]["tekst"] == "Bo tak."
+    assert client.post(f"/fiszki/kosz/{kosz_id}/przywroc", headers={"Accept": "application/json"}).status_code == 400
+    # usunięcie całego PDF-a i przywrócenie
+    client.post("/fiszki/egzaminy", data={"nazwa": "Kolokwium", "data": "2030-01-10", "pdf_id": "1"})
+    client.delete(f"/fiszki/1/fiszki/{f2['id']}")  # fiszka w koszu osobno
+    client.post("/fiszki/1/usun")
+    folder_pdf = os.path.join(str(client.tmp), "fiszki", "pliki")
+    assert os.listdir(folder_pdf) == [] and client.get("/fiszki/1/").status_code == 404
+    wpisy = client.get("/fiszki/").get_data(as_text=True)
+    assert "wyklad.pdf — fiszek: 1" in wpisy
+    with client.application.app_context():
+        lista = kosz.lista(get_db())
+    pdf_wpis = next(k for k in lista if k["rodzaj"] == "pdf")
+    fiszka_wpis = next(k for k in lista if k["rodzaj"] == "fiszka")
+    r = client.post(f"/fiszki/kosz/{fiszka_wpis['id']}/przywroc", headers={"Accept": "application/json"})
+    assert r.status_code == 400 and "najpierw przywróć plik" in r.get_json()["blad"]
+    assert client.post(f"/fiszki/kosz/{pdf_wpis['id']}/przywroc").headers["Location"].endswith("/fiszki/1/")
+    assert len(os.listdir(folder_pdf)) == 1 and len(client.get("/fiszki/1/fiszki").get_json()) == 1
+    assert "Kolokwium" in client.get("/fiszki/").get_data(as_text=True)
+    client.post(f"/fiszki/kosz/{fiszka_wpis['id']}/przywroc")
+    assert len(client.get("/fiszki/1/fiszki").get_json()) == 2
+    # po 30 dniach wpis i plik znikają
+    client.delete(f"/fiszki/1/fiszki/{f1['id']}")
+    with client.application.app_context():
+        assert kosz.wyczysc_stare(get_db(), datetime.now() + timedelta(days=31)) == 1
+        assert kosz.lista(get_db()) == [] and os.listdir(kosz.folder()) == []
+
+
+def test_kosz_obejmuje_wszystkie_tabele_fiszek(client):
+    """Nowa tabela z fiszka_id albo pdf_id musi być w kosz.TABELE_* — inaczej przywrócenie by ją gubiło."""
+    from fiszki import kosz
+    from fiszki.baza import get_db
+
+    znane = {t for t, _ in kosz.TABELE_PDF} | set(kosz.TABELE_FISZKI) | set(kosz.TABELE_ZOSTAJA)
+    with client.application.app_context():
+        db = get_db()
+        for (tabela,) in db.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"):
+            kolumny = {w[1] for w in db.execute(f"PRAGMA table_info({tabela})")}
+            if kolumny & {"fiszka_id", "pdf_id"}:
+                assert tabela in znane, tabela

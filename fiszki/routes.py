@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 from dane.gemini import BladGemini, zaproponuj_fiszke, zaproponuj_fiszki_ze_strony
 
-from . import egzaminy, luki, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
+from . import egzaminy, kosz, luki, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
 from .strona import zakotwiczone
 from .baza import folder_plikow, get_db
 
@@ -39,6 +39,7 @@ def _pobierz_pdf_albo_404(pdf_id):
 @fiszki_bp.route("/")
 def index():
     db = get_db()
+    kosz.wyczysc_stare(db)  # ETAP 212: po 30 dniach kosz opróżnia się sam
     dzis = powtorki.dzisiaj().isoformat()
     pdfy = db.execute(
         f"""SELECT pdfy.*,
@@ -61,6 +62,7 @@ def index():
         egzaminy=egzaminy.lista(db, powtorki.dzisiaj()),
         utrwalone=egzaminy.utrwalone_w_plikach(db),
         blad=request.args.get("blad"),
+        kosz=kosz.lista(db),
     )
 
 
@@ -338,10 +340,13 @@ def zaslon_fragmenty(pdf_id, fiszka_id):
 def usun_fiszke(pdf_id, fiszka_id):
     _pobierz_pdf_albo_404(pdf_id)
     db = get_db()
+    if db.execute("SELECT 1 FROM fiszki WHERE id = ? AND pdf_id = ?", (fiszka_id, pdf_id)).fetchone() is None:
+        abort(404)
+    kosz_id = kosz.odloz(db, folder_plikow(), obrazy.folder(), fiszka_id=fiszka_id)  # ETAP 212: do cofnięcia
     db.execute("DELETE FROM fiszki WHERE id = ? AND pdf_id = ?", (fiszka_id, pdf_id))
     db.commit()
     obrazy.usun_osierocone(db)
-    return "", 204
+    return jsonify({"kosz_id": kosz_id})
 
 
 @fiszki_bp.route("/<int:pdf_id>/fiszki/<int:fiszka_id>", methods=["PUT"])
@@ -402,17 +407,28 @@ def _fiszki_do_eksportu(pdf_id=None, temat=None):
 @fiszki_bp.route("/<int:pdf_id>/usun", methods=["POST"])
 def usun_pdf(pdf_id):
     """Usuwa PDF razem z jego fiszkami (i stanem powtórek — ON DELETE CASCADE)."""
-    pdf = _pobierz_pdf_albo_404(pdf_id)
+    _pobierz_pdf_albo_404(pdf_id)
     db = get_db()
+    kosz.odloz(db, folder_plikow(), obrazy.folder(), pdf_id=pdf_id)  # ETAP 212: plik PDF trafia do kosza
     db.execute("DELETE FROM fiszki WHERE pdf_id = ?", (pdf_id,))
     db.execute("DELETE FROM pdfy WHERE id = ?", (pdf_id,))
     db.commit()
     obrazy.usun_osierocone(db)
-
-    sciezka = os.path.join(folder_plikow(), pdf["nazwa_pliku"])
-    if os.path.exists(sciezka):
-        os.remove(sciezka)
     return redirect(url_for("fiszki.index"))
+
+
+@fiszki_bp.route("/kosz/<int:kosz_id>/przywroc", methods=["POST"])
+def przywroc_z_kosza(kosz_id):
+    """ETAP 212: przywraca usunięty PDF z fiszkami albo jedną fiszkę.
+    Z fetch (Accept: application/json) — JSON; z formularza — przekierowanie."""
+    jako_json = request.accept_mimetypes.best == "application/json"
+    try:
+        wynik = kosz.przywroc(get_db(), kosz_id, folder_plikow(), obrazy.folder())
+    except kosz.BladKosza as e:
+        return (jsonify({"blad": str(e)}), 400) if jako_json else redirect(url_for("fiszki.index", blad=str(e)))
+    if jako_json:
+        return jsonify(wynik)
+    return redirect(url_for("fiszki.widok_pdf", pdf_id=wynik["pdf_id"]))
 
 
 # ---------- ostatnio używane na stronie głównej (ETAP 141) ----------
