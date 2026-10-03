@@ -647,3 +647,14 @@ button.przycisk--niebezpieczny-tekst {
         display: none;
     }
 }
+
+/* ETAP 225: ustawy zmieniające w sprawdzaniu aktualności */
+.aktualnosc__naglowek {
+    margin: 14px 0 4px;
+    font-size: 15px;
+}
+
+.aktualnosc__uwaga {
+    margin-top: 10px;
+    font-size: 13px;
+}

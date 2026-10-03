@@ -300,27 +300,41 @@
             const odp = await fetch(URL_AKTUALNOSC);
             const w = await odp.json().catch(() => ({}));
             if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
-            if (!w.nowsze.length) {
-                pole.replaceChildren(el("p", "", `Nie znalazłem nowszego tekstu jednolitego ustawy „${w.przedmiot}” niż ${w.adres}.`),
-                    el("p", "wyciszony", "Sprawdź też nowelizacje ogłoszone po ostatnim tekście jednolitym — tekst jednolity nie zawsze obejmuje najnowsze zmiany."));
-                return;
-            }
-            pole.replaceChildren(el("p", "", `Jest nowszy tekst jednolity ustawy „${w.przedmiot}” (masz ${w.adres}):`));
-            const lista = el("ul", "wyniki-sejmu");
-            for (const a of w.nowsze) {
-                const li = el("li", "wynik-sejmu");
-                const opis = el("div", "wynik-sejmu__opis");
-                opis.append(el("span", "", a.tytul), el("br"), el("span", "wyciszony", a.adres));
-                li.appendChild(opis);
-                if (a.ma_pdf) {
-                    const guzik = el("button", "przycisk--drugi", "Pobierz");
-                    guzik.type = "button";
-                    guzik.addEventListener("click", () => pobierz(a, guzik));
-                    li.appendChild(guzik);
+            const listaAktow = (akty, dopisek) => {
+                const lista = el("ul", "wyniki-sejmu");
+                for (const a of akty) {
+                    const li = el("li", "wynik-sejmu");
+                    const opis = el("div", "wynik-sejmu__opis");
+                    opis.append(el("span", "", a.tytul), el("br"), el("span", "wyciszony", a.adres + (dopisek ? dopisek(a) : "")));
+                    li.appendChild(opis);
+                    if (a.ma_pdf) {
+                        const guzik = el("button", "przycisk--drugi", "Pobierz");
+                        guzik.type = "button";
+                        guzik.addEventListener("click", () => pobierz(a, guzik));
+                        li.appendChild(guzik);
+                    }
+                    lista.appendChild(li);
                 }
-                lista.appendChild(li);
+                return lista;
+            };
+            if (!w.nowsze.length) {
+                pole.replaceChildren(el("p", "", `Nie znalazłem nowszego tekstu jednolitego ustawy „${w.przedmiot}” niż ${w.adres}.`));
+            } else {
+                pole.replaceChildren(el("p", "", `Jest nowszy tekst jednolity ustawy „${w.przedmiot}” (masz ${w.adres}):`), listaAktow(w.nowsze));
             }
-            pole.appendChild(lista);
+            // ETAP 225: ustawy zmieniające ogłoszone po akcie z biblioteki
+            const nowelizacje = w.nowelizacje || [];
+            if (nowelizacje.length) {
+                const po = nowelizacje.filter((a) => a.po_tekscie_jednolitym).length;
+                pole.append(el("h4", "aktualnosc__naglowek", `Ustawy zmieniające ogłoszone po ${w.adres} (${nowelizacje.length})`),
+                    el("p", "wyciszony", po
+                        ? `${po} z nich ogłoszono po najnowszym tekście jednolitym — tekst jednolity ich nie obejmuje; sprawdź w nich, co i od kiedy się zmienia.`
+                        : "Wszystkie ogłoszono przed najnowszym tekstem jednolitym z listy wyżej — zwykle już go zmieniły."),
+                    listaAktow(nowelizacje, (a) => (a.po_tekscie_jednolitym ? " · po najnowszym tekście jednolitym" : "")));
+            } else {
+                pole.append(el("p", "wyciszony", "Nie znalazłem ustaw zmieniających z tą nazwą w tytule ogłoszonych po tym akcie."));
+            }
+            pole.append(el("p", "wyciszony aktualnosc__uwaga", "Szukane po tytule w Dzienniku Ustaw (API Sejmu): nowelizacje „o zmianie niektórych ustaw” bez nazwy tej ustawy w tytule i akty wykonawcze się tu nie pokażą."));
         } catch (e) {
             pole.replaceChildren(el("p", "komunikat komunikat--blad", e.message));
         } finally {

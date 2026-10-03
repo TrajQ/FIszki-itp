@@ -3997,3 +3997,24 @@ Status: zamknięty
   prognozy przy skuteczności; przeglądarka 1300/390 px
 - Pomoc: „Prognoza gotowości na dzień egzaminu”
 - `DECISIONS.md`: D-232
+
+## ETAP 225 — Przepisy: ustawy zmieniające ogłoszone po tekście jednolitym
+Data: 2026-10-03
+Status: zamknięty
+
+- Plan: „akty powiązane z API Sejmu (wykonawcze, zmieniające)” zastąpione
+  (D-198) — `api.sejm.gov.pl` odrzucone przez proxy środowiska, więc pól
+  z powiązaniami aktów w odpowiedzi API nie dało się sprawdzić
+- `dane/sejm.py`: `czy_nowelizacja` (w tytule „o zmianie ustaw…” i
+  przedmiot tej ustawy, bez obwieszczeń); `nowsze_teksty_jednolite`
+  zwraca też `nowelizacje` ogłoszone po akcie z biblioteki z polem
+  `po_tekscie_jednolitym` (po najnowszym znalezionym tekście jednolitym)
+  — z tej samej wyszukiwarki co w ETAPie 101, bez dodatkowych zapytań
+- „Czy jest nowszy tekst?”: sekcja „Ustawy zmieniające ogłoszone po …”
+  z liczbą tych po tekście jednolitym, „Pobierz” przy każdej, uwaga o
+  granicach szukania po tytule
+- Testy: `czy_nowelizacja` (5 tytułów), nowelizacje przed i po tekście
+  jednolitym, rozszerzony test z ETAPu 101; przeglądarka 1300/390 px z
+  podstawioną odpowiedzią API
+- Pomoc: akapit „Czy jest nowszy tekst?” uzupełniony
+- `DECISIONS.md`: D-233

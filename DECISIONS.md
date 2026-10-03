@@ -4637,3 +4637,24 @@ przyjęcia; przy mniej niż 30 odpowiedziach pokazujemy tylko granicę.
 - Skuteczność osobno dla każdego pudełka — przy kilkudziesięciu
   odpowiedziach w pudełku udziały byłyby losowe.
 - Stała skuteczność (np. 80%) bez danych — liczba niepochodząca z danych.
+
+## D-233 — Nowelizacje z wyszukiwarki po tytule zamiast pól powiązań API
+Data: 2026-10-03
+
+**Decyzja:** Ustawy zmieniające znajdujemy tą samą wyszukiwarką po tytule
+co teksty jednolite (ETAP 101): tytuł zawiera „o zmianie ustaw…” i
+przedmiot ustawy. Aktów wykonawczych nie pokazujemy.
+
+**Uzasadnienie:** Plan zakładał pola powiązań aktów z odpowiedzi API
+Sejmu, ale API jest niedostępne z tego środowiska (proxy odrzuca
+połączenie), a zasada „nie zgaduj” wyklucza wpisanie nazw pól z pamięci.
+Wyszukiwarka jest już używana i przetestowana. Tytuły ustaw zmieniających
+w Dzienniku Ustaw wymieniają zmienianą ustawę, więc to wystarcza dla
+typowych nowelizacji; ograniczenie („o zmianie niektórych ustaw”) jest
+opisane na stronie i w Pomocy.
+
+**Odrzucone alternatywy:**
+- Pola powiązań z odpowiedzi API wpisane z pamięci — niesprawdzalne tu;
+  do zrobienia, gdy będzie można obejrzeć prawdziwą odpowiedź.
+- Szukanie rozporządzeń po słowach z tytułu ustawy — tytuły rozporządzeń
+  zwykle jej nie wymieniają, wynik byłby przypadkowy.

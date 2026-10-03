@@ -112,8 +112,18 @@ def adres_i_przedmiot(nazwa: str) -> tuple[int, int, str] | None:
     return int(adres.group(1)), int(adres.group(2)), " ".join(przedmiot.group(1).split())
 
 
+def czy_nowelizacja(tytul: str, przedmiot: str) -> bool:
+    """ETAP 225: ustawa zmieniająca TĘ ustawę — „… o zmianie ustawy o planowaniu…”,
+    także „o zmianie ustawy – Prawo budowlane” i „… oraz niektórych innych ustaw”.
+    Nowelizacji „o zmianie niektórych ustaw …” bez przedmiotu w tytule tak nie znajdziemy."""
+    tytul = " ".join(tytul.lower().split())
+    return "o zmianie ustaw" in tytul and przedmiot.lower() in tytul and "jednolitego tekstu" not in tytul
+
+
 def nowsze_teksty_jednolite(nazwa: str) -> dict:
-    """Obwieszczenia z tekstem jednolitym tej samej ustawy, nowsze niż akt w bibliotece."""
+    """Obwieszczenia z tekstem jednolitym tej samej ustawy, nowsze niż akt w
+    bibliotece, i (ETAP 225) ustawy zmieniające ogłoszone po nim — z
+    zaznaczeniem tych ogłoszonych po najnowszym znalezionym tekście jednolitym."""
     dane = adres_i_przedmiot(nazwa)
     if dane is None:
         raise BladSejmu("To działa dla aktów pobranych z Dziennika Ustaw — w nazwie musi zostać tytuł i „(Dz.U. rok poz. …)”.")
@@ -123,4 +133,10 @@ def nowsze_teksty_jednolite(nazwa: str) -> dict:
         a for a in wszystkie
         if a["tekst_jednolity"] and przedmiot.lower() in a["tytul"].lower() and (a["rok"], a["pozycja"]) > (rok, pozycja)
     ]
-    return {"przedmiot": przedmiot, "adres": f"Dz.U. {rok} poz. {pozycja}", "nowsze": nowsze}
+    najnowszy = max(((a["rok"], a["pozycja"]) for a in nowsze), default=(rok, pozycja))
+    nowelizacje = [
+        {**a, "po_tekscie_jednolitym": (a["rok"], a["pozycja"]) > najnowszy}
+        for a in wszystkie
+        if czy_nowelizacja(a["tytul"], przedmiot) and (a["rok"], a["pozycja"]) > (rok, pozycja)
+    ]
+    return {"przedmiot": przedmiot, "adres": f"Dz.U. {rok} poz. {pozycja}", "nowsze": nowsze, "nowelizacje": nowelizacje}

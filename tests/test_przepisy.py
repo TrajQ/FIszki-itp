@@ -432,6 +432,8 @@ def test_nowszy_tekst_jednolity(client, monkeypatch):
     assert w["przedmiot"] == "o planowaniu i zagospodarowaniu przestrzennym" and w["adres"] == "Dz.U. 2024 poz. 1130"
     assert [a["adres"] for a in w["nowsze"]] == ["Dz.U. 2025 poz. 50"]  # starsze, nowelizacje i inne ustawy odpadają
     assert zapytania[-1]["title"] == "o planowaniu i zagospodarowaniu przestrzennym"
+    # ETAP 225: nowelizacja z 2025 poz. 60 — ogłoszona po najnowszym tekście jednolitym (2025 poz. 50)
+    assert [(a["adres"], a["po_tekscie_jednolitym"]) for a in w["nowelizacje"]] == [("Dz.U. 2025 poz. 60", True)]
     wgraj(client)  # akt wgrany z dysku — bez adresu Dz.U.
     assert client.get("/przepisy/akty/2/aktualnosc").status_code == 422
 
@@ -623,3 +625,30 @@ def test_notatki_do_pliku_md(client):
     assert "Wszystkie notatki do pliku" in client.get("/przepisy/").get_data(as_text=True)
     assert "Notatki do pliku" in client.get("/przepisy/akty/1").get_data(as_text=True)
     assert client.get("/przepisy/akty/9/notatki.md").status_code == 404
+
+
+# ---------- ETAP 225: ustawy zmieniające ----------
+
+
+def test_czy_nowelizacja():
+    p = "o planowaniu i zagospodarowaniu przestrzennym"
+    assert sejm.czy_nowelizacja("Ustawa z dnia 7 lipca 2023 r. o zmianie ustawy o planowaniu i zagospodarowaniu przestrzennym oraz niektórych innych ustaw", p)
+    assert sejm.czy_nowelizacja("Ustawa o zmianie ustawy – Prawo budowlane", "Prawo budowlane")
+    assert not sejm.czy_nowelizacja("Obwieszczenie … jednolitego tekstu ustawy o zmianie ustawy o planowaniu i zagospodarowaniu przestrzennym", p)
+    assert not sejm.czy_nowelizacja("Ustawa o zmianie ustawy o gospodarce nieruchomościami", p)
+    assert not sejm.czy_nowelizacja("Rozporządzenie w sprawie … planowaniu i zagospodarowaniu przestrzennym", p)
+
+
+def test_nowelizacje_przed_i_po_tekscie_jednolitym(monkeypatch):
+    def akt(rok, poz, tytul):
+        return {"publisher": "DU", "year": rok, "pos": poz, "title": tytul, "textPDF": True}
+    tj = "Obwieszczenie … w sprawie ogłoszenia jednolitego tekstu ustawy o planowaniu i zagospodarowaniu przestrzennym"
+    zm = "Ustawa o zmianie ustawy o planowaniu i zagospodarowaniu przestrzennym"
+    items = [akt(2023, 977, tj), akt(2023, 1688, zm), akt(2024, 1130, tj), akt(2024, 1907, zm), akt(2022, 10, zm)]
+    monkeypatch.setattr(sejm.requests, "get", lambda url, params=None, **k: _Odp({"items": items}))
+    w = sejm.nowsze_teksty_jednolite(tj + " (Dz.U. 2023 poz. 977)")
+    assert [a["adres"] for a in w["nowsze"]] == ["Dz.U. 2024 poz. 1130"]
+    assert [(a["adres"], a["po_tekscie_jednolitym"]) for a in w["nowelizacje"]] == [("Dz.U. 2024 poz. 1907", True), ("Dz.U. 2023 poz. 1688", False)]
+    # bez nowszego tekstu jednolitego — każda nowelizacja po akcie jest „po tekście jednolitym”
+    w = sejm.nowsze_teksty_jednolite(tj + " (Dz.U. 2024 poz. 1130)")
+    assert w["nowsze"] == [] and [a["po_tekscie_jednolitym"] for a in w["nowelizacje"]] == [True]

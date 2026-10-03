@@ -1129,3 +1129,6 @@
 
 ## ETAP 224 — 2026-10-03
 - Fiszki: prognoza, ile fiszek będzie utrwalonych w dniu egzaminu
+
+## ETAP 225 — 2026-10-03
+- Przepisy: ustawy zmieniające ogłoszone po tekście jednolitym
