@@ -1514,3 +1514,38 @@ def test_raport_gminy_podobne(raport_client, monkeypatch):
     d = c.get(f"/atlas/raport-gminy/{GMINA}/podobne").get_json()
     assert d["gmina"]["nazwa"] == "Kraków" and d["podobne"][0]["nazwa"] == "Bliska" and d["rok"] == 2023 and len(d["skladowe"]) == 2
     assert 'id="sekcja-podobnych"' in c.get(f"/atlas/raport-gminy/{GMINA}").get_data(as_text=True)
+
+
+# ---------- ETAP 194: stabilność rankingu wskaźnika złożonego ----------
+
+
+def test_stabilnosc_rankingu():
+    from atlas import zlozony
+
+    def wynik(wartosci):
+        return {"gminy": [{"teryt": t, "nazwa": t.upper(), "wartosc": v} for t, v in wartosci.items()]}
+
+    s = zlozony.stabilnosc({2023: wynik({"a": 0.9, "b": 0.5, "c": 0.1, "d": 0.3}), 2015: wynik({"a": 0.2, "b": 0.8, "c": 0.1}),
+                            2019: wynik({"a": 0.5, "b": 0.6, "c": 0.4, "e": 1.0})})
+    assert s["lata"] == [2015, 2019, 2023] and s["liczba_gmin"] == 3  # „d” i „e” nie we wszystkich latach
+    a = next(g for g in s["gminy"] if g["teryt"] == "a")
+    assert a["miejsca"] == {2015: 2, 2019: 2, 2023: 1} and a["zmiana"] == 1
+    assert [g["teryt"] for g in s["gminy"]] == ["a", "b", "c"]  # kolejność wg ostatniego roku
+    assert s["rho"] == pytest.approx(0.5)
+    with pytest.raises(zlozony.BladWskaznika):
+        zlozony.stabilnosc({2020: wynik({"a": 1, "b": 2}), 2021: wynik({"a": 1, "b": 2})})
+
+
+def test_trasa_stabilnosci(raport_client, monkeypatch):
+    c = raport_client
+    teryty = {GMINA: "1261011", "011212105033": "1212033", "011212105044": "1212044"}
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+        {"bdl_id": b, "teryt": t, "nazwa": t, "wartosc": ((rok - 2011) * 10 if b == GMINA else (i + 1) * 10) + zid} for i, (b, t) in enumerate(teryty.items())])
+    w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
+    zapytanie = f"woj={WOJ_RAPORTU}&rok=2023&s={w1}:1:1,{w2}:1:1"
+    d = c.get(f"/atlas/wskaznik-zlozony/lata?{zapytanie}&lata=2012,2023").get_json()
+    assert d["lata"] == [2012, 2023] and d["liczba_gmin"] == 3
+    assert next(g for g in d["gminy"] if g["teryt"] == "1261011")["zmiana"] == 2  # z 3. miejsca na 1.
+    assert c.get(f"/atlas/wskaznik-zlozony/lata?{zapytanie}&lata=2023").status_code == 400
+    assert 'id="formularz-lat"' in c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)

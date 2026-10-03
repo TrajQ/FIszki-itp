@@ -3376,3 +3376,20 @@ Status: zamknięty
   przeglądarce 1300/390 px
 - Pomoc: akapit „Gminy podobne”
 - `DECISIONS.md`: D-201
+
+## ETAP 194 — Atlas: stabilność rankingu wskaźnika złożonego
+Data: 2026-10-03
+Status: zamknięty
+
+- `atlas/zlozony.py`: `stabilnosc` — miejsca gmin obecnych we wszystkich
+  latach (przeliczone wśród nich), zmiana miejsca od pierwszego do
+  ostatniego roku, rho Spearmana skrajnych lat z opisem siły
+  (`statystyki._rangi`, `_pearson`, `opis_sily`)
+- Trasa `/atlas/wskaznik-zlozony/lata?…&lata=` (2–6 lat) — ta sama
+  procedura `_policz` dla każdego roku
+- Strona wskaźnika złożonego: „Stabilność rankingu w latach” (domyślnie
+  rok − 8, − 4, rok), tabela miejsc ze strzałkami zmian, opis rho
+- Testy: przeliczanie miejsc, gminy spoza wszystkich lat, rho, trasa;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: „Stabilność rankingu”
+- `DECISIONS.md`: D-202

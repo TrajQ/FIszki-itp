@@ -4020,3 +4020,21 @@ kompletnością.
 **Odrzucone alternatywy:**
 - Każdy wskaźnik z jego ostatniego roku — mieszałoby lata w jednym
   profilu gminy.
+
+## D-202 — Stabilność rankingu: miejsca wśród gmin wspólnych, rho skrajnych lat
+Data: 2026-10-03
+
+**Decyzja:** Wskaźnik złożony liczy się osobno dla każdego roku (własna
+normalizacja w roku), a miejsca porównujemy tylko wśród gmin z danymi we
+wszystkich latach. Zgodność to rho Spearmana między pierwszym a ostatnim
+rokiem.
+
+**Uzasadnienie:** Ranking odpowiada pytaniu „która gmina jest wyżej w
+danym roku” — normalizacja w roku zachowuje sens wskaźnika złożonego
+(ETAP 84). Gminy, którym brakuje danych w części lat, zmieniałyby liczbę
+miejsc i fałszowały awanse. Rho na rangach to standardowa miara zgodności
+dwóch rankingów, znana z korelacji w Atlasie (ETAP 25).
+
+**Odrzucone alternatywy:**
+- Normalizacja na danych ze wszystkich lat naraz — pokazuje zmianę
+  poziomu, nie pozycji; to inny wskaźnik (do rozważenia jako dynamika).

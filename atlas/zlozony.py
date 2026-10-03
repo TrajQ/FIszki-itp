@@ -68,6 +68,33 @@ def _hellwig(unormowane: list[dict], wagi: list[float], gminy: set[str]) -> dict
     return {t: 1 - d / d0 for t, d in odleglosci.items()}
 
 
+def stabilnosc(wyniki_lat: dict[int, dict]) -> dict:
+    """ETAP 194: ten sam wskaźnik złożony w kilku latach — miejsca gmin
+    obecnych we wszystkich latach (przeliczone wśród nich, żeby lata z
+    inną liczbą gmin dało się porównać), zmiana miejsca od pierwszego do
+    ostatniego roku i rho Spearmana między skrajnymi latami."""
+    from .statystyki import _pearson, _rangi, opis_sily
+
+    lata = sorted(wyniki_lat)
+    wspolne = set.intersection(*({g["teryt"] for g in wyniki_lat[r]["gminy"]} for r in lata))
+    if len(wspolne) < 3:
+        raise BladWskaznika("Za mało gmin z danymi we wszystkich wybranych latach.")
+    nazwy = {g["teryt"]: g["nazwa"] for r in lata for g in wyniki_lat[r]["gminy"]}
+    miejsca: dict[str, dict[int, int]] = {t: {} for t in wspolne}
+    wartosci: dict[int, dict[str, float]] = {}
+    for r in lata:
+        w_roku = sorted((g for g in wyniki_lat[r]["gminy"] if g["teryt"] in wspolne), key=lambda g: (-g["wartosc"], g["nazwa"]))
+        wartosci[r] = {g["teryt"]: g["wartosc"] for g in w_roku}
+        for m, g in enumerate(w_roku, start=1):
+            miejsca[g["teryt"]][r] = m
+    pierwszy, ostatni = lata[0], lata[-1]
+    kolejnosc = sorted(wspolne)
+    rho = _pearson(_rangi([wartosci[pierwszy][t] for t in kolejnosc]), _rangi([wartosci[ostatni][t] for t in kolejnosc]))
+    gminy = sorted(({"teryt": t, "nazwa": nazwy[t], "miejsca": miejsca[t], "zmiana": miejsca[t][pierwszy] - miejsca[t][ostatni]} for t in wspolne),
+                   key=lambda g: (g["miejsca"][ostatni], g["nazwa"]))
+    return {"lata": lata, "gminy": gminy, "rho": rho, "opis_rho": opis_sily(rho), "liczba_gmin": len(wspolne)}
+
+
 def wskaznik_zlozony(skladowe: list[dict], metoda: str = "unitaryzacja") -> dict:
     """skladowe: [{"nazwa", "kierunek" (1 stymulanta / -1 destymulanta),
     "waga" (> 0), "gminy": [{"teryt", "nazwa", "wartosc"}]}]."""

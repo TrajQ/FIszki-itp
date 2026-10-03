@@ -1036,3 +1036,6 @@
 
 ## ETAP 193 — 2026-10-03
 - Atlas: raport gminy pokazuje gminy o podobnym profilu wskaźników
+
+## ETAP 194 — 2026-10-03
+- Atlas: stabilność rankingu wskaźnika złożonego w 2–6 latach (miejsca, rho Spearmana)

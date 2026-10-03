@@ -63,6 +63,9 @@ def _parametry(argumenty) -> dict:
     return {"woj": woj, "wojewodztwo": wojewodztwo, "rok": rok, "metoda": metoda, "skladowe": skladowe}
 
 
+MAKS_LAT = 6
+
+
 def _policz(argumenty) -> dict:
     p = _parametry(argumenty)
     skladowe = []
@@ -89,6 +92,22 @@ def _odpowiedz_bledu(e: Exception):
     if isinstance(e, BladBDL | granice.BladGranic):
         return jsonify({"blad": str(e)}), 502
     return jsonify({"blad": str(e)}), 400
+
+
+@atlas_bp.route("/wskaznik-zlozony/lata")
+def wskaznik_zlozony_lata():
+    """ETAP 194: stabilność rankingu — te same składowe i metoda w 2–6 latach (?lata=2015,2019,2023)."""
+    try:
+        try:
+            lata = sorted({int(r) for r in (request.args.get("lata") or "").split(",") if r.strip()})
+        except ValueError:
+            raise ValueError("Lata: liczby po przecinku, np. 2015,2019,2023.") from None
+        if not 2 <= len(lata) <= MAKS_LAT or not all(1995 <= r <= 2100 for r in lata):
+            raise ValueError(f"Wybierz od 2 do {MAKS_LAT} lat.")
+        wyniki = {r: _policz({**request.args.to_dict(), "rok": str(r)}) for r in lata}
+        return jsonify(zlozony.stabilnosc(wyniki))
+    except (ValueError, BladBDL) as e:
+        return _odpowiedz_bledu(e)
 
 
 @atlas_bp.route("/wskaznik-zlozony")

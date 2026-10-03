@@ -62,6 +62,14 @@
     <p id="pominiete" class="wyciszony" hidden></p>
     <figure class="zlozony__mapa"><img id="mapa" alt="Kartogram wskaźnika złożonego"><figcaption id="mapa-stan" class="wyciszony"></figcaption></figure>
     <div class="zlozony__przewijanie zlozony__ranking"><table class="tabela" id="ranking"></table></div>
+    {# ETAP 194: czy ranking jest stały w czasie #}
+    <h4>Stabilność rankingu w latach</h4>
+    <form id="formularz-lat" class="rzad">
+        <label class="rzad">Lata (2–6) <input type="text" id="pole-lat" placeholder="np. 2015,2019,2023" required></label>
+        <button type="submit" class="przycisk--drugi">Porównaj</button>
+    </form>
+    <p id="opis-stabilnosci" class="wyciszony" hidden></p>
+    <div class="zlozony__przewijanie zlozony__ranking"><table class="tabela" id="tabela-stabilnosci" hidden></table></div>
 </section>
 {% endif %}
 {% endblock %}
@@ -72,6 +80,7 @@
     const URL_WYNIK = "{{ url_for('atlas.wskaznik_zlozony_wynik') }}";
     const URL_MAPA = "{{ url_for('atlas.wskaznik_zlozony_mapa') }}";
     const URL_CSV = "{{ url_for('atlas.wskaznik_zlozony_csv') }}";
+    const URL_LATA = "{{ url_for('atlas.wskaznik_zlozony_lata') }}";
 </script>
 <script src="{{ url_for('atlas.static', filename='zlozony.js') }}"></script>
 {% endblock %}

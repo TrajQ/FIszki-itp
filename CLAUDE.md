@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 193 (Atlas: raport gminy — gminy o podobnym profilu — zamknięty)
-Ostatni ZIP: releases/warsztat_etap193_20261003.zip
-Testy: 613 passed / 0 failed
+ETAP: 194 (Atlas: wskaźnik złożony w latach — zamknięty)
+Ostatni ZIP: releases/warsztat_etap194_20261003.zip
+Testy: 615 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

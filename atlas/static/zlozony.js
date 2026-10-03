@@ -98,6 +98,11 @@
             : "";
         pominiete.hidden = !dane.pominiete.length;
 
+        document.getElementById("formularz-lat").dataset.zapytanie = zapytanie;
+        if (!document.getElementById("pole-lat").value) {
+            const rok = Number(new URLSearchParams(zapytanie).get("rok"));
+            document.getElementById("pole-lat").value = [rok - 8, rok - 4, rok].join(",");
+        }
         document.getElementById("link-mapy").href = `${URL_MAPA}?${zapytanie}`;
         document.getElementById("link-csv").href = `${URL_CSV}?${zapytanie}`;
         mapaStan.textContent = "Wczytywanie granic gmin…";
@@ -106,6 +111,39 @@
         mapa.src = `${URL_MAPA}?${zapytanie}`;
         wynik.hidden = false;
     }
+
+    // ETAP 194: stabilność rankingu — liczy serwer (atlas/zlozony.stabilnosc)
+    document.getElementById("formularz-lat").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const opis = document.getElementById("opis-stabilnosci");
+        const tabela = document.getElementById("tabela-stabilnosci");
+        const parametry = new URLSearchParams(e.target.dataset.zapytanie);
+        parametry.set("lata", document.getElementById("pole-lat").value.replace(/\s/g, ""));
+        opis.hidden = false;
+        opis.textContent = "Liczę… (każdy rok to osobne zapytanie do GUS)";
+        tabela.hidden = true;
+        try {
+            const odpowiedz = await fetch(`${URL_LATA}?${parametry}`);
+            const d = await odpowiedz.json().catch(() => ({}));
+            if (!odpowiedz.ok) throw new Error(d.blad || `Błąd ${odpowiedz.status}`);
+            const glowa = element("tr");
+            glowa.appendChild(element("th", "", "Gmina"));
+            for (const r of d.lata) glowa.appendChild(element("th", "liczba", String(r)));
+            glowa.appendChild(element("th", "liczba", "Zmiana miejsca"));
+            tabela.replaceChildren(glowa);
+            for (const g of d.gminy) {
+                const tr = element("tr");
+                tr.appendChild(element("td", "", g.nazwa));
+                for (const r of d.lata) tr.appendChild(element("td", "liczba", String(g.miejsca[r])));
+                tr.appendChild(element("td", `liczba ${g.zmiana > 0 ? "wartosc-plus" : g.zmiana < 0 ? "wartosc-minus" : ""}`, g.zmiana > 0 ? `↑ ${g.zmiana}` : g.zmiana < 0 ? `↓ ${-g.zmiana}` : "="));
+                tabela.appendChild(tr);
+            }
+            opis.textContent = `Miejsca wśród ${d.liczba_gmin} gmin z danymi we wszystkich latach. Zgodność rankingu ${d.lata[0]} i ${d.lata[d.lata.length - 1]} (rho Spearmana): ${d.rho === null ? "—" : liczba(d.rho, 2)} — ${d.opis_rho}. Blisko 1 — kolejność gmin prawie się nie zmienia.`;
+            tabela.hidden = false;
+        } catch (blad) {
+            opis.textContent = blad.message;
+        }
+    });
 
     async function policz(zdarzenie) {
         zdarzenie.preventDefault();
