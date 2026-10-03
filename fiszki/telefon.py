@@ -65,7 +65,9 @@ def fiszki_do_eksportu(db, dzis: date, temat: str | None, pdf_id: int | None) ->
     ).fetchall()
     # ETAP 154: wycinek rysunku osadzony w pliku (telefon działa bez połączenia z Warsztatem)
     obrazki = obrazy.obrazy_fiszek(db)
-    return [{**dict(w), "obraz": obrazy.jako_data_url(obrazki[w["id"]]) if w["id"] in obrazki else None} for w in wiersze]
+    zaslony = obrazy.zaslony_fiszek(db)  # ETAP 185
+    return [{**dict(w), "obraz": obrazy.jako_data_url(obrazki[w["id"]]) if w["id"] in obrazki else None, "zaslona": zaslony.get(w["id"])}
+            for w in wiersze]
 
 
 def odczytaj_wyniki(dane, instalacja: str, dzis: date) -> list[dict]:

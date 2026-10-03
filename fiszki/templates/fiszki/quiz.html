@@ -57,5 +57,6 @@
     const URL_PYTANIA = "{{ url_for('fiszki.quiz_pytania', pdf_id=pdf['id'] if pdf else None, temat=temat) }}";
     const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
 </script>
+<script src="{{ url_for('fiszki.static', filename='zaslona.js') }}"></script>
 <script src="{{ url_for('fiszki.static', filename='quiz.js') }}"></script>
 {% endblock %}

@@ -82,5 +82,6 @@
     const URL_POWTORKA = "{{ url_for('fiszki.powtorka') }}";
     const URL_PDF_WZOR = "{{ url_for('fiszki.widok_pdf', pdf_id=0) }}";
 </script>
+<script src="{{ url_for('fiszki.static', filename='zaslona.js') }}"></script>
 <script src="{{ url_for('fiszki.static', filename='powtorka.js') }}"></script>
 {% endblock %}

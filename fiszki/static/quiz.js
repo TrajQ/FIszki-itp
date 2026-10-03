@@ -38,6 +38,7 @@
         pytanieEl.textContent = p.pytanie;
         obrazQuizu.hidden = !p.obraz; // ETAP 154
         if (p.obraz) obrazQuizu.src = p.obraz;
+        ZaslonaObrazu.ustaw(obrazQuizu, p.zaslona, true); // ETAP 185
         odpowiedziEl.replaceChildren();
         p.odpowiedzi.forEach((tekst, i) => {
             const li = el("li");

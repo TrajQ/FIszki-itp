@@ -410,6 +410,7 @@ async function odswiezListeFiszek() {
             obraz.src = fiszka.obraz;
             obraz.alt = "Wycinek rysunku";
             li.appendChild(obraz);
+            ZaslonaObrazu.ustaw(obraz, fiszka.zaslona, true); // ETAP 185
         }
         const odpowiedzEl = document.createElement("div");
         odpowiedzEl.className = "fiszka-odpowiedz";
@@ -432,6 +433,7 @@ async function odswiezListeFiszek() {
 
         if (fiszka.strona) akcje.appendChild(przycisk("Pokaż w źródle", "przycisk--tekst", () => pokazWZrodle(fiszka)));
         akcje.appendChild(przycisk("Edytuj", "przycisk--tekst", () => pokazEdycje(li, fiszka)));
+        if (fiszka.obraz && !fiszka.zaslona) akcje.appendChild(przycisk("Zasłoń fragmenty", "przycisk--tekst", () => pokazEdytorZaslon(li, fiszka)));
         akcje.appendChild(
             przycisk("Usuń", "przycisk--niebezpieczny", async () => {
                 await fetch(`${URL_FISZKI}/${fiszka.id}`, { method: "DELETE" });
@@ -448,6 +450,112 @@ async function odswiezListeFiszek() {
         listaFiszekEl.appendChild(li);
     }
     return fiszki;
+}
+
+// ETAP 185: zasłonięte fragmenty obrazu — prostokąty rysowane na wycinku;
+// każdy staje się osobną fiszką (zapis i walidacja: serwer, fiszki/obrazy.py).
+function pokazEdytorZaslon(li, fiszka) {
+    li.replaceChildren();
+    const edytor = document.createElement("div");
+    edytor.className = "edytor-zaslon";
+    const opis = document.createElement("p");
+    opis.className = "wyciszony";
+    opis.textContent = "Przeciągnij po obrazie, żeby zasłonić fragment (np. nazwę na mapie albo element schematu). Każdy fragment stanie się osobną fiszką — wpisz, co jest pod zasłoną.";
+    const pole = document.createElement("div");
+    pole.className = "edytor-zaslon__obraz";
+    const img = document.createElement("img");
+    img.src = fiszka.obraz;
+    img.alt = "Wycinek rysunku do zasłonięcia";
+    pole.appendChild(img);
+    const listaOdpowiedzi = document.createElement("ol");
+    listaOdpowiedzi.className = "edytor-zaslon__odpowiedzi";
+    const pytanie = document.createElement("input");
+    pytanie.type = "text";
+    pytanie.maxLength = 500;
+    pytanie.placeholder = "Pytanie (puste: „Co jest w zasłoniętym miejscu?”)";
+    pytanie.setAttribute("aria-label", "Pytanie wspólne dla zasłoniętych fragmentów");
+    const komunikat = document.createElement("p");
+    komunikat.className = "komunikat komunikat--blad";
+    komunikat.hidden = true;
+    const prostokaty = []; // [{x, y, w, h, el, pole}]
+
+    function rysujNumery() {
+        prostokaty.forEach((p, i) => (p.el.querySelector("span").textContent = String(i + 1)));
+    }
+
+    let start = null;
+    let biezacy = null;
+    const wzgledne = (e) => {
+        const r = img.getBoundingClientRect();
+        return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))];
+    };
+    pole.addEventListener("pointerdown", (e) => {
+        if (prostokaty.length >= 12) return;
+        start = wzgledne(e);
+        biezacy = document.createElement("div");
+        biezacy.className = "edytor-zaslon__prostokat";
+        biezacy.appendChild(document.createElement("span"));
+        pole.appendChild(biezacy);
+        pole.setPointerCapture(e.pointerId);
+    });
+    pole.addEventListener("pointermove", (e) => {
+        if (!start) return;
+        const [x, y] = wzgledne(e);
+        Object.assign(biezacy.style, { left: `${Math.min(x, start[0]) * 100}%`, top: `${Math.min(y, start[1]) * 100}%`,
+            width: `${Math.abs(x - start[0]) * 100}%`, height: `${Math.abs(y - start[1]) * 100}%` });
+    });
+    pole.addEventListener("pointerup", (e) => {
+        if (!start) return;
+        const [x, y] = wzgledne(e);
+        const p = { x: Math.min(x, start[0]), y: Math.min(y, start[1]), w: Math.abs(x - start[0]), h: Math.abs(y - start[1]), el: biezacy };
+        start = null;
+        if (p.w < 0.01 || p.h < 0.01) {
+            biezacy.remove(); // zwykłe kliknięcie — bez prostokąta
+            return;
+        }
+        const wiersz = document.createElement("li");
+        p.pole = document.createElement("input");
+        p.pole.type = "text";
+        p.pole.maxLength = 2000;
+        p.pole.placeholder = "Co jest pod zasłoną?";
+        p.pole.setAttribute("aria-label", `Odpowiedź dla fragmentu ${prostokaty.length + 1}`);
+        wiersz.appendChild(p.pole);
+        listaOdpowiedzi.appendChild(wiersz);
+        p.wiersz = wiersz;
+        prostokaty.push(p);
+        rysujNumery();
+        p.pole.focus();
+    });
+
+    const akcje = document.createElement("div");
+    akcje.className = "fiszka-akcje";
+    akcje.append(
+        przycisk("Utwórz fiszki", "", async () => {
+            komunikat.hidden = true;
+            const odp = await fetch(`${URL_FISZKI}/${fiszka.id}/zaslony`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prostokaty: prostokaty.map((p) => [p.x, p.y, p.w, p.h]), odpowiedzi: prostokaty.map((p) => p.pole.value), pytanie: pytanie.value }),
+            });
+            const d = await odp.json().catch(() => ({}));
+            if (!odp.ok) {
+                komunikat.textContent = d.blad || `Błąd ${odp.status}`;
+                komunikat.hidden = false;
+                return;
+            }
+            await odswiezListeFiszek();
+        }),
+        przycisk("Cofnij ostatni", "przycisk--tekst", () => {
+            const p = prostokaty.pop();
+            if (p) {
+                p.el.remove();
+                p.wiersz.remove();
+            }
+        }),
+        przycisk("Anuluj", "przycisk--tekst", () => odswiezListeFiszek())
+    );
+    edytor.append(opis, pole, pytanie, listaOdpowiedzi, komunikat, akcje);
+    li.appendChild(edytor);
 }
 
 function przycisk(tekst, klasa, poKliknieciu) {

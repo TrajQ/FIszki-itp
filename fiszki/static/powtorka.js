@@ -102,6 +102,8 @@
         for (const [obraz, widoczny] of [[obrazPrzod, !trybOdwrocony.checked], [obrazTyl, trybOdwrocony.checked]]) {
             obraz.hidden = !(fiszka.obraz && widoczny);
             if (!obraz.hidden) obraz.src = fiszka.obraz;
+            // ETAP 185: zasłonięty fragment — zakryty przy pytaniu, z tyłu karty tylko obrys
+            ZaslonaObrazu.ustaw(obraz, fiszka.zaslona, obraz === obrazPrzod);
         }
         fragmentEl.textContent = fiszka.fragment_tekstu;
         fragmentEl.hidden = !fiszka.fragment_tekstu; // fiszka z importu nie ma cytatu
@@ -181,6 +183,7 @@
     function odslon() {
         if (odpowiedzWidoczna || kolejka.length === 0) return;
         odpowiedzWidoczna = true;
+        ZaslonaObrazu.ustaw(obrazPrzod, kolejka[0].zaslona, false); // ETAP 185: odsłonięcie pokazuje miejsce
         if (poleLuki) {
             const wpisana = poleLuki.value;
             poleLuki.disabled = true;

@@ -3218,3 +3218,27 @@ Status: zamknięty
   przykładowych; sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Dzielnice”
 - `DECISIONS.md`: D-192
+
+## ETAP 185 — Fiszki: zasłonięte fragmenty obrazu (image occlusion)
+Data: 2026-10-03
+Status: zamknięty
+
+- `fiszki/baza.py`: tabela `zaslony_fiszek` (prostokąt we współrzędnych
+  względnych 0–1, jedna zasłona na fiszkę); `fiszki/obrazy.py`:
+  `sprawdz_zaslony` (1–12 prostokątów, w granicach obrazu, min. 1% boku),
+  `zaslony_fiszek`
+- Trasa POST `/fiszki/<pdf>/fiszki/<id>/zaslony` — z fiszki z obrazem
+  nowe fiszki (po jednej na prostokąt) z tym samym plikiem obrazu,
+  kotwicą i tematami; pytanie wspólne (domyślne „Co jest w zasłoniętym
+  miejscu?”), odpowiedź osobna dla każdego fragmentu
+- `zaslona` w liście fiszek, kolejce powtórki, quizie, pliku na telefon
+  i wydruku; `fiszki/static/zaslona.js` — nakładka na obraz (pełna przy
+  pytaniu, obrys po odsłonięciu); w pliku na telefon ta sama logika
+  wbudowana (plik działa bez Warsztatu)
+- Lista fiszek: „Zasłoń fragmenty” — rysowanie prostokątów myszą/palcem
+  (pointer events), numery, „Cofnij ostatni”, pola odpowiedzi
+- Testy: tworzenie, walidacja, wspólny plik obrazu po usunięciu wzoru,
+  zasłona w kolejce, druku i pliku na telefon; sprawdzone w przeglądarce
+  (rysowanie, powtórka 1300/390 px)
+- Pomoc: „Zasłoń fragmenty rysunku”
+- `DECISIONS.md`: D-193

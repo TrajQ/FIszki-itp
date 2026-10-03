@@ -23,7 +23,8 @@
         <article class="karta-druk">
             <div class="karta-druk__strona">
                 <span class="karta-druk__nr">{{ loop.index }}</span>
-                {% if f['obraz_plik'] %}<img class="karta-druk__obraz" src="{{ url_for('fiszki.obraz_fiszki', nazwa=f['obraz_plik']) }}" alt="Wycinek rysunku">{% endif %}
+                {% if f['obraz_plik'] %}<span class="obraz-z-zaslona"><img class="karta-druk__obraz" src="{{ url_for('fiszki.obraz_fiszki', nazwa=f['obraz_plik']) }}" alt="Wycinek rysunku">
+                    {%- if f['zas_x'] is not none %}<span class="zaslona" style="left: {{ f['zas_x'] * 100 }}%; top: {{ f['zas_y'] * 100 }}%; width: {{ f['zas_w'] * 100 }}%; height: {{ f['zas_h'] * 100 }}%"></span>{% endif %}</span>{% endif %}
                 <p class="karta-druk__pytanie">{{ f['pytanie'] }}</p>
                 <span class="karta-druk__zrodlo">{{ f['nazwa_oryginalna'] }}{% if f['strona'] %}, s. {{ f['strona'] }}{% endif %}</span>
             </div>

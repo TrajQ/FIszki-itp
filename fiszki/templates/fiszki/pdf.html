@@ -132,5 +132,6 @@
     const URL_SZKICE_STRONY = "{{ url_for('fiszki.szkice_strony', pdf_id=pdf['id']) }}";
     const URL_WORKER = "{{ url_for('fiszki.static', filename='pdfjs/pdf.worker.min.mjs') }}";
 </script>
+<script src="{{ url_for('fiszki.static', filename='zaslona.js') }}"></script>
 <script type="module" src="{{ url_for('fiszki.static', filename='fiszki.js') }}"></script>
 {% endblock %}

@@ -187,7 +187,9 @@ def lista_fiszek(pdf_id):
     ).fetchall()
     po_fiszce = tematy.tematy_fiszek(db)
     obrazki = obrazy.obrazy_fiszek(db)
-    return jsonify([{**dict(f), "tematy": po_fiszce.get(f["id"], []), "obraz": url_obrazu(obrazki.get(f["id"]))} for f in fiszki])
+    zaslony = obrazy.zaslony_fiszek(db)  # ETAP 185
+    return jsonify([{**dict(f), "tematy": po_fiszce.get(f["id"], []), "obraz": url_obrazu(obrazki.get(f["id"])), "zaslona": zaslony.get(f["id"])}
+                    for f in fiszki])
 
 
 def url_obrazu(nazwa: str | None) -> str | None:
@@ -301,6 +303,37 @@ def zapisz_luki(pdf_id):
     return jsonify({"liczba": len(identyfikatory), "id": identyfikatory}), 201
 
 
+@fiszki_bp.route("/<int:pdf_id>/fiszki/<int:fiszka_id>/zaslony", methods=["POST"])
+def zaslon_fragmenty(pdf_id, fiszka_id):
+    """ETAP 185: z fiszki z obrazem — nowe fiszki, każda z jednym zasłoniętym
+    fragmentem. JSON {prostokaty: [[x, y, w, h], …] (0–1), odpowiedzi: [tekst, …],
+    pytanie?: tekst}. Kotwica (strona, fragment) i tematy jak w fiszce wzorcowej."""
+    _pobierz_pdf_albo_404(pdf_id)
+    db = get_db()
+    wzor = db.execute("SELECT * FROM fiszki WHERE id = ? AND pdf_id = ?", (fiszka_id, pdf_id)).fetchone()
+    plik = obrazy.obrazy_fiszek(db).get(fiszka_id)
+    if wzor is None or plik is None:
+        abort(404)
+    dane = request.get_json(silent=True) or {}
+    try:
+        prostokaty = obrazy.sprawdz_zaslony(dane.get("prostokaty"))
+    except obrazy.BladObrazu as e:
+        return jsonify({"blad": str(e)}), 400
+    odpowiedzi = dane.get("odpowiedzi")
+    if not isinstance(odpowiedzi, list) or len(odpowiedzi) != len(prostokaty) or not all(isinstance(o, str) and o.strip() for o in odpowiedzi):
+        return jsonify({"blad": "Wpisz odpowiedź dla każdego zasłoniętego fragmentu."}), 400
+    pytanie = (dane.get("pytanie") or "").strip()[:500] or "Co jest w zasłoniętym miejscu?"
+    lista_tematow = tematy.tematy_fiszek(db).get(fiszka_id, [])
+    nowe = []
+    for (x, y, w, h), odpowiedz in zip(prostokaty, odpowiedzi):
+        nowa = _wstaw_fiszke(db, pdf_id, wzor["strona"], wzor["fragment_tekstu"], pytanie, odpowiedz.strip()[:2000], lista_tematow)
+        db.execute("INSERT INTO obrazy_fiszek (fiszka_id, plik) VALUES (?, ?)", (nowa, plik))  # ten sam plik obrazu
+        db.execute("INSERT INTO zaslony_fiszek (fiszka_id, x, y, w, h) VALUES (?, ?, ?, ?, ?)", (nowa, x, y, w, h))
+        nowe.append(nowa)
+    db.commit()
+    return jsonify({"liczba": len(nowe), "id": nowe}), 201
+
+
 @fiszki_bp.route("/<int:pdf_id>/fiszki/<int:fiszka_id>", methods=["DELETE"])
 def usun_fiszke(pdf_id, fiszka_id):
     _pobierz_pdf_albo_404(pdf_id)
@@ -357,8 +390,11 @@ def _fiszki_do_eksportu(pdf_id=None, temat=None):
     gdzie = (" WHERE " + " AND ".join(warunki)) if warunki else ""
     kolejnosc = " ORDER BY strona, fiszki.id" if pdf_id is not None else " ORDER BY pdfy.nazwa_oryginalna, strona, fiszki.id"
     return db.execute(
-        "SELECT fiszki.*, pdfy.nazwa_oryginalna, obrazy_fiszek.plik AS obraz_plik FROM fiszki JOIN pdfy ON pdfy.id = fiszki.pdf_id"
-        " LEFT JOIN obrazy_fiszek ON obrazy_fiszek.fiszka_id = fiszki.id" + gdzie + kolejnosc,  # ETAP 154: wycinek do druku
+        "SELECT fiszki.*, pdfy.nazwa_oryginalna, obrazy_fiszek.plik AS obraz_plik,"
+        " zaslony_fiszek.x AS zas_x, zaslony_fiszek.y AS zas_y, zaslony_fiszek.w AS zas_w, zaslony_fiszek.h AS zas_h"
+        " FROM fiszki JOIN pdfy ON pdfy.id = fiszki.pdf_id"
+        " LEFT JOIN obrazy_fiszek ON obrazy_fiszek.fiszka_id = fiszki.id"
+        " LEFT JOIN zaslony_fiszek ON zaslony_fiszek.fiszka_id = fiszki.id" + gdzie + kolejnosc,  # ETAP 185: zasłona  # ETAP 154: wycinek do druku
         parametry,
     ).fetchall()
 

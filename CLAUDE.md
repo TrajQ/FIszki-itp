@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 184 (Dostępność: dzielnice w porównaniu scenariuszy — zamknięty)
-Ostatni ZIP: releases/warsztat_etap184_20261003.zip
-Testy: 602 passed / 0 failed
+ETAP: 185 (Fiszki: zasłanianie fragmentów rysunku — zamknięty)
+Ostatni ZIP: releases/warsztat_etap185_20261003.zip
+Testy: 603 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

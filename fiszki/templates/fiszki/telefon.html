@@ -31,7 +31,12 @@
     .liczby { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
     .liczby strong { display: block; font-size: 26px; }
     .fiszka__pytanie { font-size: 20px; font-weight: 600; white-space: pre-line; }
-    .fiszka__obraz { display: block; max-width: 100%; max-height: 50vh; margin: 8px auto; border-radius: 8px; background: #fff; }
+    .fiszka__obraz { display: block; max-width: 100%; max-height: 50vh; border-radius: 8px; background: #fff; }
+    /* ETAP 185: zasłonięty fragment obrazu — współrzędne względne, pełny prostokąt przy pytaniu, obrys po odsłonięciu */
+    .obraz-wrap { position: relative; width: fit-content; max-width: 100%; margin: 8px auto; }
+    .obraz-wrap[hidden] { display: none; }
+    .zaslona { position: absolute; border-radius: 4px; background: var(--akcent); box-shadow: 0 0 0 2px #fff; }
+    .zaslona--odslonieta { background: transparent; border: 3px solid var(--akcent); }
     .fiszka__odpowiedz { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--linia); white-space: pre-line; }
     .fiszka__zrodlo { margin-top: 10px; }
     .oceny { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
@@ -59,7 +64,7 @@
 
 <section id="fiszka" class="karta" hidden>
     <div class="wyciszony" id="postep"></div>
-    <img id="obraz" class="fiszka__obraz" alt="Wycinek rysunku z PDF-a" hidden>
+    <div id="obraz-wrap" class="obraz-wrap" hidden><img id="obraz" class="fiszka__obraz" alt="Wycinek rysunku z PDF-a"><span id="zaslona" class="zaslona" hidden></span></div>
     <div id="pytanie" class="fiszka__pytanie"></div>
     <div id="odpowiedz" class="fiszka__odpowiedz" hidden></div>
     <div id="zrodlo" class="fiszka__zrodlo wyciszony" hidden></div>
@@ -188,8 +193,12 @@
         $("fiszka").hidden = false;
         $("postep").textContent = `pudełko ${stan.get(biezaca.id).pudelko} · zostało ${kolejka.length + 1}`;
         $("pytanie").textContent = biezaca.pytanie;
-        $("obraz").hidden = !biezaca.obraz; // ETAP 154: wycinek rysunku (data URL w pliku)
+        $("obraz-wrap").hidden = !biezaca.obraz; // ETAP 154: wycinek rysunku (data URL w pliku)
         if (biezaca.obraz) $("obraz").src = biezaca.obraz;
+        const z = biezaca.zaslona; // ETAP 185
+        $("zaslona").hidden = !z;
+        if (z) Object.assign($("zaslona").style, { left: `${z[0] * 100}%`, top: `${z[1] * 100}%`, width: `${z[2] * 100}%`, height: `${z[3] * 100}%` });
+        $("zaslona").classList.remove("zaslona--odslonieta");
         $("odpowiedz").textContent = biezaca.odpowiedz;
         $("zrodlo").textContent = biezaca.strona ? `${biezaca.zrodlo}, s. ${biezaca.strona}` : biezaca.zrodlo;
         $("odpowiedz").hidden = $("zrodlo").hidden = true;
@@ -209,6 +218,7 @@
 
     $("pokaz").addEventListener("click", () => {
         $("odpowiedz").hidden = $("zrodlo").hidden = false;
+        $("zaslona").classList.add("zaslona--odslonieta");
         pokazPrzyciski("nie_umiem", "trudne", "umiem");
     });
 

@@ -3859,3 +3859,24 @@ ludności (np. scenariusz z nowym osiedlem).
 **Odrzucone alternatywy:**
 - Średnia ze zmian w komórkach wspólnych (jak mapa porównania) — inne
   liczby niż w tabeli pojedynczego pliku, trudne do wyjaśnienia.
+
+## D-193 — Zasłony obrazu: osobne fiszki, nakładka CSS zamiast przerabiania obrazu
+Data: 2026-10-03
+
+**Decyzja:** Każdy zasłonięty fragment to zwykła fiszka z tym samym
+plikiem obrazu i jednym prostokątem w tabeli `zaslony_fiszek`
+(współrzędne względne). Zasłonę rysuje nakładka CSS na obrazie; plik
+obrazu się nie zmienia.
+
+**Uzasadnienie:** Jak przy lukach (D-147) — powtórki Leitnera, tematy,
+quiz i statystyki działają bez zmian, bo to zwykłe fiszki. Nakładka nie
+wymaga biblioteki do obróbki obrazów (Pillow), pozwala odsłonić to samo
+miejsce obrysem i współdzielić jeden plik między fiszkami (`usun_osierocone`
+usuwa plik dopiero, gdy nie używa go żadna fiszka). Współrzędne względne
+działają przy każdej szerokości ekranu i na wydruku.
+
+**Odrzucone alternatywy:**
+- Kopia obrazu z wypaloną zasłoną dla każdej fiszki — więcej plików,
+  zależność od Pillow, brak obrysu po odsłonięciu.
+- Kilka zasłon na jednej fiszce („zasłoń wszystkie, odsłoń jedną”) —
+  wariant znany z Anki; do rozważenia, gdy pojedyncze zasłony się sprawdzą.

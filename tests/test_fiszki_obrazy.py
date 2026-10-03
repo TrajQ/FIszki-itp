@@ -78,3 +78,35 @@ def test_zly_obraz_i_sprzatanie(client):
     assert len(os.listdir(folder)) == 1 and client.get(pierwsza["obraz"]).status_code == 404
     client.post("/fiszki/1/usun")  # usunięcie PDF-a usuwa fiszki i ich wycinki
     assert os.listdir(folder) == [] and client.get(druga["obraz"]).status_code == 404
+
+
+# ---------- ETAP 185: zasłonięte fragmenty obrazu ----------
+
+
+def test_zasloniete_fragmenty(client):
+    wzor = fiszka(client, obraz=data_url(png()), tematy=["planowanie"]).get_json()
+    url = wzor["obraz"]
+    adres = f"/fiszki/1/fiszki/{wzor['id']}/zaslony"
+    odp = client.post(adres, json={"prostokaty": [[0.1, 0.2, 0.3, 0.1], [0.5, 0.5, 0.2, 0.2]], "odpowiedzi": ["Warta", " Cytadela "]})
+    assert odp.status_code == 201 and odp.get_json()["liczba"] == 2
+    lista = client.get("/fiszki/1/fiszki").get_json()
+    nowe = [f for f in lista if f["zaslona"]]
+    assert [f["odpowiedz"] for f in nowe] == ["Warta", "Cytadela"] and {f["obraz"] for f in nowe} == {url}  # ten sam plik
+    assert nowe[0]["zaslona"] == [0.1, 0.2, 0.3, 0.1] and nowe[0]["pytanie"] == "Co jest w zasłoniętym miejscu?"
+    assert nowe[0]["tematy"] == ["planowanie"] and nowe[0]["strona"] == 2
+    assert next(f for f in lista if f["id"] == wzor["id"])["zaslona"] is None  # wzór bez zmian
+    assert any(f.get("zaslona") for f in client.get("/fiszki/powtorka/kolejka").get_json())
+    druk = client.get("/fiszki/druk").get_data(as_text=True)
+    assert 'class="zaslona" style="left: 10.0%' in druk
+    assert '"zaslona": [0.1, 0.2, 0.3, 0.1]' in client.get("/fiszki/telefon.html").get_data(as_text=True)
+    # usunięcie wzoru nie kasuje pliku, bo używają go fiszki z zasłonami
+    client.delete(f"/fiszki/1/fiszki/{wzor['id']}")
+    obraz = client.get(url)
+    assert obraz.status_code == 200
+    obraz.close()
+    for zle in ({"prostokaty": [[0.9, 0.9, 0.3, 0.3]], "odpowiedzi": ["x"]}, {"prostokaty": [[0.1, 0.1, 0.001, 0.2]], "odpowiedzi": ["x"]},
+                {"prostokaty": [], "odpowiedzi": []}, {"prostokaty": [[0.1, 0.1, 0.2, 0.2]], "odpowiedzi": [" "]},
+                {"prostokaty": [[0.1, 0.1, 0.2, 0.2]] * 13, "odpowiedzi": ["x"] * 13}, {"prostokaty": [[0.1, 0.1, True, 0.2]], "odpowiedzi": ["x"]}):
+        assert client.post(f"/fiszki/1/fiszki/{nowe[0]['id']}/zaslony", json=zle).status_code == 400, zle
+    bez_obrazu = fiszka(client).get_json()
+    assert client.post(f"/fiszki/1/fiszki/{bez_obrazu['id']}/zaslony", json={"prostokaty": [[0.1, 0.1, 0.2, 0.2]], "odpowiedzi": ["x"]}).status_code == 404

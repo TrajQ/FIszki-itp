@@ -1009,3 +1009,6 @@
 
 ## ETAP 184 — 2026-10-03
 - Dostępność: tabela dzielnic w porównaniu scenariuszy (przed → po, zmiana)
+
+## ETAP 185 — 2026-10-03
+- Fiszki: zasłanianie fragmentów rysunku (mapy, schematy) — każdy fragment osobną fiszką

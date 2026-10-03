@@ -84,6 +84,13 @@ CREATE TABLE IF NOT EXISTS obrazy_fiszek (
     plik TEXT NOT NULL
 );
 
+-- ETAP 185: zasłonięty fragment obrazu (image occlusion) — prostokąt we
+-- współrzędnych względnych obrazu (0–1). Jedna zasłona na fiszkę.
+CREATE TABLE IF NOT EXISTS zaslony_fiszek (
+    fiszka_id INTEGER PRIMARY KEY REFERENCES fiszki(id) ON DELETE CASCADE,
+    x REAL NOT NULL, y REAL NOT NULL, w REAL NOT NULL, h REAL NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fiszka_id INTEGER NOT NULL,

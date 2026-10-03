@@ -58,7 +58,8 @@ def quiz_pytania():
     except quiz_fiszek.ZaMaloFiszek as e:
         return jsonify({"blad": str(e)}), 400
     obrazki = obrazy.obrazy_fiszek(db)  # ETAP 154
-    return jsonify([{**p, "obraz": url_obrazu(obrazki.get(p["fiszka_id"]))} for p in pytania])
+    zaslony = obrazy.zaslony_fiszek(db)  # ETAP 185
+    return jsonify([{**p, "obraz": url_obrazu(obrazki.get(p["fiszka_id"])), "zaslona": zaslony.get(p["fiszka_id"])} for p in pytania])
 
 
 @fiszki_bp.route("/statystyki")
@@ -111,7 +112,8 @@ def kolejka_powtorki():
         parametry,
     ).fetchall()
     obrazki = obrazy.obrazy_fiszek(db)  # ETAP 154
-    fiszki = [{**dict(w), "obraz": url_obrazu(obrazki.get(w["id"]))} for w in wiersze]
+    zaslony = obrazy.zaslony_fiszek(db)  # ETAP 185
+    fiszki = [{**dict(w), "obraz": url_obrazu(obrazki.get(w["id"])), "zaslona": zaslony.get(w["id"])} for w in wiersze]
     if wszystkie:
         random.shuffle(fiszki)
     return jsonify(fiszki)

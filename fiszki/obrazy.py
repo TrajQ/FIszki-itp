@@ -54,6 +54,35 @@ def zapisz(db, fiszka_id: int, dane: bytes) -> str:
     return nazwa
 
 
+# ---------- zasłonięte fragmenty obrazu (ETAP 185) ----------
+# Mapa albo schemat z zasłoniętym jednym miejscem: „co tu jest?”. Jak luki
+# (D-147) — każdy prostokąt to osobna, zwykła fiszka z tym samym plikiem
+# obrazu i własną zasłoną.
+
+MAKS_ZASLON = 12
+MIN_ROZMIAR = 0.01  # 1% boku obrazu
+
+
+def sprawdz_zaslony(prostokaty) -> list[tuple[float, float, float, float]]:
+    """[[x, y, w, h], …] we współrzędnych względnych → lista krotek albo BladObrazu."""
+    if not isinstance(prostokaty, list) or not 1 <= len(prostokaty) <= MAKS_ZASLON:
+        raise BladObrazu(f"Zaznacz od 1 do {MAKS_ZASLON} fragmentów do zasłonięcia.")
+    wynik = []
+    for p in prostokaty:
+        if not isinstance(p, list) or len(p) != 4 or not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in p):
+            raise BladObrazu("Zły format zaznaczenia.")
+        x, y, w, h = (float(v) for v in p)
+        if w < MIN_ROZMIAR or h < MIN_ROZMIAR or x < 0 or y < 0 or x + w > 1.0001 or y + h > 1.0001:
+            raise BladObrazu("Zaznaczenie wychodzi poza obraz albo jest za małe.")
+        wynik.append((x, y, w, h))
+    return wynik
+
+
+def zaslony_fiszek(db) -> dict[int, list[float]]:
+    """{fiszka_id: [x, y, w, h]}"""
+    return {w[0]: [w[1], w[2], w[3], w[4]] for w in db.execute("SELECT fiszka_id, x, y, w, h FROM zaslony_fiszek")}
+
+
 def obrazy_fiszek(db) -> dict[int, str]:
     """{fiszka_id: nazwa pliku}"""
     return {w[0]: w[1] for w in db.execute("SELECT fiszka_id, plik FROM obrazy_fiszek")}
