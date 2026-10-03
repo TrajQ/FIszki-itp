@@ -352,6 +352,40 @@ def _kwartyle(liczby: list[float]) -> tuple[float, float, float]:
     return q1, q2, q3
 
 
+# ---------- nietypowe transakcje do sprawdzenia (ETAP 182) ----------
+
+MIN_W_ROKU_NIETYPOWYCH = 5  # rok z mniejszą liczbą transakcji — mediana roku zbyt niepewna
+MAKS_NIETYPOWYCH = 50
+
+
+def nietypowe(rekordy: list[dict]) -> dict:
+    """Transakcje z ceną za m² odstającą od mediany swojego roku: iloraz
+    cena_m2 / mediana roku, na logarytmie (spadek o połowę i wzrost
+    dwukrotny są tak samo daleko), granice Tukeya Q1 − 1,5·IQR i
+    Q3 + 1,5·IQR; poza 3·IQR — „bardzo nietypowa”. To lista do sprawdzenia
+    (np. udział, lokal z garażem, transakcja rodzinna), nie błędy."""
+    po_roku: dict[int, list[float]] = {}
+    for r in rekordy:
+        po_roku.setdefault(r["rok"], []).append(r["cena_m2"])
+    mediany = {rok: statistics.median(c) for rok, c in po_roku.items() if len(c) >= MIN_W_ROKU_NIETYPOWYCH}
+    oceniane = [(r, math.log(r["cena_m2"] / mediany[r["rok"]])) for r in rekordy if r["rok"] in mediany and r["cena_m2"] > 0]
+    if len(oceniane) < 2 * MIN_W_ROKU_NIETYPOWYCH:
+        return {"ocenione": len(oceniane), "liczba": 0, "transakcje": [], "dolna_proc": None, "gorna_proc": None}
+    q1, _, q3 = _kwartyle(sorted(l for _, l in oceniane))
+    iqr = q3 - q1
+    dolna, gorna = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+    wynik = []
+    for r, l in oceniane:
+        if dolna <= l <= gorna:
+            continue
+        wynik.append({**{k: r.get(k) for k in ("id", "data", "rynek", "rodzaj", "pow_m2", "cena", "cena_m2", "izby", "przeznaczenie", "lat", "lng")},
+                      "mediana_roku": mediany[r["rok"]], "od_mediany_proc": 100 * (math.exp(l) - 1),
+                      "bardzo": l < q1 - 3 * iqr or l > q3 + 3 * iqr})
+    wynik.sort(key=lambda t: -abs(math.log(1 + t["od_mediany_proc"] / 100)))
+    return {"ocenione": len(oceniane), "liczba": len(wynik), "transakcje": wynik[:MAKS_NIETYPOWYCH],
+            "dolna_proc": 100 * (math.exp(dolna) - 1), "gorna_proc": 100 * (math.exp(gorna) - 1)}
+
+
 MAKS_GRUP = 10
 
 

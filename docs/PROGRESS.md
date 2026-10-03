@@ -3168,3 +3168,19 @@ Status: zamknięty
 - Testy: indeks, trasa, zestawienie; sprawdzone w przeglądarce
 - Pomoc: „Które miasto drożeje najszybciej?”
 - `DECISIONS.md`: D-189
+
+## ETAP 182 — Ceny: nietypowe transakcje RCN do sprawdzenia
+Data: 2026-10-03
+Status: zamknięty
+
+- `ceny/rcn.py`: `nietypowe` — iloraz ceny za m² do mediany roku (lata
+  z co najmniej 5 transakcjami), logarytm, granice Tukeya (1,5 IQR;
+  poza 3 IQR — „bardzo nietypowa”); najwyżej 50 najbardziej odstających
+  z odchyleniem w % i medianą roku; dla mieszkań i działek
+- Trasa `/ceny/transakcje/<id>/nietypowe` z filtrami strony
+- Strona transakcji: karta „Nietypowe transakcje” — opis granic w % mediany,
+  tabela, „na mapie” (czerwony okrąg i przybliżenie)
+- Testy: wybór odstających, za mało danych, trasa; sprawdzone w
+  przeglądarce 1300/390 px
+- Pomoc: „Nietypowe transakcje”
+- `DECISIONS.md`: D-190

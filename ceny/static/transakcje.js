@@ -530,6 +530,62 @@
         });
     }
 
+    // ---------- nietypowe transakcje (ETAP 182) — wybiera serwer (rcn.nietypowe) ----------
+    const przyciskNietypowych = document.getElementById("przycisk-nietypowych");
+    if (przyciskNietypowych) {
+        const status = document.getElementById("nietypowe-status");
+        const tabela = document.getElementById("tabela-nietypowych");
+        const zl = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
+        const proc = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0, signDisplay: "always" });
+        const warstwaNietypowej = L.layerGroup().addTo(mapa);
+        przyciskNietypowych.addEventListener("click", async () => {
+            przyciskNietypowych.disabled = true;
+            status.hidden = false;
+            status.textContent = "Szukam…";
+            tabela.hidden = true;
+            try {
+                const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/nietypowe?${parametryFiltrow()}`);
+                const w = await odp.json().catch(() => ({}));
+                if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+                if (w.dolna_proc === null) {
+                    status.textContent = "Za mało transakcji (potrzeba co najmniej 5 w roku), żeby ocenić, co jest nietypowe.";
+                    return;
+                }
+                status.textContent = `Nietypowych: ${zl.format(w.liczba)} z ${zl.format(w.ocenione)} ocenionych (typowe: od ${proc.format(w.dolna_proc)}% do ${proc.format(w.gorna_proc)}% mediany roku)` +
+                    (w.liczba > w.transakcje.length ? `; pokazujemy ${w.transakcje.length} najbardziej odstających.` : ".");
+                if (!w.liczba) return;
+                const glowa = el("tr");
+                for (const [t, k] of [["Data", ""], ["Rynek", ""], ["Pow. m²", "liczba"], ["Cena", "liczba"], ["Za m²", "liczba"], ["Od mediany roku", "liczba"], ["", ""]]) glowa.appendChild(el("th", k, t));
+                tabela.replaceChildren(glowa);
+                for (const t of w.transakcje) {
+                    const tr = el("tr");
+                    const od = el("td", `liczba ${t.bardzo ? "stan--zle" : ""}`, `${proc.format(t.od_mediany_proc)}%${t.bardzo ? " !" : ""}`);
+                    od.title = `mediana roku: ${zl.format(t.mediana_roku)} zł/m²${t.bardzo ? " — bardzo nietypowa (poza 3 rozstępami)" : ""}`;
+                    const akcja = el("td");
+                    if (t.lat !== null) {
+                        const pokaz = el("button", "przycisk--tekst", "na mapie");
+                        pokaz.type = "button";
+                        pokaz.addEventListener("click", () => {
+                            warstwaNietypowej.clearLayers();
+                            L.circleMarker([t.lat, t.lng], { radius: 11, color: "#d70015", weight: 3, fill: false }).addTo(warstwaNietypowej);
+                            mapa.setView([t.lat, t.lng], Math.max(mapa.getZoom(), 16));
+                            document.getElementById("mapa-rcn").scrollIntoView({ behavior: "smooth", block: "center" });
+                        });
+                        akcja.appendChild(pokaz);
+                    }
+                    tr.append(el("td", "", t.data), el("td", "", t.rynek), el("td", "liczba", zl.format(t.pow_m2)), el("td", "liczba", `${zl.format(t.cena)} zł`),
+                        el("td", "liczba", `${zl.format(t.cena_m2)} zł`), od, akcja);
+                    tabela.appendChild(tr);
+                }
+                tabela.hidden = false;
+            } catch (e) {
+                status.textContent = e.message;
+            } finally {
+                przyciskNietypowych.disabled = false;
+            }
+        });
+    }
+
     async function szukajPodobnych() {
         warstwaPodobnych.clearLayers();
         if (!miejsce) {

@@ -328,6 +328,18 @@ def regresja_transakcji(plik_id):
         return jsonify({"blad": str(e)}), 400
 
 
+@ceny_bp.route("/transakcje/<int:plik_id>/nietypowe")
+def nietypowe_transakcje(plik_id):
+    """ETAP 182: transakcje z ceną za m² odstającą od mediany roku (filtry strony)."""
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    try:
+        co = _co()
+        return jsonify(rcn.nietypowe(_rekordy(plik_id, co, _filtry(co))))
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+
+
 @ceny_bp.route("/transakcje/<int:plik_id>/wycena")
 def karta_wyceny(plik_id):
     """ETAP 113: karta wyceny porównawczej do druku — te same parametry co /podobne."""

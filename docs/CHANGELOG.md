@@ -1000,3 +1000,6 @@
 
 ## ETAP 181 — 2026-10-03
 - Ceny: indeks cen (rok bazowy = 100) na wykresie miast i w zestawieniu plików RCN
+
+## ETAP 182 — 2026-10-03
+- Ceny: lista nietypowych transakcji RCN (cena za m² odstająca od mediany roku)

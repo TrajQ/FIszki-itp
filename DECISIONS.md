@@ -3802,3 +3802,25 @@ gwarantuje, że linie startują z tego samego miejsca.
 - Rok bazowy osobno dla każdego miasta (jego pierwszy rok) — linie
   startowałyby w różnych latach i porównanie by się rozjechało.
 - Skala logarytmiczna cen — trudniejsza do czytania dla odbiorcy raportu.
+
+## D-190 — Nietypowe transakcje: Tukey na logarytmie ilorazu do mediany roku
+Data: 2026-10-03
+
+**Decyzja:** Transakcja jest nietypowa, gdy logarytm ilorazu jej ceny za
+m² do mediany roku leży poza Q1 − 1,5·IQR … Q3 + 1,5·IQR (z całego
+filtrowanego zbioru). Warsztat tylko pokazuje listę; statystyki i mapy
+liczą się dalej ze wszystkich transakcji (import odsiewa wyłącznie ceny
+nierealne, D-112).
+
+**Uzasadnienie:** Mediana roku usuwa wpływ wzrostu cen w czasie (inaczej
+wszystkie stare transakcje byłyby „tanie”). Logarytm sprawia, że
+dwukrotnie drożej i dwukrotnie taniej są tak samo daleko — rozkład cen
+jest prawoskośny. Reguła Tukeya nie zakłada rozkładu normalnego i jest
+znana ze statystyki opisowej. Decyzję, czy transakcję pominąć, zostawiamy
+użytkownikowi — nietypowa nie znaczy błędna.
+
+**Odrzucone alternatywy:**
+- Automatyczne wykluczanie odstających ze statystyk — ukryta zmiana
+  wyników; mediana i tak jest na nie odporna.
+- Odchylenie od mediany w promieniu (lokalnie) — dokładniejsze, ale
+  zależne od gęstości transakcji; do rozważenia w wycenie.

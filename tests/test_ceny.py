@@ -871,3 +871,28 @@ def test_indeks_w_zestawieniu_plikow():
     z = rcn.zestawienie_plikow([("a.gpkg", lokale([(2021, 10000), (2022, 11000), (2023, 12000)]), []), ("b.gpkg", lokale([(2022, 8000), (2023, 10000)]), [])])
     assert z["rok_bazowy"] == 2022
     assert z["pliki"][0]["indeks_lat"][2023] == pytest.approx(12000 / 11000 * 100) and z["pliki"][1]["indeks_lat"][2023] == pytest.approx(125.0)
+
+
+# ---------- ETAP 182: nietypowe transakcje ----------
+
+
+def test_nietypowe_transakcje(client, tmp_path, monkeypatch):
+    rekordy = [{"id": i, "rok": 2023 + i % 2, "data": "2023-05-01", "rynek": "wtórny", "rodzaj": "", "pow_m2": 50.0,
+                "cena_m2": (10000.0 if i % 2 == 0 else 11000.0) * (1 + (i % 5 - 2) / 100), "cena": 0.0, "lat": 50.0, "lng": 19.9}
+               for i in range(40)]
+    rekordy += [{**rekordy[0], "id": 100, "cena_m2": 3000.0}, {**rekordy[1], "id": 101, "cena_m2": 15500.0}, {**rekordy[0], "id": 102, "cena_m2": 10150.0}]
+    w = rcn.nietypowe(rekordy)
+    assert w["ocenione"] == 43 and [t["id"] for t in w["transakcje"]] == [100, 101]  # 10 150 przy medianie 10 000 — typowa
+    assert w["transakcje"][0]["od_mediany_proc"] == pytest.approx(-70, abs=0.5) and w["transakcje"][0]["bardzo"]
+    assert w["transakcje"][1]["mediana_roku"] == pytest.approx(11000)
+    assert rcn.nietypowe(rekordy[:6])["dolna_proc"] is None  # za mało transakcji w roku
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "krakow.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_cena_brutto=600000 + 1000 * (i % 7)) for i in range(1, 21)] + [lokal(99, lok_cena_brutto=200000)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    d = client.get("/ceny/transakcje/1/nietypowe").get_json()
+    assert d["liczba"] == 1 and d["transakcje"][0]["cena"] == 200000
+    assert client.get("/ceny/transakcje/9/nietypowe").status_code == 404
+    assert 'id="karta-nietypowych"' in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)

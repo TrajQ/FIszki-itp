@@ -194,6 +194,17 @@
             <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK), ceny brutto z aktów notarialnych. Statystyki liczy aplikacja.</p>
         </section>
 
+        {# ETAP 182: transakcje do sprawdzenia — liczy serwer (rcn.nietypowe) #}
+        <section class="karta stos" id="karta-nietypowych">
+            <div class="rzad rzad--miedzy">
+                <h3>Nietypowe transakcje</h3>
+                <button type="button" id="przycisk-nietypowych" class="przycisk--drugi">Pokaż</button>
+            </div>
+            <p class="wyciszony opis-cen">Ceny za m² mocno odbiegające od mediany swojego roku (poza granicami Tukeya: 1,5 rozstępu kwartylnego od kwartyli, na skali logarytmicznej). Warto je sprawdzić, zanim posłużą do wniosków — bywa to udział w nieruchomości, lokal z garażem, sprzedaż w rodzinie albo błąd w rejestrze.</p>
+            <p id="nietypowe-status" class="wyciszony" hidden></p>
+            <div class="przewijanie-cen"><table class="tabela" id="tabela-nietypowych" hidden></table></div>
+        </section>
+
         {% if co != 'dzialki' %}
         <section class="karta stos" id="karta-regresji">
             <div class="rzad rzad--miedzy">
