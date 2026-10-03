@@ -1120,3 +1120,6 @@
 
 ## ETAP 221 — 2026-10-03
 - Ceny: mapa schematyczna położenia plików w zestawieniu RCN
+
+## ETAP 222 — 2026-10-03
+- Dostępność: nazwy, przesuwanie i ponowna edycja punktów w szybkim modelu

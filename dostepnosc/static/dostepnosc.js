@@ -845,13 +845,64 @@
         return L.divIcon({ className: "punkt-uslugi", html: `<span>${nr}</span>`, iconSize: [26, 26] });
     }
 
+    const listaPunktow = document.getElementById("lista-punktow-modelu");
+
+    function podpisz(wpis) {
+        wpis.znacznik.unbindTooltip();
+        if (!wpis.nazwa) return;
+        const napis = document.createElement("span");
+        napis.textContent = wpis.nazwa; // nazwa od użytkownika albo z CSV — Leaflet wstawiłby napis jako HTML
+        wpis.znacznik.bindTooltip(napis);
+    }
+
+    function usunPunkt(wpis) {
+        warstwaPunktow.removeLayer(wpis.znacznik);
+        punktyModelu.splice(punktyModelu.indexOf(wpis), 1);
+        odswiezPunkty();
+    }
+
+    // ETAP 222: lista punktów pod mapą — nazwa (do tabeli obszarów obsługi), pokaż, usuń
+    function odswiezListe() {
+        listaPunktow.hidden = punktyModelu.length === 0;
+        listaPunktow.replaceChildren(...punktyModelu.map((wpis, i) => {
+            const li = document.createElement("li");
+            const nr = document.createElement("button");
+            nr.type = "button";
+            nr.className = "lista-punktow-modelu__nr";
+            nr.textContent = String(i + 1);
+            nr.title = "Pokaż na mapie";
+            nr.setAttribute("aria-label", `Pokaż punkt ${i + 1} na mapie`);
+            nr.addEventListener("click", () => mapa.setView(wpis.latlng, Math.max(mapa.getZoom(), 15)));
+            const nazwa = document.createElement("input");
+            nazwa.type = "text";
+            nazwa.maxLength = 60;
+            nazwa.placeholder = "nazwa (opcjonalnie)";
+            nazwa.value = wpis.nazwa || "";
+            nazwa.setAttribute("aria-label", `Nazwa punktu ${i + 1}`);
+            nazwa.addEventListener("input", () => {
+                wpis.nazwa = nazwa.value.trim();
+                podpisz(wpis);
+            });
+            const usun = document.createElement("button");
+            usun.type = "button";
+            usun.className = "przycisk--tekst";
+            usun.textContent = "✕";
+            usun.title = "Usuń punkt";
+            usun.setAttribute("aria-label", `Usuń punkt ${i + 1}`);
+            usun.addEventListener("click", () => usunPunkt(wpis));
+            li.append(nr, nazwa, usun);
+            return li;
+        }));
+    }
+
     function odswiezPunkty() {
         punktyModelu.forEach((p, i) => p.znacznik.setIcon(ikonaPunktu(i + 1)));
         modelStan.textContent = wstawianie
-            ? `Punkty: ${punktyModelu.length} — klikaj na mapie; klik w punkt go usuwa.`
-            : `Punkty: ${punktyModelu.length}`;
+            ? `Punkty: ${punktyModelu.length} — klikaj na mapie; klik w punkt go usuwa, przeciągnięcie przesuwa.`
+            : punktyModelu.length ? `Punkty: ${punktyModelu.length} — przeciągnij punkt, żeby go przesunąć.` : "Punkty: 0";
         modelWyczysc.hidden = punktyModelu.length === 0;
         modelPolicz.disabled = punktyModelu.length === 0;
+        odswiezListe();
     }
 
     function ustawWstawianie(wlacz) {
@@ -864,18 +915,14 @@
     }
 
     function dodajPunkt(latlng, nazwa = "") {
-        const znacznik = L.marker(latlng, { icon: ikonaPunktu(punktyModelu.length + 1), keyboard: false }).addTo(warstwaPunktow);
-        if (nazwa) {
-            const napis = document.createElement("span");
-            napis.textContent = nazwa; // nazwa z wgranego CSV — Leaflet wstawiłby napis jako HTML
-            znacznik.bindTooltip(napis);
-        }
+        const znacznik = L.marker(latlng, { icon: ikonaPunktu(punktyModelu.length + 1), keyboard: false, draggable: true }).addTo(warstwaPunktow);
         const wpis = { latlng, znacznik, nazwa };
+        podpisz(wpis);
         znacznik.on("click", () => {
-            if (!wstawianie) return;
-            warstwaPunktow.removeLayer(znacznik);
-            punktyModelu.splice(punktyModelu.indexOf(wpis), 1);
-            odswiezPunkty();
+            if (wstawianie) usunPunkt(wpis);
+        });
+        znacznik.on("dragend", () => {
+            wpis.latlng = znacznik.getLatLng(); // ETAP 222: przesunięty punkt
         });
         punktyModelu.push(wpis);
         odswiezPunkty();
@@ -991,9 +1038,11 @@
             (zLudnoscia
                 ? punkty.polaczone ? " — mieszkańcy, którzy zyskali." : " — stąd liczba mieszkańców na placówkę."
                 : ". Bez kolumny ludnosc w pliku bazowym nie ma liczby mieszkańców.");
+        przygotujEdycje(punkty);
         const lista = document.getElementById("lista-obszarow");
         lista.replaceChildren();
         const warstwa = L.layerGroup().addTo(mapa);
+        warstwaObszarowObslugi = warstwa;
         for (const o of punkty.obszary) {
             const tr = document.createElement("tr");
             tr.title = `Komórek w obszarze: ${o.komorki}`;
@@ -1013,9 +1062,64 @@
         }
     }
 
+    // ---------- ETAP 222: punkty policzonego pliku z powrotem do edycji ----------
+    // Liczymy ponownie na pliku bazowym (tam, gdzie punkty liczono pierwszy raz):
+    // zestaw punktów jedzie przez sessionStorage na stronę tamtego pliku.
+    const KLUCZ_EDYCJI = "dostepnosc.edycjaPunktow";
+    let warstwaObszarowObslugi = null;
+
+    function przygotujEdycje(punkty) {
+        const przycisk = document.getElementById("edytuj-punkty");
+        const opis = document.getElementById("edytuj-punkty-opis");
+        const cel = punkty.baza && punkty.baza_istnieje ? punkty.baza : punkty.baza ? null : NAZWA_PLIKU;
+        opis.hidden = cel === NAZWA_PLIKU;
+        opis.textContent = cel ? `Punkty otworzą się na pliku bazowym „${cel}” — tam, gdzie liczono je pierwszy raz.`
+            : `Pliku bazowego „${punkty.baza}” już nie ma — punkty wczytają się tutaj, na siatce tego pliku` +
+              (punkty.polaczone ? "; czas policzy się tylko z nich, bez usług, do których je wtedy dodano." : ".");
+        przycisk.onclick = () => {
+            const zestaw = {
+                usluga: punkty.usluga, predkosc_kmh: punkty.predkosc_kmh, kretosc: punkty.kretosc,
+                polacz: Boolean(punkty.polaczone && cel !== NAZWA_PLIKU),
+                punkty: punkty.obszary.map((o) => ({ lat: o.lat, lon: o.lon, nazwa: o.nazwa || "" })),
+            };
+            if (!cel || cel === NAZWA_PLIKU) return wczytajDoEdycji(zestaw);
+            try {
+                sessionStorage.setItem(KLUCZ_EDYCJI, JSON.stringify(zestaw));
+            } catch (e) {
+                return wczytajDoEdycji(zestaw); // bez pamięci sesji — chociaż tutaj
+            }
+            window.location.href = `${URL_INDEKS}?plik=${encodeURIComponent(cel)}`;
+        };
+    }
+
+    function wczytajDoEdycji(zestaw) {
+        warstwaPunktow.clearLayers();
+        punktyModelu.length = 0;
+        if (warstwaObszarowObslugi) warstwaObszarowObslugi.clearLayers(); // stare numery pod przeciąganymi
+        modelUsluga.value = zestaw.usluga || "";
+        const liczba = (x) => String(x).replace(".", ",");
+        modelPredkosc.value = liczba(zestaw.predkosc_kmh);
+        modelKretosc.value = liczba(zestaw.kretosc);
+        modelSiatka.value = "plik";
+        modelSiatka.dispatchEvent(new Event("change"));
+        document.getElementById("model-polacz").checked = Boolean(zestaw.polacz);
+        for (const p of zestaw.punkty) dodajPunkt(L.latLng(p.lat, p.lon), p.nazwa);
+        if (punktyModelu.length) mapa.fitBounds(L.latLngBounds(punktyModelu.map((p) => p.latlng)), { padding: [40, 40], maxZoom: 15 });
+        modelStan.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    let zestawDoEdycji = null;
+    try {
+        zestawDoEdycji = JSON.parse(sessionStorage.getItem(KLUCZ_EDYCJI) || "null");
+        sessionStorage.removeItem(KLUCZ_EDYCJI);
+    } catch (e) {
+        zestawDoEdycji = null;
+    }
+
     pobierzJson(urlPliku)
         .then((meta) => {
             pokazObszaryObslugi(meta.punkty);
+            if (zestawDoEdycji) wczytajDoEdycji(zestawDoEdycji);
             podpowiedzUslugi(meta.kolumny);
             if (meta.laczny_dostepny) {
                 poleKolumna.add(new Option("★ Wszystkie usługi naraz (min)", WARTOSC_LACZNY));

@@ -3932,3 +3932,23 @@ Status: zamknięty
   zestawienia z mapą; przeglądarka 1300/390 px i wydruk PDF
 - Pomoc: akapit „Mapa zestawienia”
 - `DECISIONS.md`: D-229
+
+## ETAP 222 — Dostępność: lista, przeciąganie i ponowna edycja punktów szybkiego modelu
+Data: 2026-10-03
+Status: zamknięty
+
+- Szybki model: lista punktów (`#lista-punktow-modelu`) — numer (pokaż
+  na mapie), nazwa (do obszarów obsługi), ✕ usuń; znaczniki przeciągane
+  (`draggable`, położenie po `dragend`); nazwy w dymkach przez
+  textContent
+- „Edytuj te punkty i policz ponownie” w „Obszarach obsługi”: zestaw
+  (usługa, prędkość, krętość, „dodaj do istniejących”, punkty z nazwami)
+  przez sessionStorage na stronę pliku bazowego; bez pliku bazowego — na
+  bieżącym pliku z uwagą
+- `dostepnosc/routes.py`: `opis_pliku` zwraca `punkty.baza_istnieje`
+  (`_punkty_z_baza`; plik przykładowy też się liczy)
+- Test: `baza_istnieje` (nowa siatka, plik bazowy, usunięty, przykład);
+  przeglądarka 1300/390 px: wstawienie, nazwa, przeciągnięcie, usunięcie,
+  policzenie, powrót do edycji na pliku bazowym
+- Pomoc: „Poprawianie punktów usług w szybkim modelu”
+- `DECISIONS.md`: D-230

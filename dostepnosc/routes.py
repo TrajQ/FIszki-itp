@@ -264,9 +264,20 @@ def opis_pliku(nazwa):
             ],
             # Wskaźnik łączny ma sens dopiero przy co najmniej dwóch usługach.
             "laczny_dostepny": len(wyniki_h3.kolumny_minut(dane)) >= 2,
-            "punkty": _punkty_pliku(nazwa),
+            "punkty": _punkty_z_baza(nazwa),
         }
     )
+
+
+def _punkty_z_baza(nazwa: str) -> dict | None:
+    """ETAP 222: punkty pliku + czy plik bazowy jeszcze istnieje — do „Edytuj
+    te punkty” (ponowne liczenie odbywa się na pliku bazowym)."""
+    punkty = _punkty_pliku(nazwa)
+    if punkty is None:
+        return None
+    baza = punkty.get("baza")
+    istnieje = bool(baza) and (baza in PLIKI_PRZYKLADOWE or (baza == secure_filename(baza) and os.path.isfile(os.path.join(_folder_wynikow(), baza))))
+    return {**punkty, "baza_istnieje": istnieje}
 
 
 @dostepnosc_bp.route("/porownanie")

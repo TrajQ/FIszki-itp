@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 221 (Ceny: mapa schematyczna w zestawieniu plików — zamknięty)
-Ostatni ZIP: releases/warsztat_etap221_20261003.zip
-Testy: 661 passed / 0 failed
+ETAP: 222 (Dostępność: edycja punktów usług w szybkim modelu — zamknięty)
+Ostatni ZIP: releases/warsztat_etap222_20261003.zip
+Testy: 662 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

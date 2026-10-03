@@ -120,6 +120,8 @@
                 <thead><tr><th>Punkt</th><th class="liczba">Mieszkańcy</th><th class="liczba">Czas śr. / maks.</th></tr></thead>
                 <tbody id="lista-obszarow"></tbody>
             </table>
+            <button id="edytuj-punkty" type="button" class="przycisk--drugi">Edytuj te punkty i policz ponownie</button>
+            <p id="edytuj-punkty-opis" class="przypis" hidden></p>
         </section>
 
         <section class="karta stos" id="karta-dzielnic">
@@ -179,6 +181,8 @@
                 <button id="model-wyczysc" type="button" class="przycisk--tekst" hidden>Wyczyść</button>
             </div>
             <p id="model-stan" class="wyciszony model__stan">Punkty: 0</p>
+            {# ETAP 222: lista punktów — nazwa, pokaż, usuń; znaczniki można przeciągać #}
+            <ol id="lista-punktow-modelu" class="lista-punktow-modelu" hidden></ol>
             <button id="model-policz" type="button" disabled>Policz i zapisz jako nowy plik</button>
             <p id="model-blad" class="komunikat komunikat--blad" hidden></p>
         </section>

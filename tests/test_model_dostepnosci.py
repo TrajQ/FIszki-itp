@@ -227,3 +227,18 @@ def test_endpoint_punktow_z_pliku_i_nazwy_w_obszarach(client):
     zly = client.post("/dostepnosc/punkty-z-pliku", data={"plik": (io.BytesIO("ą".encode("cp1250")), "x.csv")}, content_type="multipart/form-data")
     assert zly.status_code == 400
     assert client.post("/dostepnosc/punkty-z-pliku", data={}, content_type="multipart/form-data").status_code == 400
+
+
+def test_punkty_pliku_mowia_czy_baza_istnieje(client, tmp_path):
+    """ETAP 222: „Edytuj te punkty” liczy ponownie na pliku bazowym — strona musi wiedzieć, czy jest."""
+    baza = client.post("/dostepnosc/z-punktow", json={"usluga": "x", "punkty": [list(SRODEK)], "obszar": [52.40, 16.91, 52.41, 16.94]}).get_json()["plik"]
+    meta = client.get(f"/dostepnosc/plik/{baza}").get_json()
+    assert meta["punkty"]["baza"] is None and meta["punkty"]["baza_istnieje"] is False
+    wynik = client.post("/dostepnosc/z-punktow", json={"usluga": "Szkoła", "punkty": [list(SRODEK)], "nazwy": ["SP 1"], "baza": baza}).get_json()["plik"]
+    punkty = client.get(f"/dostepnosc/plik/{wynik}").get_json()["punkty"]
+    assert (punkty["baza"], punkty["baza_istnieje"], punkty["obszary"][0]["nazwa"]) == (baza, True, "SP 1")
+    (tmp_path / "dostepnosc" / "wyniki" / baza).unlink()
+    assert client.get(f"/dostepnosc/plik/{wynik}").get_json()["punkty"]["baza_istnieje"] is False
+    przyklad = client.post("/dostepnosc/z-punktow", json={"usluga": "Szkoła", "punkty": [list(SRODEK)], "baza": PRZYKLAD}).get_json()["plik"]
+    assert client.get(f"/dostepnosc/plik/{przyklad}").get_json()["punkty"]["baza_istnieje"] is True
+    assert 'id="lista-punktow-modelu"' in client.get("/dostepnosc/").get_data(as_text=True)

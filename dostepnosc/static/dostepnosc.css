@@ -646,3 +646,39 @@ button.model__wstawiaj--aktywny {
 .tabela-dzielnic__calosc td {
     font-weight: 600;
 }
+
+/* ETAP 222: lista punktów szybkiego modelu */
+.lista-punktow-modelu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 260px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.lista-punktow-modelu li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lista-punktow-modelu input {
+    flex: 1;
+    min-width: 0;
+}
+
+button.lista-punktow-modelu__nr {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    background: #5e5ce6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    font: 700 12px/1 var(--czcionka);
+}

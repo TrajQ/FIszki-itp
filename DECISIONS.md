@@ -4578,3 +4578,22 @@ transakcje, więc pominięcie na schemacie niczego nie zmienia w wynikach.
   a plik RCN nie mówi wprost, jaki obszar obejmuje.
 - Prostokąt wszystkich transakcji — rozciągany przez błędne położenia.
 - Podkład OSM w raporcie — kafle z sieci w wydruku; schemat wystarcza.
+
+## D-230 — Ponowne liczenie zawsze na pliku bazowym, wynik jako nowy plik
+Data: 2026-10-03
+
+**Decyzja:** „Edytuj te punkty” przenosi punkty na stronę pliku bazowego
+(tego, na którym policzono je pierwszy raz) i liczy od nowa jak przy
+pierwszym razie; wynik to nowy plik, poprzedni zostaje.
+
+**Uzasadnienie:** Przy „dodaj do istniejących” plik wynikowy ma już czasy
+połączone ze starymi usługami — ponowne łączenie na nim zostawiłoby
+przesunięty punkt w danych także w starym miejscu. Plik bazowy
+ma czyste czasy istniejących usług, ludność i wskaźniki. Nowy plik zamiast
+nadpisania: warianty „przed/po przesunięciu” porównuje się tym samym
+„Porównaj” co scenariusze z ETAPu 21.
+
+**Odrzucone alternatywy:**
+- Nadpisanie pliku wynikowego — traci się wariant do porównania.
+- Przenoszenie przez parametr w adresie — do 100 punktów z nazwami to
+  długi adres; sessionStorage trzyma zestaw tylko na jedno przejście.
