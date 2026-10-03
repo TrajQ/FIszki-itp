@@ -3114,3 +3114,22 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: „Trend w gminach”
 - `DECISIONS.md`: D-186
+
+## ETAP 179 — Teren: tabela krzyżowa dwóch pytań z testem chi-kwadrat
+Data: 2026-10-03
+Status: zamknięty
+
+- `teren/raport.py`: `tabela_krzyzowa` — liczności dla pól
+  jednokrotnego wyboru i tak/nie, sumy, procent wiersza, test chi-kwadrat
+  niezależności (puste wiersze i kolumny pominięte), V Craméra, liczba
+  komórek z licznością oczekiwaną < 5; `_p_chi2` — wartość p z
+  regularyzowanej funkcji gamma (szereg i ułamek łańcuchowy), bez scipy
+- Raport projektu: sekcja „Tabela krzyżowa” z wyborem wierszy i kolumn
+  (`?krzyz_a=&krzyz_b=`), opis wyniku słowami z progów (p < 0,05; V
+  0,2 / 0,4), ostrzeżenie o małych licznościach; bez wyboru — formularz
+  ukryty w druku
+- Testy: liczności, chi² = 20 (2×2), p i V z wartości referencyjnych
+  (tablice chi-kwadrat, scipy `chi2.sf`), raport; sprawdzone w
+  przeglądarce 1300/390 px
+- Pomoc: „Czy odpowiedzi na dwa pytania są ze sobą związane?”
+- `DECISIONS.md`: D-187

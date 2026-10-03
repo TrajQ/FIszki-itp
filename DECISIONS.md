@@ -3744,3 +3744,24 @@ wskaźników i okresów.
   wszystkie są „stabilne”, co sugeruje różnice, których nie ma.
 - Ukrycie trendów niestabilnych na mapie — gubi informację; przypis i
   gwiazdka w tabeli wystarczą.
+
+## D-187 — Test chi-kwadrat własną implementacją, tylko pytania jednokrotne
+Data: 2026-10-03
+
+**Decyzja:** Tabela krzyżowa obejmuje pytania jednokrotnego wyboru i
+tak/nie. Wartość p liczy własna funkcja (`_p_chi2`, regularyzowana
+funkcja gamma wg Numerical Recipes), sprawdzona testem z wartościami z
+tablic chi-kwadrat; przy licznościach oczekiwanych < 5 raport ostrzega.
+
+**Uzasadnienie:** Test chi-kwadrat zakłada, że każda osoba trafia do
+jednej komórki — przy pytaniu wielokrotnego wyboru to nieprawda. Jedna
+funkcja specjalna nie uzasadnia scipy jako zależności (D-047: własne
+implementacje sprawdzone z referencją). Słowne opisy wyniku z progów
+pomagają czytać tabelę bez znajomości statystyki, a zastrzeżenie „związek
+to nie przyczyna” jest w Pomocy.
+
+**Odrzucone alternatywy:**
+- Dokładny test Fishera przy małych licznościach — przydatny głównie dla
+  tabel 2×2; ostrzeżenie wystarcza na tym etapie.
+- Pytania wielokrotne jako osobne kolumny tak/nie — do rozważenia przy
+  wykresach ankiety (ETAP 180).

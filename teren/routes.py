@@ -309,8 +309,17 @@ def raport_projektu(projekt_id):
         pt["kolor"] = raport.kolor_punktu(pt, pole, kolory)
         pt["url_zdjecia"] = url_for("teren.zdjecie", projekt_id=projekt_id, punkt_id=pt["id"]) if pt["zdjecie"] else None
     czasy = [pt["czas"] for pt in punkty]
+    # ETAP 179: tabela krzyżowa dwóch pytań jednokrotnego wyboru (?krzyz_a=&krzyz_b=)
+    krzyzowe = [x for x in p["pola"] if x["typ"] in raport.POLA_KRZYZOWE]
+    po_nazwie = {x["nazwa"]: x for x in krzyzowe}
+    krzyz_a, krzyz_b = po_nazwie.get(request.args.get("krzyz_a")), po_nazwie.get(request.args.get("krzyz_b"))
+    tabela_krzyzowa = raport.tabela_krzyzowa(krzyz_a, krzyz_b, punkty) if krzyz_a and krzyz_b and krzyz_a is not krzyz_b else None
     return render_template(
         "teren/raport.html",
+        pola_krzyzowe=krzyzowe,
+        krzyz_a=krzyz_a,
+        krzyz_b=krzyz_b,
+        tabela_krzyzowa=tabela_krzyzowa,
         projekt=p,
         punkty=punkty,
         zestawienie=raport.zestawienie(p["pola"], punkty),

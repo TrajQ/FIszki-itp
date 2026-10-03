@@ -585,3 +585,37 @@ def test_punkty_w_okolicy(client):
     assert client.post("/teren/okolica", json={"geometria": dzialka, "promien": 1000}).status_code == 400
     assert client.post("/teren/okolica", json={"geometria": {"type": "Point", "coordinates": [500000, 5800000]}}).status_code == 400
     assert client.post("/teren/okolica", json={"geometria": {"type": "LineString", "coordinates": [[16, 52], [17, 52]]}}).status_code == 400
+
+
+# ---------- ETAP 179: tabela krzyżowa ----------
+
+
+def test_tabela_krzyzowa():
+    from teren import raport as r
+
+    a = {"nazwa": "wiek", "typ": "wybor", "opcje": ["młodzi", "starsi", "dzieci"]}
+    b = {"nazwa": "bezpiecznie", "typ": "tak_nie", "opcje": []}
+    odpowiedzi = [("młodzi", True)] * 30 + [("młodzi", False)] * 10 + [("starsi", True)] * 10 + [("starsi", False)] * 30 + [("starsi", None)] * 3
+    punkty = [{"wartosci": {"wiek": w, **({} if t is None else {"bezpiecznie": t})}} for w, t in odpowiedzi]
+    t = r.tabela_krzyzowa(a, b, punkty)
+    assert t["n"] == 80 and t["liczby"] == [[30, 10], [10, 30], [0, 0]] and t["w_razem"] == [40, 40, 0]
+    assert t["procent_w_wierszu"][0] == [75.0, 25.0] and t["procent_w_wierszu"][2] == [None, None]
+    assert t["chi2"] == pytest.approx(20.0) and t["df"] == 1  # pusty wiersz „dzieci” pominięty w teście
+    assert t["p"] == pytest.approx(7.744e-06, rel=1e-3) and t["v_cramera"] == pytest.approx(0.5) and t["male_oczekiwane"] == 0
+    assert r.tabela_krzyzowa(a, b, punkty[:30])["chi2"] is None  # jedna kolumna
+    assert r._p_chi2(3.841, 1) == pytest.approx(0.05, abs=1e-4) and r._p_chi2(9.488, 4) == pytest.approx(0.05, abs=1e-4)
+    assert r._p_chi2(30, 4) == pytest.approx(4.8944e-06, rel=1e-3) and r._p_chi2(0.5, 3) == pytest.approx(0.91889, abs=1e-4)
+
+
+def test_tabela_krzyzowa_w_raporcie(client):
+    client.post("/teren/projekty", data={"nazwa": "Ankieta", "wzor": "ankieta"})
+    with client.application.app_context():
+        from teren import baza
+        baza.zapisz_punkty(1, [{"uid": f"a{i:07d}", "lat": None, "lng": None, "dokladnosc_m": None, "czas": "2025-05-01T10:00",
+                                "wartosci": {"wiek": ["19–35", "61 i więcej"][i % 2], "czy czujesz się tu bezpiecznie": ["tak", "nie"][i % 2 if i < 10 else 0]},
+                                "uwagi": "", "zdjecie": None} for i in range(16)])
+    strona = client.get("/teren/projekty/1/raport").get_data(as_text=True)
+    assert 'id="tabela-krzyzowa"' in strona and "Test chi-kwadrat" not in strona  # bez wyboru — tylko formularz
+    wynik = client.get("/teren/projekty/1/raport?krzyz_a=wiek&krzyz_b=czy+czujesz+się+tu+bezpiecznie").get_data(as_text=True)
+    assert "Test chi-kwadrat" in wynik and "V Craméra" in wynik and "liczność oczekiwana" in wynik
+    assert "Test chi-kwadrat" not in client.get("/teren/projekty/1/raport?krzyz_a=wiek&krzyz_b=wiek").get_data(as_text=True)

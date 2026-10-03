@@ -89,6 +89,42 @@
         </div>
     </section>
 
+    {% if pola_krzyzowe | length >= 2 %}
+    {# ETAP 179: tabela krzyżowa — liczby i test z teren/raport.py #}
+    <section class="raport-terenu__strona{{ ' raport-terenu__bez-druku' if not tabela_krzyzowa }}" id="tabela-krzyzowa">
+        <h2>Tabela krzyżowa</h2>
+        <form method="get" class="rzad raport-terenu__wybor-krzyzowy">
+            {% if pole %}<input type="hidden" name="pole" value="{{ pole.nazwa }}">{% endif %}
+            <label class="rzad">Wiersze <select name="krzyz_a">{% for x in pola_krzyzowe %}<option value="{{ x.nazwa }}" {{ 'selected' if (krzyz_a and krzyz_a.nazwa == x.nazwa) or (not krzyz_a and loop.first) }}>{{ x.nazwa }}</option>{% endfor %}</select></label>
+            <label class="rzad">Kolumny <select name="krzyz_b">{% for x in pola_krzyzowe %}<option value="{{ x.nazwa }}" {{ 'selected' if (krzyz_b and krzyz_b.nazwa == x.nazwa) or (not krzyz_b and loop.index == 2) }}>{{ x.nazwa }}</option>{% endfor %}</select></label>
+            <button type="submit" class="przycisk--drugi">Zestaw</button>
+        </form>
+        {% set t = tabela_krzyzowa %}
+        {% if t %}
+        <p class="wyciszony">{{ krzyz_a.nazwa }} (wiersze) × {{ krzyz_b.nazwa }} (kolumny) — {{ t.n }} {{ 'osób odpowiedziało' if ankieta else 'punktów ma' }} na oba pytania. W komórce: liczba i procent wiersza.</p>
+        <div class="przewijanie-terenu">
+        <table class="tabela tabela-krzyzowa">
+            <tr><th></th>{% for k in t.kolumny %}<th class="liczba">{{ k }}</th>{% endfor %}<th class="liczba">razem</th></tr>
+            {% for w in t.wiersze %}{% set i = loop.index0 %}
+            <tr><th>{{ w }}</th>
+                {% for k in t.kolumny %}<td class="liczba">{{ t.liczby[i][loop.index0] }}{% if t.procent_w_wierszu[i][loop.index0] is not none %} <span class="wyciszony">{{ liczba(t.procent_w_wierszu[i][loop.index0]) }}%</span>{% endif %}</td>{% endfor %}
+                <td class="liczba"><strong>{{ t.w_razem[i] }}</strong></td></tr>
+            {% endfor %}
+            <tr><th>razem</th>{% for s in t.k_razem %}<td class="liczba"><strong>{{ s }}</strong></td>{% endfor %}<td class="liczba"><strong>{{ t.n }}</strong></td></tr>
+        </table>
+        </div>
+        {% if t.chi2 is not none %}
+        <p>Test chi-kwadrat niezależności: χ² = {{ liczba(t.chi2) }}, df = {{ t.df }}, p {{ ('= ' ~ ('%.3f' % t.p)) | replace('.', ',') if t.p >= 0.001 else '< 0,001' }} —
+            {{ 'odpowiedzi na oba pytania są ze sobą związane (p < 0,05)' if t.p < 0.05 else 'brak podstaw, by twierdzić, że odpowiedzi są ze sobą związane (p ≥ 0,05)' }}.
+            Siła związku (V Craméra): {{ liczba(t.v_cramera) }} — {{ 'słaba' if t.v_cramera < 0.2 else 'umiarkowana' if t.v_cramera < 0.4 else 'silna' }}.</p>
+        {% if t.male_oczekiwane %}<p class="komunikat komunikat--ostrzezenie">W {{ t.male_oczekiwane }} z {{ t.komorek }} komórek liczność oczekiwana jest mniejsza niż 5 — test chi-kwadrat jest wtedy niepewny; zbierz więcej odpowiedzi albo połącz rzadkie odpowiedzi.</p>{% endif %}
+        {% else %}
+        <p class="wyciszony">Za mało różnych odpowiedzi, żeby policzyć test (potrzeba co najmniej dwóch wierszy i dwóch kolumn z odpowiedziami).</p>
+        {% endif %}
+        {% endif %}
+    </section>
+    {% endif %}
+
     <section class="raport-terenu__strona">
         <h2>{{ 'Odpowiedzi' if ankieta else 'Punkty' }}</h2>
         <table class="tabela raport-terenu__punkty">

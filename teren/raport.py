@@ -70,6 +70,84 @@ def zestawienie(pola: list[dict], punkty: list[dict]) -> list[dict]:
     return wynik
 
 
+# ---------- tabela krzyżowa dwóch pytań (ETAP 179) ----------
+
+POLA_KRZYZOWE = ("wybor", "tak_nie")  # jedna odpowiedź na osobę — warunek testu chi-kwadrat
+
+
+def _opcje(pole: dict) -> list[str]:
+    return pole["opcje"] if pole["typ"] == "wybor" else ["tak", "nie"]
+
+
+def _p_chi2(chi2: float, df: int) -> float:
+    """P(X ≥ chi2) dla rozkładu chi-kwadrat: 1 − P(df/2, chi2/2), gdzie P to
+    regularyzowana dolna funkcja gamma (szereg dla x < a + 1, inaczej ułamek
+    łańcuchowy — Numerical Recipes, rozdz. 6.2)."""
+    a, x = df / 2, chi2 / 2
+    if x <= 0:
+        return 1.0
+    if x < a + 1:
+        suma = wyraz = 1 / a
+        n = a
+        for _ in range(500):
+            n += 1
+            wyraz *= x / n
+            suma += wyraz
+            if abs(wyraz) < abs(suma) * 1e-15:
+                break
+        return max(0.0, 1 - suma * math.exp(-x + a * math.log(x) - math.lgamma(a)))
+    b, c, d = x + 1 - a, 1e300, 1 / (x + 1 - a)
+    h = d
+    for i in range(1, 500):
+        an = -i * (i - a)
+        b += 2
+        d = an * d + b
+        d = 1e-300 if abs(d) < 1e-300 else d
+        c = b + an / c
+        c = 1e-300 if abs(c) < 1e-300 else c
+        d = 1 / d
+        h *= d * c
+        if abs(d * c - 1) < 1e-15:
+            break
+    return min(1.0, math.exp(-x + a * math.log(x) - math.lgamma(a)) * h)
+
+
+def tabela_krzyzowa(pole_a: dict, pole_b: dict, punkty: list[dict]) -> dict:
+    """Liczności odpowiedzi na dwa pytania jednokrotnego wyboru, procenty
+    w wierszach, test chi-kwadrat niezależności i V Craméra. Liczymy tylko
+    osoby, które odpowiedziały na oba pytania; puste wiersze i kolumny
+    pomijamy w teście."""
+    wiersze, kolumny = _opcje(pole_a), _opcje(pole_b)
+    liczby = [[0] * len(kolumny) for _ in wiersze]
+    for p in punkty:
+        a, b = p["wartosci"].get(pole_a["nazwa"]), p["wartosci"].get(pole_b["nazwa"])
+        if a is None or b is None:
+            continue
+        a, b = _tekst(a), _tekst(b)
+        if a in wiersze and b in kolumny:
+            liczby[wiersze.index(a)][kolumny.index(b)] += 1
+    w_razem = [sum(w) for w in liczby]
+    k_razem = [sum(k) for k in zip(*liczby)]
+    n = sum(w_razem)
+    wynik = {"wiersze": wiersze, "kolumny": kolumny, "liczby": liczby, "w_razem": w_razem, "k_razem": k_razem, "n": n,
+             "procent_w_wierszu": [[100 * x / w_razem[i] if w_razem[i] else None for x in wiersz] for i, wiersz in enumerate(liczby)],
+             "chi2": None, "df": None, "p": None, "v_cramera": None, "male_oczekiwane": 0}
+    ri = [i for i, s in enumerate(w_razem) if s]
+    kj = [j for j, s in enumerate(k_razem) if s]
+    if len(ri) < 2 or len(kj) < 2:
+        return wynik
+    chi2, male = 0.0, 0
+    for i in ri:
+        for j in kj:
+            oczekiwana = w_razem[i] * k_razem[j] / n
+            chi2 += (liczby[i][j] - oczekiwana) ** 2 / oczekiwana
+            male += oczekiwana < 5
+    df = (len(ri) - 1) * (len(kj) - 1)
+    wynik.update(chi2=chi2, df=df, p=_p_chi2(chi2, df), v_cramera=math.sqrt(chi2 / (n * (min(len(ri), len(kj)) - 1))),
+                 male_oczekiwane=male, komorek=len(ri) * len(kj))
+    return wynik
+
+
 def kolor_skali(i: int, liczba: int) -> str:
     """Kolor i-tej opcji skali od najlepszej (zielony) do najgorszej
     (czerwony) — odcień HSL od 130° do 0°. Ten sam wzór jest w teren.js."""

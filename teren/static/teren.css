@@ -493,3 +493,25 @@ button.przycisk--niebezpieczny-tekst {
 .raport-terenu__przewijanie {
     overflow-x: auto;
 }
+
+/* ---------- tabela krzyżowa (ETAP 179) ---------- */
+.przewijanie-terenu {
+    overflow-x: auto;
+}
+
+.tabela-krzyzowa th {
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 13px;
+}
+
+.tabela-krzyzowa td.liczba {
+    white-space: nowrap;
+}
+
+@media print {
+    .raport-terenu__wybor-krzyzowy,
+    .raport-terenu__bez-druku {
+        display: none;
+    }
+}

@@ -991,3 +991,6 @@
 
 ## ETAP 178 — 2026-10-03
 - Atlas: kartogram trendu liniowego wskaźnika w gminach (średnia roczna zmiana, R²)
+
+## ETAP 179 — 2026-10-03
+- Teren: tabela krzyżowa dwóch pytań ankiety z testem chi-kwadrat i V Craméra
