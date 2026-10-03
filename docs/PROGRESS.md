@@ -3698,3 +3698,21 @@ Status: zamknięty
   przeglądarki w raporcie (D-213); PORTFOLIO: liczby na ETAP 210
 - PLAN 171–250: podsumowanie serii 201–209
 - `DECISIONS.md`: D-218
+
+## ETAP 211 — Strona główna: przypięte rzeczy
+Data: 2026-10-03
+Status: zamknięty
+
+- `przypiete.py`: lista w `instance/przypiete.json` (zapis przez plik
+  tymczasowy i `os.replace`), `przypnij` (tylko adresy tej aplikacji —
+  zaczynające się od „/”, bez „//”, „\\” i znaków sterujących; tytuł;
+  bez duplikatów; `MAKS_PRZYPIETYCH=12`), `odepnij`, `wczytaj`
+  (uszkodzony plik → pusta lista)
+- `app.py`: `POST /przypiete`, `POST /przypiete/usun`; strona główna
+  dostaje listę przypiętych i znacznik przy „Wróć do pracy”
+- Strona główna: sekcja „Przypięte” z ✕, przycisk 📌 przy pozycjach
+  „Wróć do pracy”, które nie są przypięte
+- Test: przypinanie, duplikat, złe adresy, limit, odpinanie, uszkodzony
+  plik; sprawdzone w przeglądarce 1300/390 px
+- Pomoc: zdanie o przypinaniu
+- `DECISIONS.md`: D-219

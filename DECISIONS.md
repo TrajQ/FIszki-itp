@@ -4358,3 +4358,25 @@ kodzie. Przegląd ETAPu 210 znalazł takie zdanie w ETAPie 209.
 **Odrzucone alternatywy:**
 - Zostawić ogólnik „otworzysz w Wordzie” — nie da się go potwierdzić
   dla każdej wersji programu.
+
+## D-219 — Przypięte jako lista adresów w instance/, nie w bazach modułów
+Data: 2026-10-03
+
+**Decyzja:** Przypięte rzeczy to lista adresów stron aplikacji z tytułem
+i nazwą modułu, w pliku JSON w `instance/` (jak `widziana_wersja.txt`
+z ETAPu 159). Przypina się je z „Wróć do pracy”; moduły nic o nich nie
+wiedzą.
+
+**Uzasadnienie:** Przypięcie dotyczy strony głównej, nie danych modułu —
+osobna tabela w ośmiu bazach byłaby wspólną abstrakcją wbrew CLAUDE.md.
+Adres strony działa dla każdego modułu bez zmian w nim; plik w
+`instance/` trafia do kopii zapasowej. Tylko adresy zaczynające się od
+„/” — przypięcie nie może prowadzić poza aplikację.
+
+**Odrzucone alternatywy:**
+- localStorage przeglądarki — nie trafia do kopii i znika przy
+  czyszczeniu danych przeglądarki.
+- Przycisk „przypnij” na każdej stronie modułu — zmiany w ośmiu
+  modułach; „Wróć do pracy” ma już wszystko, co trzeba przypiąć.
+- Gdy przypięty obiekt zostanie usunięty, link prowadzi do strony
+  błędu — akceptowalne, ✕ usuwa go z listy.

@@ -115,6 +115,11 @@ def create_app(instance_path=None):
         import kopia
 
         ostatnie = ostatnio_uzywane()
+        import przypiete as przypiete_mod  # ETAP 211
+
+        przypiete = przypiete_mod.wczytaj(app.instance_path)
+        adresy_przypietych = {p["url"] for p in przypiete}
+        ostatnie = [{**o, "przypiete": o["url"] in adresy_przypietych} for o in ostatnie]
         import nowosci  # ETAP 159
 
         nowe_etapy = nowosci.nowe(app.instance_path)
@@ -124,7 +129,7 @@ def create_app(instance_path=None):
                           "klucz_gus": bool(app.config.get("GUS_BDL_API_KEY"))} if pusta else None
         return render_template(
             "index.html", p=podsumowania, terminy=terminy[:MAKS_TERMINOW], wiecej_terminow=len(terminy) > MAKS_TERMINOW,
-            ostatnie=ostatnie, pierwsze_kroki=pierwsze_kroki, nowe_etapy=nowe_etapy,
+            ostatnie=ostatnie, przypiete=przypiete, pierwsze_kroki=pierwsze_kroki, nowe_etapy=nowe_etapy,
             kopia_auto=kopia.ostatnia_kopia_automatyczna(app.config["AUTO_KOPIA_FOLDER"]) if app.config["AUTO_KOPIA_DNI"] > 0 else None,
             auto_kopia_dni=app.config["AUTO_KOPIA_DNI"],
             poza_dyskiem=_stan_kopii_poza_dyskiem(pusta),
@@ -179,6 +184,22 @@ def create_app(instance_path=None):
             except Exception:
                 app.logger.exception("Nie udało się odczytać terminów modułu %s", modul)
         return sorted(terminy, key=lambda t: (t["data"], t["rodzaj"], t["nazwa"]))
+
+    @app.route("/przypiete", methods=["POST"])
+    def przypnij():
+        """ETAP 211: JSON {url, tytul, modul?, opis?} → lista przypiętych."""
+        import przypiete
+
+        try:
+            return jsonify(przypiete.przypnij(app.instance_path, request.get_json(silent=True) or {}))
+        except przypiete.BladPrzypiecia as e:
+            return jsonify({"blad": str(e)}), 400
+
+    @app.route("/przypiete/usun", methods=["POST"])
+    def odepnij():
+        import przypiete
+
+        return jsonify(przypiete.odepnij(app.instance_path, (request.get_json(silent=True) or {}).get("url")))
 
     @app.route("/kalendarz.ics")
     def kalendarz_ics():

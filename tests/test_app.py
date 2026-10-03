@@ -27,6 +27,7 @@ def test_placeholdery_modulow(client, sciezka):
 # ---------- ETAP 14: pulpit na stronie głównej ----------
 
 import io
+import os
 import json
 
 
@@ -567,3 +568,35 @@ def test_kopia_poza_komputerem(tmp_path):
 
 def test_bez_danych_bez_przypomnienia_o_kopii(czysty_client):
     assert "kopia-przypomnienie" not in czysty_client.get("/").get_data(as_text=True)
+
+
+# ---------- ETAP 211: przypięte na stronie głównej ----------
+
+
+def test_przypiete(czysty_client, tmp_path):
+    import przypiete
+
+    c = czysty_client
+    c.post("/osiedle/koncepcje", json={"nazwa": "Wariant <B>"})
+    strona = c.get("/").get_data(as_text=True)
+    assert "Przypięte" not in strona and "data-przypnij=" in strona and "&lt;B&gt;" in strona
+    assert c.post("/przypiete", json={"url": "/osiedle/?koncepcja=1", "tytul": "Wariant <B>", "modul": "Osiedle"}).status_code == 200
+    c.post("/przypiete", json={"url": "/osiedle/?koncepcja=1", "tytul": "x"})  # drugi raz — bez duplikatu
+    strona = c.get("/").get_data(as_text=True)
+    sekcja = strona[strona.index('id="naglowek-przypietych"'):strona.index('id="naglowek-ostatnich"')]
+    assert "Wariant &lt;B&gt;" in sekcja and 'data-odepnij="/osiedle/?koncepcja=1"' in sekcja
+    assert "data-przypnij=" not in strona[strona.index('id="naglowek-ostatnich"'):]  # już przypięte — bez 📌
+    for zly in ("https://obca.pl/", "//obca.pl", "javascript:alert(1)", "/a\\b", "/" + "x" * 300, ""):
+        assert c.post("/przypiete", json={"url": zly, "tytul": "t"}).status_code == 400
+    assert c.post("/przypiete", json={"url": "/fiszki/", "tytul": " "}).status_code == 400
+    for i in range(11):
+        c.post("/przypiete", json={"url": f"/strona/{i}", "tytul": f"S{i}"})
+    r = c.post("/przypiete", json={"url": "/za/duzo", "tytul": "t"})
+    assert r.status_code == 400 and "12" in r.get_json()["blad"]
+    lista = c.post("/przypiete/usun", json={"url": "/osiedle/?koncepcja=1"}).get_json()
+    assert len(lista) == 11 and all(p["url"] != "/osiedle/?koncepcja=1" for p in lista)
+    # uszkodzony plik nie psuje strony głównej
+    with open(os.path.join(c.application.instance_path, przypiete.NAZWA_PLIKU), "w", encoding="utf-8") as f:
+        f.write("{")
+    assert przypiete.wczytaj(c.application.instance_path) == [] and c.get("/").status_code == 200
+    assert przypiete.wczytaj(str(tmp_path / "brak")) == []

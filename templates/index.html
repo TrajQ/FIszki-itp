@@ -49,19 +49,54 @@
 </section>
 {% endif %}
 
+{% if przypiete %}
+{# ETAP 211: przypięte — zostają, dopóki ich nie odepniesz (instance/przypiete.json) #}
+<section class="karta stos ostatnie przypiete" aria-labelledby="naglowek-przypietych">
+    <h3 id="naglowek-przypietych">Przypięte</h3>
+    <ol class="ostatnie__lista">
+        {% for p in przypiete %}
+        <li class="ostatnie__wiersz"><a class="ostatnie__pozycja" href="{{ p.url }}">
+            <span class="etykieta">{{ p.modul or '—' }}</span>
+            <span class="ostatnie__co"><strong>{{ p.tytul }}</strong> <span class="wyciszony">{{ p.opis }}</span></span>
+        </a>
+        <button type="button" class="przycisk--tekst ostatnie__przypnij" data-odepnij="{{ p.url }}" aria-label="Odepnij: {{ p.tytul }}" title="Odepnij">✕</button></li>
+        {% endfor %}
+    </ol>
+</section>
+{% endif %}
+
 {% if ostatnie %}
 <section class="karta stos ostatnie" aria-labelledby="naglowek-ostatnich">
     <h3 id="naglowek-ostatnich">Wróć do pracy</h3>
     <ol class="ostatnie__lista">
         {% for o in ostatnie %}
-        <li><a class="ostatnie__pozycja" href="{{ o.url }}">
+        <li class="ostatnie__wiersz"><a class="ostatnie__pozycja" href="{{ o.url }}">
             <span class="etykieta">{{ o.modul }}</span>
             <span class="ostatnie__co"><strong>{{ o.tytul }}</strong> <span class="wyciszony">{{ o.opis }}</span></span>
             <span class="wyciszony ostatnie__kiedy">{{ o.kiedy_opis }}</span>
-        </a></li>
+        </a>
+        {% if not o.przypiete %}<button type="button" class="przycisk--tekst ostatnie__przypnij" data-przypnij="{{ {'url': o.url, 'tytul': o.tytul, 'modul': o.modul, 'opis': o.opis} | tojson | forceescape }}" aria-label="Przypnij: {{ o.tytul }}" title="Przypnij na górze strony">📌</button>{% endif %}</li>
         {% endfor %}
     </ol>
 </section>
+{% endif %}
+{% if przypiete or ostatnie %}
+<script>
+// ETAP 211: przypinanie i odpinanie — po zapisie strona się odświeża (lista liczona na serwerze)
+document.querySelectorAll("[data-przypnij], [data-odepnij]").forEach((przycisk) => {
+    przycisk.addEventListener("click", async () => {
+        przycisk.disabled = true;
+        const przypnij = przycisk.dataset.przypnij !== undefined;
+        const odp = await fetch(przypnij ? "{{ url_for('przypnij') }}" : "{{ url_for('odepnij') }}", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: przypnij ? przycisk.dataset.przypnij : JSON.stringify({ url: przycisk.dataset.odepnij }),
+        });
+        if (odp.ok) return location.reload();
+        przycisk.disabled = false;
+        alert((await odp.json().catch(() => ({}))).blad || `Błąd ${odp.status}`);
+    });
+});
+</script>
 {% endif %}
 
 {% if terminy %}

@@ -1087,3 +1087,6 @@
 
 ## ETAP 210 — 2026-10-03
 - Przegląd i dokumentacja po ETAPach 201–209
+
+## ETAP 211 — 2026-10-03
+- Strona główna: przypięte rzeczy (📌 przy „Wróć do pracy”, sekcja „Przypięte”)

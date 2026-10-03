@@ -1196,3 +1196,26 @@ summary:focus-visible,
     outline: 2px solid var(--akcent);
     outline-offset: 2px;
 }
+
+/* ETAP 211: przypięte i przycisk przypinania przy „Wróć do pracy” */
+.ostatnie__wiersz {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ostatnie__wiersz .ostatnie__pozycja {
+    flex: 1;
+    min-width: 0;
+}
+
+.ostatnie__przypnij {
+    flex: 0 0 auto;
+    min-width: 36px;
+    opacity: 0.55;
+}
+
+.ostatnie__przypnij:hover,
+.ostatnie__przypnij:focus-visible {
+    opacity: 1;
+}
