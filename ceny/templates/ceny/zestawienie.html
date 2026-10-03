@@ -67,6 +67,11 @@
         </table>
         </div>
 
+        {# ETAP 221: mapa schematyczna — numery jak w tabeli #}
+        <h3>Gdzie są transakcje</h3>
+        <div class="raport-cen__mapa" id="mapa-zestawienia">{{ mapa }}</div>
+        <p class="wyciszony opis-cen">Numery jak w tabeli, w środku plików (mediana położenia transakcji). Linia przerywana obejmuje 95% transakcji pliku najbliższych środka — pozostałe 5%, często z błędnym położeniem w rejestrze, nie są rysowane i nie wyznaczają zasięgu. Kropki: najwyżej 1500 najnowszych transakcji pliku. Schemat bez podkładu — do pokazania, jak pliki leżą względem siebie.</p>
+
         {% if zestawienie.lata %}
         <h3>Mediana ceny za m² w latach [zł]</h3>
         <div class="raport-cen__mapa">{{ wykres }}</div>

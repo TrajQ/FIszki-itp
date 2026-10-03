@@ -3913,3 +3913,22 @@ Status: zamknięty
 - Plan: przy ETAPie 244 dopisany przegląd formularzy na iPhonie (Safari)
 - Pomoc: „Import punktów z tabeli CSV”
 - `DECISIONS.md`: D-228
+
+## ETAP 221 — Ceny: mapa schematyczna w raporcie zestawienia plików RCN
+Data: 2026-10-03
+Status: zamknięty
+
+- `ceny/rcn.py`: `mapa_plikow_svg` — dla każdego pliku otoczka wypukła
+  rdzenia (95% transakcji najbliższych środka, `RDZEN_PLIKU`), kropki
+  (najwyżej 1500 najnowszych z rdzenia), numer w środku (mediana
+  długości i szerokości); schemat wyśrodkowany; `_rdzen`
+- Podziałka i strzałka północy wydzielone z `mapa_svg` do
+  `_podzialka_i_polnoc` (wspólne dla obu map; dodana długość 50 km)
+- `ceny/trasy_rcn.py`: transakcje każdego pliku pobierane raz — do
+  tabeli i do mapy; szablon `zestawienie.html`: sekcja „Gdzie są
+  transakcje” z opisem
+- Testy: rdzeń bez punktu odstającego (podziałka nie rozciąga się),
+  plik bez położenia pominięty, liczba kropek, brak nazw w SVG; strona
+  zestawienia z mapą; przeglądarka 1300/390 px i wydruk PDF
+- Pomoc: akapit „Mapa zestawienia”
+- `DECISIONS.md`: D-229

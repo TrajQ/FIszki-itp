@@ -1117,3 +1117,6 @@
 
 ## ETAP 220 — 2026-10-03
 - Teren: import punktów z tabeli CSV ze współrzędnymi
+
+## ETAP 221 — 2026-10-03
+- Ceny: mapa schematyczna położenia plików w zestawieniu RCN

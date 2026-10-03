@@ -647,9 +647,17 @@ def mapa_svg(lokale: list[dict], obszary: list[dict], progi: list[float], kolory
             czesci.append(f'<path d="{d}" fill="{kolor}" fill-opacity="0.06" stroke="{kolor}" stroke-width="2.5"/>')
         x, y = px(*k.representative_point().coords[0])
         czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="11" fill="#ffffff" stroke="{kolor}" stroke-width="2"/><text x="{x:.1f}" y="{y + 4:.1f}" text-anchor="middle" font-weight="700" fill="{kolor}">{nr}</text>')
-    # podziałka: okrągła długość do ok. 1/4 szerokości
+    czesci += _podzialka_i_polnoc(skala, szerokosc, wysokosc, margines)
+    czesci.append("</svg>")
+    return "".join(czesci)
+
+
+def _podzialka_i_polnoc(skala: float, szerokosc: int, wysokosc: int, margines: int) -> list[str]:
+    """Podziałka (okrągła długość do ok. 1/4 szerokości) i strzałka północy;
+    skala w pikselach na stopień szerokości."""
+    czesci = []
     m_na_px = 111_320 / skala
-    dlugosc_m = max((k for k in (100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000) if k / m_na_px <= szerokosc / 4), default=100)
+    dlugosc_m = max((k for k in (100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 50000) if k / m_na_px <= szerokosc / 4), default=100)
     dl = dlugosc_m / m_na_px
     y0 = wysokosc - 14
     czesci.append(
@@ -659,6 +667,69 @@ def mapa_svg(lokale: list[dict], obszary: list[dict], progi: list[float], kolory
     )
     x = szerokosc - margines
     czesci.append(f'<path d="M{x},{margines - 12} L{x + 6},{margines + 4} L{x},{margines} L{x - 6},{margines + 4} Z" fill="#1d1d1f"/><text x="{x}" y="{margines + 18}" text-anchor="middle" fill="#1d1d1f">N</text>')
+    return czesci
+
+
+# ---------- mapa schematyczna zestawienia plików (ETAP 221) ----------
+
+RDZEN_PLIKU = 0.95  # udział transakcji najbliższych środka pliku, z których rysujemy zasięg
+MAKS_PUNKTOW_PLIKU_NA_MAPIE = 1500
+
+
+def _rdzen(punkty: list[tuple[float, float]]) -> tuple[tuple[float, float], list[tuple[float, float]]]:
+    """Środek pliku (mediana długości i szerokości — odporna na pojedyncze
+    błędne położenia) i RDZEN_PLIKU punktów najbliższych temu środkowi."""
+    srodek = (statistics.median(p[0] for p in punkty), statistics.median(p[1] for p in punkty))
+    kx = math.cos(math.radians(srodek[1]))
+    po_odleglosci = sorted(punkty, key=lambda p: math.hypot((p[0] - srodek[0]) * kx, p[1] - srodek[1]))
+    return srodek, po_odleglosci[:max(1, math.ceil(len(punkty) * RDZEN_PLIKU))]
+
+
+def mapa_plikow_svg(pliki: list[dict], szerokosc: int = 1000, wysokosc: int = 560) -> str:
+    """Schematyczna mapa zestawienia: dla każdego pliku [{"kolor", "lokale"}]
+    zasięg transakcji (otoczka wypukła rdzenia — bez 5% najdalszych od środka,
+    zwykle błędnie położonych), punkty (najwyżej MAKS_PUNKTOW_PLIKU_NA_MAPIE
+    najnowszych z rdzenia) i numer pliku w środku. Tylko liczby i kolory —
+    nazwy plików są w tabeli raportu (D-048)."""
+    otwarcie = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {szerokosc} {wysokosc}" width="{szerokosc}" height="{wysokosc}" font-family="sans-serif" font-size="12"><rect width="100%" height="100%" fill="#ffffff"/>'
+    warstwy = []
+    for nr, p in enumerate(pliki, start=1):
+        z_polozeniem = sorted((l for l in p["lokale"] if l["lat"] is not None), key=lambda l: l["data"], reverse=True)
+        if not z_polozeniem:
+            continue
+        srodek, rdzen = _rdzen([(l["lng"], l["lat"]) for l in z_polozeniem])
+        w_rdzeniu = set(rdzen)
+        punkty = [(l["lng"], l["lat"]) for l in z_polozeniem if (l["lng"], l["lat"]) in w_rdzeniu][:MAKS_PUNKTOW_PLIKU_NA_MAPIE]
+        warstwy.append((nr, p["kolor"], srodek, rdzen, punkty))
+    if not warstwy:
+        return otwarcie + f'<text x="{szerokosc / 2}" y="{wysokosc / 2}" text-anchor="middle" fill="#6e6e73">brak transakcji z położeniem</text></svg>'
+    xs = [x for w in warstwy for x, _ in w[3]]
+    ys = [y for w in warstwy for _, y in w[3]]
+    kx = math.cos(math.radians((min(ys) + max(ys)) / 2))
+    margines = 30
+    skala = min((szerokosc - 2 * margines) / (((max(xs) - min(xs)) * kx) or 1e-9), (wysokosc - 2 * margines - 20) / ((max(ys) - min(ys)) or 1e-9))
+    skala = min(skala, 111_320 / 5)  # jeden punkt w pliku — nie powiększaj ponad 5 m na piksel
+    # schemat na środku rysunku (wolne miejsce po równo z obu stron)
+    dx = (szerokosc - 2 * margines - (max(xs) - min(xs)) * kx * skala) / 2
+    dy = (wysokosc - 2 * margines - 20 - (max(ys) - min(ys)) * skala) / 2
+
+    def px(lng, lat):
+        return margines + dx + (lng - min(xs)) * kx * skala, margines + dy + (max(ys) - lat) * skala
+
+    czesci = [otwarcie]
+    for nr, kolor, srodek, rdzen, punkty in warstwy:
+        otoczka = shapely.MultiPoint(rdzen).convex_hull
+        if otoczka.geom_type == "Polygon":
+            d = "M" + " L".join(f"{a:.1f},{b:.1f}" for a, b in (px(*q) for q in otoczka.exterior.coords)) + " Z"
+            czesci.append(f'<path d="{d}" fill="{kolor}" fill-opacity="0.08" stroke="{kolor}" stroke-width="2" stroke-dasharray="6 4"/>')
+    for nr, kolor, srodek, rdzen, punkty in warstwy:
+        for lng, lat in punkty:
+            x, y = px(lng, lat)
+            czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2" fill="{kolor}" fill-opacity="0.55"/>')
+    for nr, kolor, srodek, rdzen, punkty in warstwy:
+        x, y = px(*srodek)
+        czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="13" fill="#ffffff" stroke="{kolor}" stroke-width="2.5"/><text x="{x:.1f}" y="{y + 5:.1f}" text-anchor="middle" font-weight="700" font-size="14" fill="{kolor}">{nr}</text>')
+    czesci += _podzialka_i_polnoc(skala, szerokosc, wysokosc, margines)
     czesci.append("</svg>")
     return "".join(czesci)
 

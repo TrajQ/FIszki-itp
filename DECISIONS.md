@@ -4558,3 +4558,23 @@ wiersza zamiast punktów w złym miejscu.
   przypadku; zmiana nazwy kolumny w arkuszu jest prostsza.
 - `csv.Sniffer` — zgaduje także inne znaki i myli się na krótkich
   plikach; trzy dozwolone separatory wystarczą.
+
+## D-229 — Zasięg pliku z 95% transakcji najbliższych środka
+Data: 2026-10-03
+
+**Decyzja:** Na mapie zestawienia zasięg pliku to otoczka wypukła 95%
+transakcji najbliższych środka (mediana długości i szerokości), a numer
+stoi w tym środku. Pozostałe 5% nie jest rysowane i nie wpływa na kadr.
+
+**Uzasadnienie:** W plikach RCN zdarzają się transakcje z błędnym
+położeniem; jedna taka kropka setki kilometrów dalej zmniejszyłaby
+schemat do kilku pikseli. Mediana położenia nie przesuwa się od
+pojedynczych błędów. Mapa ma pokazać, jak pliki leżą względem siebie —
+liczby (mediany, liczby transakcji) są w tabeli i liczą wszystkie
+transakcje, więc pominięcie na schemacie niczego nie zmienia w wynikach.
+
+**Odrzucone alternatywy:**
+- Granice powiatów z PRG — usługa niedostępna z tego środowiska (D-223),
+  a plik RCN nie mówi wprost, jaki obszar obejmuje.
+- Prostokąt wszystkich transakcji — rozciągany przez błędne położenia.
+- Podkład OSM w raporcie — kafle z sieci w wydruku; schemat wystarcza.

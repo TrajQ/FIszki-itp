@@ -264,9 +264,12 @@ def zestawienie_plikow():
         blad = f"Najwyżej {rcn.MAKS_PLIKOW_ZESTAWIENIA} pliki naraz."
     elif request.args.getlist("pliki") and len(wybrane) < 2:
         blad = "Zaznacz co najmniej dwa pliki."
-    zestawienie = None
+    zestawienie = mapa = None
     if not blad and len(wybrane) >= 2:
-        zestawienie = rcn.zestawienie_plikow([(po_id[i]["nazwa"], _rekordy(i, co, filtry), baza.obszary_rcn(i)) for i in wybrane])
+        rekordy = {i: _rekordy(i, co, filtry) for i in wybrane}
+        zestawienie = rcn.zestawienie_plikow([(po_id[i]["nazwa"], rekordy[i], baza.obszary_rcn(i)) for i in wybrane])
+        # ETAP 221: mapa schematyczna — gdzie leżą transakcje każdego pliku
+        mapa = rcn.mapa_plikow_svg([{"kolor": p["kolor"], "lokale": rekordy[i]} for i, p in zip(wybrane, zestawienie["pliki"])])
     return render_template(
         "ceny/zestawienie.html",
         pliki=pliki,
@@ -278,6 +281,7 @@ def zestawienie_plikow():
         maks=rcn.MAKS_PLIKOW_ZESTAWIENIA,
         zestawienie=zestawienie,
         wykres=Markup(rcn.wykres_plikow_svg(zestawienie)) if zestawienie else None,  # tylko liczby i kolory z kodu
+        mapa=Markup(mapa) if mapa else None,  # jw.
         min_w_roku=rcn.MIN_W_ROKU,
     )
 

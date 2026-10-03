@@ -1035,3 +1035,36 @@ def test_gpkg_transakcji(client, tmp_path, monkeypatch):
     finally:
         db.close()
     assert client.get("/ceny/transakcje/9.gpkg").status_code == 404
+
+
+# ---------- ETAP 221: mapa schematyczna zestawienia plików ----------
+
+
+def test_mapa_plikow_svg():
+    def lokale(lng0, lat0, n, odstajacy=False):
+        wynik = [{"lat": lat0 + (i % 5) * 0.002, "lng": lng0 + (i // 5) * 0.003, "data": f"2024-01-{i % 28 + 1:02d}"} for i in range(n)]
+        if odstajacy:
+            wynik.append({"lat": 54.5, "lng": 18.6, "data": "2024-02-01"})  # błędne położenie — Gdańsk w pliku z Krakowa
+        return wynik
+    svg = rcn.mapa_plikow_svg([{"kolor": "#0071e3", "lokale": lokale(19.9, 50.0, 40, odstajacy=True)},
+                               {"kolor": "#34c759", "lokale": lokale(20.05, 49.98, 20)},
+                               {"kolor": "#5e5ce6", "lokale": [{"lat": None, "lng": None, "data": "2024"}]}])
+    assert svg.count("stroke-dasharray") == 2  # zasięg dwóch plików z położeniem; trzeci pominięty
+    assert ">1</text>" in svg and ">2</text>" in svg and ">3</text>" not in svg
+    assert svg.count('r="2"') == 40 * 95 // 100 + 1 + 19  # 95% najbliższych środka: 39 z 41 i 19 z 20
+    assert "km</text>" in svg  # podziałka w km, nie rozciągnięta do Gdańska (kilkaset km)
+    assert ">200 km<" not in svg and ">50 km<" not in svg
+    assert "brak transakcji" in rcn.mapa_plikow_svg([{"kolor": "#000", "lokale": []}])
+
+
+def test_zestawienie_ma_mape(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    for nazwa in ("krakow.gpkg", "wieliczka.gpkg"):
+        plik_rcn(str(pobrane / nazwa), [lokal(i, lok_cena_brutto=600000) for i in range(1, 4)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    for nazwa in ("krakow.gpkg", "wieliczka.gpkg"):
+        client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / nazwa)})
+    wynik = client.get("/ceny/transakcje/zestawienie?pliki=1&pliki=2").get_data(as_text=True)
+    mapa = wynik.split('id="mapa-zestawienia">')[1].split("</div>")[0]
+    assert mapa.startswith("<svg") and "krakow" not in mapa  # nazwy tylko w tabeli
