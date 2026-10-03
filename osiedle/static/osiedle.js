@@ -527,6 +527,25 @@
         pokazKoszty(b.koszty);
         pokazBudynki(b.budynki);
         pokazEtapy(b.etapy);
+        pokazChlonnosc(b.chlonnosc);
+    }
+
+    // ETAP 197: chłonność terenu wg wpisanych ustaleń planu (osiedle/chlonnosc.py)
+    function pokazChlonnosc(c) {
+        const blok = document.getElementById("chlonnosc");
+        blok.hidden = !c;
+        if (!c) return;
+        const pasek = document.getElementById("pasek-chlonnosci");
+        pasek.style.width = `${Math.min(100, c.wykorzystanie_proc ?? 0)}%`;
+        pasek.classList.toggle("pasek-chlonnosci--ponad", c.zapas_m2 < 0);
+        const czesci = [`Plan pozwala na ${formatM2.format(c.maks_calkowita_m2)} m² powierzchni całkowitej (ogranicza: ${c.decyduje}).`,
+            `Koncepcja: ${formatM2.format(c.calkowita_m2)} m² — ${formatProc.format(c.wykorzystanie_proc)}% chłonności.`];
+        if (c.calkowita_budynkow_m2 !== undefined) czesci.push(`Z budynków: ${formatM2.format(c.calkowita_budynkow_m2)} m² — ${formatProc.format(c.wykorzystanie_budynkow_proc)}%.`);
+        czesci.push(c.zapas_m2 >= 0
+            ? `Zapas ${formatM2.format(c.zapas_m2)} m²${c.zapas_mieszkan ? ` ≈ ${c.zapas_mieszkan} mieszk. MW` : ""}.`
+            : `Przekroczenie o ${formatM2.format(-c.zapas_m2)} m².`);
+        if (c.min_calkowita_m2 !== null && c.calkowita_m2 < c.min_calkowita_m2) czesci.push(`Poniżej minimum z planu (${formatM2.format(c.min_calkowita_m2)} m²).`);
+        document.getElementById("opis-chlonnosci").textContent = czesci.join(" ");
     }
 
     // ETAP 196: etapy realizacji — program i koszty liczy serwer (osiedle/etapy.py)

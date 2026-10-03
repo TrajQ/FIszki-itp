@@ -206,7 +206,12 @@ def arkusze_koncepcji(k: dict, b: dict) -> list[dict]:
         wiersze = [["wskaźnik", "z terenów", *(["z budynków"] if wb else [])]]
         wiersze += [[opis, b["wskazniki"][klucz], *([wb[klucz]] if wb else [])] for klucz, opis in OPISY_WSKAZNIKOW]
         zgodnosc = [[f"plan: {z['nazwa']} {z['rodzaj']} {z['granica']}", z["wartosc"], "zgodne" if z["spelnione"] else "niezgodne"] for z in b["zgodnosc"]]
-        arkusze.append({"nazwa": "Wskaźniki", "wiersze": wiersze + ([[]] + zgodnosc if zgodnosc else []), "przypisy": zrodlo})
+        ch = b.get("chlonnosc")  # ETAP 197
+        chlonnosc = [[f"chłonność: pow. całkowita z ustalenia „{o['z']}” [m²]", o["calkowita_m2"]] for o in ch["ograniczenia"]] + [
+            ["chłonność: wykorzystanie [%]", ch["wykorzystanie_proc"]], ["chłonność: zapas [m²]", ch["zapas_m2"]],
+            ["chłonność: zapas mieszkań MW", ch["zapas_mieszkan"]]] if ch else []
+        arkusze.append({"nazwa": "Wskaźniki", "wiersze": wiersze + ([[]] + zgodnosc if zgodnosc else []) + ([[]] + chlonnosc if chlonnosc else []),
+                        "przypisy": zrodlo})
     if b["program"]:
         arkusze.append({"nazwa": "Program", "wiersze": [["pozycja", "wartość"]] + [[opis, b["program"][klucz]] for klucz, opis in OPISY_PROGRAMU],
                         "przypisy": zrodlo})

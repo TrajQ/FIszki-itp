@@ -1045,3 +1045,6 @@
 
 ## ETAP 196 — 2026-10-03
 - Osiedle: etapy realizacji — numer etapu przy terenie, program i koszty na etap z sumą narastającą (karta, raport, ODS)
+
+## ETAP 197 — 2026-10-03
+- Osiedle: chłonność terenu wg wpisanych ustaleń planu — dopuszczalna powierzchnia całkowita, wykorzystanie i zapas

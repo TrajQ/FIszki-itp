@@ -4080,3 +4080,24 @@ proporcjonalny do powierzchni byłby założeniem, którego autor nie wpisał.
   ukrywa braki w pierwszym etapie, który jest najważniejszy.
 - Grunt proporcjonalnie do powierzchni etapu — liczba wynikająca z
   założenia kodu, nie z danych autora.
+
+## D-205 — Chłonność z ustaleń już wpisanych w koncepcji
+Data: 2026-10-03
+
+**Decyzja:** Chłonność liczymy wyłącznie z ustaleń planu, które autor
+wpisał do zgodności (max intensywność; max wskaźnik zabudowy razem z max
+kondygnacjami), od tej samej podstawy co wskaźniki. Gdy ograniczeń jest
+kilka, decyduje najmniejsza wartość; zapas w mieszkaniach przeliczamy
+przez średnie mieszkanie MW z założeń programu.
+
+**Uzasadnienie:** Jedno źródło ustaleń (pola „Plan”) — bez drugiego
+formularza i bez rozbieżności między zgodnością a chłonnością. Najmniejsza
+wartość to faktyczne ograniczenie. Mieszkania MW dają górny szacunek
+(najmniejszy metraż), opisany wprost jako szacunek.
+
+**Odrzucone alternatywy:**
+- Chłonność z ustaleń pobranych z MPZP dla działek pod obszarem — plany
+  różnie zapisują wskaźniki (tekst uchwały), a moduł MPZP nie zwraca ich
+  liczbowo dla każdego planu.
+- Mieszkania wg proporcji MN/MW z koncepcji — zapas nie ma jeszcze
+  funkcji; przyjęcie proporcji byłoby założeniem kodu.

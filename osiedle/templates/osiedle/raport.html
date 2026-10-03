@@ -107,6 +107,21 @@
                     {% endfor %}
                 </table>
                 {% endif %}
+
+                {% set ch = b.chlonnosc %}
+                {% if ch %}
+                <h3>Chłonność terenu</h3>
+                <table class="tabela raport-osiedla__chlonnosc">
+                    {% for o in ch.ograniczenia %}
+                    <tr><td>pow. całkowita dopuszczalna — z ustalenia: {{ o.z }}</td><td class="liczba">{{ m(o.calkowita_m2, 0) }} m²</td></tr>
+                    {% endfor %}
+                    {% if ch.min_calkowita_m2 is not none %}<tr><td>pow. całkowita najmniejsza (min intensywność)</td><td class="liczba">{{ m(ch.min_calkowita_m2, 0) }} m²</td></tr>{% endif %}
+                    <tr><td>koncepcja (z terenów)</td><td class="liczba">{{ m(ch.calkowita_m2, 0) }} m² — {{ m(ch.wykorzystanie_proc) }}% chłonności</td></tr>
+                    {% if ch.calkowita_budynkow_m2 is defined %}<tr><td>koncepcja (z budynków)</td><td class="liczba">{{ m(ch.calkowita_budynkow_m2, 0) }} m² — {{ m(ch.wykorzystanie_budynkow_proc) }}% chłonności</td></tr>{% endif %}
+                    <tr class="tabela-bilansu__razem"><td>{{ 'zapas' if ch.zapas_m2 >= 0 else 'przekroczenie' }}</td><td class="liczba">{{ m(ch.zapas_m2|abs, 0) }} m²{% if ch.zapas_mieszkan %} ≈ {{ ch.zapas_mieszkan }} mieszk. MW{% endif %}</td></tr>
+                </table>
+                <p class="wyciszony">Ogranicza ustalenie „{{ ch.decyduje }}”: najwyżej {{ m(ch.maks_calkowita_m2, 0) }} m² powierzchni całkowitej, czyli ok. {{ ch.maks_mieszkan }} mieszk. przy średnim mieszkaniu MW z założeń programu — szacunek górny, nie liczba z planu.</p>
+                {% endif %}
             </div>
 
             {% if p %}

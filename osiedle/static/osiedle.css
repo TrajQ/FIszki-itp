@@ -497,3 +497,25 @@ button.przycisk--niebezpieczny-tekst {
     color: var(--tekst-drugi);
     font-weight: 600;
 }
+
+/* ETAP 197: chłonność terenu — wykorzystanie dopuszczalnej powierzchni całkowitej */
+.chlonnosc h4 {
+    margin: 0;
+}
+
+.pasek-chlonnosci {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 980px;
+    background: var(--tlo-wyciszone);
+}
+
+.pasek-chlonnosci span {
+    display: block;
+    height: 100%;
+    background: var(--akcent);
+}
+
+.pasek-chlonnosci span.pasek-chlonnosci--ponad {
+    background: var(--blad);
+}

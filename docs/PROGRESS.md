@@ -3426,3 +3426,22 @@ Status: zamknięty
   przeglądarce 1300/390 px (także zmiana etapu w panelu)
 - Pomoc: akapit „Etapy realizacji”
 - `DECISIONS.md`: D-204
+
+## ETAP 197 — Osiedle: chłonność terenu wg ustaleń planu
+Data: 2026-10-03
+Status: zamknięty
+
+- `osiedle/chlonnosc.py`: `chlonnosc` — dopuszczalna powierzchnia
+  całkowita z max intensywności i z max wskaźnika zabudowy × max
+  kondygnacji (decyduje mniejsza), minimum z min intensywności,
+  wykorzystanie i zapas (z terenów i z budynków), mieszkania MW z
+  założeń programu (`_w_dol` jak w `program.py`)
+- `bilans.py`: klucz `chlonnosc` (ta sama podstawa co wskaźniki)
+- Osiedle: blok „Chłonność terenu” w karcie wskaźników — pasek
+  wykorzystania (czerwony przy przekroczeniu) i opis
+- Raport: tabela chłonności pod zgodnością; ODS: wiersze w zakładce
+  Wskaźniki
+- Test: oba ograniczenia, minimum, budynki, przekroczenie, raport;
+  sprawdzone w przeglądarce 1300/390 px (także zmiana ustalenia)
+- Pomoc: akapit o ustaleniach planu
+- `DECISIONS.md`: D-205

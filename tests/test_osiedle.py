@@ -50,7 +50,7 @@ def test_bilans_bez_obszaru_procent_od_sumy_i_pusty():
     b = bilans(kolekcja(prostokat(0, 0, 30, 10, "MN"), prostokat(40, 0, 10, 10, "ZP")))
     assert b["obszar_m2"] is None and [f["procent"] for f in b["funkcje"]] == [75.0, 25.0]
     assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None,
-                                     "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": [], "etapy": None}
+                                     "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": [], "etapy": None, "chlonnosc": None}
 
 
 def test_teren_poza_obszarem():
@@ -692,3 +692,32 @@ def test_etapy_realizacji(client):
     import io, zipfile
     with zipfile.ZipFile(io.BytesIO(client.get(f"/osiedle/koncepcje/{k_id}.ods").data)) as z:
         assert 'table:name="Etapy"' in z.read("content.xml").decode()
+
+
+# ---------- ETAP 197: chłonność terenu ----------
+
+
+def test_chlonnosc_wg_ustalen_planu(client):
+    # obszar 100 × 100 m; MW 50 × 40 m, 30%, 5 kond. → 3000 m² pow. całkowitej
+    geo = kolekcja(prostokat(0, 0, 100, 100, "obszar"), prostokat(0, 0, 50, 40, "MW", zabudowa_proc=30, kondygnacje=5))
+    assert bilans(geo)["chlonnosc"] is None  # bez ustaleń
+    assert bilans(geo, {"plan": {"max_zabudowa_proc": 40}})["chlonnosc"] is None  # sam wskaźnik zabudowy nie ogranicza
+    c = bilans(geo, {"plan": {"max_intensywnosc": 1.2, "max_zabudowa_proc": 30, "max_kondygnacje": 5, "min_intensywnosc": 0.2}})["chlonnosc"]
+    assert [o["calkowita_m2"] for o in c["ograniczenia"]] == pytest.approx([12000, 15000], rel=1e-3)
+    assert c["decyduje"] == "intensywność zabudowy" and c["maks_calkowita_m2"] == pytest.approx(12000, rel=1e-3)
+    assert c["min_calkowita_m2"] == pytest.approx(2000, rel=1e-3)
+    assert c["wykorzystanie_proc"] == pytest.approx(25, abs=0.1) and c["zapas_m2"] == pytest.approx(9000, rel=1e-3)
+    # 55 m² / 70% ≈ 78,6 m² pow. całkowitej na mieszkanie
+    assert c["maks_mieszkan"] == 152 and c["zapas_mieszkan"] == 114
+    # budynki: wykorzystanie także z obrysów
+    z_budynkiem = kolekcja(*geo["features"], prostokat(5, 5, 20, 20, "budynek", kondygnacje=6))
+    c = bilans(z_budynkiem, {"plan": {"max_zabudowa_proc": 20, "max_kondygnacje": 4}})["chlonnosc"]
+    assert c["decyduje"] == "wskaźnik zabudowy × kondygnacje" and c["maks_calkowita_m2"] == pytest.approx(8000, rel=1e-3)
+    assert c["calkowita_budynkow_m2"] == pytest.approx(2400, rel=1e-3) and c["wykorzystanie_budynkow_proc"] == pytest.approx(30, abs=0.1)
+    # przekroczenie → ujemny zapas, zero mieszkań zapasu
+    c = bilans(geo, {"plan": {"max_intensywnosc": 0.2}})["chlonnosc"]
+    assert c["zapas_m2"] < 0 and c["zapas_mieszkan"] == 0 and c["wykorzystanie_proc"] == pytest.approx(150, abs=0.1)
+    k_id = client.post("/osiedle/koncepcje", json={"nazwa": "Chłonność"}).get_json()["id"]
+    client.put(f"/osiedle/koncepcje/{k_id}", json={"geojson": geo, "ustawienia": {"plan": {"max_intensywnosc": 1.2}}})
+    raport = client.get(f"/osiedle/koncepcje/{k_id}/raport").get_data(as_text=True)
+    assert "Chłonność terenu" in raport and "12 000" in raport
