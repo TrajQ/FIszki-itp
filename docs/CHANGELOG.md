@@ -997,3 +997,6 @@
 
 ## ETAP 180 — 2026-10-03
 - Teren: wykres rozkładu odpowiedzi w grupach (słupki 100%) pod tabelą krzyżową
+
+## ETAP 181 — 2026-10-03
+- Ceny: indeks cen (rok bazowy = 100) na wykresie miast i w zestawieniu plików RCN

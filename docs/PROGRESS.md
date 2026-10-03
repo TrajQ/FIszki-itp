@@ -3151,3 +3151,20 @@ Status: zamknięty
   1300/390 px
 - Pomoc: akapit o tabeli krzyżowej
 - `DECISIONS.md`: D-188
+
+## ETAP 181 — Ceny: indeks cen z rokiem bazowym
+Data: 2026-10-03
+Status: zamknięty
+
+- `ceny/analiza.py`: `indeks(szereg, rok_bazowy)` — wartość ÷ wartość w
+  roku bazowym × 100 (None bez danych w roku bazowym); trasa
+  `/ceny/szereg/<id>?bazowy=` zwraca też `indeks`
+- Strona Ceny: przełącznik „Wykres: ceny / indeks”, rok bazowy z lat
+  wspólnych dla wybranych miast, linia odniesienia 100, oś od najmniejszej
+  wartości indeksu, opis pod wykresem; indeksy w osobnej pamięci podręcznej
+  strony (miasto + rok)
+- Zestawienie plików RCN: `rok_bazowy` (pierwszy rok z medianą we
+  wszystkich plikach) i `indeks_lat` każdego pliku; tabela „Indeks median”
+- Testy: indeks, trasa, zestawienie; sprawdzone w przeglądarce
+- Pomoc: „Które miasto drożeje najszybciej?”
+- `DECISIONS.md`: D-189

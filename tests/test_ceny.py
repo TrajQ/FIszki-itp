@@ -848,3 +848,26 @@ def test_trasa_regresji(client, tmp_path, monkeypatch):
     assert client.get("/ceny/transakcje/1/regresja?co=dzialki").status_code == 400
     assert client.get("/ceny/transakcje/9/regresja").status_code == 404
     assert "Co wpływa na cenę za m²" in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)
+
+
+# ---------- ETAP 181: indeks cen ----------
+
+
+def test_indeks_cen(client):
+    szereg = [{"rok": 2015, "wartosc": 5000.0}, {"rok": 2020, "wartosc": 6000.0}, {"rok": 2024, "wartosc": 7500.0}]
+    assert analiza.indeks(szereg, 2015) == [{"rok": 2015, "wartosc": 100.0}, {"rok": 2020, "wartosc": 120.0}, {"rok": 2024, "wartosc": 150.0}]
+    assert analiza.indeks(szereg, 2016) is None
+    c = client
+    c.put("/ceny/zmienna", json={"id": 633})
+    s = c.get(f"/ceny/szereg/{KRAKOW}?bazowy=2019").get_json()
+    assert s["indeks"][[p["rok"] for p in s["indeks"]].index(2019)]["wartosc"] == 100.0
+    assert "indeks" not in c.get(f"/ceny/szereg/{KRAKOW}").get_json()
+    assert 'id="tryb-wykresu"' in c.get("/ceny/").get_data(as_text=True)
+
+
+def test_indeks_w_zestawieniu_plikow():
+    lokale = lambda ceny: [{"rok": r, "rynek": "wtórny", "cena_m2": float(c), "pow_m2": 50.0, "cena": c * 50.0, "lat": 50.0, "lng": 19.9}
+                           for r, c in ceny]
+    z = rcn.zestawienie_plikow([("a.gpkg", lokale([(2021, 10000), (2022, 11000), (2023, 12000)]), []), ("b.gpkg", lokale([(2022, 8000), (2023, 10000)]), [])])
+    assert z["rok_bazowy"] == 2022
+    assert z["pliki"][0]["indeks_lat"][2023] == pytest.approx(12000 / 11000 * 100) and z["pliki"][1]["indeks_lat"][2023] == pytest.approx(125.0)

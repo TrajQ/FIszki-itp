@@ -51,7 +51,13 @@
             <a id="link-raport-miast" class="przycisk przycisk--drugi" href="#" target="_blank" rel="noopener">Raport do druku ↗</a>
         </div>
     </div>
+    {# ETAP 181: indeks — wszystkie miasta od tego samego punktu (rok bazowy = 100) #}
+    <div class="rzad">
+        <label class="rzad">Wykres <select id="tryb-wykresu"><option value="">ceny</option><option value="indeks">indeks (rok bazowy = 100)</option></select></label>
+        <label class="rzad" id="etykieta-bazowego" hidden>Rok bazowy <select id="rok-bazowy"></select></label>
+    </div>
     <div id="wykres" class="wykres-cen"></div>
+    <p id="opis-indeksu" class="wyciszony opis-cen" hidden></p>
     <div class="przewijanie-cen"><table class="tabela" id="tabela-cen"></table></div>
     <p class="wyciszony opis-cen">Zmiany liczy aplikacja z danych GUS. „Średnio rocznie” — średnie tempo zmian od pierwszego roku z danymi. Źródło: GUS, Bank Danych Lokalnych.</p>
 </section>

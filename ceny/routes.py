@@ -136,7 +136,11 @@ def szereg(powiat_id):
     def wynik():
         zmienna = _wymagana_zmienna()
         s = _szereg(zmienna["id"], _id_bdl(powiat_id))
-        return jsonify({"szereg": s, "podsumowanie": analiza.podsumuj(s)})
+        wynik = {"szereg": s, "podsumowanie": analiza.podsumuj(s)}
+        rok_bazowy = request.args.get("bazowy", type=int)
+        if rok_bazowy is not None:  # ETAP 181: indeks (rok bazowy = 100)
+            wynik["indeks"] = analiza.indeks(s, rok_bazowy)
+        return jsonify(wynik)
 
     return _obsluz_bledy(wynik)
 

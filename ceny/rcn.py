@@ -550,7 +550,13 @@ def zestawienie_plikow(zbiory: list[tuple[str, list[dict], list[dict]]]) -> dict
             wiersz["wobec_pierwszego_proc"] = 100 * (wiersz["mediana_m2"] / pierwszy["mediana_m2"] - 1)
         pliki.append(wiersz)
     lata = sorted({r for p in pliki for r in p.get("lata", {})})
-    return {"pliki": pliki, "lata": lata}
+    # ETAP 181: indeks median od pierwszego roku, w którym mediany mają wszystkie pliki z danymi
+    z_danymi = [p for p in pliki if p.get("lata")]
+    wspolne = sorted(set.intersection(*(set(p["lata"]) for p in z_danymi))) if z_danymi else []
+    rok_bazowy = wspolne[0] if wspolne else None
+    for p in pliki:
+        p["indeks_lat"] = {r: 100 * m / p["lata"][rok_bazowy] for r, m in p["lata"].items()} if rok_bazowy and p.get("lata") and p["lata"][rok_bazowy] else {}
+    return {"pliki": pliki, "lata": lata, "rok_bazowy": rok_bazowy}
 
 
 def wykres_plikow_svg(zestawienie: dict) -> str:

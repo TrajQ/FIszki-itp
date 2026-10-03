@@ -52,6 +52,15 @@ def podsumuj(szereg: list[dict]) -> dict | None:
     }
 
 
+def indeks(szereg: list[dict], rok_bazowy: int) -> list[dict] | None:
+    """ETAP 181: indeks cen — wartość w roku / wartość w roku bazowym × 100.
+    None, gdy w roku bazowym nie ma danych (albo wartość jest zerowa)."""
+    baza = next((p["wartosc"] for p in szereg if p["rok"] == rok_bazowy), None)
+    if not baza:
+        return None
+    return [{"rok": p["rok"], "wartosc": 100 * p["wartosc"] / baza} for p in szereg]
+
+
 def ranking(wartosci: list[dict]) -> dict:
     """wartosci: [{"bdl_id", "teryt", "nazwa", "wartosc"}] powiatów województwa
     → pozycje od najdroższego, z miejscem (remisy dzielą miejsce) i medianą."""

@@ -77,6 +77,17 @@
             {% for p in zestawienie.pliki %}<tr><td><strong style="color: {{ p.kolor }}">{{ loop.index }}</strong> {{ p.nazwa }}</td>{% for r in zestawienie.lata %}<td class="liczba">{{ z((p.lata or {}).get(r)) }}</td>{% endfor %}</tr>{% endfor %}
         </table>
         </div>
+        {% if zestawienie.rok_bazowy and zestawienie.lata | length > 1 %}
+        {# ETAP 181: tempo zmian niezależnie od poziomu cen #}
+        <h3>Indeks median ({{ zestawienie.rok_bazowy }} = 100)</h3>
+        <div class="przewijanie-cen">
+        <table class="tabela" id="tabela-indeksu">
+            <tr><th>Plik</th>{% for r in zestawienie.lata if r >= zestawienie.rok_bazowy %}<th class="liczba">{{ r }}</th>{% endfor %}</tr>
+            {% for p in zestawienie.pliki %}<tr><td><strong style="color: {{ p.kolor }}">{{ loop.index }}</strong> {{ p.nazwa }}</td>{% for r in zestawienie.lata if r >= zestawienie.rok_bazowy %}<td class="liczba">{{ z(p.indeks_lat.get(r)) }}</td>{% endfor %}</tr>{% endfor %}
+        </table>
+        </div>
+        <p class="wyciszony opis-cen">Mediana w roku ÷ mediana w {{ zestawienie.rok_bazowy }} r. × 100 — pierwszy rok z medianą we wszystkich plikach. 120 = o 20% drożej niż w roku bazowym.</p>
+        {% endif %}
         {% endif %}
         <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK) — ceny brutto z aktów notarialnych{{ '; przy działce zabudowanej cena obejmuje budynek' if dzialki }}. Powiaty prowadzą rejestr z różną kompletnością — liczba transakcji mówi, na ile mediana jest pewna.</p>
     </section>

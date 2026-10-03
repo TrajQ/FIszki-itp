@@ -13,6 +13,9 @@
     const poleRok = document.getElementById("pole-rok");
     let wybrane = odczytaj("ceny.wybrane", []); // [{id, nazwa, woj}]
     let dane = new Map(); // id → {szereg, podsumowanie}
+    const indeksy = new Map(); // ETAP 181: `${id}:${rok bazowy}` → [{rok, wartosc}] albo null (brak danych w roku bazowym)
+    const trybWykresu = document.getElementById("tryb-wykresu");
+    const rokBazowy = document.getElementById("rok-bazowy");
     let numer = 0;
 
     function el(tag, klasa, tekst) {
@@ -189,18 +192,57 @@
         return e;
     }
 
+    // ETAP 181: lata bazowe — wspólne dla wszystkich wybranych miast (indeks każdego od tego samego roku)
+    function ustawLataBazowe() {
+        const szeregi = wybrane.map((w) => (dane.get(w.id) || {}).szereg || []).filter((s) => s.length);
+        const wspolne = szeregi.length ? szeregi.map((s) => new Set(s.map((p) => p.rok))).reduce((a, b) => new Set([...a].filter((r) => b.has(r)))) : new Set();
+        const lata = [...wspolne].sort((a, b) => a - b);
+        const poprzedni = Number(rokBazowy.value);
+        rokBazowy.replaceChildren(...lata.map((r) => new Option(String(r), String(r))));
+        if (lata.length) rokBazowy.value = String(lata.includes(poprzedni) ? poprzedni : lata[0]);
+    }
+
+    async function wczytajIndeksy() {
+        const rok = rokBazowy.value;
+        await Promise.all(wybrane.filter((w) => !indeksy.has(`${w.id}:${rok}`)).map(async (w) => {
+            try {
+                indeksy.set(`${w.id}:${rok}`, (await zapytaj(`szereg/${w.id}?bazowy=${rok}`)).indeks);
+            } catch (e) {
+                indeksy.set(`${w.id}:${rok}`, null);
+            }
+        }));
+    }
+
+    async function zmienTrybWykresu() {
+        const indeks = trybWykresu.value === "indeks";
+        document.getElementById("etykieta-bazowego").hidden = !indeks;
+        if (indeks) {
+            if (!rokBazowy.options.length) ustawLataBazowe();
+            await wczytajIndeksy();
+        }
+        rysujWykres();
+    }
+    trybWykresu.addEventListener("change", zmienTrybWykresu);
+    rokBazowy.addEventListener("change", zmienTrybWykresu);
+
     function rysujWykres() {
         const pojemnik = document.getElementById("wykres");
-        const serie = wybrane.map((w, i) => ({ ...w, kolor: KOLORY[i % KOLORY.length], szereg: (dane.get(w.id) || {}).szereg || [] })).filter((s) => s.szereg.length);
+        const indeks = trybWykresu.value === "indeks" && rokBazowy.value;
+        const szeregSerii = (w) => (indeks ? indeksy.get(`${w.id}:${rokBazowy.value}`) : (dane.get(w.id) || {}).szereg) || [];
+        const serie = wybrane.map((w, i) => ({ ...w, kolor: KOLORY[i % KOLORY.length], szereg: szeregSerii(w) })).filter((s) => s.szereg.length);
         pojemnik.replaceChildren();
+        const opisIndeksu = document.getElementById("opis-indeksu");
+        opisIndeksu.hidden = !indeks;
+        opisIndeksu.textContent = indeks ? `Indeks: cena w roku ÷ cena w ${rokBazowy.value} r. × 100 (liczy serwer). 120 = o 20% drożej niż w roku bazowym — porównuje tempo zmian miast o różnych cenach.` : "";
         if (!serie.length) return;
         const punkty = serie.flatMap((s) => s.szereg);
         const [r0, r1] = [Math.min(...punkty.map((p) => p.rok)), Math.max(...punkty.map((p) => p.rok))];
-        // „ładne” podziałki osi: krok 1, 2, 2,5 albo 5 × 10^k
+        // „ładne” podziałki osi: krok 1, 2, 2,5 albo 5 × 10^k; przy indeksie oś od najmniejszej wartości
         const maks = Math.max(...punkty.map((p) => p.wartosc));
-        const potega = 10 ** Math.floor(Math.log10(maks / 4 || 1));
-        const krokY = [1, 2, 2.5, 5, 10].map((k) => k * potega).find((k) => maks / k <= 5);
-        const [w0, w1] = [0, Math.ceil(maks / krokY) * krokY];
+        const min = indeks ? Math.min(...punkty.map((p) => p.wartosc)) : 0;
+        const potega = 10 ** Math.floor(Math.log10((maks - min) / 4 || 1));
+        const krokY = [1, 2, 2.5, 5, 10].map((k) => k * potega).find((k) => (maks - min) / k <= 5) || potega * 10;
+        const [w0, w1] = [Math.floor(min / krokY) * krokY, Math.ceil(maks / krokY) * krokY];
         const SZ = 760, WY = 300, M = { l: 70, p: 16, g: 12, d: 30 };
         const x = (r) => M.l + (r1 === r0 ? 0.5 : (r - r0) / (r1 - r0)) * (SZ - M.l - M.p);
         const y = (w) => WY - M.d - ((w - w0) / (w1 - w0 || 1)) * (WY - M.g - M.d);
@@ -209,13 +251,14 @@
             wykres.append(svg("line", { x1: M.l, x2: SZ - M.p, y1: y(w), y2: y(w), class: "wykres-cen__siatka" }),
                 svg("text", { x: M.l - 8, y: y(w) + 4, "text-anchor": "end", class: "wykres-cen__opis" }, liczba.format(w)));
         }
+        if (indeks) wykres.appendChild(svg("line", { x1: M.l, x2: SZ - M.p, y1: y(100), y2: y(100), stroke: "currentColor", "stroke-dasharray": "6 4", opacity: 0.6 }));
         const krok = Math.max(1, Math.ceil((r1 - r0) / 10));
         for (let r = r0; r <= r1; r += krok) wykres.appendChild(svg("text", { x: x(r), y: WY - 8, "text-anchor": "middle", class: "wykres-cen__opis" }, r));
         for (const s of serie) {
             wykres.appendChild(svg("polyline", { points: s.szereg.map((p) => `${x(p.rok).toFixed(1)},${y(p.wartosc).toFixed(1)}`).join(" "), fill: "none", stroke: s.kolor, "stroke-width": 2.5 }));
             for (const p of s.szereg) {
                 const kropka = svg("circle", { cx: x(p.rok), cy: y(p.wartosc), r: 3, fill: s.kolor });
-                kropka.appendChild(svg("title", {}, `${s.nazwa}, ${p.rok}: ${liczba.format(p.wartosc)} ${ZMIENNA.jednostka || ""}`));
+                kropka.appendChild(svg("title", {}, indeks ? `${s.nazwa}, ${p.rok}: indeks ${liczba.format(p.wartosc)}` : `${s.nazwa}, ${p.rok}: ${liczba.format(p.wartosc)} ${ZMIENNA.jednostka || ""}`));
                 wykres.appendChild(kropka);
             }
         }
@@ -278,6 +321,8 @@
             }
         }));
         if (moj !== numer) return;
+        ustawLataBazowe();
+        if (trybWykresu.value === "indeks") await wczytajIndeksy();
         rysujWykres();
         rysujTabele();
         if (!ustawLata()) wczytajRanking(); // podświetlenie wybranych miast

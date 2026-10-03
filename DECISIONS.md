@@ -3784,3 +3784,21 @@ druku, D-048).
   trudno porównać udziały.
 - Wykres w JS na stronie — raport jest stroną do druku, SVG z serwera
   drukuje się tak samo jak mapa.
+
+## D-189 — Indeks cen liczony na serwerze, rok bazowy wspólny dla porównania
+Data: 2026-10-03
+
+**Decyzja:** Indeks to proste przeliczenie szeregu na rok bazowy = 100,
+liczone w `ceny/analiza.py` (trasa z parametrem `bazowy`). Na stronie do
+wyboru są tylko lata, w których dane mają wszystkie wybrane miasta; w
+zestawieniu plików RCN rok bazowy to pierwszy wspólny rok median.
+
+**Uzasadnienie:** Wykres cen w zł pokazuje poziom, ale „który rynek
+drożeje szybciej” widać dopiero od wspólnego punktu startu. Liczby
+liczy serwer jak wszystkie zmiany w module (D-111); wspólny rok bazowy
+gwarantuje, że linie startują z tego samego miejsca.
+
+**Odrzucone alternatywy:**
+- Rok bazowy osobno dla każdego miasta (jego pierwszy rok) — linie
+  startowałyby w różnych latach i porównanie by się rozjechało.
+- Skala logarytmiczna cen — trudniejsza do czytania dla odbiorcy raportu.
