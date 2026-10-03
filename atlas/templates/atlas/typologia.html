@@ -63,6 +63,11 @@
     <div class="zlozony__przewijanie"><table class="tabela" id="profile"></table></div>
     <h4>Gminy</h4>
     <div class="zlozony__przewijanie zlozony__ranking"><table class="tabela" id="gminy"></table></div>
+    {# ETAP 177: najbliższe gminy w przestrzeni tych samych wskaźników #}
+    <h4>Gminy podobne do wybranej</h4>
+    <label class="rzad">Gmina <select id="pole-podobne" aria-label="Gmina, do której szukamy podobnych"></select></label>
+    <p id="opis-podobnych" class="wyciszony opis-raportu">Odległość w odchyleniach standardowych wszystkich wskaźników naraz (0 — identyczny profil). „Różni się najbardziej” — wskaźnik o największej różnicy i jej kierunek.</p>
+    <div class="zlozony__przewijanie"><table class="tabela" id="podobne"></table></div>
 </section>
 {% endif %}
 {% endblock %}
@@ -71,6 +76,7 @@
 <script>
     const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
     const URL_WYNIK = "{{ url_for('atlas.typologia_wynik') }}";
+    const URL_PODOBNE = "{{ url_for('atlas.typologia_podobne') }}";
     const URL_MAPA = "{{ url_for('atlas.typologia_mapa') }}";
     const URL_CSV = "{{ url_for('atlas.typologia_csv') }}";
     const URL_SYLWETKI = "{{ url_for('atlas.typologia_sylwetki') }}";

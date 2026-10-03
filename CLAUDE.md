@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 176 (MPZP: punkty z Terenu na karcie działki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap176_20261003.zip
-Testy: 590 passed / 0 failed
+ETAP: 177 (Atlas: gminy podobne do wybranej — zamknięty)
+Ostatni ZIP: releases/warsztat_etap177_20261003.zip
+Testy: 592 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

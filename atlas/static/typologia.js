@@ -95,6 +95,12 @@
             gminy.appendChild(tr);
         }
 
+        // ETAP 177: lista gmin do „podobnych” (alfabetycznie)
+        const wyborPodobnych = document.getElementById("pole-podobne");
+        wyborPodobnych.replaceChildren(new Option("— wybierz gminę —", ""),
+            ...[...d.gminy].sort((a, b) => a.nazwa.localeCompare(b.nazwa, "pl")).map((g) => new Option(g.nazwa, g.teryt)));
+        wyborPodobnych.dataset.zapytanie = zapytanie;
+        document.getElementById("podobne").replaceChildren();
         document.getElementById("link-mapy").href = `${URL_MAPA}?${zapytanie}`;
         document.getElementById("link-csv").href = `${URL_CSV}?${zapytanie}`;
         const mapa = document.getElementById("mapa");
@@ -105,6 +111,34 @@
         mapa.src = `${URL_MAPA}?${zapytanie}`;
         document.getElementById("wynik").hidden = false;
     }
+
+    document.getElementById("pole-podobne").addEventListener("change", async (e) => {
+        const tabela = document.getElementById("podobne");
+        tabela.replaceChildren();
+        if (!e.target.value) return;
+        try {
+            const odpowiedz = await fetch(`${URL_PODOBNE}?${e.target.dataset.zapytanie}&gmina=${e.target.value}`);
+            const d = await odpowiedz.json().catch(() => ({}));
+            if (!odpowiedz.ok) throw new Error(d.blad || `Błąd ${odpowiedz.status}`);
+            const glowa = element("tr");
+            glowa.append(element("th", "", "Gmina"), element("th", "liczba", "Odległość"), element("th", "", "Różni się najbardziej"));
+            for (const n of d.skladowe) glowa.appendChild(element("th", "liczba", n));
+            const wybrana = element("tr", "tabela-bilansu__razem");
+            wybrana.append(element("td", "", `${d.gmina.nazwa} (wybrana)`), element("td", "liczba", "0"), element("td", "", ""));
+            for (const x of d.gmina.surowe) wybrana.appendChild(element("td", "liczba", liczba(x, 2)));
+            tabela.replaceChildren(glowa, wybrana);
+            for (const g of d.podobne) {
+                const tr = element("tr");
+                const r = g.najwieksza_roznica;
+                tr.append(element("td", "", g.nazwa), element("td", "liczba", liczba(g.odleglosc, 2)),
+                    element("td", "", `${r.wskaznik} (${r.z > 0 ? "wyżej" : "niżej"} o ${liczba(Math.abs(r.z), 1)} odch.)`));
+                for (const x of g.surowe) tr.appendChild(element("td", "liczba", liczba(x, 2)));
+                tabela.appendChild(tr);
+            }
+        } catch (blad) {
+            pokazBlad(blad.message);
+        }
+    });
 
     async function policz(zdarzenie) {
         zdarzenie.preventDefault();

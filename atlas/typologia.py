@@ -101,6 +101,31 @@ def _dane(skladowe: list[dict]) -> tuple[dict, list[dict], list[str], list[list[
     return nazwy_gmin, wartosci, wspolne, [list(p) for p in zip(*z)]
 
 
+MAKS_PODOBNYCH = 10
+
+
+def podobne(skladowe: list[dict], teryt: str, ile: int = MAKS_PODOBNYCH) -> dict:
+    """ETAP 177: gminy najbardziej podobne do wybranej — najmniejsza
+    odległość euklidesowa w przestrzeni z (te same standaryzowane wskaźniki
+    co typologia). Przy każdej: wskaźnik, którym różni się najbardziej."""
+    nazwy_gmin, wartosci, wspolne, punkty = _dane(skladowe)
+    if teryt not in wspolne:
+        raise BladTypologii("Wybrana gmina nie ma danych wszystkich wskaźników w tym roku.")
+    i0 = wspolne.index(teryt)
+    wynik = []
+    for i, t in enumerate(wspolne):
+        if i == i0:
+            continue
+        roznice = [b - a for a, b in zip(punkty[i0], punkty[i])]
+        j = max(range(len(roznice)), key=lambda n: abs(roznice[n]))
+        wynik.append({"teryt": t, "nazwa": nazwy_gmin[t], "odleglosc": round(_odleglosc(punkty[i0], punkty[i]), 3),
+                      "surowe": [w[t] for w in wartosci],
+                      "najwieksza_roznica": {"wskaznik": skladowe[j]["nazwa"], "z": round(roznice[j], 2)}})
+    wynik.sort(key=lambda g: (g["odleglosc"], g["nazwa"]))
+    return {"gmina": {"teryt": teryt, "nazwa": nazwy_gmin[teryt], "surowe": [w[teryt] for w in wartosci]},
+            "podobne": wynik[:ile], "liczba_gmin": len(wspolne)}
+
+
 def sylwetki(skladowe: list[dict]) -> list[dict]:
     """ETAP 125: średnia sylwetka dla k = 2…8 (o ile gmin wystarcza) — pomoc w wyborze liczby typów."""
     _, _, wspolne, punkty = _dane(skladowe)

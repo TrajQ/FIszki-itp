@@ -3081,3 +3081,18 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: „Inwentaryzacja na karcie działki”
 - `DECISIONS.md`: D-184
+
+## ETAP 177 — Atlas: gminy podobne do wybranej
+Data: 2026-10-03
+Status: zamknięty
+
+- `atlas/typologia.py`: `podobne(skladowe, teryt)` — 10 najbliższych
+  gmin w przestrzeni z (te same standaryzowane wskaźniki co typologia),
+  odległość euklidesowa, wskaźnik największej różnicy z kierunkiem
+- Trasa `/atlas/typologia/podobne` (parametry typologii + `gmina`)
+- Strona typologii: „Gminy podobne do wybranej” — lista gmin z wyniku,
+  tabela z wybraną gminą na górze, odległością, różnicą i wartościami
+- Testy: kolejność podobnych, różnica, brak gminy, trasa; sprawdzone w
+  przeglądarce 1300/390 px
+- Pomoc: „Gminy podobne”
+- `DECISIONS.md`: D-185

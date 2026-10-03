@@ -71,6 +71,18 @@ def typologia_sylwetki():
         return _odpowiedz_bledu(e)
 
 
+@atlas_bp.route("/typologia/podobne")
+def typologia_podobne():
+    """ETAP 177: gminy podobne do wybranej — te same parametry co typologia + gmina=<TERYT>."""
+    try:
+        p = _parametry(request.args)
+        wynik = typologia.podobne(_skladowe(p), str(request.args.get("gmina", "")))
+        wynik["skladowe"] = [_nazwa_wskaznika(s["wskaznik"]) for s in p["skladowe"]]
+        return jsonify(wynik)
+    except (ValueError, BladBDL) as e:
+        return _odpowiedz_bledu(e)
+
+
 @atlas_bp.route("/typologia/mapa.svg")
 def typologia_mapa():
     try:

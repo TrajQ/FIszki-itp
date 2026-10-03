@@ -1417,3 +1417,35 @@ def test_strona_gmin_w_czasie(client, monkeypatch):
     assert "1206032,Wieliczka,60000.0,63000.0" in tekst
     assert client.get("/atlas/gminy-w-czasie?zmienna=x").status_code == 400
     assert 'id="link-gminy-czas"' in client.get("/atlas/").get_data(as_text=True)
+
+
+# ---------- ETAP 177: gminy podobne do wybranej ----------
+
+
+def test_gminy_podobne():
+    from atlas import typologia
+    a = [(1.0, 10.0), (1.2, 11.0), (0.9, 9.5), (5.0, 50.0), (5.2, 52.0), (4.9, 49.0)]
+    skladowe = [{"nazwa": n, "gminy": [{"teryt": f"t{i}", "nazwa": f"g{i}", "wartosc": p[j]} for i, p in enumerate(a)]}
+                for j, n in enumerate(["mieszkania", "dochody"])]
+    w = typologia.podobne(skladowe, "t0", ile=3)
+    assert w["gmina"]["nazwa"] == "g0" and w["liczba_gmin"] == 6
+    assert [g["nazwa"] for g in w["podobne"]] == ["g2", "g1", "g5"]  # najpierw własna grupa
+    assert w["podobne"][0]["odleglosc"] < w["podobne"][2]["odleglosc"]
+    assert w["podobne"][2]["najwieksza_roznica"]["z"] > 0 and w["podobne"][2]["surowe"] == [4.9, 49.0]
+    with pytest.raises(typologia.BladTypologii):
+        typologia.podobne(skladowe, "brak")
+
+
+def test_trasa_podobnych(raport_client, monkeypatch):
+    c = raport_client
+    bdl_id = [f"0112121050{i:02d}" for i in range(6)]
+    wartosci = {1: list(zip(bdl_id, (100.0, 110.0, 90.0, 900.0, 950.0, 880.0))), 2: list(zip(bdl_id, (5.0, 6.0, 5.5, 50.0, 52.0, 49.0)))}
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+        {"bdl_id": b, "teryt": "12" + b[-5:], "nazwa": "gmina " + b[-2:], "wartosc": w} for b, w in wartosci[zid]])
+    w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
+    zapytanie = f"woj={WOJ_RAPORTU}&rok=2023&k=2&s={w1}:1:1,{w2}:1:1"
+    d = c.get(f"/atlas/typologia/podobne?{zapytanie}&gmina=1205003").get_json()
+    assert d["gmina"]["nazwa"] == "gmina 03" and d["podobne"][0]["nazwa"] in ("gmina 04", "gmina 05") and len(d["skladowe"]) == 2
+    assert c.get(f"/atlas/typologia/podobne?{zapytanie}&gmina=9999999").status_code == 400
+    assert 'id="pole-podobne"' in c.get("/atlas/typologia").get_data(as_text=True)

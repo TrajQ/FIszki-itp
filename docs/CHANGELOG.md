@@ -985,3 +985,6 @@
 
 ## ETAP 176 — 2026-10-03
 - MPZP: karta działki pokazuje punkty z inwentaryzacji terenowej do 100 m
+
+## ETAP 177 — 2026-10-03
+- Atlas: gminy podobne do wybranej w przestrzeni kilku wskaźników

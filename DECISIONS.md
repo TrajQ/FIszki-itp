@@ -3706,3 +3706,21 @@ promieni na wydruku.
   danymi i zasadami (CLAUDE.md: bez abstrakcji dla dwóch modułów).
 - Wybór projektu na karcie — karta ma być powtarzalna; projekt widać
   w kolumnie.
+
+## D-185 — Gminy podobne liczone na danych typologii
+Data: 2026-10-03
+
+**Decyzja:** Podobieństwo gmin to odległość euklidesowa w przestrzeni
+standaryzowanych wskaźników — tych samych, które wybrano do typologii
+(`_dane` z ETAPu 124). Funkcja jest w `atlas/typologia.py`, a lista na
+stronie typologii.
+
+**Uzasadnienie:** Standaryzacja z typologii już wyrównuje jednostki
+wskaźników; podobne gminy i typy opisują wtedy ten sam obraz. Wskaźnik
+największej różnicy tłumaczy wynik słowami bez modelu językowego.
+
+**Odrzucone alternatywy:**
+- Podobieństwo w raporcie gminy z jego zestawem wskaźników — w kolejnym
+  ETAPie planu (193) korzysta z tej funkcji.
+- Odległość Mahalanobisa (uwzględnia korelacje wskaźników) — trudniejsza
+  do wyjaśnienia na pierwszym roku; euklidesowa w z jest standardem.
