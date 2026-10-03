@@ -1069,3 +1069,6 @@
 
 ## ETAP 204 — 2026-10-03
 - Dostępność: grupy mieszkańców z pliku (np. wiek) — udział w zasięgu i mediana czasu dla każdej grupy
+
+## ETAP 205 — 2026-10-03
+- Dostępność: raport dzielnic do druku — mapa z konturami i numerami obszarów, tabela

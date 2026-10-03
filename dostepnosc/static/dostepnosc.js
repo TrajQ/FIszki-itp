@@ -334,6 +334,10 @@
             lista.appendChild(li);
         });
         tabela.hidden = status.hidden = true;
+        // ETAP 205: raport dzielnic do druku — jeden plik, bez porównania scenariuszy
+        const linkRaportu = document.getElementById("link-raport-dzielnic");
+        linkRaportu.hidden = !dzielnice.length || !biezacaKolumna || !trybPorownania.hidden;
+        linkRaportu.href = `${URL_RAPORT}-dzielnic?${new URLSearchParams({ plik: NAZWA_PLIKU, kolumna: biezacaKolumna === WARTOSC_LACZNY ? "laczny" : biezacaKolumna })}`;
         if (!dzielnice.length || !biezacaKolumna) return;
         try {
             const odp = await fetch(`${urlPliku}/obszary`, {

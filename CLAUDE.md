@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 204 (Dostępność: grupy mieszkańców — zamknięty)
-Ostatni ZIP: releases/warsztat_etap204_20261003.zip
-Testy: 626 passed / 0 failed
+ETAP: 205 (Dostępność: raport dzielnic do druku — zamknięty)
+Ostatni ZIP: releases/warsztat_etap205_20261003.zip
+Testy: 627 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

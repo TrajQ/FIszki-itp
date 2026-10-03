@@ -511,6 +511,33 @@ def mapa_do_druku():
     return Response(svg, mimetype="image/svg+xml", headers=naglowki)
 
 
+@dostepnosc_bp.route("/raport-dzielnic")
+def raport_dzielnic():
+    """ETAP 205: raport narysowanych dzielnic do druku. Dzielnice są w
+    przeglądarce (localStorage) — strona prosi o tabelę (POST /obszary) i mapę
+    (POST /raport-dzielnic.svg)."""
+    try:
+        r = _raport(request.args.get("plik", ""), request.args.get("kolumna", ""))
+    except KeyError:
+        abort(404, "Plik nie ma takiego wskaźnika.")
+    except BladWynikow as e:
+        abort(422, str(e))
+    return render_template("dostepnosc/raport_dzielnic.html", r=r)
+
+
+@dostepnosc_bp.route("/raport-dzielnic.svg", methods=["POST"])
+def mapa_dzielnic():
+    dane = request.get_json(silent=True) or {}
+    try:
+        r = _raport(str(dane.get("plik") or ""), str(dane.get("kolumna") or ""))
+        svg = druk.mapa_svg(r["analiza"], r["tytul"], r["podtytul"], r["przypisy"], obszary=obszary.kontury_do_mapy(dane.get("obszary")))
+    except KeyError:
+        return jsonify({"blad": "Plik nie ma takiego wskaźnika."}), 404
+    except (BladWynikow, ValueError) as e:
+        return jsonify({"blad": str(e)}), 422
+    return Response(svg, mimetype="image/svg+xml")
+
+
 @dostepnosc_bp.route("/raport")
 def raport():
     try:

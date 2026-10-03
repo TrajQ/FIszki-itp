@@ -70,6 +70,20 @@ def w_obszarach(wyniki: dict, kolumna: str, obszary: list[dict]) -> dict:
     return {"obszary": wynik, "calosc": calosc, "minuty": minuty, "prog": PROG_MIASTA_15}
 
 
+def kontury_do_mapy(obszary: list[dict]) -> list[dict]:
+    """ETAP 205: obszary z przeglądarki → pierścienie zewnętrzne i punkt na
+    numer (wewnątrz wieloboku) do mapy do druku (druk.mapa_svg)."""
+    if not isinstance(obszary, list) or not 1 <= len(obszary) <= MAKS_OBSZAROW:
+        raise BladWynikow(f"Podaj od 1 do {MAKS_OBSZAROW} obszarów.")
+    wynik = []
+    for nr, o in enumerate(obszary, start=1):
+        g = _wielobok((o or {}).get("geometria"))
+        czesci = list(g.geoms) if g.geom_type == "MultiPolygon" else [g]
+        etykieta = g.representative_point()
+        wynik.append({"nr": nr, "pierscienie": [list(c.exterior.coords) for c in czesci], "etykieta": (etykieta.x, etykieta.y)})
+    return wynik
+
+
 def _zmiana(przed: dict, po: dict) -> dict:
     wynik = {"przed": przed, "po": po}
     for klucz in ("srednia", "mediana", "w_zasiegu_proc"):

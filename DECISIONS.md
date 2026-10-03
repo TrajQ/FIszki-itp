@@ -4243,3 +4243,22 @@ grupami bez zakładania progu.
   każdym pliku i stan do zapamiętania.
 - Grupy z GUS (BDL) dla obszaru — dane gminne, nie na siatce H3; podział
   na komórki byłby założeniem.
+
+## D-213 — Raport dzielnic: obszary z przeglądarki, mapa bez nazw
+Data: 2026-10-03
+
+**Decyzja:** Raport dzielnic jest stroną, której skrypt czyta obszary z
+localStorage (jak karta Dzielnice, D-171) i prosi serwer POST-em o tabelę
+i mapę SVG. Na mapie są tylko kontury i numery; nazwy obszarów — w
+tabeli HTML.
+
+**Uzasadnienie:** Obszary nie są zapisywane na serwerze (ETAP 163), więc
+zwykły link GET by ich nie przeniósł. SVG z serwera tylko z liczb i
+kolorów (D-048) — nazwa wpisana przez użytkownika nie trafia do pliku
+SVG; mapa jako obraz z Bloba nie wstawia znaczników do strony.
+
+**Odrzucone alternatywy:**
+- Zapis obszarów w bazie modułu — zmiana modelu danych z ETAPu 163 dla
+  jednego raportu; obszary są własnością przeglądarki i pliku.
+- Obszary w adresie strony — geometria kilku wieloboków przekracza
+  rozsądną długość URL.

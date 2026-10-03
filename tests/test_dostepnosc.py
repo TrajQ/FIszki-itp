@@ -589,3 +589,28 @@ def test_grupy_mieszkancow(client):
     assert [x["nazwa"] for x in analiza["statystyki"]["grupy"]] == ["ludnosc_0_14", "ludnosc_65+"]
     raport = client.get("/dostepnosc/raport?plik=grupy.csv&kolumna=czas_szkola_min").get_data(as_text=True)
     assert "ludnosc_65+" in raport and "33,3%" in raport
+
+
+# ---------- ETAP 205: raport dzielnic do druku ----------
+
+
+def test_raport_dzielnic(client):
+    from dostepnosc import obszary
+    lat, lng = h3.cell_to_latlng(SRODEK)
+    d = 0.01
+    kwadrat = {"type": "Polygon", "coordinates": [[[lng - d, lat - d], [lng + d, lat - d], [lng + d, lat + d], [lng - d, lat + d], [lng - d, lat - d]]]}
+    dwa = {"type": "MultiPolygon", "coordinates": [kwadrat["coordinates"], [[[lng + 2 * d, lat], [lng + 3 * d, lat], [lng + 3 * d, lat + d], [lng + 2 * d, lat]]]]}
+    k = obszary.kontury_do_mapy([{"nazwa": "A", "geometria": kwadrat}, {"nazwa": "B", "geometria": dwa}])
+    assert [x["nr"] for x in k] == [1, 2] and len(k[1]["pierscienie"]) == 2 and len(k[0]["pierscienie"][0]) == 5
+    with pytest.raises(BladWynikow):
+        obszary.kontury_do_mapy([])
+    wgraj(client, csv_testowy())
+    strona = client.get("/dostepnosc/raport-dzielnic?plik=moje.csv&kolumna=czas_przystanek_min").get_data(as_text=True)
+    assert "dostepnosc.dzielnice." in strona and "brak-dzielnic" in strona
+    assert client.get("/dostepnosc/raport-dzielnic?plik=moje.csv&kolumna=nie_ma").status_code == 404
+    odp = client.post("/dostepnosc/raport-dzielnic.svg", json={"plik": "moje.csv", "kolumna": "czas_przystanek_min",
+                                                                "obszary": [{"nazwa": "<Jeżyce>", "geometria": kwadrat}]})
+    svg = odp.get_data(as_text=True)
+    assert odp.mimetype == "image/svg+xml" and 'stroke-width="2.5"' in svg and "obszar (numer z tabeli)" in svg
+    assert "Jeżyce" not in svg  # nazwa obszaru tylko w tabeli HTML
+    assert client.post("/dostepnosc/raport-dzielnic.svg", json={"plik": "moje.csv", "kolumna": "czas_przystanek_min", "obszary": []}).status_code == 422

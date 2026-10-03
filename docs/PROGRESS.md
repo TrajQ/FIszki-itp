@@ -3578,3 +3578,24 @@ Status: zamknięty
   1300/390 px na pliku przykładowym z dodanymi grupami
 - Pomoc: „Dostępność dla dzieci, seniorów i innych grup”
 - `DECISIONS.md`: D-212
+
+## ETAP 205 — Dostępność: raport dzielnic do druku
+Data: 2026-10-03
+Status: zamknięty
+
+- `dostepnosc/druk.py`: `mapa_svg(…, obszary=)` — kontury obszarów i
+  numer w kółku (bez nazw w SVG), pozycja w legendzie
+- `dostepnosc/obszary.py`: `kontury_do_mapy` — pierścienie zewnętrzne
+  (także wieloboki złożone) i punkt na numer wewnątrz obszaru
+- `dostepnosc/routes.py`: `GET /dostepnosc/raport-dzielnic` (strona) i
+  `POST /dostepnosc/raport-dzielnic.svg` (mapa); obszary przysyła
+  przeglądarka (localStorage, ETAP 163), tabela z istniejącego
+  `POST /plik/<nazwa>/obszary`
+- Szablon `raport_dzielnic.html`: mapa jako obraz z Bloba, tabela z
+  nazwami przez `textContent`, opis metody, komunikat bez obszarów
+- Dostępność: link „Raport dzielnic do druku” w karcie Dzielnice (ukryty
+  w porównaniu scenariuszy)
+- Test: kontury, strona, mapa bez nazw, błędy; sprawdzone w przeglądarce
+  1300/390 px
+- Pomoc: akapit o dzielnicach
+- `DECISIONS.md`: D-213

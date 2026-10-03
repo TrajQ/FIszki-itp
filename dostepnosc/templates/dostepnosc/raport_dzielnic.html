@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+
+{% block tytul %}Raport dzielnic — Dostępność — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-dostepnosci{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('dostepnosc.static', filename='dostepnosc.css') }}">{% endblock %}
+
+{# ETAP 205: dzielnice są w przeglądarce (localStorage, ETAP 163) — tabelę i mapę
+   strona pobiera POST-em; nazwy dzielnic tylko w HTML przez textContent, mapa SVG z serwera bez nich. #}
+{% block tresc %}
+<div class="raport-dostepnosci">
+    <div class="raport-dostepnosci__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('dostepnosc.index', plik=r.plik) }}">‹ Dostępność</a>
+        <div class="rzad">
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>
+    </div>
+
+    <p id="brak-dzielnic" class="komunikat" hidden>Brak narysowanych obszarów dla tego pliku. Wróć do Dostępności, w karcie „Dzielnice” narysuj obszary i otwórz raport jeszcze raz.</p>
+    <p id="blad-raportu" class="komunikat komunikat--blad" hidden></p>
+
+    <div id="tresc-raportu" hidden>
+        <img id="mapa-dzielnic" class="raport-dostepnosci__mapa" alt="Mapa: {{ r.tytul }} — obszary z numerami">
+        <section class="raport-dostepnosci__strona">
+            <h2>{{ r.tytul }} — w obszarach</h2>
+            <p class="wyciszony">{{ r.podtytul }}</p>
+            <div class="przewijanie-dzielnic"><table class="tabela" id="tabela-raportu-dzielnic"></table></div>
+            <p id="opis-raportu-dzielnic" class="wyciszony"></p>
+            <p class="przypis">{% for p in r.przypisy %}{{ p }} {% endfor %}</p>
+        </section>
+    </div>
+    {{ stopka_wydruku("Dostępność") }}
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+(function () {
+    "use strict";
+    const PLIK = {{ r.plik | tojson }};
+    const KOLUMNA = {{ r.kolumna | tojson }};
+    const fmt = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 1 });
+    const tys = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
+    let dzielnice = [];
+    try {
+        dzielnice = JSON.parse(localStorage.getItem(`dostepnosc.dzielnice.${PLIK}`) || "[]"); // ten sam klucz co dostepnosc.js
+    } catch (e) {
+        dzielnice = [];
+    }
+    if (!dzielnice.length) {
+        document.getElementById("brak-dzielnic").hidden = false;
+        return;
+    }
+    const blad = (tekst) => {
+        const el = document.getElementById("blad-raportu");
+        el.textContent = tekst;
+        el.hidden = false;
+    };
+    const komorka = (tr, tekst, klasa) => {
+        const td = document.createElement("td");
+        td.className = klasa || "";
+        td.textContent = tekst;
+        tr.appendChild(td);
+    };
+    const naglowki = { "Content-Type": "application/json" };
+    Promise.all([
+        fetch(`{{ url_for('dostepnosc.index') }}plik/${encodeURIComponent(PLIK)}/obszary`, { method: "POST", headers: naglowki, body: JSON.stringify({ kolumna: KOLUMNA, obszary: dzielnice }) })
+            .then(async (o) => { const d = await o.json(); if (!o.ok) throw new Error(d.blad || `Błąd ${o.status}`); return d; }),
+        fetch("{{ url_for('dostepnosc.mapa_dzielnic') }}", { method: "POST", headers: naglowki, body: JSON.stringify({ plik: PLIK, kolumna: KOLUMNA, obszary: dzielnice }) })
+            .then(async (o) => { if (!o.ok) throw new Error((await o.json().catch(() => ({}))).blad || `Błąd ${o.status}`); return o.blob(); }),
+    ]).then(([w, mapa]) => {
+        document.getElementById("mapa-dzielnic").src = URL.createObjectURL(mapa);
+        const tabela = document.getElementById("tabela-raportu-dzielnic");
+        const ludnosc = w.obszary.some((o) => o.mieszkancy !== undefined);
+        const glowa = document.createElement("tr");
+        const kolumny = [["Nr", "liczba"], ["Obszar", ""], ["Komórki", "liczba"], ...(ludnosc ? [["Mieszkańcy", "liczba"]] : []),
+            [w.minuty ? "Średni czas" : "Średnia", "liczba"], ["Mediana", "liczba"], ...(w.minuty ? [[`W ${w.prog} min`, "liczba"]] : [])];
+        for (const [t, k] of kolumny) {
+            const th = document.createElement("th");
+            th.className = k;
+            th.textContent = t;
+            glowa.appendChild(th);
+        }
+        tabela.replaceChildren(glowa);
+        const jedn = w.minuty ? " min" : "";
+        const wiersz = (nr, nazwa, o, klasa) => {
+            const tr = document.createElement("tr");
+            tr.className = klasa || "";
+            komorka(tr, nr, "liczba");
+            komorka(tr, nazwa);
+            komorka(tr, tys.format(o.komorek), "liczba");
+            if (ludnosc) komorka(tr, o.mieszkancy === undefined ? "—" : tys.format(o.mieszkancy), "liczba");
+            komorka(tr, o.srednia === undefined ? "—" : fmt.format(o.srednia) + jedn, "liczba");
+            komorka(tr, o.mediana === undefined ? "—" : fmt.format(o.mediana) + jedn, "liczba");
+            if (w.minuty) komorka(tr, o.w_zasiegu_proc === undefined ? "—" : `${fmt.format(o.w_zasiegu_proc)}%`, "liczba");
+            tabela.appendChild(tr);
+        };
+        w.obszary.forEach((o, i) => wiersz(String(i + 1), o.nazwa, o));
+        wiersz("", "cały plik", w.calosc, "tabela-dzielnic__calosc");
+        document.getElementById("opis-raportu-dzielnic").textContent =
+            "Komórka należy do obszaru, gdy jej środek leży w wieloboku. " +
+            (ludnosc ? "Średnia ważona liczbą mieszkańców komórek" : "Średnia z komórek") +
+            (w.minuty ? `; „W ${w.prog} min” — udział ${ludnosc ? "mieszkańców" : "komórek"} z czasem dojścia do ${w.prog} min.` : ".");
+        document.getElementById("tresc-raportu").hidden = false;
+    }).catch((e) => blad(e.message));
+})();
+</script>
+{% endblock %}

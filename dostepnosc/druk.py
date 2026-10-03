@@ -68,7 +68,10 @@ def dlugosc_podzialki_m(m_na_px: float, maks_px: float = 180) -> int:
     return pasujace[-1] if pasujace else LADNE_DLUGOSCI_M[0]
 
 
-def mapa_svg(analiza: dict, tytul: str, podtytul: str, przypisy: list[str], punkty: list[dict] | None = None) -> str:
+def mapa_svg(analiza: dict, tytul: str, podtytul: str, przypisy: list[str], punkty: list[dict] | None = None,
+             obszary: list[dict] | None = None) -> str:
+    """obszary (ETAP 205): [{"nr", "pierscienie": [[(lon, lat), …]], "etykieta": (lon, lat)}] —
+    kontury narysowanych dzielnic z numerem; nazwy są w tabeli raportu, nie w SVG."""
     cechy = analiza["geojson"]["features"]
     if not cechy:
         raise ValueError("Brak komórek z wartością do narysowania.")
@@ -105,6 +108,14 @@ def mapa_svg(analiza: dict, tytul: str, podtytul: str, przypisy: list[str], punk
         czesci.append(f'<polygon points="{wsp_px}" fill="{kolor}" stroke="{kolor}"/>')
     czesci.append("</g>")
 
+    for o in obszary or []:
+        for pierscien in o["pierscienie"]:
+            wsp_px = " ".join(f"{x:.1f},{y:.1f}" for x, y in (punkt(lon, lat) for lon, lat in pierscien))
+            czesci.append(f'<polygon points="{wsp_px}" fill="none" stroke="#1d1d1f" stroke-width="2.5" stroke-linejoin="round"/>')
+        x, y = punkt(*o["etykieta"])
+        czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="12" fill="#ffffff" stroke="#1d1d1f" stroke-width="2"/>')
+        czesci.append(f'<text x="{x:.1f}" y="{y + 4.5:.1f}" font-size="13" font-weight="700" fill="#1d1d1f" text-anchor="middle">{int(o["nr"])}</text>')
+
     for p in punkty or []:
         x, y = punkt(p["lon"], p["lat"])
         czesci.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="10" fill="#5e5ce6" stroke="#ffffff" stroke-width="2"/>')
@@ -122,6 +133,10 @@ def mapa_svg(analiza: dict, tytul: str, podtytul: str, przypisy: list[str], punk
         czesci.append(f'<rect x="{lx}" y="{wy}" width="28" height="18" rx="3" fill="{kolor}"/>')
         czesci.append(f'<text x="{lx + 38}" y="{wy + 14}" font-size="13" fill="#1d1d1f">{escape(opis)}</text>')
         czesci.append(f'<text x="{SZEROKOSC - MARGINES}" y="{wy + 14}" font-size="12" fill="#6e6e73" text-anchor="end">{ile}</text>')
+    if obszary:
+        wy = ly + 22 + (len(legenda(analiza)) + (1.5 if punkty else 0.5)) * 28
+        czesci.append(f'<rect x="{lx + 2}" y="{wy}" width="24" height="18" fill="none" stroke="#1d1d1f" stroke-width="2.5"/>')
+        czesci.append(f'<text x="{lx + 38}" y="{wy + 14}" font-size="13" fill="#1d1d1f">obszar (numer z tabeli)</text>')
     if punkty:
         wy = ly + 22 + (len(legenda(analiza)) + 0.5) * 28
         czesci.append(f'<circle cx="{lx + 14}" cy="{wy + 9}" r="9" fill="#5e5ce6"/>')
