@@ -159,7 +159,7 @@
             {% for p in ze_zdjeciem %}
             <figure>
                 <img src="{{ p.url_zdjecia }}" alt="Zdjęcie punktu {{ p.nr }}" loading="lazy">
-                <figcaption><strong>{{ p.nr }}.</strong> {% for x in projekt.pola if x.nazwa in p.wartosci %}{{ wartosc(p.wartosci[x.nazwa]) }}{{ ', ' if not loop.last }}{% endfor %}{% if p.uwagi %} — {{ p.uwagi | truncate(80) }}{% endif %}</figcaption>
+                <figcaption><strong>{{ p.nr }}.</strong> {% for x in projekt.pola if x.nazwa in p.wartosci %}{{ wartosc(p.wartosci[x.nazwa]) }}{{ ', ' if not loop.last }}{% endfor %}{% if p.uwagi %} — {{ p.uwagi | truncate(80) }}{% endif %}{% if p.zdjecie_opis or p.kierunek_opis %}<br><span class="podpis-zdjecia">{{ p.zdjecie_opis or "" }}{% if p.kierunek_opis %}{{ ' · ' if p.zdjecie_opis }}<span title="Kierunek zdjęcia">widok {{ p.kierunek_opis }}</span>{% endif %}</span>{% endif %}</figcaption>
             </figure>
             {% endfor %}
         </div>

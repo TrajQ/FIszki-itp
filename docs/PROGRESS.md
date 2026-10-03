@@ -3869,3 +3869,26 @@ Status: zamknięty
   przeliczony program)
 - Pomoc: „Własne założenia programu (normatywy)”
 - `DECISIONS.md`: D-226
+
+## ETAP 219 — Teren: opis i kierunek zdjęcia, podpisy w galerii raportu
+Data: 2026-10-03
+Status: zamknięty
+
+- Formularz na telefon: po zdjęciu pola „Opis zdjęcia” (do 200 znaków) i
+  „Kierunek patrzenia” (8 stron świata, stopnie 0–315); zapisywane tylko
+  przy zdjęciu, czyszczone z formularzem
+- `teren/projekt.py`: `KIERUNKI`, `STRZALKI`, `kierunek_zdjecia`
+  (walidacja), `opis_kierunku`; `odczytaj_plik` czyta nowe klucze
+  (starsze pliki bez nich — puste), `sprawdz_poprawke` przyjmuje je
+  opcjonalnie
+- `teren/baza.py`: kolumny `zdjecie_opis`, `zdjecie_kierunek`
+  (`KOLUMNY_DODANE` — stare bazy dostają je przy starcie)
+- Strona projektu: podpis w dymku, pola w panelu „Popraw” (gdy punkt ma
+  zdjęcie); raport: podpis zdjęcia „opis · widok ↗ NE”
+- Eksport: nowe kolumny w CSV/ODS, GeoJSON i GeoPackage
+- Testy: plik (walidacja, brak zdjęcia, starszy plik), import → strona,
+  raport, eksporty, poprawka; raport bez opisu nie pisze „None” (błąd
+  znaleziony w przeglądarce); sprawdzone w przeglądarce 1300/390 px
+  (dymek, panel, raport, formularz na telefon)
+- Pomoc: „Opis i kierunek zdjęcia”
+- `DECISIONS.md`: D-227

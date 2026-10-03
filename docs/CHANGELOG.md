@@ -1111,3 +1111,6 @@
 
 ## ETAP 218 — 2026-10-03
 - Osiedle: własne zestawy założeń programu do użycia w wielu koncepcjach
+
+## ETAP 219 — 2026-10-03
+- Teren: opis i kierunek zdjęcia z telefonu, w raporcie, dymku i eksportach

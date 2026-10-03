@@ -769,3 +769,51 @@ def test_gpkg_projektu(client, tmp_path):
         assert 'attr="stan"' in qml and 'value="dobry"' in qml
     finally:
         db.close()
+
+
+# ---------- ETAP 219: opis i kierunek zdjęcia ----------
+
+def test_opis_i_kierunek_zdjecia_w_pliku():
+    wynik = odczytaj_plik(plik("K", punkt(zdjecie_opis="  elewacja  frontowa ", zdjecie_kierunek=45),
+                               punkt("bezzdjecia1", zdjecie=None, zdjecie_opis="nie zapisze się", zdjecie_kierunek=90),
+                               punkt("starszy0001")), "K", POLA)
+    assert (wynik[0]["zdjecie_opis"], wynik[0]["zdjecie_kierunek"]) == ("elewacja frontowa", 45)
+    assert (wynik[1]["zdjecie_opis"], wynik[1]["zdjecie_kierunek"]) == ("", None)  # bez zdjęcia — pomijamy
+    assert (wynik[2]["zdjecie_opis"], wynik[2]["zdjecie_kierunek"]) == ("", None)  # plik ze starszego formularza
+    for zly in (30, 360, "pn", True, 45.5):
+        with pytest.raises(BladDanych, match="kierunek zdjęcia"):
+            odczytaj_plik(plik("K", punkt(zdjecie_kierunek=zly)), "K", POLA)
+    with pytest.raises(BladDanych, match="opis zdjęcia"):
+        odczytaj_plik(plik("K", punkt(zdjecie_opis="x" * 201)), "K", POLA)
+
+
+def test_opis_i_kierunek_zdjecia_w_warsztacie(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    html = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert 'id="zdjecie-kierunek"' in html and '<option value="315">NW (315°)</option>' in html
+    klucz = re.search(r'"klucz": "([^"]+)"', html).group(1)
+    tresc = json.dumps(plik(klucz, punkt(zdjecie_opis="brama wjazdowa", zdjecie_kierunek=135))).encode()
+    client.post("/teren/projekty/1/import", content_type="multipart/form-data", data={"plik": (io.BytesIO(tresc), "t.json")})
+    p = client.get("/teren/projekty/1/punkty").get_json()[0]
+    assert (p["zdjecie_opis"], p["zdjecie_kierunek"], p["kierunek_opis"]) == ("brama wjazdowa", 135, "↘ SE")
+    raport = client.get("/teren/projekty/1/raport").get_data(as_text=True)
+    assert "brama wjazdowa" in raport and "widok ↘ SE" in raport
+    wl = json.loads(client.get("/teren/projekty/1.geojson").data)["features"][0]["properties"]
+    assert (wl["zdjecie_opis"], wl["zdjecie_kierunek"]) == ("brama wjazdowa", 135)
+    assert "zdjecie_opis;zdjecie_kierunek" in client.get("/teren/projekty/1.csv").get_data(as_text=True).splitlines()[0]
+
+    url = f"/teren/projekty/1/punkty/{p['id']}"
+    p = client.put(url, json={"wartosci": {}, "uwagi": "", "zdjecie_opis": "brama", "zdjecie_kierunek": None}).get_json()
+    assert (p["zdjecie_opis"], p["zdjecie_kierunek"], p["kierunek_opis"]) == ("brama", None, "")
+    p = client.put(url, json={"wartosci": {}, "uwagi": "x"}).get_json()  # bez kluczy — podpis zostaje
+    assert p["zdjecie_opis"] == "brama"
+    assert client.put(url, json={"wartosci": {}, "zdjecie_kierunek": 10}).status_code == 400
+
+
+def test_raport_bez_opisu_zdjecia_nie_pisze_none(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    klucz = re.search(r'"klucz": "([^"]+)"', client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)).group(1)
+    tresc = json.dumps(plik(klucz, punkt(zdjecie_kierunek=45))).encode()
+    client.post("/teren/projekty/1/import", content_type="multipart/form-data", data={"plik": (io.BytesIO(tresc), "t.json")})
+    raport = client.get("/teren/projekty/1/raport").get_data(as_text=True)
+    assert "widok ↗ NE" in raport and "None" not in raport

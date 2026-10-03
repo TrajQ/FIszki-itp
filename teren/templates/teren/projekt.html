@@ -91,6 +91,10 @@
             </div>
             <div id="poprawka-pola" class="poprawka-pola"></div>
             <label>Uwagi <textarea id="poprawka-uwagi" rows="2" maxlength="2000"></textarea></label>
+            <div id="poprawka-zdjecie" class="rzad" hidden>
+                <label>Opis zdjęcia <input id="poprawka-zdjecie-opis" maxlength="200"></label>
+                <label>Kierunek <select id="poprawka-zdjecie-kierunek"><option value="">—</option>{% for st, nazwa in kierunki.items() %}<option value="{{ st }}">{{ nazwa }}</option>{% endfor %}</select></label>
+            </div>
             <div class="rzad">
                 <button id="poprawka-przesun" type="button" class="przycisk--drugi">✥ Przesuń na mapie</button>
                 <span id="poprawka-polozenie" class="wyciszony"></span>

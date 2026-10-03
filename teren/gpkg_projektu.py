@@ -14,7 +14,7 @@ from mpzp.uklady import pl1992
 from .raport import KOLOR_BRAK, KOLOR_JEDNOLITY, kolory_pola
 
 EPSG = 2180
-STALE_KOLUMNY = ("id", "czas", "dokladnosc_m", "polozenie_reczne", "uwagi", "zdjecie")
+STALE_KOLUMNY = ("id", "czas", "dokladnosc_m", "polozenie_reczne", "uwagi", "zdjecie", "zdjecie_opis", "zdjecie_kierunek")
 
 
 def _kolumny_pol(pola: list[dict]) -> dict[str, str]:
@@ -45,14 +45,16 @@ def projekt_gpkg(projekt: dict, punkty: list[dict]) -> bytes:
     pola = projekt["pola"]
     kolumna = _kolumny_pol(pola)
     kolumny = [("id", "INTEGER"), ("czas", "TEXT"), ("dokladnosc_m", "REAL"), ("polozenie_reczne", "INTEGER"),
-               *[(kolumna[p["nazwa"]], "REAL" if p["typ"] == "liczba" else "TEXT") for p in pola], ("uwagi", "TEXT"), ("zdjecie", "TEXT")]
+               *[(kolumna[p["nazwa"]], "REAL" if p["typ"] == "liczba" else "TEXT") for p in pola], ("uwagi", "TEXT"), ("zdjecie", "TEXT"),
+               ("zdjecie_opis", "TEXT"), ("zdjecie_kierunek", "INTEGER")]  # ETAP 219: kierunek w stopniach od północy
     obiekty = []
     for pt in punkty:
         if pt["lat"] is None:
             continue
         xy = pl1992(pt["lat"], pt["lng"])
         atrybuty = {"id": pt["id"], "czas": pt["czas"], "dokladnosc_m": pt["dokladnosc_m"], "polozenie_reczne": int(bool(pt["polozenie_reczne"])),
-                    "uwagi": pt["uwagi"], "zdjecie": pt["zdjecie"]}
+                    "uwagi": pt["uwagi"], "zdjecie": pt["zdjecie"],
+                    "zdjecie_opis": pt.get("zdjecie_opis"), "zdjecie_kierunek": pt.get("zdjecie_kierunek")}
         for p in pola:
             atrybuty[kolumna[p["nazwa"]]] = _wartosc(pt["wartosci"].get(p["nazwa"]), p["typ"])
         obiekty.append((Point(xy["y"], xy["x"]), atrybuty))  # PL-1992: x = północ, y = wschód; w GIS: X = wschód

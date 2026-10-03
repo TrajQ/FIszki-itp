@@ -578,3 +578,14 @@ button.przycisk--niebezpieczny-tekst {
 .kosz-projektow form {
     margin: 0;
 }
+
+/* ETAP 219: podpis i kierunek zdjęcia w dymku i w raporcie */
+.dymek__podpis {
+    margin: 4px 0 6px;
+    font-size: 0.85rem;
+    color: var(--tekst-drugi);
+}
+
+.podpis-zdjecia {
+    font-style: italic;
+}

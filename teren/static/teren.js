@@ -78,6 +78,8 @@
             img.alt = "Zdjęcie punktu";
             a.appendChild(img);
             div.appendChild(a);
+            const podpis = [p.zdjecie_opis, p.kierunek_opis && `widok ${p.kierunek_opis}`].filter(Boolean).join(" · ");
+            if (podpis) div.appendChild(element("p", "dymek__podpis", podpis)); // ETAP 219
         }
         const lista = element("dl", "dymek__wartosci");
         for (const pole of PROJEKT.pola) {
@@ -341,6 +343,9 @@
         document.getElementById("poprawka-opis").textContent = new Date(p.czas).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" });
         polaPoprawki.replaceChildren(...PROJEKT.pola.map((pole) => polePoprawki(pole, p.wartosci[pole.nazwa])));
         document.getElementById("poprawka-uwagi").value = p.uwagi;
+        document.getElementById("poprawka-zdjecie").hidden = !p.zdjecie; // ETAP 219
+        document.getElementById("poprawka-zdjecie-opis").value = p.zdjecie_opis || "";
+        document.getElementById("poprawka-zdjecie-kierunek").value = p.zdjecie_kierunek === null || p.zdjecie_kierunek === undefined ? "" : String(p.zdjecie_kierunek);
         opisPolozenia.textContent = p.lat === null ? "punkt bez położenia" : "";
         panelPoprawki.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
@@ -382,6 +387,11 @@
             wartosci[k.dataset.pole] = k.dataset.typ === "liczba" ? Number(k.value) : k.dataset.typ === "tak_nie" ? k.value === "tak" : k.value;
         }
         const cialo = { wartosci, uwagi: document.getElementById("poprawka-uwagi").value };
+        if (poprawiany.zdjecie) {
+            const kierunek = document.getElementById("poprawka-zdjecie-kierunek").value;
+            cialo.zdjecie_opis = document.getElementById("poprawka-zdjecie-opis").value;
+            cialo.zdjecie_kierunek = kierunek === "" ? null : Number(kierunek);
+        }
         if (znacznikPrzesuwania) {
             const { lat, lng } = znacznikPrzesuwania.getLatLng();
             Object.assign(cialo, { lat, lng });

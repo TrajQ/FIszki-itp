@@ -38,6 +38,9 @@ MAKS_DLUGOSC = 200  # nazwa pola, opcja, wartość tekstowa
 MAKS_UWAGI = 2000
 MAKS_PUNKTOW = 3000
 MAKS_ZDJECIE_B = 4 * 1024 * 1024
+# ETAP 219: kierunek zdjęcia — osiem stron świata, w stopniach od północy zgodnie z ruchem wskazówek
+KIERUNKI = {0: "N", 45: "NE", 90: "E", 135: "SE", 180: "S", 225: "SW", 270: "W", 315: "NW"}
+STRZALKI = {0: "↑", 45: "↗", 90: "→", 135: "↘", 180: "↓", 225: "↙", 270: "←", 315: "↖"}
 FORMAT = "warsztat-teren"
 
 # Wzory projektów — tylko propozycja pól, użytkownik może je zmienić.
@@ -225,6 +228,10 @@ def sprawdz_poprawke(dane, pola: list[dict]) -> dict:
         if not (-90 <= lat <= 90 and -180 <= lng <= 180):
             raise BladDanych("Współrzędne poza zakresem.")
         wynik["lat"], wynik["lng"] = lat, lng
+    if "zdjecie_opis" in dane:  # ETAP 219 — klucze opcjonalne, starsze wywołania ich nie wysyłają
+        wynik["zdjecie_opis"] = sprawdz_tekst(dane.get("zdjecie_opis"), "Opis zdjęcia", wymagany=False)
+    if "zdjecie_kierunek" in dane:
+        wynik["zdjecie_kierunek"] = kierunek_zdjecia(dane.get("zdjecie_kierunek"), "Punkt")
     return wynik
 
 
@@ -272,8 +279,25 @@ def odczytaj_plik(dane, klucz_projektu: str, pola: list[dict]) -> list[dict]:
             "wartosci": _wartosci(p.get("wartosci") or {}, pola, opis),
             "uwagi": sprawdz_tekst(p.get("uwagi"), f"{opis}, uwagi", MAKS_UWAGI, wymagany=False),
             "zdjecie": _zdjecie(p.get("zdjecie"), opis),
+            # ETAP 219: opis i kierunek tylko przy zdjęciu (starsze formularze ich nie mają)
+            "zdjecie_opis": sprawdz_tekst(p.get("zdjecie_opis"), f"{opis}, opis zdjęcia", wymagany=False) if p.get("zdjecie") else "",
+            "zdjecie_kierunek": kierunek_zdjecia(p.get("zdjecie_kierunek"), opis) if p.get("zdjecie") else None,
         })
     return wynik
+
+
+def kierunek_zdjecia(wartosc, opis: str) -> int | None:
+    """Kierunek patrzenia aparatu: jedna z ośmiu stron świata (stopnie) albo brak."""
+    if wartosc is None or wartosc == "":
+        return None
+    if isinstance(wartosc, bool) or not isinstance(wartosc, (int, str)) or str(wartosc).strip() not in {str(k) for k in KIERUNKI}:
+        raise BladDanych(f"{opis}: kierunek zdjęcia musi być jedną z wartości {', '.join(map(str, KIERUNKI))} (stopnie od północy).")
+    return int(wartosc)
+
+
+def opis_kierunku(stopnie) -> str:
+    """„↗ NE” do raportu i dymka; pusty tekst, gdy kierunku nie podano."""
+    return f"{STRZALKI[stopnie]} {KIERUNKI[stopnie]}" if stopnie in KIERUNKI else ""
 
 
 # ---------- import punktów z GeoJSON, np. z QGIS (ETAP 133) ----------

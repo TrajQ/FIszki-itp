@@ -18,7 +18,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 from markupsafe import Markup
 
 from . import baza, podklad, porownanie, raport, trasa
-from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, braki, odczytaj_geojson, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
+from .projekt import FORMAT, KIERUNKI, RODZAJE, TYPY_POL, WZORY, BladDanych, braki, odczytaj_geojson, odczytaj_plik, opis_kierunku, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
     "teren",
@@ -119,7 +119,7 @@ def ustaw_rodzaj(projekt_id):
 @teren_bp.route("/projekty/<int:projekt_id>")
 def widok_projektu(projekt_id):
     inne = [p for p in baza.projekty() if p["id"] != projekt_id]  # ETAP 157: do porównania
-    return render_template("teren/projekt.html", projekt=_projekt_albo_404(projekt_id), typy=TYPY_POL, inne=inne)
+    return render_template("teren/projekt.html", projekt=_projekt_albo_404(projekt_id), typy=TYPY_POL, inne=inne, kierunki=KIERUNKI)
 
 
 @teren_bp.route("/projekty/<int:projekt_id>", methods=["PUT"])
@@ -221,7 +221,7 @@ def formularz(projekt_id):
         do_sprawdzenia = _do_sprawdzenia(projekt_id, request.args.get("do_sprawdzenia", ""))
     except ValueError as e:
         return Response(str(e), status=400, mimetype="text/plain")
-    html = render_template("teren/telefon.html", projekt=p, format_pliku=FORMAT, mapa=mapa, do_sprawdzenia=do_sprawdzenia)
+    html = render_template("teren/telefon.html", projekt=p, format_pliku=FORMAT, mapa=mapa, do_sprawdzenia=do_sprawdzenia, kierunki=KIERUNKI)
     return Response(
         html,
         mimetype="text/html",
@@ -259,6 +259,10 @@ def _punkt_dla_strony(projekt_id: int, pt: dict, pola: list[dict]) -> dict:
     wynik["braki"] = braki(pt["wartosci"], pola)  # ETAP 166
     wynik["polozenie_reczne"] = bool(pt["polozenie_reczne"])
     wynik["zdjecie"] = url_for("teren.zdjecie", projekt_id=projekt_id, punkt_id=pt["id"]) if pt["zdjecie"] else None
+    # ETAP 219: podpis i kierunek zdjęcia
+    wynik["zdjecie_opis"] = pt["zdjecie_opis"] or ""
+    wynik["zdjecie_kierunek"] = pt["zdjecie_kierunek"]
+    wynik["kierunek_opis"] = opis_kierunku(pt["zdjecie_kierunek"])
     return wynik
 
 
@@ -307,7 +311,8 @@ def eksport_geojson(projekt_id):
             "geometry": {"type": "Point", "coordinates": [pt["lng"], pt["lat"]]},
             "properties": {"id": pt["id"], "czas": pt["czas"], "dokladnosc_m": pt["dokladnosc_m"],
                            "polozenie_reczne": bool(pt["polozenie_reczne"]), **pt["wartosci"],
-                           "uwagi": pt["uwagi"], "zdjecie": pt["zdjecie"]},
+                           "uwagi": pt["uwagi"], "zdjecie": pt["zdjecie"],
+                           "zdjecie_opis": pt["zdjecie_opis"], "zdjecie_kierunek": pt["zdjecie_kierunek"]},
         }
         for pt in baza.punkty(projekt_id)
         if pt["lat"] is not None
@@ -322,14 +327,15 @@ def eksport_geojson(projekt_id):
 def _wiersze_punktow(p: dict) -> list[list]:
     """Tabela punktów projektu — wspólna dla CSV i ODS (ETAP 189)."""
     nazwy_pol = [pole["nazwa"] for pole in p["pola"]]
-    wiersze = [["id", "czas", "szerokosc", "dlugosc", "dokladnosc_m", "polozenie_reczne", *nazwy_pol, "uwagi", "zdjecie"]]
+    wiersze = [["id", "czas", "szerokosc", "dlugosc", "dokladnosc_m", "polozenie_reczne", *nazwy_pol, "uwagi", "zdjecie", "zdjecie_opis", "zdjecie_kierunek"]]
     for pt in baza.punkty(p["id"]):
         wartosci = []
         for nazwa in nazwy_pol:
             w = pt["wartosci"].get(nazwa, "")
             wartosci.append("tak" if w is True else "nie" if w is False else "; ".join(w) if isinstance(w, list) else w)
         wiersze.append([pt["id"], pt["czas"], pt["lat"], pt["lng"], pt["dokladnosc_m"], "tak" if pt["polozenie_reczne"] else "nie",
-                        *wartosci, pt["uwagi"], pt["zdjecie"] or ""])
+                        *wartosci, pt["uwagi"], pt["zdjecie"] or "",
+                        pt["zdjecie_opis"] or "", "" if pt["zdjecie_kierunek"] is None else pt["zdjecie_kierunek"]])
     return wiersze
 
 
@@ -418,6 +424,7 @@ def raport_projektu(projekt_id):
     for pt in punkty:
         pt["kolor"] = raport.kolor_punktu(pt, pole, kolory)
         pt["url_zdjecia"] = url_for("teren.zdjecie", projekt_id=projekt_id, punkt_id=pt["id"]) if pt["zdjecie"] else None
+        pt["kierunek_opis"] = opis_kierunku(pt["zdjecie_kierunek"])  # ETAP 219
     czasy = [pt["czas"] for pt in punkty]
     # ETAP 179: tabela krzyżowa dwóch pytań jednokrotnego wyboru (?krzyz_a=&krzyz_b=)
     krzyzowe = [x for x in p["pola"] if x["typ"] in raport.POLA_KRZYZOWE]

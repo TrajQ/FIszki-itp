@@ -4517,3 +4517,23 @@ jest jawna: wartości widać w polach i w raporcie („Przyjęte założenia”)
   starych wariantów zmieniałyby się po cichu.
 - Zestawy w pliku poza bazą — trudniej o walidację i kopię zapasową;
   baza modułu jest w kopii.
+
+## D-227 — Kierunek zdjęcia wybierany ręcznie z ośmiu stron świata
+Data: 2026-10-03
+
+**Decyzja:** Kierunek patrzenia aparatu użytkownik wybiera z listy ośmiu
+stron świata (zapis w stopniach: 0, 45 … 315). Formularz nie odczytuje
+kompasu telefonu ani metadanych EXIF zdjęcia.
+
+**Uzasadnienie:** Formularz jest plikiem HTML otwieranym bez serwera;
+dostęp do czujnika orientacji różni się między przeglądarkami (na części
+wymaga osobnego pozwolenia) i nie da się go tu sprawdzić na prawdziwych
+telefonach. Zdjęcie jest zmniejszane na płótnie, więc EXIF i tak znika.
+Dokładność ośmiu kierunków wystarcza do opisu dokumentacji fotograficznej
+(„widok na NE”); wartość jest jawna i poprawialna w Warsztacie.
+
+**Odrzucone alternatywy:**
+- Odczyt kompasu (DeviceOrientation) — niesprawdzalne tutaj, zależne od
+  przeglądarki i kalibracji; może wrócić po testach na telefonach.
+- Dowolne stopnie wpisywane ręcznie — fałszywa precyzja przy ocenie „na
+  oko”, wolniejsze w terenie.

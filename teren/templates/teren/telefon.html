@@ -35,7 +35,7 @@
     button.glowny { width: 100%; background: var(--akcent-wypelnienie); color: #fff; font-size: 17px; }
     button:disabled { opacity: 0.5; }
     label { display: block; margin: 12px 0 4px; font-size: 14px; font-weight: 600; }
-    input[type=text], input[type=number], input[type=search], textarea {
+    input[type=text], input[type=number], input[type=search], textarea, select {
         width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--linia); border-radius: 10px;
         background: var(--tlo); color: var(--tekst); font: inherit; }
     textarea { min-height: 70px; resize: vertical; }
@@ -98,6 +98,12 @@
     <label for="zdjecie">Zdjęcie</label>
     <input id="zdjecie" type="file" accept="image/*" capture="environment">
     <img id="podglad" class="podglad" alt="Podgląd zdjęcia" hidden>
+    <div id="opis-zdjecia" hidden>
+        <label for="zdjecie-opis">Opis zdjęcia</label>
+        <input id="zdjecie-opis" type="text" maxlength="200" placeholder="np. elewacja frontowa">
+        <label for="zdjecie-kierunek">Kierunek patrzenia</label>
+        <select id="zdjecie-kierunek"><option value="">— nie podaję —</option>{% for st, nazwa in kierunki.items() %}<option value="{{ st }}">{{ nazwa }} ({{ st }}°)</option>{% endfor %}</select>
+    </div>
     {% if ankieta %}</details>{% endif %}
 
     <label for="uwagi">Uwagi</label>
@@ -342,6 +348,7 @@
             URL.revokeObjectURL(url);
             $("podglad").src = zdjecie;
             $("podglad").hidden = false;
+            $("opis-zdjecia").hidden = false;
         };
         obraz.onerror = () => komunikat("Nie udało się odczytać zdjęcia.", "blad");
         obraz.src = url;
@@ -379,6 +386,10 @@
             uid: nowyUid(), lat, lng, dokladnosc_m: dokladnosc, czas: new Date().toISOString(),
             wartosci, uwagi: $("uwagi").value.trim(), zdjecie,
         };
+        if (zdjecie) { // ETAP 219: podpis i kierunek tylko przy zdjęciu
+            punkt.zdjecie_opis = $("zdjecie-opis").value.trim();
+            punkt.zdjecie_kierunek = $("zdjecie-kierunek").value === "" ? null : Number($("zdjecie-kierunek").value);
+        }
         try {
             await transakcja("readwrite", (s) => s.add(punkt));
         } catch (e) {
@@ -387,6 +398,7 @@
         zatrzymajGps(); // odczyt zużyty w tym punkcie — następny punkt pobiera położenie od nowa
         $("formularz").reset();
         $("podglad").hidden = true;
+        $("opis-zdjecia").hidden = true;
         zdjecie = null;
         polozenie = null;
         pokazPolozenie();

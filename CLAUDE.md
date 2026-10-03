@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 218 (Osiedle: własne zestawy założeń — zamknięty)
-Ostatni ZIP: releases/warsztat_etap218_20261003.zip
-Testy: 645 passed / 0 failed
+ETAP: 219 (Teren: opis i kierunek zdjęcia — zamknięty)
+Ostatni ZIP: releases/warsztat_etap219_20261003.zip
+Testy: 648 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -47,6 +47,9 @@ KOLUMNY_DODANE = {
         "polozenie_reczne": "INTEGER NOT NULL DEFAULT 0",
         # ETAP 72: czas ostatniej poprawki w Warsztacie
         "data_poprawki": "TEXT",
+        # ETAP 219: podpis zdjęcia i kierunek patrzenia aparatu (stopnie: 0, 45, … 315)
+        "zdjecie_opis": "TEXT",
+        "zdjecie_kierunek": "INTEGER",
     },
     "projekty": {
         # ETAP 83: obszar prac [południe, zachód, północ, wschód] — podkład mapy w formularzu
@@ -220,11 +223,14 @@ def zapisz_punkty(projekt_id: int, nowe: list[dict]) -> tuple[int, int]:
                     plik.write(p["zdjecie"])
                 zapisane_zdjecia.append(nazwa_zdjecia)
             db.execute(
-                """INSERT INTO punkty (projekt_id, uid, lat, lng, dokladnosc_m, czas, wartosci, uwagi, zdjecie, data_importu)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                """INSERT INTO punkty (projekt_id, uid, lat, lng, dokladnosc_m, czas, wartosci, uwagi, zdjecie, data_importu,
+                                     zdjecie_opis, zdjecie_kierunek)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (projekt_id, p["uid"], p["lat"], p["lng"], p["dokladnosc_m"], p["czas"],
                  json.dumps(p["wartosci"], ensure_ascii=False), p["uwagi"], nazwa_zdjecia,
-                 datetime.now().isoformat(timespec="seconds")),
+                 datetime.now().isoformat(timespec="seconds"),
+                 (p.get("zdjecie_opis") or None) if nazwa_zdjecia else None,
+                 p.get("zdjecie_kierunek") if nazwa_zdjecia else None),
             )
             dodane += 1
         db.commit()
@@ -262,6 +268,9 @@ def popraw_punkt(projekt_id: int, punkt_id: int, poprawka: dict) -> bool:
             "UPDATE punkty SET lat = ?, lng = ?, dokladnosc_m = NULL, polozenie_reczne = 1 WHERE id = ?",
             (poprawka["lat"], poprawka["lng"], punkt_id),
         )
+    for kolumna in ("zdjecie_opis", "zdjecie_kierunek"):  # ETAP 219; nazwy kolumn ze stałej listy
+        if kolumna in poprawka:
+            db.execute(f"UPDATE punkty SET {kolumna} = ? WHERE id = ?", (poprawka[kolumna] if poprawka[kolumna] != "" else None, punkt_id))
     db.commit()
     return True
 
