@@ -996,7 +996,7 @@ def raport_client(client, monkeypatch):
     szeregi = {1: [{"rok": 2013, "wartosc": 1000.0}, {"rok": 2023, "wartosc": 800.0}], 2: [{"rok": 2023, "wartosc": 40.0}]}
     monkeypatch.setattr(bdl, "szereg_gminy", lambda zid, gid: szeregi[zid])
     wartosci = {1: [(GMINA, 800.0), ("011212105033", 5000.0)], 2: [(GMINA, 40.0), ("011212105033", 50.0)]}
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
         {"bdl_id": b, "teryt": b, "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
     return client
 
@@ -1161,7 +1161,7 @@ def test_wskaznik_zlozony_trasy(raport_client, monkeypatch):
     TERYTY = {GMINA: "1261011", "011212105033": "1212033", trzecia: "1212044"}
     wartosci = {1: [(GMINA, 800.0), ("011212105033", 5000.0), (trzecia, 2000.0)],
                 2: [(GMINA, 40.0), ("011212105033", 50.0), (trzecia, 10.0)]}
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
         {"bdl_id": b, "teryt": TERYTY[b], "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
     assert "co najmniej dwa" in c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)
     w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
@@ -1222,7 +1222,7 @@ def test_wskaznik_zlozony_hellwig_na_stronie(raport_client, monkeypatch):
     w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
     trzecia = "011212105044"
     wartosci = {1: [(GMINA, 800.0), ("011212105033", 5000.0), (trzecia, 2000.0)], 2: [(GMINA, 40.0), ("011212105033", 50.0), (trzecia, 10.0)]}
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [{"bdl_id": b, "teryt": b, "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [{"bdl_id": b, "teryt": b, "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
     assert "metoda Hellwiga" in c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)
     wynik = c.get(f"/atlas/wskaznik-zlozony/wynik?woj={WOJ_RAPORTU}&rok=2023&metoda=hellwig&s={w1}:1:1,{w2}:-1:1").get_json()
     assert wynik["metoda"] == "hellwig" and wynik["gminy"][0]["wartosc"] <= 1
@@ -1279,7 +1279,7 @@ def test_typologia_trasy(raport_client, monkeypatch):
     bdl_id = [f"0112121050{i:02d}" for i in range(6)]
     wartosci = {1: [(b, v) for b, v in zip(bdl_id, (100.0, 110.0, 90.0, 900.0, 950.0, 880.0))],
                 2: [(b, v) for b, v in zip(bdl_id, (5.0, 6.0, 5.5, 50.0, 52.0, 49.0))]}
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
         {"bdl_id": b, "teryt": "12" + b[-5:], "nazwa": "gmina " + b[-2:], "wartosc": w} for b, w in wartosci[zid]])
     assert "co najmniej dwa" in c.get("/atlas/typologia").get_data(as_text=True)
     w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
@@ -1317,7 +1317,7 @@ def test_trasa_sylwetek(raport_client, monkeypatch):
     c = raport_client
     bdl_id = [f"0112121050{i:02d}" for i in range(6)]
     wartosci = {1: list(zip(bdl_id, (100.0, 110.0, 90.0, 900.0, 950.0, 880.0))), 2: list(zip(bdl_id, (5.0, 6.0, 5.5, 50.0, 52.0, 49.0)))}
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
         {"bdl_id": b, "teryt": "12" + b[-5:], "nazwa": b, "wartosc": w} for b, w in wartosci[zid]])
     w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
     w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
@@ -1440,7 +1440,7 @@ def test_trasa_podobnych(raport_client, monkeypatch):
     c = raport_client
     bdl_id = [f"0112121050{i:02d}" for i in range(6)]
     wartosci = {1: list(zip(bdl_id, (100.0, 110.0, 90.0, 900.0, 950.0, 880.0))), 2: list(zip(bdl_id, (5.0, 6.0, 5.5, 50.0, 52.0, 49.0)))}
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
         {"bdl_id": b, "teryt": "12" + b[-5:], "nazwa": "gmina " + b[-2:], "wartosc": w} for b, w in wartosci[zid]])
     w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
     w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
@@ -1507,7 +1507,7 @@ def test_raport_gminy_podobne(raport_client, monkeypatch):
     assert c.get(f"/atlas/raport-gminy/{GMINA}/podobne").status_code == 400  # pusty zestaw
     gminy = [(GMINA, "1261011", "Kraków", 800.0, 40.0), ("011212105033", "1212033", "Alwernia", 5000.0, 50.0),
              ("011212105034", "1212034", "Bliska", 820.0, 41.0), ("011212105035", "1212035", "Daleka", 9000.0, 900.0)]
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
         {"bdl_id": b, "teryt": t, "nazwa": n, "wartosc": (v1 if zid == 1 else v2)} for b, t, n, v1, v2 in gminy])
     c.post("/atlas/raport-wskazniki", json={"zmienna": 1})
     c.post("/atlas/raport-wskazniki", json={"zmienna": 2})
@@ -1539,7 +1539,7 @@ def test_stabilnosc_rankingu():
 def test_trasa_stabilnosci(raport_client, monkeypatch):
     c = raport_client
     teryty = {GMINA: "1261011", "011212105033": "1212033", "011212105044": "1212044"}
-    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
         {"bdl_id": b, "teryt": t, "nazwa": t, "wartosc": ((rok - 2011) * 10 if b == GMINA else (i + 1) * 10) + zid} for i, (b, t) in enumerate(teryty.items())])
     w1 = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
     w2 = c.post("/atlas/raport-wskazniki", json={"zmienna": 2}).get_json()["id"]
@@ -1549,3 +1549,46 @@ def test_trasa_stabilnosci(raport_client, monkeypatch):
     assert next(g for g in d["gminy"] if g["teryt"] == "1261011")["zmiana"] == 2  # z 3. miejsca na 1.
     assert c.get(f"/atlas/wskaznik-zlozony/lata?{zapytanie}&lata=2023").status_code == 400
     assert 'id="formularz-lat"' in c.get("/atlas/wskaznik-zlozony").get_data(as_text=True)
+
+
+# ---------- ETAP 215: powiaty ----------
+
+
+def test_granice_powiatow_z_gmin(tmp_path, monkeypatch):
+    from shapely.geometry import box, mapping, shape
+
+    # powiat 1206: dwie gminy obok siebie z wąską szczeliną (jak po osobnym uproszczeniu); 1261: miasto (jedna gmina)
+    gminy = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {"teryt": "1206012", "nazwa": "A"}, "geometry": mapping(box(19.0, 50.0, 19.1, 50.1))},
+        {"type": "Feature", "properties": {"teryt": "1206022", "nazwa": "B"}, "geometry": mapping(box(19.10005, 50.0, 19.2, 50.1))},
+        {"type": "Feature", "properties": {"teryt": "1261011", "nazwa": "Kraków"}, "geometry": mapping(box(19.9, 50.0, 20.0, 50.1))},
+    ]}
+    wywolania = []
+    monkeypatch.setattr(granice, "granice_gmin", lambda teryt, folder: wywolania.append(teryt) or gminy)
+    k = granice.granice_powiatow("12", str(tmp_path))
+    assert [c["properties"]["teryt"] for c in k["features"]] == ["1206", "1261"]
+    assert [c["properties"]["nazwa"] for c in k["features"]] == ["", "Kraków"]
+    powiat = shape(k["features"][0]["geometry"])
+    assert powiat.geom_type == "Polygon" and not list(powiat.interiors)  # szczelina domknięta — jeden wielobok
+    assert powiat.area == pytest.approx(0.02, rel=0.01)
+    granice.granice_powiatow("12", str(tmp_path))
+    assert wywolania == ["12"]  # drugi raz z pliku cache
+
+
+def test_dane_dla_powiatow(client, monkeypatch):
+    wywolania = []
+
+    def wartosci(zid, rok, woj, poziom="gminy"):
+        wywolania.append(poziom)
+        return [{"bdl_id": f"0112{i:08d}", "teryt": f"12{i:02d}", "nazwa": f"Powiat {i}", "wartosc": 100.0 * i} for i in range(1, 6)]
+
+    monkeypatch.setattr(atlas_routes, "_wartosci", wartosci)
+    monkeypatch.setattr(atlas_routes, "_wojewodztwa", lambda: [{"bdl_id": "011200000000", "nazwa": "MAŁOPOLSKIE", "teryt": "12"}])
+    monkeypatch.setattr(atlas_routes, "_opis_zmiennej", lambda *a: {"id": 1, "nazwa": "ludność", "jednostka": "osoba"})
+    d = client.get("/atlas/dane?zmienna=1&rok=2023&woj=011200000000&poziom=powiaty").get_json()
+    assert d["poziom"] == "powiaty" and [g["teryt"] for g in d["gminy"]][:2] == ["1205", "1204"] and wywolania == ["powiaty"]
+    assert client.get("/atlas/dane?zmienna=1&rok=2023&woj=011200000000&poziom=wsie").status_code == 400
+    csv_tekst = client.get("/atlas/eksport.csv?zmienna=1&rok=2023&woj=011200000000&poziom=powiaty").get_data(as_text=True)
+    assert "Powiat 5" in csv_tekst
+    monkeypatch.setattr(atlas_routes.granice, "granice_powiatow", lambda teryt, folder: {"type": "FeatureCollection", "features": []})
+    assert client.get("/atlas/granice-powiatow/12").status_code == 200 and client.get("/atlas/granice-powiatow/x1").status_code == 400

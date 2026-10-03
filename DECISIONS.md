@@ -4444,3 +4444,23 @@ modułów. Decyzje „co i jakim kolorem” zostają w modułach, z tymi samymi
   QML, łatwo o rozjazd przy poprawce.
 - Szablony Jinja dla QML — styl to dane, nie strona; f-stringi z
   `quoteattr` są krótsze i testowane jako poprawny XML.
+
+## D-223 — Granice powiatów z połączenia gmin, nie z osobnej warstwy PRG
+Data: 2026-10-03
+
+**Decyzja:** Granice powiatów liczymy, łącząc gminy z tej samej warstwy
+PRG, z której Atlas bierze kartogram gmin (A03); powiat = gminy o
+wspólnych czterech pierwszych cyfrach TERYT.
+
+**Uzasadnienie:** Nazwy warstwy powiatów i jej pól w usłudze PRG nie dało
+się sprawdzić (usługa niedostępna w środowisku pracy), a zasada „nie
+zgaduj” wyklucza wpisanie jej z pamięci. Połączenie gmin daje granice
+zgodne z kartogramem gmin co do metra i nie wymaga drugiego pobrania.
+Szczeliny po osobnym uproszczeniu sąsiednich gmin domykamy buforem
+±0,0002° (ok. 15–20 m) — poniżej rozdzielczości mapy województwa.
+
+**Odrzucone alternatywy:**
+- Warstwa powiatów z PRG — niesprawdzona nazwa; do rozważenia, gdy
+  będzie można potwierdzić usługę.
+- Osobny moduł / strona dla powiatów — ten sam interfejs Atlasu działa,
+  gdy dane mają ten sam kształt (lista jednostek z TERYT i wartością).

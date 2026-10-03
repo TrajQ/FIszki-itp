@@ -3788,3 +3788,24 @@ Status: zamknięty
   i obszary, układ; sprawdzone w przeglądarce 1300/390 px
 - Pomoc: zdania przy eksporcie Terenu i Cen
 - `DECISIONS.md`: D-222
+
+## ETAP 215 — Atlas: powiaty zamiast gmin — dane i granice (serwer)
+Data: 2026-10-03
+Status: zamknięty
+
+- `atlas/routes.py`: parametr `poziom` (`gminy` domyślnie albo `powiaty`,
+  `POZIOMY`) w `_parametry_zapytania`; `_wartosci`, `_wartosci_wskaznika`
+  i `_policz_dane` przyjmują poziom — powiaty z `bdl.wartosci_dla_powiatow`
+  (ETAP 103, TERYT 4-znakowy); wynik ma klucz `poziom`; eksport CSV/ODS i
+  wydruk działają tak samo (ten sam słownik parametrów)
+- `atlas/granice.py`: `granice_powiatow` — powiaty jako połączenie gmin z
+  tych samych granic PRG (TERYT gminy zaczyna się od TERYT powiatu);
+  domknięcie szczelin po osobnym uproszczeniu gmin (bufor ±0,0002°),
+  usunięcie resztkowych dziur, cache w `instance/atlas/granice/`
+- Trasa `/atlas/granice-powiatow/<teryt_woj>`
+- Przełącznik na stronie Atlasu i kartogram — ETAP 216
+- Testy: łączenie gmin ze szczeliną, nazwa miasta na prawach powiatu,
+  cache, dane i CSV dla powiatów, błędny poziom; atrapy `_wartosci` w
+  testach Atlasu przyjmują poziom; strona Atlasu sprawdzona w
+  przeglądarce bez zmian 1300/390 px
+- `DECISIONS.md`: D-223

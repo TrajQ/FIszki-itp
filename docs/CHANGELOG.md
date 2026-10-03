@@ -1099,3 +1099,6 @@
 
 ## ETAP 214 — 2026-10-03
 - Teren i Ceny: GeoPackage ze stylami dla QGIS (punkty projektu; transakcje w klasach ceny i obszary)
+
+## ETAP 215 — 2026-10-03
+- Atlas: dane i granice powiatów (podstawa przełącznika gminy/powiaty)

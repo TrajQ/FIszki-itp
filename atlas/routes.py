@@ -22,6 +22,7 @@ atlas_bp = Blueprint(
 )
 
 MIN_DLUGOSC_FRAZY = 3
+POZIOMY = ("gminy", "powiaty")  # ETAP 215
 
 
 @atlas_bp.route("/")
@@ -172,6 +173,18 @@ def granice_wojewodztwa(teryt_woj):
     return jsonify(kolekcja)
 
 
+@atlas_bp.route("/granice-powiatow/<teryt_woj>")
+def granice_powiatow(teryt_woj):
+    """ETAP 215: powiaty województwa z połączonych gmin (atlas/granice.py)."""
+    if len(teryt_woj) != 2 or not teryt_woj.isdigit():
+        return jsonify({"blad": "Kod TERYT województwa to dwie cyfry."}), 400
+    try:
+        kolekcja = granice.granice_powiatow(teryt_woj, os.path.join(folder_modulu(), "granice"))
+    except granice.BladGranic as e:
+        return jsonify({"blad": str(e)}), 502
+    return jsonify(kolekcja)
+
+
 @atlas_bp.route("/tlo-wojewodztw")
 def tlo_wojewodztw():
     """Granice wszystkich województw — tło mapy zamiast kafelków OSM."""
@@ -235,7 +248,11 @@ def _parametry_zapytania(zrodlo) -> dict:
             raise ValueError("rok_bazowy musi być liczbą.")
         if rok_bazowy >= rok:
             raise ValueError("Rok bazowy musi być wcześniejszy niż rok badany.")
-    return {"zmienna_id": zmienna_id, "rok": rok, "woj_bdl_id": woj, "rok_bazowy": rok_bazowy, **_parametry_wzgledne(zrodlo, zmienna_id)}
+    poziom = str(zrodlo.get("poziom") or "gminy")  # ETAP 215: gminy albo powiaty województwa
+    if poziom not in POZIOMY:
+        raise ValueError("Parametr poziom: gminy albo powiaty.")
+    return {"zmienna_id": zmienna_id, "rok": rok, "woj_bdl_id": woj, "rok_bazowy": rok_bazowy, "poziom": poziom,
+            **_parametry_wzgledne(zrodlo, zmienna_id)}
 
 
 def _parametry_wzgledne(zrodlo, zmienna_id: int) -> dict:
@@ -270,18 +287,23 @@ def _opis_zmiennej(zmienna_id: int, mianownik: int | None, mnoznik: int) -> dict
     }
 
 
-def _wartosci_wskaznika(zmienna_id: int, rok: int, woj_bdl_id: str, mianownik: int | None, mnoznik: int) -> list[dict]:
-    gminy = _wartosci(zmienna_id, rok, woj_bdl_id)
+def _wartosci_wskaznika(zmienna_id: int, rok: int, woj_bdl_id: str, mianownik: int | None, mnoznik: int, poziom: str = "gminy") -> list[dict]:
+    gminy = _wartosci(zmienna_id, rok, woj_bdl_id, poziom)
     if mianownik is None:
         return gminy
-    return statystyki.podziel(gminy, _wartosci(mianownik, rok, woj_bdl_id), mnoznik)
+    return statystyki.podziel(gminy, _wartosci(mianownik, rok, woj_bdl_id, poziom), mnoznik)
 
 
 def _wojewodztwa() -> list[dict]:
     return z_cache("wojewodztwa", lambda: [asdict(j) for j in bdl.wojewodztwa()])
 
 
-def _wartosci(zmienna_id: int, rok: int, woj_bdl_id: str) -> list[dict]:
+def _wartosci(zmienna_id: int, rok: int, woj_bdl_id: str, poziom: str = "gminy") -> list[dict]:
+    """Wartości zmiennej w jednostkach województwa — gminach albo (ETAP 215) powiatach.
+    Powiaty mają 4-znakowy TERYT (województwo + powiat) — jak w granicach z granice.granice_powiatow."""
+    if poziom == "powiaty":
+        return z_cache(f"dane-pow:{zmienna_id}:{rok}:{woj_bdl_id}",
+                       lambda: [asdict(w) for w in bdl.wartosci_dla_powiatow(zmienna_id, rok, woj_bdl_id)])
     return z_cache(
         f"dane:{zmienna_id}:{rok}:{woj_bdl_id}",
         lambda: [asdict(w) for w in bdl.wartosci_dla_gmin(zmienna_id, rok, woj_bdl_id)],
@@ -295,6 +317,7 @@ def _policz_dane(
     rok_bazowy: int | None = None,
     mianownik: int | None = None,
     mnoznik: int = 1,
+    poziom: str = "gminy",
 ) -> dict:
     wojewodztwo = next((w for w in _wojewodztwa() if w["bdl_id"] == woj_bdl_id), None)
     if wojewodztwo is None:
@@ -302,7 +325,7 @@ def _policz_dane(
 
     zmienna = _opis_zmiennej(zmienna_id, mianownik, mnoznik)
     gminy = sorted(
-        _wartosci_wskaznika(zmienna_id, rok, woj_bdl_id, mianownik, mnoznik),
+        _wartosci_wskaznika(zmienna_id, rok, woj_bdl_id, mianownik, mnoznik, poziom),
         key=lambda g: g["wartosc"],
         reverse=True,
     )
@@ -311,16 +334,17 @@ def _policz_dane(
         "zmienna": zmienna,
         "rok": rok,
         "wojewodztwo": wojewodztwo,
+        "poziom": poziom,  # ETAP 215: lista „gminy” zawiera wtedy powiaty (ten sam kształt danych)
         "gminy": gminy,
         "statystyki": statystyki.statystyki(gminy),
         "progi_klas": statystyki.progi_klas([g["wartosc"] for g in gminy]),
         "klasyfikacja": statystyki.klasyfikuj([g["wartosc"] for g in gminy]),
     }
     if mianownik is not None:  # ETAP 153: iloraz lokalizacji z surowych wartości, nie ze średniej wskaźników
-        wynik["lq"] = statystyki.iloraz_lokalizacji(_wartosci(zmienna_id, rok, woj_bdl_id), _wartosci(mianownik, rok, woj_bdl_id))
+        wynik["lq"] = statystyki.iloraz_lokalizacji(_wartosci(zmienna_id, rok, woj_bdl_id, poziom), _wartosci(mianownik, rok, woj_bdl_id, poziom))
     if rok_bazowy is not None:
         porownanie = statystyki.porownaj(
-            gminy, _wartosci_wskaznika(zmienna_id, rok_bazowy, woj_bdl_id, mianownik, mnoznik)
+            gminy, _wartosci_wskaznika(zmienna_id, rok_bazowy, woj_bdl_id, mianownik, mnoznik, poziom)
         )
         wynik["porownanie"] = {
             "rok_bazowy": rok_bazowy,

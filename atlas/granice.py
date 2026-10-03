@@ -19,7 +19,7 @@ import os
 import xml.etree.ElementTree as ET
 
 import requests
-from shapely.geometry import MultiPolygon, Polygon, mapping
+from shapely.geometry import MultiPolygon, Polygon, mapping, shape
 from shapely.ops import unary_union
 
 from dane.siec import opis_bledu_sieci
@@ -52,6 +52,43 @@ def granice_gmin(teryt_wojewodztwa: str, folder_cache: str) -> dict:
         raise BladGranic(f"PRG nie zwrócił żadnej gminy dla województwa {teryt_wojewodztwa}.")
 
     os.makedirs(folder_cache, exist_ok=True)
+    with open(sciezka, "w", encoding="utf-8") as plik:
+        json.dump(kolekcja, plik)
+    return kolekcja
+
+
+# ETAP 215: powiaty z połączonych gmin — gmina 3064011 należy do powiatu 3064
+DOMKNIECIE_SZCZELIN = 0.0002  # stopnie, ok. 15–20 m: szczeliny po osobnym uproszczeniu sąsiednich gmin
+MIN_POLE_DZIURY = 1e-6  # stopnie² (ok. 0,007 km²) — mniejsze otwory to resztki szczelin, nie enklawy
+
+
+def _bez_drobnych_dziur(geometria):
+    czesci = list(geometria.geoms) if geometria.geom_type == "MultiPolygon" else [geometria]
+    oczyszczone = [Polygon(p.exterior, [r for r in p.interiors if Polygon(r).area > MIN_POLE_DZIURY]) for p in czesci]
+    return oczyszczone[0] if len(oczyszczone) == 1 else MultiPolygon(oczyszczone)
+
+
+def granice_powiatow(teryt_wojewodztwa: str, folder_cache: str) -> dict:
+    """GeoJSON powiatów województwa jako połączenie gmin (TERYT gminy zaczyna
+    się od TERYT powiatu). Bez osobnej warstwy PRG — z tych samych granic
+    gmin co kartogram gmin, więc granice obu poziomów się pokrywają."""
+    sciezka = os.path.join(folder_cache, f"powiaty_{teryt_wojewodztwa}.geojson")
+    if os.path.exists(sciezka):
+        with open(sciezka, encoding="utf-8") as plik:
+            return json.load(plik)
+    po_powiecie: dict[str, list] = {}
+    nazwy_gmin: dict[str, list[str]] = {}
+    for cecha in granice_gmin(teryt_wojewodztwa, folder_cache)["features"]:
+        teryt = cecha["properties"]["teryt"][:4]
+        po_powiecie.setdefault(teryt, []).append(shape(cecha["geometry"]))
+        nazwy_gmin.setdefault(teryt, []).append(cecha["properties"]["nazwa"])
+    cechy = []
+    for teryt in sorted(po_powiecie):
+        g = unary_union([x.buffer(DOMKNIECIE_SZCZELIN) for x in po_powiecie[teryt]]).buffer(-DOMKNIECIE_SZCZELIN)
+        nazwa = nazwy_gmin[teryt][0] if len(nazwy_gmin[teryt]) == 1 else ""  # miasto na prawach powiatu = jedna gmina
+        cechy.append({"type": "Feature", "properties": {"teryt": teryt, "nazwa": nazwa},
+                      "geometry": mapping(_bez_drobnych_dziur(g).simplify(TOLERANCJA_UPRASZCZANIA / 2, preserve_topology=True))})
+    kolekcja = {"type": "FeatureCollection", "features": cechy}
     with open(sciezka, "w", encoding="utf-8") as plik:
         json.dump(kolekcja, plik)
     return kolekcja
