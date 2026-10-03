@@ -4003,3 +4003,20 @@ serwerze wymagałoby nowej tabeli i sprzątania.
 **Odrzucone alternatywy:**
 - Pamięć podręczna wyników listy — oszczędza zapytania, ale dokłada stan
   bez wyraźnej potrzeby.
+
+## D-201 — Podobne gminy w raporcie z zestawu raportu, w jednym roku
+Data: 2026-10-03
+
+**Decyzja:** W raporcie gminy podobieństwo liczy się z tego samego
+zestawu wskaźników co tabela raportu, w jednym roku — najnowszym, w
+którym badana gmina ma wszystkie wskaźniki.
+
+**Uzasadnienie:** Czytelnik raportu widzi te same wskaźniki w tabeli i w
+podobieństwie, więc wynik da się wyjaśnić. Jeden rok dla wszystkich
+wskaźników jest warunkiem standaryzacji (porównujemy gminy w tym samym
+czasie); najnowszy wspólny rok to kompromis między aktualnością a
+kompletnością.
+
+**Odrzucone alternatywy:**
+- Każdy wskaźnik z jego ostatniego roku — mieszałoby lata w jednym
+  profilu gminy.

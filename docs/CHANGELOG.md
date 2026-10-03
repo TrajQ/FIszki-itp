@@ -1033,3 +1033,6 @@
 
 ## ETAP 192 — 2026-10-03
 - MPZP: lista działek do druku i jako arkusz ODS
+
+## ETAP 193 — 2026-10-03
+- Atlas: raport gminy pokazuje gminy o podobnym profilu wskaźników

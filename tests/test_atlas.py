@@ -1497,3 +1497,20 @@ def test_eksport_ods_atlasu(client):
     tekst = doc.toxml()
     assert "Kraków" in tekst and 'office:value="804237.0"' in tekst and "Bank Danych Lokalnych" in tekst
     assert client.get("/atlas/eksport.ods?zmienna=x").status_code == 400
+
+
+# ---------- ETAP 193: gminy podobne w raporcie gminy ----------
+
+
+def test_raport_gminy_podobne(raport_client, monkeypatch):
+    c = raport_client
+    assert c.get(f"/atlas/raport-gminy/{GMINA}/podobne").status_code == 400  # pusty zestaw
+    gminy = [(GMINA, "1261011", "Kraków", 800.0, 40.0), ("011212105033", "1212033", "Alwernia", 5000.0, 50.0),
+             ("011212105034", "1212034", "Bliska", 820.0, 41.0), ("011212105035", "1212035", "Daleka", 9000.0, 900.0)]
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj: [
+        {"bdl_id": b, "teryt": t, "nazwa": n, "wartosc": (v1 if zid == 1 else v2)} for b, t, n, v1, v2 in gminy])
+    c.post("/atlas/raport-wskazniki", json={"zmienna": 1})
+    c.post("/atlas/raport-wskazniki", json={"zmienna": 2})
+    d = c.get(f"/atlas/raport-gminy/{GMINA}/podobne").get_json()
+    assert d["gmina"]["nazwa"] == "Kraków" and d["podobne"][0]["nazwa"] == "Bliska" and d["rok"] == 2023 and len(d["skladowe"]) == 2
+    assert 'id="sekcja-podobnych"' in c.get(f"/atlas/raport-gminy/{GMINA}").get_data(as_text=True)

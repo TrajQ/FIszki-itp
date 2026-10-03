@@ -3360,3 +3360,19 @@ Status: zamknięty
   w przeglądarce 1300/390 px
 - Pomoc: akapit o liście działek
 - `DECISIONS.md`: D-200
+
+## ETAP 193 — Atlas: gminy o podobnym profilu w raporcie gminy
+Data: 2026-10-03
+Status: zamknięty
+
+- Trasa `/atlas/raport-gminy/<id>/podobne` — wskaźniki zestawu raportu
+  (co najmniej 2) w najnowszym roku, w którym gmina ma dane wszystkich,
+  `typologia.podobne` (ETAP 177), 5 najbliższych gmin
+- Raport gminy: sekcja „Gminy o podobnym profilu” wczytywana po tabeli
+  (odległość i wskaźnik największej różnicy); bez danych — ukryta.
+  Trend (prognoza z R²) był w raporcie od ETAPu 92, więc ETAP dokłada
+  tylko podobieństwo
+- Test: trasa (pusty zestaw, kolejność podobnych, rok); sprawdzone w
+  przeglądarce 1300/390 px
+- Pomoc: akapit „Gminy podobne”
+- `DECISIONS.md`: D-201

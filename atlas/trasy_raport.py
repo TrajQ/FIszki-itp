@@ -209,6 +209,33 @@ def raport_gminy_wskaznik(gmina_bdl_id, wskaznik_id):
         return jsonify({"blad": str(e)}), 502
 
 
+@atlas_bp.route("/raport-gminy/<gmina_bdl_id>/podobne")
+def raport_gminy_podobne(gmina_bdl_id):
+    """ETAP 193: gminy województwa o najbliższym profilu wskaźników raportu
+    (ta sama metoda co w typologii, ETAP 177), w najnowszym roku, w którym
+    gmina ma dane wszystkich wskaźników."""
+    from . import typologia
+
+    wskazniki = baza.wskazniki_raportu()
+    if len(wskazniki) < 2:
+        return jsonify({"blad": "Podobne gminy liczymy z co najmniej dwóch wskaźników zestawu raportu."}), 400
+    try:
+        gmina, wojewodztwo = _gmina_albo_404(gmina_bdl_id)
+        ostatnie = [s["rok"] if (s := _podsumowanie(w, gmina_bdl_id)) else None for w in wskazniki]
+        if None in ostatnie:
+            return jsonify({"blad": "Gmina nie ma danych wszystkich wskaźników zestawu."}), 404
+        rok = min(ostatnie)
+        skladowe = [{"nazwa": _nazwa_wskaznika(w),
+                     "gminy": routes._wartosci_wskaznika(w["zmienna_id"], rok, wojewodztwo["bdl_id"], w["mianownik_id"], w["mnoznik"])}
+                    for w in wskazniki]
+        wynik = typologia.podobne(skladowe, gmina["teryt"], ile=5)
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    except typologia.BladTypologii as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify({**wynik, "rok": rok, "skladowe": [s["nazwa"] for s in skladowe]})
+
+
 @atlas_bp.route("/raport-gminy/<gmina_bdl_id>/opis", methods=["POST"])
 def raport_gminy_opis(gmina_bdl_id):
     """Charakterystyka gminy przez Gemini z faktów policzonych tutaj —

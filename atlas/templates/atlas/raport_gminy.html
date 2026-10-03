@@ -70,6 +70,13 @@
         </table>
         <p class="wyciszony przypis">Miejsce: 1 = najwyższa wartość wśród gmin województwa w tym samym roku. Zmiana: od najstarszego roku z ostatnich {{ lat_wstecz }} lat, dla którego GUS ma dane. „→ rok: ~wartość” pod trendem: ekstrapolacja trendu liniowego z tych lat na 5 lat naprzód — co będzie, jeśli dotychczasowa zmiana się utrzyma (nie prognoza demograficzna GUS); „trend niestabilny”, gdy R² &lt; 0,7.</p>
 
+        {# ETAP 193: gminy o podobnym profilu — liczy serwer (atlas/typologia.podobne) #}
+        <section class="raport-gminy__podobne stos" id="sekcja-podobnych" hidden>
+            <h3>Gminy o podobnym profilu</h3>
+            <p id="opis-podobnych" class="wyciszony przypis"></p>
+            <div class="przewijanie-tabeli"><table class="tabela" id="tabela-podobnych"></table></div>
+        </section>
+
         <section class="raport-gminy__opis stos">
             <div class="rzad rzad--miedzy">
                 <h3>Charakterystyka</h3>
@@ -94,6 +101,7 @@
     const URL_WSKAZNIK = "{{ url_for('atlas.raport_gminy_wskaznik', gmina_bdl_id=gmina.bdl_id, wskaznik_id=0) }}".replace(/0$/, "");
     const URL_WSKAZNIK_DRUGIEJ = {{ (url_for('atlas.raport_gminy_wskaznik', gmina_bdl_id=porownanie[0].bdl_id, wskaznik_id=0)[:-1]) | tojson if porownanie else 'null' }};
     const URL_OPIS = "{{ url_for('atlas.raport_gminy_opis', gmina_bdl_id=gmina.bdl_id) }}";
+    const URL_PODOBNE = "{{ url_for('atlas.raport_gminy_podobne', gmina_bdl_id=gmina.bdl_id) }}";
     const URL_WOJEWODZTWA = "{{ url_for('atlas.wojewodztwa') }}";
     const URL_GMINY = "{{ url_for('atlas.gminy_wojewodztwa', woj_bdl_id='000000000000') }}";
     const GMINA_ID = "{{ gmina.bdl_id }}";

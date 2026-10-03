@@ -180,5 +180,32 @@
     if (mapaPolozenia.complete && mapaPolozenia.naturalWidth === 0) brakMapy();
     else mapaPolozenia.addEventListener("error", brakMapy);
 
+    // ETAP 193: gminy o podobnym profilu wskaźników raportu
+    async function wczytajPodobne() {
+        try {
+            const odp = await fetch(URL_PODOBNE);
+            const d = await odp.json();
+            if (!odp.ok || !d.podobne.length) return;
+            const tabela = document.getElementById("tabela-podobnych");
+            const glowa = element("tr");
+            glowa.append(element("th", "", "Gmina"), element("th", "liczba", "Odległość"), element("th", "", "Różni się najbardziej"));
+            tabela.replaceChildren(glowa);
+            const liczba = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
+            for (const g of d.podobne) {
+                const r = g.najwieksza_roznica;
+                const tr = element("tr");
+                tr.append(element("td", "", g.nazwa), element("td", "liczba", liczba.format(g.odleglosc)),
+                    element("td", "", `${r.wskaznik} (${r.z > 0 ? "wyżej" : "niżej"} o ${liczba.format(Math.abs(r.z))} odch.)`));
+                tabela.appendChild(tr);
+            }
+            document.getElementById("opis-podobnych").textContent =
+                `Najbliższe w przestrzeni ${d.skladowe.length} wskaźników zestawu raportu (standaryzowanych), ${d.rok} r., spośród ${d.liczba_gmin} gmin województwa. Odległość 0 — identyczny profil.`;
+            document.getElementById("sekcja-podobnych").hidden = false;
+        } catch (e) {
+            // sekcja dodatkowa — bez niej raport jest kompletny
+        }
+    }
+
     wczytajWszystkie();
+    wczytajPodobne();
 })();
