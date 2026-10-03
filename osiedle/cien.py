@@ -19,6 +19,11 @@ budynki mogą stać przy samej krawędzi terenu.
    i przesłanianie (§ 13) na projekcie budynków.
 
 To przybliżenie do porównania wariantów, nie analiza nasłonecznienia.
+
+ETAP 195: gdy koncepcja ma narysowane budynki (ETAP 173), cień liczymy od
+budynków (obrys i ich kondygnacje) zamiast od całych terenów zabudowy —
+to już nie najgorszy przypadek, tylko konkretny rysunek. Cień na samych
+budynkach nie wlicza się do strefy.
 """
 
 import math
@@ -27,7 +32,7 @@ from shapely.affinity import scale, translate
 from shapely.geometry import Polygon, mapping
 from shapely.ops import unary_union
 
-from .bilans import _w_metrach, metry_na_stopien, wczytaj_tereny
+from .bilans import _w_metrach, metry_na_stopien, wczytaj_budynki, wczytaj_tereny
 from . import wskazniki as wsk
 
 WYSOKOSC_KONDYGNACJI_M = 3.0
@@ -75,9 +80,10 @@ def analiza(geojson: dict, dzien: str = "rownonoc") -> dict:
     if dzien not in DNI:
         raise BladCienia("Dzień: rownonoc, lato albo zima.")
     obszar, tereny = wczytaj_tereny(geojson)
+    budynki = wczytaj_budynki(geojson)
     for t in tereny:
         t["parametry"] = wsk.parametry_terenu(t["funkcja"], t["wlasciwosci"])
-    wszystko = [t["geometria"] for t in tereny] + ([obszar] if obszar is not None else [])
+    wszystko = [t["geometria"] for t in tereny] + [b["geometria"] for b in budynki] + ([obszar] if obszar is not None else [])
     if not wszystko:
         return {"dzien": DNI[dzien][0], "tereny": [], "zacienione": [], "strefa": None, "slonce": []}
     szerokosc = unary_union(wszystko).centroid.y
@@ -89,12 +95,15 @@ def analiza(geojson: dict, dzien: str = "rownonoc") -> dict:
         slonce.append({"godzina": g, "wysokosc": round(wys, 1), "azymut": round(az, 1)})
 
     granica = _w_metrach(obszar, szerokosc).boundary if obszar is not None else None
+    # źródła cienia: budynki, gdy są narysowane, inaczej tereny zabudowy (najgorszy przypadek)
+    if budynki:
+        zrodla = [("budynek", nr, b["geometria"], b["kondygnacje"]) for nr, b in enumerate(budynki, start=1)]
+    else:
+        zrodla = [(t["funkcja"], nr, t["geometria"], t["parametry"]["kondygnacje"]) for nr, t in enumerate(tereny, start=1) if t["funkcja"] in ("MN", "MW", "U")]
     wyniki, strefy = [], []
-    for nr, t in enumerate(tereny, start=1):
-        if t["funkcja"] not in ("MN", "MW", "U"):
-            continue
-        teren_m = _w_metrach(t["geometria"], szerokosc)
-        wysokosc = t["parametry"]["kondygnacje"] * WYSOKOSC_KONDYGNACJI_M
+    for funkcja, nr, geometria, kondygnacje in zrodla:
+        teren_m = _w_metrach(geometria, szerokosc)
+        wysokosc = kondygnacje * WYSOKOSC_KONDYGNACJI_M
         slady = []
         for s in slonce:
             if s["wysokosc"] <= 0 or wysokosc <= 0:
@@ -108,7 +117,7 @@ def analiza(geojson: dict, dzien: str = "rownonoc") -> dict:
         poludnie = next(s for s in slonce if s["godzina"] == 12)
         wyniki.append({
             "nr": nr,
-            "funkcja": t["funkcja"],
+            "funkcja": funkcja,
             "wysokosc_m": round(wysokosc, 1),
             "cien_w_poludnie_m": round(wysokosc / math.tan(math.radians(poludnie["wysokosc"])), 1) if poludnie["wysokosc"] > 0 and wysokosc > 0 else None,
             # 0 m = teren sięga granicy obszaru (albo ją przecina)
@@ -116,6 +125,8 @@ def analiza(geojson: dict, dzien: str = "rownonoc") -> dict:
         })
 
     strefa = unary_union(strefy) if strefy else None
+    if strefa is not None and budynki:
+        strefa = strefa.difference(unary_union([_w_metrach(b["geometria"], szerokosc) for b in budynki]))
     zacienione = []
     if strefa is not None:
         for nr, t in enumerate(tereny, start=1):
@@ -140,5 +151,6 @@ def analiza(geojson: dict, dzien: str = "rownonoc") -> dict:
         # strefa z powrotem w stopniach — do narysowania na mapie
         "strefa": mapping(scale(strefa, xfact=1 / mx, yfact=1 / my, origin=(0, 0))) if strefa is not None and not strefa.is_empty else None,
         "wysokosc_kondygnacji_m": WYSOKOSC_KONDYGNACJI_M,
+        "zrodlo": "budynki" if budynki else "tereny",  # ETAP 195
     }
 

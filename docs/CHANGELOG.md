@@ -1039,3 +1039,6 @@
 
 ## ETAP 194 — 2026-10-03
 - Atlas: stabilność rankingu wskaźnika złożonego w 2–6 latach (miejsca, rho Spearmana)
+
+## ETAP 195 — 2026-10-03
+- Osiedle: cień liczony od narysowanych budynków (gdy są), zamiast od całych terenów

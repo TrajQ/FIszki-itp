@@ -41,7 +41,7 @@
                 </select>
             </form>
         </div>
-        <p class="wyciszony">{{ cien.dzien }}, szerokość {{ m(cien.szerokosc, 2) }}° N. Najgorszy przypadek: budynki przy krawędzi terenu, wysokość = kondygnacje × {{ m(cien.wysokosc_kondygnacji_m, 0) }} m, godziny 9–15 czasu słonecznego. Numery terenów jak na szkicu.</p>
+        <p class="wyciszony">{{ cien.dzien }}, szerokość {{ m(cien.szerokosc, 2) }}° N. {% if cien.zrodlo == 'budynki' %}Cień od narysowanych budynków (numery jak w karcie „Budynki”){% else %}Najgorszy przypadek: budynki przy krawędzi terenu{% endif %}, wysokość = kondygnacje × {{ m(cien.wysokosc_kondygnacji_m, 0) }} m, godziny 9–15 czasu słonecznego. Numery terenów jak na szkicu.</p>
         <div class="przewijanie-osiedla"><table class="tabela">
             <tr><th>Teren</th><th class="liczba">Wysokość [m]</th><th class="liczba">Cień w południe [m]</th><th class="liczba">Od granicy obszaru [m]</th></tr>
             {% for t in cien.tereny %}<tr><td>{{ t.nr }}. <strong>{{ t.funkcja }}</strong></td><td class="liczba">{{ m(t.wysokosc_m) }}</td><td class="liczba">{{ m(t.cien_w_poludnie_m) if t.cien_w_poludnie_m is not none else '—' }}</td><td class="liczba">{% if t.od_granicy_m is none %}—{% elif t.od_granicy_m == 0 %}0 — sięga granicy{% else %}{{ m(t.od_granicy_m) }}{% endif %}</td></tr>{% endfor %}

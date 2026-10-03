@@ -3393,3 +3393,18 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: „Stabilność rankingu”
 - `DECISIONS.md`: D-202
+
+## ETAP 195 — Osiedle: cień od budynków zamiast od terenów
+Data: 2026-10-03
+Status: zamknięty
+
+- `osiedle/cien.py`: gdy koncepcja ma budynki (ETAP 173), źródłem cienia
+  są obrysy budynków z ich kondygnacjami; bez budynków — jak dotąd tereny
+  MN/MW/U; obrysy budynków odejmowane od strefy cienia; wynik ma klucz
+  `zrodlo` („budynki” albo „tereny”)
+- Osiedle i raport: nagłówek „Budynek”, etykiety „budynek N”, opis źródła
+  cienia nad tabelą
+- Test: cień od budynku krótszy niż od terenu, źródło „budynki”;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Odległości od granicy i cień”
+- `DECISIONS.md`: D-203

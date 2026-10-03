@@ -725,18 +725,19 @@
         }
         const tabela = element("table", "tabela tabela-cienia");
         const glowa = element("tr");
-        glowa.append(element("th", "", "Teren"), element("th", "liczba", "Wysokość"), element("th", "liczba", "Cień w południe"), element("th", "liczba", "Od granicy obszaru"));
+        glowa.append(element("th", "", w.zrodlo === "budynki" ? "Budynek" : "Teren"), element("th", "liczba", "Wysokość"), element("th", "liczba", "Cień w południe"), element("th", "liczba", "Od granicy obszaru"));
         tabela.appendChild(glowa);
         for (const t of w.tereny) {
             const tr = element("tr");
             const nazwa = element("td");
-            nazwa.appendChild(wierszTerenu(t.nr, `${t.funkcja} (teren ${t.nr})`));
+            // ETAP 195: przy budynkach numer z karty „Budynki”
+            nazwa.appendChild(t.funkcja === "budynek" ? element("span", "", `budynek ${t.nr}`) : wierszTerenu(t.nr, `${t.funkcja} (teren ${t.nr})`));
             const granica = t.od_granicy_m === null ? "— (brak obszaru)" : t.od_granicy_m === 0 ? "0 m — sięga granicy" : `${formatWsk.format(t.od_granicy_m)} m`;
             tr.append(nazwa, element("td", "liczba", `${formatWsk.format(t.wysokosc_m)} m`),
                 element("td", "liczba", t.cien_w_poludnie_m === null ? "—" : `${formatWsk.format(t.cien_w_poludnie_m)} m`), element("td", "liczba", granica));
             tabela.appendChild(tr);
         }
-        const czesci = [element("p", "wyciszony opis-panelu", `${w.dzien}, szerokość ${formatWsk.format(w.szerokosc)}° N: słońce w południe ${formatWsk.format(w.slonce.find((s) => s.godzina === 12).wysokosc)}° nad horyzontem.`), tabela];
+        const czesci = [element("p", "wyciszony opis-panelu", (w.zrodlo === "budynki" ? "Cień od narysowanych budynków. " : "Najgorszy przypadek: budynki przy krawędzi terenów zabudowy (narysuj budynki, żeby liczyć od nich). ") + `${w.dzien}, szerokość ${formatWsk.format(w.szerokosc)}° N: słońce w południe ${formatWsk.format(w.slonce.find((s) => s.godzina === 12).wysokosc)}° nad horyzontem.`), tabela];
         if (w.tereny.some((t) => t.od_granicy_m === 0)) {
             czesci.push(element("p", "komunikat komunikat--ostrzezenie", "Teren zabudowy sięga granicy obszaru — budynki trzeba będzie odsunąć od granicy działki (minimalne odległości: § 12 warunków technicznych)."));
         }

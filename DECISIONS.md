@@ -4038,3 +4038,22 @@ dwóch rankingów, znana z korelacji w Atlasie (ETAP 25).
 **Odrzucone alternatywy:**
 - Normalizacja na danych ze wszystkich lat naraz — pokazuje zmianę
   poziomu, nie pozycji; to inny wskaźnik (do rozważenia jako dynamika).
+
+## D-203 — Cień od budynków, gdy są narysowane; tereny jako zapas
+Data: 2026-10-03
+
+**Decyzja:** Analiza „Odległości i cień” bierze budynki jako źródło cienia,
+gdy koncepcja ma choć jeden budynek; w przeciwnym razie zostaje
+najgorszy przypadek od całych terenów zabudowy. Nie mieszamy obu źródeł.
+
+**Uzasadnienie:** Obrys budynku z kondygnacjami jest bliższy rzeczywistości
+niż teren zakładający budynek przy samej krawędzi. Mieszanie (część
+terenów z budynkami, część bez) dawałoby strefę trudną do odczytania;
+reguła „są budynki — liczą się budynki” jest prosta do wyjaśnienia w
+opisie nad tabelą.
+
+**Odrzucone alternatywy:**
+- Obie strefy naraz na mapie — dwie nakładające się strefy cienia są
+  nieczytelne na małym ekranie.
+- Przełącznik źródła w interfejsie — dodatkowa decyzja dla użytkownika
+  bez wyraźnej korzyści; tereny bez budynków nadal działają.

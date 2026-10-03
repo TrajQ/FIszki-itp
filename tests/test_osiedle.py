@@ -635,3 +635,22 @@ def test_linia_zabudowy(client):
     assert client.put(f"/osiedle/koncepcje/{k}", json={"geojson": rysunek}).status_code == 200
     assert client.get(f"/osiedle/koncepcje/{k}.dxf").status_code == 200
     assert "przecinających nieprzekraczalną linię zabudowy: 1" in client.get(f"/osiedle/koncepcje/{k}/raport").get_data(as_text=True)
+
+
+# ---------- ETAP 195: cień od budynków ----------
+
+
+def test_cien_od_budynkow():
+    from osiedle.cien import analiza
+
+    tereny = [prostokat(0, 0, 200, 200, "obszar"), prostokat(0, 0, 100, 200, "MW", kondygnacje=8), prostokat(100, 0, 100, 200, "ZP")]
+    bez = analiza(kolekcja(*tereny), "zima")
+    assert bez["zrodlo"] == "tereny" and [t["funkcja"] for t in bez["tereny"]] == ["MW"]
+    # niski budynek daleko od zieleni — cień krótszy niż od całego terenu MW przy krawędzi
+    z = analiza(kolekcja(*tereny, prostokat(10, 150, 20, 20, "budynek", kondygnacje=2)), "zima")
+    assert z["zrodlo"] == "budynki" and [(t["funkcja"], t["nr"], t["wysokosc_m"]) for t in z["tereny"]] == [("budynek", 1, 6.0)]
+    zielen_bez = next(x for x in bez["zacienione"] if x["funkcja"] == "ZP")["w_cieniu_m2"]
+    zielen_z = sum(x["w_cieniu_m2"] for x in z["zacienione"] if x["funkcja"] == "ZP")
+    assert zielen_z < zielen_bez
+    mw = next(x for x in z["zacienione"] if x["funkcja"] == "MW")
+    assert mw["w_cieniu_m2"] < 20 * 20 * 10  # cień na terenie MW, bez obrysu samego budynku
