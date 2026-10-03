@@ -1027,3 +1027,6 @@
 
 ## ETAP 190 — 2026-10-03
 - Przegląd i dokumentacja po ETAPach 171–189
+
+## ETAP 191 — 2026-10-03
+- MPZP: lista działek — przeznaczenie do 30 działek naraz z wklejonej listy

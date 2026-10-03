@@ -3968,3 +3968,22 @@ dlaczego plan się zmienił (D-178).
 
 **Odrzucone alternatywy:**
 - Przenumerowanie dalszych ETAPów — psuje odnośniki w dokumentacji.
+
+## D-199 — Lista działek: do 30 naraz, po kolei, bez historii
+Data: 2026-10-03
+
+**Decyzja:** Hurtowe sprawdzenie obejmuje najwyżej 30 działek w jednym
+zapytaniu, a działki są sprawdzane kolejno (bez równoległych zapytań).
+Wyniki nie trafiają do historii sprawdzonych działek.
+
+**Uzasadnienie:** ULDK, WFS gmin i KIMPZP to bezpłatne usługi publiczne —
+masowe, równoległe pobieranie byłoby nadużyciem (CLAUDE.md: tylko API i
+WFS, z umiarem). 30 działek wystarcza na typową listę z ogłoszenia
+przetargu czy ćwiczenia. Historia służy do powrotu do oglądanych działek;
+lista z arkusza by ją zalała.
+
+**Odrzucone alternatywy:**
+- Wczytywanie pliku CSV — wklejenie kolumny z arkusza robi to samo bez
+  obsługi formatów; plik można dodać, jeśli będzie potrzebny.
+- Udziały przeznaczeń dla każdej działki — kolejne zapytanie WFS na
+  działkę; zostaje na karcie działki.

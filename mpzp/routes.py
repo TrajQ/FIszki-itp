@@ -569,7 +569,7 @@ def ostatnie(limit: int = 3) -> list[dict]:
             for d in historia()[:limit]]
 
 
-from . import trasy_kronika, trasy_narzedzia, trasy_zapisane  # noqa: E402, F401
+from . import trasy_hurtowe, trasy_kronika, trasy_narzedzia, trasy_zapisane  # noqa: E402, F401
 
 
 # ---------- wyszukiwarka globalna (ETAP 128) ----------

@@ -3327,3 +3327,22 @@ Status: zamknięty
 - PLAN 171–250: podsumowanie serii; pozycja 217 zastąpiona (punkty z
   Terenu przy działce zrobione w ETAPie 176)
 - `DECISIONS.md`: D-198
+
+## ETAP 191 — MPZP: hurtowe sprawdzenie listy działek
+Data: 2026-10-03
+Status: zamknięty
+
+- `mpzp/trasy_hurtowe.py`: `wpisy_z_tekstu` (wiersze, średniki,
+  tabulatory; przecinki tylko między pełnymi identyfikatorami; bez
+  powtórzeń), `sprawdz_wpis` — działka po identyfikatorze albo „obręb
+  numer” (ULDK; kilka trafień — „niejednoznaczny”), powierzchnia,
+  przeznaczenie z WFS gminy albo krajowej integracji planów, stan i uwaga;
+  błąd jednej działki nie przerywa listy
+- Strona `/mpzp/hurtowo` (formularz, do 30 działek, zapytania po kolei,
+  bez zapisu w historii): tabela z opisem symboli i linkiem do karty
+  działki; link „Lista działek” na stronie MPZP
+- Testy: rozbiór tekstu, stany (plan gminy, plan krajowy, bez trafienia,
+  niejednoznaczny), limit, pusty wpis, brak zapisu w historii; sprawdzone
+  w przeglądarce 1300/390 px (tabela przewijana w bok na telefonie)
+- Pomoc: „Jak sprawdzić wiele działek naraz?”
+- `DECISIONS.md`: D-199

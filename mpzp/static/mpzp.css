@@ -1059,3 +1059,12 @@ button.wpis-zapisany {
         height: 72px;
     }
 }
+
+/* ETAP 191: tabela listy działek przewija się w bok na telefonie */
+.przewijanie-mpzp {
+    overflow-x: auto;
+}
+
+.przewijanie-mpzp #tabela-hurtowa {
+    min-width: 760px; /* przewijanie w bok zamiast bardzo wysokich wierszy */
+}

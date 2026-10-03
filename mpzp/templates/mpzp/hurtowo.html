@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% macro m2(x) %}{% if x is none %}—{% else %}{{ '{:,.0f}'.format(x).replace(',', ' ') }}{% endif %}{% endmacro %}
+
+{% block tytul %}Lista działek — MPZP — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('mpzp.static', filename='mpzp.css') }}">{% endblock %}
+
+{% block tresc %}
+{# ETAP 191: hurtowe sprawdzenie listy działek — liczby i symbole z ULDK i usług planów #}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ MPZP</a>
+        <h1>Lista działek</h1>
+        <p>Wklej identyfikatory działek (albo „obręb numer”, np. „Jeżyce 18/14”) — po jednym w wierszu, przez średnik albo prosto z kolumny arkusza. Warsztat sprawdzi każdą: powierzchnię i przeznaczenie w planie miejscowym.</p>
+    </div>
+</div>
+
+<form method="post" class="karta stos" id="formularz-listy">
+    <label>Działki (najwyżej {{ maks }})
+        <textarea name="lista" rows="6" placeholder="306401_1.0012.18/14&#10;Jeżyce 18/15&#10;146501_1.0001.AR_1.1" required>{{ tekst }}</textarea></label>
+    <div class="rzad"><button type="submit">Sprawdź</button><span class="wyciszony">Działki są sprawdzane po kolei — przy 30 działkach to może potrwać kilkadziesiąt sekund.</span></div>
+</form>
+{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+
+{% if wyniki %}
+<section class="karta stos">
+    <h3>Wynik: {{ wyniki | selectattr('stan', 'equalto', 'ok') | list | length }} z {{ wyniki | length }} z przeznaczeniem w planie</h3>
+    <div class="przewijanie-mpzp">
+    <table class="tabela" id="tabela-hurtowa">
+        <tr><th>Wpis</th><th>Działka</th><th class="liczba">Pow. [m²]</th><th>Przeznaczenie</th><th>Stan</th></tr>
+        {% for w in wyniki %}
+        <tr>
+            <td>{{ w.wpis }}</td>
+            <td>{% if w.dzialka_id %}<a href="{{ url_for('mpzp.raport', id=w.dzialka_id) }}" title="Karta działki">{{ w.dzialka_id }}</a>{% else %}—{% endif %}</td>
+            <td class="liczba">{{ m2(w.powierzchnia_m2) }}</td>
+            <td>{% if w.przeznaczenie %}<strong>{{ w.przeznaczenie }}</strong>{% for o in w.opis or [] %}<br><span class="wyciszony">{{ o.symbol }} — {{ o.opis or 'brak w słowniku, sprawdź legendę planu' }}</span>{% endfor %}{% else %}—{% endif %}</td>
+            <td class="{{ 'stan--ok' if w.stan == 'ok' else 'wyciszony' }}">{{ w.stan }}{% if w.uwaga %}<br><span class="wyciszony">{{ w.uwaga }}</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    </div>
+    <p class="wyciszony">Przeznaczenie w punkcie wewnątrz działki (działka może leżeć w kilku przeznaczeniach — sprawdź ją na mapie). Opisy symboli wg rozporządzenia z 2003 r. są orientacyjne; wiążący jest tekst i rysunek planu. Źródła: ULDK (GUGiK), WFS gminy albo krajowa integracja planów (GUGiK).</p>
+</section>
+{% endif %}
+{% endblock %}

@@ -955,3 +955,38 @@ def test_zestawienie_zapisanych_dzialek(tmp_path):
     assert "stopka-wydruku" in html and "nie jest wypisem" in html
     # numery od najstarszego zapisu
     assert html.index("306401_1.0051.AR_18.14") < html.index("306401_1.0051.AR_18.16")
+
+
+# ---------- ETAP 191: lista działek ----------
+
+
+def test_wpisy_z_tekstu():
+    from mpzp.trasy_hurtowe import wpisy_z_tekstu
+
+    tekst = "306401_1.0051.AR_18.14, 146501_1.0001.AR_1.1\nJeżyce 18/15; Jeżyce 18/15\t\n  Stare Miasto, ark. 3 12  "
+    assert wpisy_z_tekstu(tekst) == ["306401_1.0051.AR_18.14", "146501_1.0001.AR_1.1", "Jeżyce 18/15", "Stare Miasto, ark. 3 12"]
+
+
+def test_lista_dzialek(client, monkeypatch):
+    from dane.uldk import Podpowiedz
+    from mpzp.krajowe import ObiektPlanu
+
+    dzialki = {d.id: d for d in (_dzialka_poznan(), _dzialka_warszawa())}
+    wydzielenie = Wydzielenie(geometria=_dzialka_poznan().geometria, atrybuty={"symb_t": "ZP"})
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: dzialki.get(i))
+    monkeypatch.setattr(mpzp_routes, "znajdz_przeznaczenie", lambda gmina, punkt: wydzielenie)
+    monkeypatch.setattr(mpzp_routes, "plan_krajowy", lambda lat, lon: [ObiektPlanu("wektor-pow", {"symbol": "MN/U"})])
+    monkeypatch.setattr(mpzp_routes, "szukaj_dzialek", lambda fraza: {
+        "Jeżyce 18/14": [Podpowiedz("306401_1.0051.AR_18.14", "Poznań", "Jeżyce", "18/14")],
+        "Wilda 1": [Podpowiedz("a", "", "", ""), Podpowiedz("b", "", "", "")]}.get(fraza, []))
+    assert "Lista działek" in client.get("/mpzp/").get_data(as_text=True)
+    lista = "306401_1.0051.AR_18.14\n146501_1.0001.AR_1.1\nJeżyce 18/14\nWilda 1\nNiema 5\n146501_1.0001.AR_9.9"
+    strona = client.post("/mpzp/hurtowo", data={"lista": lista}).get_data(as_text=True)
+    assert 'id="tabela-hurtowa"' in strona and "3 z 6 z przeznaczeniem" in strona
+    assert "<strong>ZP</strong>" in strona and "<strong>MN/U</strong>" in strona
+    assert "niejednoznaczny" in strona and "2 działek pasuje" in strona and strona.count("nie znaleziono") == 2
+    assert "/mpzp/raport?id=306401_1.0051.AR_18.14" in strona
+    assert client.get("/mpzp/historia").get_json() == []  # nie zapisuje w historii
+    za_duzo = "\n".join(f"146501_1.0001.AR_1.{i}" for i in range(31))
+    assert "Najwyżej 30 działek" in client.post("/mpzp/hurtowo", data={"lista": za_duzo}).get_data(as_text=True)
+    assert "Wklej co najmniej" in client.post("/mpzp/hurtowo", data={"lista": " "}).get_data(as_text=True)

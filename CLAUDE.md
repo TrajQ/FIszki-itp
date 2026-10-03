@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 190 (Przegląd i dokumentacja po ETAPach 171–189 — zamknięty)
-Ostatni ZIP: releases/warsztat_etap190_20261003.zip
-Testy: 609 passed / 0 failed
+ETAP: 191 (MPZP: lista działek — hurtowe sprawdzenie — zamknięty)
+Ostatni ZIP: releases/warsztat_etap191_20261003.zip
+Testy: 611 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).
