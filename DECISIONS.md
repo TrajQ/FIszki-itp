@@ -3824,3 +3824,21 @@ użytkownikowi — nietypowa nie znaczy błędna.
   wyników; mediana i tak jest na nie odporna.
 - Odchylenie od mediany w promieniu (lokalnie) — dokładniejsze, ale
   zależne od gęstości transakcji; do rozważenia w wycenie.
+
+## D-191 — Izochrony z siatki H3: suma komórek, progi skumulowane
+Data: 2026-10-03
+
+**Decyzja:** Zasięg „do N minut” to suma heksagonów z czasem ≤ N
+(`h3.cells_to_geo`), po jednym obiekcie na próg, od największego.
+Progi jak klasy mapy (5/10/15/20/30 min).
+
+**Uzasadnienie:** Moduł czyta gotowe wyniki na siatce H3 (D-034) —
+kontur z komórek jest wierny danym, bez interpolacji, której wynik zależy
+od metody. Zasięgi skumulowane (a nie pierścienie 5–10, 10–15) odpowiadają
+pytaniu „co jest w zasięgu 15 minut” i nakładają się w QGIS bez dziur.
+
+**Odrzucone alternatywy:**
+- Wygładzanie konturów (bufor, alfa-kształt) — ładniej, ale pokazuje
+  obszary, których dane nie obejmują.
+- Pierścienie przedziałów — dostępne z heksagonów w zwykłym eksporcie
+  (pole `klasa`).

@@ -398,6 +398,29 @@ def _klasa(wartosc: float, progi: list[float]) -> int:
     return len(progi)
 
 
+def kontury(wyniki: dict, kolumna: str, progi: list[int] | None = None) -> dict:
+    """ETAP 183: zasięgi czasu dojścia jako wieloboki (izochrony z siatki H3):
+    dla każdego progu suma komórek z czasem ≤ próg — jeden obiekt na próg,
+    od największego (w QGIS mniejszy zasięg leży na wierzchu). Właściwości:
+    minuty, liczba komórek, powierzchnia [km²], mieszkańcy (gdy są w pliku)."""
+    czasy = wartosci_wskaznika(wyniki, kolumna)  # KeyError, gdy nie ma takiego wskaźnika
+    if kolumna != NAZWA_LACZNEGO and not czy_minuty(kolumna):
+        raise BladWynikow("Kontury są dla wskaźników czasu dojścia (kolumna *_min albo czas*).")
+    ludnosc = wyniki.get("ludnosc")
+    cechy = []
+    for prog in sorted(progi or PROGI_MINUT, reverse=True):
+        indeksy = [i for i, c in enumerate(czasy) if c is not None and c <= prog]
+        if not indeksy:
+            continue
+        komorki = {wyniki["komorki"][i] for i in indeksy}
+        wlasciwosci = {"minuty": prog, "komorek": len(komorki),
+                       "powierzchnia_km2": round(sum(h3.cell_area(k, unit="km^2") for k in komorki), 3)}
+        if ludnosc:
+            wlasciwosci["mieszkancy"] = round(sum(ludnosc[i] or 0 for i in indeksy))
+        cechy.append({"type": "Feature", "properties": wlasciwosci, "geometry": h3.cells_to_geo(komorki)})
+    return {"type": "FeatureCollection", "features": cechy}
+
+
 def _geometria_komorki(komorka: str) -> dict:
     # h3 zwraca (lat, lng); GeoJSON wymaga (lng, lat) i domkniętego pierścienia.
     obwod = [[lng, lat] for lat, lng in h3.cell_to_boundary(komorka)]

@@ -103,6 +103,7 @@
             <p id="meta-pliku" class="wyciszony meta-pliku"></p>
             <div class="rzad">
                 <a id="link-geojson" class="przycisk przycisk--drugi" href="#" title="Heksagony z wartościami — przeciągnij plik do QGIS">GeoJSON do QGIS</a>
+                <a id="link-kontury" class="przycisk przycisk--drugi" href="#" title="Zasięgi 5, 10, 15, 20 i 30 minut jako wieloboki (izochrony) do QGIS">Zasięgi (wieloboki)</a>
                 <a id="link-raport" class="przycisk przycisk--drugi" href="#" target="_blank" title="Mapa A4 z legendą, podziałką i źródłem + tabele — do wydruku albo PDF">Raport do druku ↗</a>
             </div>
         </section>
@@ -192,6 +193,7 @@
     const URL_PLIK = "{{ url_for('dostepnosc.opis_pliku', nazwa='__PLIK__') }}";
     const URL_POROWNANIE = "{{ url_for('dostepnosc.porownanie') }}";
     const URL_GEOJSON = "{{ url_for('dostepnosc.eksport_geojson') }}";
+    const URL_KONTURY = "{{ url_for('dostepnosc.kontury_geojson') }}";
     const URL_RAPORT = "{{ url_for('dostepnosc.raport') }}";
     const URL_PUNKTY_Z_PLIKU = "{{ url_for('dostepnosc.punkty_z_pliku') }}";
     const URL_Z_PUNKTOW = "{{ url_for('dostepnosc.z_punktow') }}";

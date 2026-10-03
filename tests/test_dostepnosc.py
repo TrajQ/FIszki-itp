@@ -497,3 +497,35 @@ def test_wyniki_w_obszarach(client):
     assert client.post(url, json={"kolumna": "czas_szkola_min", "obszary": [{"geometria": {"type": "Point", "coordinates": [17, 52]}}]}).status_code == 400
     assert client.post("/dostepnosc/plik/nie_ma.csv/obszary", json={}).status_code == 404
     assert wyniki_h3.PROG_MIASTA_15 == 15
+
+
+# ---------- ETAP 183: zasięgi jako wieloboki ----------
+
+
+def test_kontury_zasiegow(client):
+    import json as _json
+
+    import h3
+
+    from dostepnosc import wyniki as w
+
+    srodek = h3.latlng_to_cell(52.40, 16.92, 9)
+    pierscien1 = [k for k in h3.grid_disk(srodek, 1) if k != srodek]
+    daleko = h3.latlng_to_cell(52.50, 16.92, 9)
+    wyniki = {"komorki": [srodek, *pierscien1, daleko], "kolumny": {"czas_min": [3.0] + [8.0] * 6 + [40.0], "liczba": [1.0] * 8},
+              "ludnosc": [100.0] * 8}
+    k = w.kontury(wyniki, "czas_min")
+    assert [c["properties"]["minuty"] for c in k["features"]] == [30, 20, 15, 10, 5]  # od największego
+    pierwszy, piec = k["features"][0], k["features"][-1]
+    assert pierwszy["properties"]["komorek"] == 7 and pierwszy["properties"]["mieszkancy"] == 700
+    assert piec["properties"]["komorek"] == 1 and pierwszy["geometry"]["type"] == "Polygon"  # 7 sąsiednich komórek — jeden wielobok
+    assert pierwszy["properties"]["powierzchnia_km2"] == pytest.approx(7 * h3.cell_area(srodek, unit="km^2"), rel=0.01)
+    with pytest.raises(w.BladWynikow):
+        w.kontury(wyniki, "liczba")  # nie czas dojścia
+    przyklad = "przyklad_poznan_syntetyczny.csv"
+    odp = client.get(f"/dostepnosc/kontury.geojson?plik={przyklad}&kolumna=czas_szkola_min")
+    assert odp.mimetype == "application/geo+json" and "_zasiegi.geojson" in odp.headers["Content-Disposition"]
+    dane = _json.loads(odp.data)
+    assert dane["features"] and {"minuty", "komorek", "powierzchnia_km2", "wskaznik"} <= set(dane["features"][0]["properties"])
+    assert client.get(f"/dostepnosc/kontury.geojson?plik={przyklad}&kolumna=laczny").status_code == 200
+    assert client.get(f"/dostepnosc/kontury.geojson?plik={przyklad}&kolumna=nie_ma").status_code == 404

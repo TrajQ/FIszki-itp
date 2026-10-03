@@ -22,6 +22,10 @@
         const parametry = new URLSearchParams({ plik: NAZWA_PLIKU, kolumna });
         if (po) parametry.set("po", po);
         linkGeojson.href = `${URL_GEOJSON}?${parametry}`;
+        // ETAP 183: zasięgi jako wieloboki — tylko dla czasu dojścia i bez porównania scenariuszy
+        const linkKontury = document.getElementById("link-kontury");
+        linkKontury.hidden = Boolean(po) || !(kolumna === "laczny" || /_min$|^czas/i.test(kolumna));
+        linkKontury.href = `${URL_KONTURY}?${new URLSearchParams({ plik: NAZWA_PLIKU, kolumna })}`;
         // Raport do druku jest dla jednego wskaźnika — w porównaniu scenariuszy ukryty.
         const linkRaport = document.getElementById("link-raport");
         linkRaport.hidden = Boolean(po);

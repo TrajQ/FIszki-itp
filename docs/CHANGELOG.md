@@ -1003,3 +1003,6 @@
 
 ## ETAP 182 — 2026-10-03
 - Ceny: lista nietypowych transakcji RCN (cena za m² odstająca od mediany roku)
+
+## ETAP 183 — 2026-10-03
+- Dostępność: zasięgi 5–30 min jako wieloboki (izochrony) do QGIS

@@ -3184,3 +3184,20 @@ Status: zamknięty
   przeglądarce 1300/390 px
 - Pomoc: „Nietypowe transakcje”
 - `DECISIONS.md`: D-190
+
+## ETAP 183 — Dostępność: kontury klas czasu dojścia (GeoJSON)
+Data: 2026-10-03
+Status: zamknięty
+
+- `dostepnosc/wyniki.py`: `kontury(wyniki, kolumna)` — dla progów
+  5/10/15/20/30 min suma komórek H3 z czasem ≤ próg (`h3.cells_to_geo`),
+  od największego zasięgu; właściwości: minuty, komórki, powierzchnia km²
+  (`h3.cell_area`), mieszkańcy; tylko wskaźniki czasu (i łączny)
+- Trasa `/dostepnosc/kontury.geojson?plik=&kolumna=`; link „Zasięgi
+  (wieloboki)” przy „GeoJSON do QGIS” (ukryty dla wskaźników innych niż
+  czas i przy porównaniu scenariuszy)
+- Testy: kontury na ręcznej siatce (liczba komórek, mieszkańcy,
+  powierzchnia, jeden wielobok), trasa na pliku przykładowym, błędy;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: „Zasięgi jako wieloboki”
+- `DECISIONS.md`: D-191

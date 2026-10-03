@@ -319,6 +319,26 @@ def eksport_geojson():
     )
 
 
+@dostepnosc_bp.route("/kontury.geojson")
+def kontury_geojson():
+    """ETAP 183: zasięgi 5/10/15/20/30 min jako wieloboki do QGIS."""
+    plik = request.args.get("plik", "")
+    kolumna = request.args.get("kolumna", "")
+    if kolumna == "laczny":
+        kolumna = wyniki_h3.NAZWA_LACZNEGO
+    try:
+        kolekcja = wyniki_h3.kontury(_wczytaj(plik), kolumna)
+    except KeyError:
+        return jsonify({"blad": f"Plik nie ma wskaźnika „{kolumna}”."}), 404
+    except BladWynikow as e:
+        return jsonify({"blad": str(e)}), 422
+    for cecha in kolekcja["features"]:
+        cecha["properties"]["wskaznik"] = kolumna
+    nazwa = os.path.splitext(plik)[0] + f"_{kolumna}_zasiegi.geojson"
+    return Response(json.dumps(kolekcja, ensure_ascii=False), mimetype="application/geo+json",
+                    headers={"Content-Disposition": f"attachment; filename={secure_filename(nazwa)}"})
+
+
 @dostepnosc_bp.route("/plik/<nazwa>/laczny")
 def analiza_laczna(nazwa):
     try:
