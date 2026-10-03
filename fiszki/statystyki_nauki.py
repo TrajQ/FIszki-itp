@@ -38,7 +38,36 @@ def policz(db: sqlite3.Connection, dzis: date) -> dict:
         "skutecznosc_proc": 100 * umiem / wszystkie if wszystkie else None,
         "opanowane": opanowane,
         "dzis": po_dniu.get(dzis.isoformat(), (0, 0))[0],
+        "krzywa": krzywa_zapominania(db),
     }
+
+
+# ---------- krzywa zapominania (ETAP 186) ----------
+# Dla każdej powtórki: ile dni minęło od poprzedniej powtórki tej samej
+# fiszki i czy fiszka była zapamiętana („umiem” albo „trudne”). Udział
+# zapamiętanych w przedziałach odstępu to własna krzywa zapominania
+# (Ebbinghaus) — z prawdziwych odpowiedzi, nie z modelu.
+
+PRZEDZIALY_DNI = [(1, 1), (2, 3), (4, 7), (8, 14), (15, 30), (31, None)]
+MIN_POWTOREK_PRZEDZIALU = 5
+
+
+def krzywa_zapominania(db: sqlite3.Connection) -> list[dict]:
+    wiersze = db.execute("SELECT fiszka_id, data, wynik FROM dziennik_powtorek ORDER BY fiszka_id, data, id").fetchall()
+    licznik = [[0, 0] for _ in PRZEDZIALY_DNI]  # [powtórki, zapamiętane]
+    poprzednia = (None, None)
+    for w in wiersze:
+        if poprzednia[0] == w["fiszka_id"]:
+            dni = (date.fromisoformat(w["data"]) - date.fromisoformat(poprzednia[1])).days
+            for i, (od, do) in enumerate(PRZEDZIALY_DNI):
+                if dni >= od and (do is None or dni <= do):  # 0 dni (powtórka w tej samej sesji) pomijamy
+                    licznik[i][0] += 1
+                    licznik[i][1] += w["wynik"] in ("umiem", "trudne")
+                    break
+        poprzednia = (w["fiszka_id"], w["data"])
+    return [{"od": od, "do": do, "powtorki": n, "zapamietane": z,
+             "procent": 100 * z / n if n >= MIN_POWTOREK_PRZEDZIALU else None}
+            for (od, do), (n, z) in zip(PRZEDZIALY_DNI, licznik)]
 
 
 DNI_PROGNOZY = 7

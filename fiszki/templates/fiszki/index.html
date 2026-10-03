@@ -187,6 +187,21 @@
               style="--poziom: {{ (dzien.powtorki / najwiecej) | round(2) }}"></span>
         {% endfor %}
     </div>
+    {# ETAP 186: krzywa zapominania — liczby z fiszki/statystyki_nauki.py #}
+    {% if nauka.krzywa | selectattr('procent') | list %}
+    <div class="krzywa-zapominania">
+        <h4>Po ilu dniach pamiętasz</h4>
+        <table class="tabela">
+            {% for p in nauka.krzywa if p.powtorki %}
+            <tr><td>{{ p.od }}{% if p.do is none %}+ dni{% elif p.do != p.od %}–{{ p.do }} dni{% else %} dzień{% endif %}</td>
+                <td class="krzywa-zapominania__wykres">{% if p.procent is not none %}<span class="krzywa-zapominania__pasek" style="width: {{ '%.1f' % p.procent }}%"></span>{% endif %}</td>
+                <td class="liczba">{{ '%.0f%%' % p.procent if p.procent is not none else '—' }}</td>
+                <td class="liczba wyciszony">{{ p.powtorki }} powt.</td></tr>
+            {% endfor %}
+        </table>
+        <p class="wyciszony">Udział powtórek z odpowiedzią „umiem” albo „trudne” według odstępu od poprzedniej powtórki tej samej fiszki — Twoja krzywa zapominania. Spadek przy dłuższych odstępach to normalne; system pudełek wydłuża je tylko dla fiszek, które pamiętasz. „—”: mniej niż 5 powtórek w przedziale.</p>
+    </div>
+    {% endif %}
 </section>
 {% endif %}
 

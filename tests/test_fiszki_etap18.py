@@ -178,3 +178,26 @@ def test_skutecznosc_liczy_trudne_jako_zapamietane(client):
             db.execute("INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (1, '2026-09-29', ?)", (wynik,))
         db.commit()
         assert statystyki_nauki.policz(db, date(2026, 9, 29))["skutecznosc_proc"] == 50
+
+
+# ---------- ETAP 186: krzywa zapominania ----------
+
+
+def test_krzywa_zapominania(tmp_path):
+    import sqlite3
+
+    from fiszki.statystyki_nauki import krzywa_zapominania
+
+    db = sqlite3.connect(":memory:")
+    db.row_factory = sqlite3.Row
+    db.execute("CREATE TABLE dziennik_powtorek (id INTEGER PRIMARY KEY AUTOINCREMENT, fiszka_id INTEGER, data TEXT, wynik TEXT)")
+    wpisy = []
+    for f in range(10):  # 10 fiszek: po 1 dniu wszystkie pamiętane, po kolejnych 5 dniach — 6 z 10
+        wpisy += [(f, "2026-09-01", "nie_umiem"), (f, "2026-09-01", "umiem"), (f, "2026-09-02", "umiem"), (f, "2026-09-07", "umiem" if f < 6 else "nie_umiem")]
+    db.executemany("INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (?, ?, ?)", wpisy)
+    k = krzywa_zapominania(db)
+    jeden, cztery_siedem = k[0], k[2]
+    assert (jeden["powtorki"], jeden["procent"]) == (10, 100.0)  # powtórka w tej samej sesji (0 dni) pominięta
+    assert (cztery_siedem["powtorki"], cztery_siedem["zapamietane"], cztery_siedem["procent"]) == (10, 6, 60.0)
+    assert k[1]["powtorki"] == 0 and k[1]["procent"] is None and k[-1]["do"] is None
+    db.close()

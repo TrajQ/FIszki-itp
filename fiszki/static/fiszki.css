@@ -1196,3 +1196,32 @@ button.przycisk--ocena-trudne:hover {
 .edytor-zaslon__odpowiedzi input {
     width: 100%;
 }
+
+/* ---------- krzywa zapominania (ETAP 186) ---------- */
+.krzywa-zapominania {
+    margin-top: 16px;
+}
+
+.krzywa-zapominania h4 {
+    margin: 0 0 6px;
+}
+
+.krzywa-zapominania .tabela {
+    font-size: 13px;
+}
+
+.krzywa-zapominania__wykres {
+    width: 50%;
+}
+
+.krzywa-zapominania__pasek {
+    display: block;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--akcent);
+}
+
+.krzywa-zapominania p {
+    margin: 6px 0 0;
+    font-size: 12px;
+}

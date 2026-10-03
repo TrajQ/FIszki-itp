@@ -1012,3 +1012,6 @@
 
 ## ETAP 185 — 2026-10-03
 - Fiszki: zasłanianie fragmentów rysunku (mapy, schematy) — każdy fragment osobną fiszką
+
+## ETAP 186 — 2026-10-03
+- Fiszki: własna krzywa zapominania z dziennika powtórek

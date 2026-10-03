@@ -3242,3 +3242,18 @@ Status: zamknięty
   (rysowanie, powtórka 1300/390 px)
 - Pomoc: „Zasłoń fragmenty rysunku”
 - `DECISIONS.md`: D-193
+
+## ETAP 186 — Fiszki: krzywa zapominania z dziennika powtórek
+Data: 2026-10-03
+Status: zamknięty
+
+- `fiszki/statystyki_nauki.py`: `krzywa_zapominania` — dla każdej
+  powtórki odstęp od poprzedniej powtórki tej samej fiszki (dni; powtórki
+  w tej samej sesji pominięte) i wynik; udział „umiem/trudne” w
+  przedziałach 1, 2–3, 4–7, 8–14, 15–30, 31+ dni (procent od 5 powtórek)
+- Strona Fiszek: tabela „Po ilu dniach pamiętasz” z paskami w sekcji
+  statystyk nauki
+- Test: przedziały, pominięcie tej samej sesji, mało danych; sprawdzone
+  w przeglądarce 1300/390 px
+- Pomoc: „Po ilu dniach pamiętasz”
+- `DECISIONS.md`: D-194

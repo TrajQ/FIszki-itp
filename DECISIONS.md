@@ -3880,3 +3880,22 @@ działają przy każdej szerokości ekranu i na wydruku.
   zależność od Pillow, brak obrysu po odsłonięciu.
 - Kilka zasłon na jednej fiszce („zasłoń wszystkie, odsłoń jedną”) —
   wariant znany z Anki; do rozważenia, gdy pojedyncze zasłony się sprawdzą.
+
+## D-194 — Krzywa zapominania z dziennika, bez dopasowania modelu
+Data: 2026-10-03
+
+**Decyzja:** Krzywa to udział zapamiętanych powtórek w przedziałach
+odstępu od poprzedniej powtórki tej samej fiszki, liczony wprost z
+`dziennik_powtorek`. Nie dopasowujemy wykładniczej krzywej Ebbinghausa
+i nie zmieniamy na tej podstawie harmonogramu Leitnera.
+
+**Uzasadnienie:** Surowe udziały są zrozumiałe bez statystyki i pokazują
+studentowi jego pamięć; dopasowanie modelu przy kilkudziesięciu
+powtórkach dawałoby pozornie dokładne parametry. Harmonogram zostaje
+prosty i przewidywalny (D-012) — krzywa jest informacją, nie sterowaniem.
+Powtórki tego samego dnia (po „nie umiem”) pomijamy, bo mierzą pamięć
+krótkotrwałą.
+
+**Odrzucone alternatywy:**
+- Algorytm SM-2/FSRS dopasowujący odstępy do krzywej — zmiana systemu
+  powtórek, poza zakresem ETAPu.
