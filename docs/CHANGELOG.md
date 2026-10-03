@@ -1018,3 +1018,6 @@
 
 ## ETAP 187 — 2026-10-03
 - Przepisy: „Moje przepisy” — własny zbiór artykułów z wielu aktów, z notatkami i do druku
+
+## ETAP 188 — 2026-10-03
+- Eksport do arkusza ODS (LibreOffice/Excel) bez nowej zależności — tabela Atlasu

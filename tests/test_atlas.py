@@ -1483,3 +1483,17 @@ def test_strona_trendu(client, monkeypatch):
     for zle in ("od=2020&do=2023", "od=2000&do=2023", "od=x&do=2023"):
         assert client.get(f"/atlas/trend.svg?{ZAPYTANIE}&{zle}").status_code == 400
     assert 'id="link-trend"' in client.get("/atlas/").get_data(as_text=True)
+
+
+# ---------- ETAP 188: arkusz ODS ----------
+
+
+def test_eksport_ods_atlasu(client):
+    odp = client.get("/atlas/eksport.ods?zmienna=72305&rok=2023&woj=011200000000")
+    assert odp.mimetype == "application/vnd.oasis.opendocument.spreadsheet" and ".ods" in odp.headers["Content-Disposition"]
+    import io, zipfile
+    from xml.dom import minidom
+    doc = minidom.parseString(zipfile.ZipFile(io.BytesIO(odp.data)).read("content.xml"))
+    tekst = doc.toxml()
+    assert "Kraków" in tekst and 'office:value="804237.0"' in tekst and "Bank Danych Lokalnych" in tekst
+    assert client.get("/atlas/eksport.ods?zmienna=x").status_code == 400

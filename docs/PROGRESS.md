@@ -3275,3 +3275,19 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: „Jak zebrać artykuły z kilku ustaw w jednym miejscu?”
 - `DECISIONS.md`: D-195
+
+## ETAP 188 — Arkusz ODS bez zależności (`dane/arkusz.py`), eksport Atlasu
+Data: 2026-10-03
+Status: zamknięty
+
+- `dane/arkusz.py`: `arkusz_ods` — ZIP z `mimetype` (pierwszy, bez
+  kompresji), `META-INF/manifest.xml` i `content.xml`; kilka arkuszy,
+  liczby jako `float`, tekst escapowany, pogrubiony nagłówek, szerokości
+  kolumn z najdłuższego tekstu, przypisy kursywą pod tabelą
+- Atlas: `/atlas/eksport.ods` — te same wiersze co CSV (`_wiersze_eksportu`,
+  wspólna funkcja), nazwa wskaźnika i źródło w przypisach; link „Arkusz
+  ODS” obok „Pobierz CSV”
+- Testy: struktura ODS (kolejność i kompresja `mimetype`, poprawny XML,
+  typy komórek, escapowanie), eksport Atlasu; sprawdzone w przeglądarce
+- Pomoc: „Arkusz ODS”
+- `DECISIONS.md`: D-196

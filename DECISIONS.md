@@ -3917,3 +3917,22 @@ będą używane. Druk korzysta z tych samych stylów co druk aktu (ETAP 158).
   użyciu; tabela łatwo dostanie kolumnę zbioru.
 - Zakładki w przeglądarce (localStorage) — znikałyby przy kopii
   zapasowej i na innym komputerze.
+
+## D-196 — ODS pisany ręcznie zamiast XLSX z biblioteką
+Data: 2026-10-03
+
+**Decyzja:** Arkusz zapisujemy w formacie OpenDocument (.ods) własnym
+kodem w `dane/arkusz.py` (zipfile + XML), jak DXF (D-130). Bez
+openpyxl/odfpy.
+
+**Uzasadnienie:** ODS to otwarty standard, otwiera go LibreOffice (Linux
+Mint) i Excel. Minimalny plik to trzy części ZIP, a potrzebne są tylko
+komórki tekstowe i liczbowe, nagłówek i szerokości — nowa zależność dla
+jednego formatu nie jest uzasadniona (CLAUDE.md). Liczby jako liczby
+rozwiązują znany problem CSV: przecinek dziesiętny i kodowanie w Excelu.
+
+**Odrzucone alternatywy:**
+- XLSX przez openpyxl — popularniejszy format, ale zależność z
+  zależnościami; Excel czyta ODS.
+- Formatowanie liczb (miejsca po przecinku, separatory) w stylach ODS —
+  zostawione arkuszowi; dane pozostają dokładne.

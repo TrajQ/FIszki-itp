@@ -454,6 +454,42 @@ def _plik_geojson(kolekcja: dict, nazwa: str) -> Response:
     )
 
 
+def _wiersze_eksportu(wynik: dict) -> list[list]:
+    """Tabela gmin do arkusza — wspólna dla CSV i ODS (ETAP 188)."""
+    rok = wynik["rok"]
+    if "porownanie" in wynik:
+        rb = wynik["porownanie"]["rok_bazowy"]
+        wiersze = [["teryt", "gmina", f"wartosc_{rb}", f"wartosc_{rok}", "zmiana", "zmiana_proc"]]
+        for g in wynik["porownanie"]["gminy"]:
+            proc = "" if g["zmiana_proc"] is None else round(g["zmiana_proc"], 2)
+            wiersze.append([g["teryt"], g["nazwa"], g["wartosc_bazowa"], g["wartosc"], g["zmiana"], proc])
+        return wiersze
+    return [["teryt", "gmina", f"wartosc_{rok}"]] + [[g["teryt"], g["nazwa"], g["wartosc"]] for g in wynik["gminy"]]
+
+
+@atlas_bp.route("/eksport.ods")
+def eksport_ods():
+    """ETAP 188: ta sama tabela co eksport.csv, jako arkusz z liczbami, nagłówkiem i źródłem."""
+    from dane.arkusz import arkusz_ods
+
+    try:
+        parametry = _parametry_zapytania(request.args)
+        wynik = _policz_dane(**parametry)
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    except LookupError as e:
+        return jsonify({"blad": str(e)}), 404
+    z = wynik["zmienna"]
+    przypisy = [f"{z['nazwa']} [{z.get('jednostka') or '–'}], gminy województwa {wynik['wojewodztwo']['nazwa']}, {wynik['rok']}",
+                "Źródło: GUS, Bank Danych Lokalnych. Opracowanie: aplikacja Warsztat."]
+    plik = arkusz_ods([{"nazwa": f"Atlas {wynik['rok']}", "wiersze": _wiersze_eksportu(wynik), "przypisy": przypisy}])
+    nazwa = f"atlas_{parametry['zmienna_id']}_{wynik['wojewodztwo']['teryt']}_{wynik['rok']}.ods"
+    return Response(plik, mimetype="application/vnd.oasis.opendocument.spreadsheet",
+                    headers={"Content-Disposition": f"attachment; filename={nazwa}"})
+
+
 @atlas_bp.route("/eksport.csv")
 def eksport_csv():
     """Tabela gmin do arkusza (UTF-8 z BOM — polskie znaki w LibreOffice/Excelu)."""
@@ -469,19 +505,8 @@ def eksport_csv():
 
     bufor = io.StringIO()
     zapis = csv.writer(bufor)
-    rok = wynik["rok"]
-    if "porownanie" in wynik:
-        rb = wynik["porownanie"]["rok_bazowy"]
-        zapis.writerow(["teryt", "gmina", f"wartosc_{rb}", f"wartosc_{rok}", "zmiana", "zmiana_proc"])
-        for g in wynik["porownanie"]["gminy"]:
-            proc = "" if g["zmiana_proc"] is None else round(g["zmiana_proc"], 2)
-            zapis.writerow([g["teryt"], g["nazwa"], g["wartosc_bazowa"], g["wartosc"], g["zmiana"], proc])
-    else:
-        zapis.writerow(["teryt", "gmina", f"wartosc_{rok}"])
-        for g in wynik["gminy"]:
-            zapis.writerow([g["teryt"], g["nazwa"], g["wartosc"]])
-
-    nazwa = f"atlas_{parametry['zmienna_id']}_{wynik['wojewodztwo']['teryt']}_{rok}.csv"
+    zapis.writerows(_wiersze_eksportu(wynik))
+    nazwa = f"atlas_{parametry['zmienna_id']}_{wynik['wojewodztwo']['teryt']}_{wynik['rok']}.csv"
     return Response(
         bufor.getvalue().encode("utf-8-sig"),
         mimetype="text/csv",

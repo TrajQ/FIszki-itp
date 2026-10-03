@@ -364,6 +364,7 @@
             numerKlas += 1; // starsze odpowiedzi /klasy dotyczą poprzednich danych
             wybranyWskaznikEl.textContent = `Na mapie: ${dane.zmienna.nazwa} [${dane.zmienna.jednostka || "–"}], ${dane.rok}`;
             linkEksport.href = `${URL_EKSPORT}?${parametry}`;
+            document.getElementById("link-ods").href = `${URL_EKSPORT.replace(/eksport\.csv$/, "eksport.ods")}?${parametry}`; // ETAP 188
             document.getElementById("link-geojson").href = `${URL_GEOJSON}?${parametry}`;
             const jestPorownanie = Boolean(dane.porownanie && dane.porownanie.gminy.length);
             if (dane.porownanie && !jestPorownanie) {
