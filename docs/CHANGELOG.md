@@ -1084,3 +1084,6 @@
 
 ## ETAP 209 — 2026-10-03
 - Przepisy: notatki do pliku Markdown (akt, wszystkie akty, „Moje przepisy”)
+
+## ETAP 210 — 2026-10-03
+- Przegląd i dokumentacja po ETAPach 201–209

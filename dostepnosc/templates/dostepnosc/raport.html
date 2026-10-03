@@ -35,7 +35,7 @@
 
         {% if r.progi_raportu %}
         <h3>Udział w zasięgu</h3>
-        <table class="tabela">
+        <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Czas dojścia</th>{% for m in progi_minut %}<th class="liczba">≤ {{ m }} min</th>{% endfor %}</tr>
             <tr><td>Powierzchnia (komórki)</td>{% for p in r.progi_raportu %}<td class="liczba">{{ liczba(p.procent) }}%</td>{% endfor %}</tr>
             {% if r.progi_raportu[0].procent_ludnosci is defined %}
@@ -45,35 +45,35 @@
             {% for g in s.grupy or [] %}
             <tr><td>{{ g.nazwa }}</td>{% for u in g.udzialy %}<td class="liczba">{{ liczba(u.procent) }}%</td>{% endfor %}</tr>
             {% endfor %}
-        </table>
+        </table></div>
         {% endif %}
 
         {% if r.analiza.najslabsze_ogniwo %}
         <h3>Najsłabsze ogniwo</h3>
-        <table class="tabela">
+        <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Usługa najdalej od komórki</th><th class="liczba">Komórki</th><th class="liczba">Udział</th></tr>
             {% for o in r.analiza.najslabsze_ogniwo %}<tr><td>{{ o.kolumna }}</td><td class="liczba">{{ o.komorki }}</td><td class="liczba">{{ liczba(o.procent) }}%</td></tr>{% endfor %}
-        </table>
+        </table></div>
         {% endif %}
 
         {% if r.punkty %}
         <h3>Obszary obsługi — {{ r.punkty_pliku.usluga }}</h3>
-        <table class="tabela">
+        <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Punkt</th><th class="liczba">Komórki</th>{% if r.punkty[0].ludnosc is defined %}<th class="liczba">Mieszkańcy</th>{% endif %}<th class="liczba">Śr. czas</th><th class="liczba">Maks. czas</th></tr>
             {% for o in r.punkty %}
             <tr><td>{{ o.nr }}{% if o.nazwa %}. {{ o.nazwa }}{% endif %}</td><td class="liczba">{{ o.komorki }}</td>{% if o.ludnosc is defined %}<td class="liczba">{{ tys(o.ludnosc) }}</td>{% endif %}
                 <td class="liczba">{{ liczba(o.sredni_czas_min) ~ ' min' if o.sredni_czas_min is not none else '—' }}</td>
                 <td class="liczba">{{ liczba(o.maks_czas_min) ~ ' min' if o.maks_czas_min is not none else '—' }}</td></tr>
             {% endfor %}
-        </table>
+        </table></div>
         {% endif %}
 
         {% if s.luki %}
         <h3>Luki w dostępności (powyżej 15 min)</h3>
-        <table class="tabela">
+        <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Komórka H3</th><th class="liczba">Czas</th>{% if s.luki[0].ludnosc is defined %}<th class="liczba">Mieszkańcy</th>{% endif %}</tr>
             {% for l in s.luki %}<tr><td class="identyfikator">{{ l.h3 }}</td><td class="liczba">{{ liczba(l.wartosc) }} min</td>{% if l.ludnosc is defined %}<td class="liczba">{{ tys(l.ludnosc) }}</td>{% endif %}</tr>{% endfor %}
-        </table>
+        </table></div>
         {% endif %}
 
         <p class="przypis">{% for p in r.przypisy %}{{ p }} {% endfor %}</p>

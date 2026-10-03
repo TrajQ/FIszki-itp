@@ -90,6 +90,8 @@ Moduły nie sięgają nawzajem do swoich baz. Wyjątki są nieliczne i jawne:
   (tylko działki niezabudowane, D-172).
 - Karta działki w MPZP pobiera punkty inwentaryzacji z `POST /teren/okolica`
   (D-184) — jak ceny, przez trasę.
+- Stan trzymany tylko w przeglądarce (dzielnice w Dostępności) trafia do
+  raportu POST-em ze strony raportu (D-213) — serwer go nie zapisuje.
 
 ## Warstwa `dane/`
 

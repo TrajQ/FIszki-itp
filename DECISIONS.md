@@ -4329,8 +4329,8 @@ ginie: stary akt zostaje bez zmian.
 Data: 2026-10-03
 
 **Decyzja:** Eksport notatek to plik Markdown: czytelny jako zwykły tekst,
-a w edytorach notatek (Obsidian, Typora) i w Wordzie (od 2024 otwiera
-.md) — jako dokument z nagłówkami i cytatami. Pisany ręcznie, bez
+a w edytorach Markdown (np. Obsidian, Typora) — jako dokument z
+nagłówkami i cytatami. Pisany ręcznie, bez
 biblioteki.
 
 **Uzasadnienie:** Plan mówi „plik tekstowy” — Markdown nim jest, a
@@ -4342,3 +4342,19 @@ notatkami jest od ETAPu 158.
 - Czysty TXT — gubi rozróżnienie tekstu przepisu i notatki.
 - DOCX — nowa zależność (python-docx) albo ręczne składanie ZIP-a z XML
   dla formatu, który i tak jest edytowany w innym programie.
+
+## D-218 — W dokumentacji tylko sprawdzone twierdzenia o programach zewnętrznych
+Data: 2026-10-03
+
+**Decyzja:** Opisy w Pomocy i DECISIONS nie obiecują, jak zachowa się
+program spoza Warsztatu (np. czy Word otworzy plik .md), jeśli nie jest
+to sprawdzone. Piszemy o formacie i narzędziach, które go na pewno
+czytają (Notatnik, edytory Markdown).
+
+**Uzasadnienie:** Zasada „nie zgaduj” dotyczy też dokumentacji —
+błędna obietnica w Pomocy kosztuje użytkownika czas tak samo jak błąd w
+kodzie. Przegląd ETAPu 210 znalazł takie zdanie w ETAPie 209.
+
+**Odrzucone alternatywy:**
+- Zostawić ogólnik „otworzysz w Wordzie” — nie da się go potwierdzić
+  dla każdej wersji programu.

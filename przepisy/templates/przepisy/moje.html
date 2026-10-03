@@ -11,7 +11,7 @@
     <div class="druk-aktu__akcje">
         <a class="przycisk przycisk--tekst" href="{{ url_for('przepisy.index') }}">‹ Przepisy</a>
         {% if liczba %}<div class="rzad">
-            <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.moje_przepisy_md') }}" title="Plik Markdown — tekst przepisów i notatki; otworzysz go w Notatniku, Obsidianie albo Wordzie">Do pliku (.md)</a>
+            <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.moje_przepisy_md') }}" title="Plik Markdown — tekst przepisów i notatki; otworzysz go w Notatniku albo edytorze Markdown (Obsidian, Typora)">Do pliku (.md)</a>
             <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
         </div>{% endif %}
     </div>

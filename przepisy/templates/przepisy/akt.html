@@ -14,7 +14,7 @@
     <div class="rzad">
         <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}" target="_blank" rel="noopener">Otwórz PDF</a>
         {% if notatki %}<a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.druk_aktu', akt_id=akt.id, notatki=1) }}" title="Artykuły, przy których masz notatki — do wydruku">Drukuj z notatkami</a>
-        <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.notatki_aktu_md', akt_id=akt.id) }}" title="Plik Markdown (zwykły tekst): artykuły z notatkami — do Notatnika, Obsidiana, Worda">Notatki do pliku</a>{% endif %}
+        <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.notatki_aktu_md', akt_id=akt.id) }}" title="Plik Markdown (zwykły tekst): artykuły z notatkami — do Notatnika albo edytora Markdown (Obsidian, Typora)">Notatki do pliku</a>{% endif %}
         <a id="druk-wybranych" class="przycisk przycisk--drugi" href="#" hidden>Drukuj zaznaczone</a>
         {% if '(Dz.U. ' in akt.nazwa %}<button id="sprawdz-aktualnosc" type="button" class="przycisk--tekst" title="Szuka w Dzienniku Ustaw nowszego obwieszczenia z tekstem jednolitym">Czy jest nowszy tekst?</button>{% endif %}
         <button id="zmien-nazwe" type="button" class="przycisk--tekst">Zmień nazwę</button>

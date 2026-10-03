@@ -3680,3 +3680,21 @@ Status: zamknięty
   plików)
 - Pomoc: akapit „Notatki do pliku”
 - `DECISIONS.md`: D-217
+
+## ETAP 210 — Przegląd i dokumentacja po ETAPach 201–209
+Data: 2026-10-03
+Status: zamknięty
+
+- Przegląd: testy 632/0, pokrycie 95% (najsłabsze bez zmian: raport
+  gminy, ULDK, granice PRG — gałęzie błędów usług), pyflakes czysty
+- Przegląd stron w Chromium: 96 stron, 0 problemów; `/dostepnosc/raport`
+  i `/dostepnosc/raport-dzielnic` dopisane z parametrami; przegląd
+  znalazł poziome przewijanie raportu Dostępności na 390 px (tabela
+  „Udział w zasięgu” z sześcioma kolumnami) — tabele raportu w
+  przewijanym kontenerze
+- Poprawka dokumentacji ETAPu 209: usunięte niesprawdzone twierdzenie o
+  otwieraniu plików .md w Wordzie (Pomoc, D-217, podpowiedzi linków)
+- README: funkcje z ETAPów 201–209 i nowe pliki; ARCHITEKTURA: stan z
+  przeglądarki w raporcie (D-213); PORTFOLIO: liczby na ETAP 210
+- PLAN 171–250: podsumowanie serii 201–209
+- `DECISIONS.md`: D-218
