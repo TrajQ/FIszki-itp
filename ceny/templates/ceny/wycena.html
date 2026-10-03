@@ -25,6 +25,11 @@
             <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Mediana ceny za m²</span><span class="kafelek-rcn__wartosc">{{ z(wynik.mediana_m2) }} zł</span><span class="wyciszony kafelek-rcn__dopisek">połowa: {{ z(wynik.q1_m2) }}–{{ z(wynik.q3_m2) }} zł</span></div>
             <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Orientacyjnie za {{ z(p.pow, 1) }} m²</span><span class="kafelek-rcn__wartosc">{{ z(wynik.szacunek) }} zł</span><span class="wyciszony kafelek-rcn__dopisek">połowa: {{ z(wynik.szacunek_od) }}–{{ z(wynik.szacunek_do) }} zł</span></div>
         </div>
+        {% set k = wynik.korekta %}
+        {% if k %}
+        <p>Po korekcie na {{ k.rok_bazowy }} r.: mediana <strong>{{ z(k.mediana_m2) }} zł/m²</strong> (połowa: {{ z(k.q1_m2) }}–{{ z(k.q3_m2) }} zł), orientacyjnie <strong>{{ z(k.szacunek) }} zł</strong> ({{ z(k.szacunek_od) }}–{{ z(k.szacunek_do) }} zł){% if k.pominiete %}; bez korekty {{ k.pominiete }} transakcji z lat, w których plik ma mniej niż 10 transakcji{% endif %}.</p>
+        <p class="wyciszony opis-cen">Korekta na datę: cena za m² transakcji × mediana ceny m² w {{ k.rok_bazowy }} r. / mediana w roku transakcji (te same filtry, cały plik) — {% for rok, f in k.wspolczynniki.items() %}{{ rok }} × {{ z(f, 3) }}{{ ', ' if not loop.last }}{% endfor %}.</p>
+        {% endif %}
         <div class="raport-cen__mapa raport-cen__mapa--kwadrat">{{ mapa }}</div>
         <p class="wyciszony opis-cen">Schemat: przerywany okrąg — promień {{ z(p.promien) }} m od wskazanego miejsca (niebieski znacznik), numery — podobne transakcje jak w tabeli (od najbliższej).</p>
         {% else %}
@@ -39,16 +44,16 @@
         <table class="tabela">
             <tr><th class="liczba">Nr</th><th class="liczba">Odległość</th><th>Data</th><th class="liczba">Powierzchnia</th>
                 {% if dzialki %}<th>Przeznaczenie</th>{% else %}<th class="liczba">Izby</th><th class="liczba">Piętro</th>{% endif %}
-                <th class="liczba">Cena</th><th class="liczba">Za m²</th></tr>
+                <th class="liczba">Cena</th><th class="liczba">Za m²</th>{% if wynik.korekta %}<th class="liczba">Za m² ({{ wynik.korekta.rok_bazowy }})</th>{% endif %}</tr>
             {% for t in wynik.transakcje %}
             <tr><td class="liczba">{{ loop.index }}</td><td class="liczba">{{ z(t.odleglosc_m) }} m</td><td>{{ t.data }}</td><td class="liczba">{{ z(t.pow_m2, 1) }} m²</td>
                 {% if dzialki %}<td>{{ t.przeznaczenie or '—' }}</td>{% else %}<td class="liczba">{{ t.izby or '—' }}</td><td class="liczba">{{ '—' if t.kondygnacja is none else ('parter' if t.kondygnacja == 0 else t.kondygnacja) }}</td>{% endif %}
-                <td class="liczba">{{ z(t.cena) }} zł</td><td class="liczba">{{ z(t.cena_m2) }} zł</td></tr>
+                <td class="liczba">{{ z(t.cena) }} zł</td><td class="liczba">{{ z(t.cena_m2) }} zł</td>{% if wynik.korekta %}<td class="liczba">{{ '—' if t.cena_m2_skorygowana is none else z(t.cena_m2_skorygowana) ~ ' zł' }}</td>{% endif %}</tr>
             {% endfor %}
         </table>
         </div>
         {% if wynik.liczba > wynik.transakcje | length %}<p class="wyciszony opis-cen">W tabeli {{ wynik.transakcje | length }} najbliższych z {{ wynik.liczba }}; mediana ze wszystkich.</p>{% endif %}
-        <p class="wyciszony opis-cen"><strong>To nie jest operat szacunkowy.</strong> Cena orientacyjna = mediana ceny za m² podobnych transakcji × powierzchnia, bez korekt na stan, piętro, standard ani datę transakcji. Przedział „połowa” — od pierwszego do trzeciego kwartyla.</p>
+        <p class="wyciszony opis-cen"><strong>To nie jest operat szacunkowy.</strong> Cena orientacyjna = mediana ceny za m² podobnych transakcji × powierzchnia, bez korekt na stan, piętro i standard{{ '' if wynik.korekta else ' ani datę transakcji' }}{{ '; korekta na datę tylko wg zmiany mediany w pliku (rynek powiatu, nie tej okolicy)' if wynik.korekta }}. Przedział „połowa” — od pierwszego do trzeciego kwartyla.</p>
     </section>
     {% endif %}
     {{ stopka_wydruku("Ceny", "Rejestr Cen Nieruchomości (GUGiK), plik " ~ plik.nazwa ~ ", ceny brutto z aktów notarialnych") }}

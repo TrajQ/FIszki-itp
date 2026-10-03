@@ -631,15 +631,27 @@
             kafelek(`Orientacyjnie za ${liczba.format(w.pow_m2)} m²`, `${liczba.format(w.szacunek)} zł`, `połowa: ${liczba.format(w.szacunek_od)}–${liczba.format(w.szacunek_do)} zł`),
         );
         elementy.push(kafelki);
+        // ETAP 201: korekta na datę — współczynniki z median roku w całym pliku (rcn.wspolczynniki_czasu)
+        const k = w.korekta;
+        if (k) {
+            elementy.push(el("p", "opis-cen", `Po korekcie na ${k.rok_bazowy} r.: mediana ${liczba.format(k.mediana_m2)} zł/m² (połowa: ${liczba.format(k.q1_m2)}–${liczba.format(k.q3_m2)}), ` +
+                `orientacyjnie ${liczba.format(k.szacunek)} zł (${liczba.format(k.szacunek_od)}–${liczba.format(k.szacunek_do)}).` +
+                (k.pominiete ? ` Bez korekty ${k.pominiete} transakcji z lat, w których plik ma mniej niż 10 transakcji.` : "")));
+            elementy.push(el("p", "wyciszony opis-cen", "Cena każdej transakcji pomnożona przez zmianę mediany ceny m² od jej roku do ostatniego roku w pliku (te same filtry, cały plik): " +
+                Object.entries(k.wspolczynniki).map(([rok, f]) => `${rok} × ${f.toLocaleString("pl-PL", { maximumFractionDigits: 3 })}`).join(", ") + "." +
+                (DZIALKI ? " Mediana roku zależy od tego, jakie działki sprzedano — przy różnym przeznaczeniu zawęź filtr „przeznaczenie”, inaczej korekta może mylić." : "")));
+        }
         const tabela = el("table", "tabela");
         const glowa = el("tr");
         glowa.append(el("th", "liczba", "Odległość"), el("th", "", "Data"), el("th", "liczba", "Powierzchnia"),
             el("th", "", DZIALKI ? "Przeznaczenie" : "Izby"), el("th", "liczba", "Cena"), el("th", "liczba", "Za m²"));
+        if (k) glowa.appendChild(el("th", "liczba", `Za m² (${k.rok_bazowy})`));
         tabela.appendChild(glowa);
         for (const t of w.transakcje) {
             const tr = el("tr");
             tr.append(el("td", "liczba", `${liczba.format(t.odleglosc_m)} m`), el("td", "", t.data), el("td", "liczba", `${liczba.format(t.pow_m2)} m²`),
                 el("td", "", String((DZIALKI ? t.przeznaczenie : t.izby) || "—")), el("td", "liczba", `${liczba.format(t.cena)} zł`), el("td", "liczba", `${liczba.format(t.cena_m2)} zł`));
+            if (k) tr.appendChild(el("td", "liczba", t.cena_m2_skorygowana === null ? "—" : `${liczba.format(t.cena_m2_skorygowana)} zł`));
             tabela.appendChild(tr);
             L.circleMarker([t.lat, t.lng], { radius: 8, color: "#0071e3", weight: 2.5, fill: false })
                 .bindTooltip(el("span", "", `${liczba.format(t.cena_m2)} zł/m² · ${liczba.format(t.pow_m2)} m² · ${t.data}`)).addTo(warstwaPodobnych);

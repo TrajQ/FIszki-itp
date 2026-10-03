@@ -3502,3 +3502,24 @@ Status: zamknięty
   9 700 JS, 621 testów, 92 strony)
 - PLAN 171–250: podsumowanie półmetka, plan 201–250 bez zmian
 - `DECISIONS.md`: D-208
+
+## ETAP 201 — Ceny: korekta cen na datę w wycenie porównawczej
+Data: 2026-10-03
+Status: zamknięty
+
+- Przegląd planu: wycena porównawcza działki działa od ETAPu 107, a karta
+  do druku od ETAPu 113 (szablon rozróżnia działki) — pozycje 201 i 202
+  zastąpione (D-198): 201 → korekta na datę, 202 → zapisane wyceny
+- `ceny/rcn.py`: `wspolczynniki_czasu` — mediany ceny m² w latach z co
+  najmniej `MIN_W_ROKU_KOREKTY=10` transakcjami (te same filtry, cały
+  plik), rok bazowy = ostatni; `podobne` zwraca `korekta` (mediana,
+  kwartyle, szacunek po korekcie, współczynniki, pominięte) i
+  `cena_m2_skorygowana` przy transakcjach
+- Transakcje: wynik po korekcie pod kafelkami, współczynniki, kolumna
+  „Za m² (rok)”; przy działkach uwaga o filtrze przeznaczenia
+- Karta wyceny: wynik i współczynniki korekty, kolumna w tabeli, opis
+  ograniczeń
+- Testy: współczynniki, pominięte lata, mediana po korekcie, trasa i karta;
+  sprawdzone w przeglądarce 1300 (działki) / 390 px (mieszkania)
+- Pomoc: akapit o wycenie porównawczej; PLAN: pozycje 201–202
+- `DECISIONS.md`: D-209

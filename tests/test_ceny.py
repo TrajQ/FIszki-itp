@@ -427,7 +427,7 @@ def test_migracja_starej_bazy(tmp_path):
 def test_podobne():
     assert rcn.odleglosc_m(50.0, 19.9, 50.009, 19.9) == pytest.approx(1000.8, abs=1)  # 0,009° szerokości ≈ 1 km
     assert rcn.odleglosc_m(50.0, 19.9, 50.0, 20.0) == pytest.approx(7147, rel=0.002)  # 0,1° długości na 50° N
-    rekordy = [{"data": f"2024-0{i}-01", "rynek": "wtórny", "pow_m2": p, "cena": c * p, "cena_m2": float(c), "izby": 2,
+    rekordy = [{"data": f"2024-0{i}-01", "rok": 2024, "rynek": "wtórny", "pow_m2": p, "cena": c * p, "cena_m2": float(c), "izby": 2,
                 "lat": 50.0 + d / 111_195, "lng": 19.9} for i, (p, c, d) in enumerate(
                     [(50, 10000, 100), (52, 12000, 300), (45, 11000, 600), (80, 20000, 200), (48, 30000, 1500)], start=1)]
     rekordy.append({**rekordy[0], "lat": None, "lng": None})
@@ -437,6 +437,26 @@ def test_podobne():
     assert w["mediana_m2"] == 11000 and w["szacunek"] == 11000 * 50 and (w["q1_m2"], w["q3_m2"]) == (10500, 11500)
     pusto = rcn.podobne(rekordy, 52.2, 21.0, 1000, 50, 0.2)  # Warszawa — nic w promieniu
     assert pusto["liczba"] == 0 and pusto["transakcje"] == [] and "mediana_m2" not in pusto
+    assert w["korekta"] is None  # jeden rok w danych — nie ma czego korygować
+
+
+def test_korekta_na_date_wyceny():
+    # rynek w pliku: 2022 — mediana 8000, 2023 — 9000, 2024 — 10 000 (po 10 transakcji daleko od miejsca); 2021 — tylko 3
+    rynek = [{"rok": rok, "data": f"{rok}-06-01", "cena_m2": float(c), "pow_m2": 50, "lat": 51.0, "lng": 19.9}
+             for rok, c, n in ((2022, 8000, 10), (2023, 9000, 10), (2024, 10000, 10), (2021, 7000, 3)) for _ in range(n)]
+    czas = rcn.wspolczynniki_czasu(rynek)
+    assert czas["rok_bazowy"] == 2024 and 2021 not in czas["wspolczynniki"]
+    assert czas["wspolczynniki"][2022] == pytest.approx(1.25) and czas["wspolczynniki"][2024] == 1
+    blisko = [{"rok": rok, "data": f"{rok}-03-01", "cena_m2": float(c), "pow_m2": 50, "cena": c * 50, "lat": 50.0, "lng": 19.9}
+              for rok, c in ((2022, 8000), (2023, 9000), (2024, 10000), (2021, 7000))]
+    w = rcn.podobne(rynek + blisko, 50.0, 19.9, 500, 50, 0.1)
+    k = w["korekta"]
+    assert w["liczba"] == 4 and k["liczba"] == 3 and k["pominiete"] == 1  # 2021 bez współczynnika
+    assert k["mediana_m2"] == pytest.approx(10000) and k["szacunek"] == pytest.approx(500000)  # wszystkie trzy po korekcie = 10 000
+    assert w["mediana_m2"] == 8500  # bez korekty: mediana z czterech
+    po_roku = {t["data"][:4]: t["cena_m2_skorygowana"] for t in w["transakcje"]}
+    assert po_roku["2022"] == pytest.approx(10000) and po_roku["2021"] is None
+    assert rcn.wspolczynniki_czasu(rynek[:10]) is None  # jeden rok
 
 
 def test_trasa_podobnych(client, tmp_path, monkeypatch):
@@ -909,3 +929,20 @@ def test_porownanie_ods(client):
     tresc = zipfile.ZipFile(io.BytesIO(odp.data)).read("content.xml").decode()
     assert "Kraków" in tresc and 'office:value="10000' in tresc and "Bank Danych Lokalnych" in tresc
     assert client.get("/ceny/porownanie.ods").status_code == 400
+
+
+def test_korekta_w_trasie_i_karcie(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    # 2023: 10 000 zł/m², 2024: 12 000 zł/m² — po 10 transakcji
+    plik_rcn(sciezka, [lokal(i, dok_data=f"{2023 + i % 2}-05-10", lok_cena_brutto=50 * (10000 + 2000 * (i % 2)),
+                             geom=geometria_gpkg(50.06 + i / 100000, 19.94)) for i in range(20)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    parametry = "lat=50.06&lng=19.94&pow=50&promien=500&tolerancja=0.2"
+    w = client.get(f"/ceny/transakcje/1/podobne?{parametry}").get_json()
+    assert w["korekta"]["rok_bazowy"] == 2024 and w["korekta"]["wspolczynniki"] == {"2023": 1.2, "2024": 1.0}
+    assert w["korekta"]["mediana_m2"] == pytest.approx(12000) and w["mediana_m2"] == pytest.approx(11000)
+    karta = client.get(f"/ceny/transakcje/1/wycena?{parametry}").get_data(as_text=True)
+    assert "Po korekcie na 2024 r." in karta and "2023 × 1,200" in karta and "Za m² (2024)" in karta

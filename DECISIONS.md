@@ -4165,3 +4165,27 @@ w dokumentacji i na żywym zapytaniu przed napisaniem kodu.
 - Przesunięcie podziału `osiedle.js` (ETAP 245) na teraz — plik ma ok.
   1 000 wierszy, ale jest uporządkowany sekcjami; podział zaplanowano po
   funkcjach Osiedla z serii 231–240, żeby dzielić raz.
+
+## D-209 — Korekta na datę z median roku w całym pliku, jako drugi wynik
+Data: 2026-10-03
+
+**Decyzja:** Wycena porównawcza pokazuje obok wyniku bez korekt drugi
+wynik: ceny za m² podobnych transakcji przeliczone na ostatni rok pliku
+współczynnikiem mediana(rok bazowy) / mediana(rok transakcji). Mediany
+liczymy z całego pliku przy tych samych filtrach; rok z mniej niż 10
+transakcjami nie dostaje współczynnika, a jego transakcje są pomijane w
+wyniku po korekcie (z informacją ile).
+
+**Uzasadnienie:** Korekta na czas to podstawowa poprawka w podejściu
+porównawczym — transakcja sprzed czterech lat bez niej zaniża wycenę przy
+rosnącym rynku. Mediana z całego pliku (powiatu) jest stabilniejsza niż z
+kilku transakcji w promieniu. Wynik bez korekty zostaje, bo korekta
+zależy od założenia (rynek okolicy zmienia się jak rynek powiatu), które
+użytkownik powinien widzieć i móc pominąć.
+
+**Odrzucone alternatywy:**
+- Indeks z GUS BDL (ceny 1 m² w powiecie) — tylko lokale, z opóźnieniem
+  publikacji i w innym podziale; dla działek brak.
+- Trend liniowy z regresji (ETAP 156) — zakłada stałe tempo, a ceny
+  rosną i spadają skokowo; mediana roku tego nie zakłada.
+- Korekta zawsze włączona, bez wyniku surowego — ukrywa założenie.

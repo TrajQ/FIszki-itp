@@ -656,6 +656,23 @@ PROMIENIE_M = (250, 500, 1000, 2000, 5000)
 TOLERANCJE = (0.1, 0.2, 0.3, 0.5)
 MIN_PODOBNYCH = 5
 MAKS_NA_LISCIE = 30
+MIN_W_ROKU_KOREKTY = 10  # rok z mniejszą liczbą transakcji w pliku nie daje wiarygodnej mediany
+
+
+def wspolczynniki_czasu(rekordy: list[dict]) -> dict | None:
+    """ETAP 201: korekta cen na datę wyceny. Dla każdego roku z co najmniej
+    MIN_W_ROKU_KOREKTY transakcjami (te same filtry, cały plik — rynek
+    powiatu, nie tylko okolica) współczynnik = mediana ceny m² w roku
+    bazowym / mediana w danym roku; rok bazowy = ostatni taki rok.
+    None, gdy takich lat jest mniej niż dwa."""
+    po_roku: dict[int, list[float]] = {}
+    for r in rekordy:
+        po_roku.setdefault(r["rok"], []).append(r["cena_m2"])
+    mediany = {rok: statistics.median(c) for rok, c in po_roku.items() if len(c) >= MIN_W_ROKU_KOREKTY}
+    if len(mediany) < 2:
+        return None
+    bazowy = max(mediany)
+    return {"rok_bazowy": bazowy, "mediany": mediany, "wspolczynniki": {rok: mediany[bazowy] / m for rok, m in mediany.items()}}
 
 
 def odleglosc_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -686,8 +703,22 @@ def podobne(rekordy: list[dict], lat: float, lng: float, promien_m: float, pow_m
     if not kandydaci:
         return {**wynik, "transakcje": []}
     q1, mediana, q3 = _kwartyle(sorted(r["cena_m2"] for r in kandydaci))
+    czas = wspolczynniki_czasu(rekordy)
+    korekta = None
+    if czas:
+        for r in kandydaci:
+            f = czas["wspolczynniki"].get(r["rok"])
+            r["cena_m2_skorygowana"] = r["cena_m2"] * f if f is not None else None
+        skorygowane = sorted(r["cena_m2_skorygowana"] for r in kandydaci if r["cena_m2_skorygowana"] is not None)
+        if skorygowane:
+            kq1, kmed, kq3 = _kwartyle(skorygowane)
+            korekta = {"rok_bazowy": czas["rok_bazowy"], "liczba": len(skorygowane), "pominiete": len(kandydaci) - len(skorygowane),
+                       "mediana_m2": kmed, "q1_m2": kq1, "q3_m2": kq3,
+                       "szacunek": kmed * pow_m2, "szacunek_od": kq1 * pow_m2, "szacunek_do": kq3 * pow_m2,
+                       "wspolczynniki": {str(rok): round(w, 4) for rok, w in sorted(czas["wspolczynniki"].items())}}
     return {
         **wynik,
+        "korekta": korekta,
         "mediana_m2": mediana,
         "q1_m2": q1,
         "q3_m2": q3,
@@ -697,7 +728,7 @@ def podobne(rekordy: list[dict], lat: float, lng: float, promien_m: float, pow_m
         "od": min(r["data"] for r in kandydaci),
         "do": max(r["data"] for r in kandydaci),
         "transakcje": [
-            {k: r.get(k) for k in ("data", "rynek", "pow_m2", "cena", "cena_m2", "izby", "kondygnacja", "przeznaczenie", "lat", "lng", "odleglosc_m")}
+            {k: r.get(k) for k in ("data", "rynek", "pow_m2", "cena", "cena_m2", "cena_m2_skorygowana", "izby", "kondygnacja", "przeznaczenie", "lat", "lng", "odleglosc_m")}
             for r in kandydaci[:MAKS_NA_LISCIE]
         ],
     }

@@ -1057,3 +1057,6 @@
 
 ## ETAP 200 — 2026-10-03
 - Półmetek: przegląd i podsumowanie ETAPów 151–199
+
+## ETAP 201 — 2026-10-03
+- Ceny: korekta cen na datę w wycenie porównawczej (wg median roku w pliku), na stronie i na karcie do druku
