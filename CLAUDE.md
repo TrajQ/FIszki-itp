@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 199 (Teren: punkty do sprawdzenia w formularzu — zamknięty)
-Ostatni ZIP: releases/warsztat_etap199_20261003.zip
+ETAP: 200 (Półmetek: przegląd i podsumowanie 151–199 — zamknięty)
+Ostatni ZIP: releases/warsztat_etap200_20261003.zip
 Testy: 621 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

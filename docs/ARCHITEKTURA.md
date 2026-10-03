@@ -104,6 +104,11 @@ Moduły nie sięgają nawzajem do swoich baz. Wyjątki są nieliczne i jawne:
 | `dxf.py` | zapis DXF R12 (CAD) — format, nie usługa (D-130) |
 | `arkusz.py` | zapis arkusza ODS (LibreOffice, Excel) — format, bez biblioteki (D-196) |
 
+Formaty pisane ręcznie poza `dane/`, bo używa ich jeden moduł: GPX trasy
+obchodu w `teren/trasa.py` (D-206). Dane, które ma mieć formularz na
+telefon (podkład mapy, punkty do sprawdzenia), są wpisywane w sam plik
+HTML — telefon nie łączy się z Warsztatem (D-071, D-207).
+
 Usługi WFS planów miejscowych i KIMPZP są w `mpzp/wfs.py` i
 `mpzp/krajowe.py`. Wyłącznie API i WFS — bez scrapowania stron.
 Odpowiedzi usług, które rzadko się zmieniają, moduły trzymają w swojej

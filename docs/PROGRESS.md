@@ -3484,3 +3484,21 @@ Status: zamknięty
   (symulowany GPS, ✓ po przeładowaniu)
 - Pomoc: akapit „Punkty do sprawdzenia w telefonie”
 - `DECISIONS.md`: D-207
+
+## ETAP 200 — Półmetek: przegląd i podsumowanie ETAPów 151–199
+Data: 2026-10-03
+Status: zamknięty
+
+- Przegląd: testy 621/0, pokrycie 95% (najsłabsze: `atlas/trasy_raport.py`,
+  `dane/uldk.py`, `atlas/granice.py` — 85%, gałęzie błędów usług),
+  pyflakes bez ostrzeżeń
+- Przegląd stron w Chromium: 92 strony, 0 problemów
+- README: funkcje z ETAPów 191–199 (lista działek naraz, gminy podobne
+  w raporcie, stabilność wskaźnika złożonego, cień od budynków, etapy,
+  chłonność, trasa obchodu, punkty do sprawdzenia) i nowe pliki
+- ARCHITEKTURA: formaty pisane ręcznie poza `dane/` (GPX), dane wpisywane
+  w plik formularza na telefon
+- PORTFOLIO: liczby na ETAP 200 (19 500 wierszy Pythona, 9 500 testów,
+  9 700 JS, 621 testów, 92 strony)
+- PLAN 171–250: podsumowanie półmetka, plan 201–250 bez zmian
+- `DECISIONS.md`: D-208

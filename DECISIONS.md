@@ -4146,3 +4146,22 @@ inwentaryzacji: wynikiem jest nowy punkt, porównywalny z poprzednim
   odległości bez tego.
 - Pełne dane starych punktów w formularzu (zdjęcia) — plik urósłby o
   megabajty; opis i położenie wystarczą do odnalezienia miejsca.
+
+## D-208 — Plan 201–250 bez zmian po półmetku
+Data: 2026-10-03
+
+**Decyzja:** Po przeglądzie w ETAPie 200 plan 201–250 zostaje bez zmian;
+kolejne ETAPy idą w zapisanej kolejności, a pozycje wymagające nowych
+usług (API Sejmu: nowszy tekst jednolity, akty powiązane) najpierw
+sprawdzają, co API rzeczywiście zwraca.
+
+**Uzasadnienie:** Żadna pozycja nie okazała się zrobiona wcześniej ani
+zbędna; przegląd nie wykazał długu, który trzeba spłacić przed dalszymi
+funkcjami (pokrycie 95%, brak ostrzeżeń, strony bez problemów).
+Zasada „nie zgaduj” dotyczy też usług — pola odpowiedzi API sprawdzamy
+w dokumentacji i na żywym zapytaniu przed napisaniem kodu.
+
+**Odrzucone alternatywy:**
+- Przesunięcie podziału `osiedle.js` (ETAP 245) na teraz — plik ma ok.
+  1 000 wierszy, ale jest uporządkowany sekcjami; podział zaplanowano po
+  funkcjach Osiedla z serii 231–240, żeby dzielić raz.

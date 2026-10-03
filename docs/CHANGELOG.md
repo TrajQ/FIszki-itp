@@ -1054,3 +1054,6 @@
 
 ## ETAP 199 — 2026-10-03
 - Teren: punkty „do sprawdzenia” (z trasy obchodu) w formularzu na telefon — lista, odległość, mapa, ✓
+
+## ETAP 200 — 2026-10-03
+- Półmetek: przegląd i podsumowanie ETAPów 151–199
