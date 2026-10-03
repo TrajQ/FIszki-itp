@@ -3346,3 +3346,17 @@ Status: zamknięty
   w przeglądarce 1300/390 px (tabela przewijana w bok na telefonie)
 - Pomoc: „Jak sprawdzić wiele działek naraz?”
 - `DECISIONS.md`: D-199
+
+## ETAP 192 — MPZP: wynik listy działek — druk i arkusz ODS
+Data: 2026-10-03
+Status: zamknięty
+
+- Trasa POST `/mpzp/hurtowo.ods` — ta sama lista sprawdzona ponownie
+  i zapisana jako arkusz (wpis, działka, powierzchnia, przeznaczenie, opis
+  symbolu, źródło planu, stan, uwaga) z przypisem o źródłach
+- Strona listy: przyciski „Arkusz ODS” i „Drukuj / zapisz PDF”, stopka
+  wydruku; w druku bez formularza, tabela bez minimalnej szerokości
+- Test: druk (stopka), ODS (liczby jako liczby, stany, źródło); sprawdzone
+  w przeglądarce 1300/390 px
+- Pomoc: akapit o liście działek
+- `DECISIONS.md`: D-200

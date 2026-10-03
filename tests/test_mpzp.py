@@ -990,3 +990,18 @@ def test_lista_dzialek(client, monkeypatch):
     za_duzo = "\n".join(f"146501_1.0001.AR_1.{i}" for i in range(31))
     assert "Najwyżej 30 działek" in client.post("/mpzp/hurtowo", data={"lista": za_duzo}).get_data(as_text=True)
     assert "Wklej co najmniej" in client.post("/mpzp/hurtowo", data={"lista": " "}).get_data(as_text=True)
+
+
+def test_lista_dzialek_ods_i_druk(client, monkeypatch):
+    """ETAP 192."""
+    import io
+    import zipfile
+
+    wydzielenie = Wydzielenie(geometria=_dzialka_poznan().geometria, atrybuty={"symb_t": "ZP"})
+    monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: _dzialka_poznan() if i == "306401_1.0051.AR_18.14" else None)
+    monkeypatch.setattr(mpzp_routes, "znajdz_przeznaczenie", lambda gmina, punkt: wydzielenie)
+    strona = client.post("/mpzp/hurtowo", data={"lista": "306401_1.0051.AR_18.14"}).get_data(as_text=True)
+    assert "Arkusz ODS" in strona and "stopka-wydruku" in strona and "window.print()" in strona
+    odp = client.post("/mpzp/hurtowo.ods", data={"lista": "306401_1.0051.AR_18.14\n146501_1.0001.AR_9.9"})
+    tresc = zipfile.ZipFile(io.BytesIO(odp.data)).read("content.xml").decode()
+    assert "ZP" in tresc and "WFS gminy Poznań" in tresc and "nie znaleziono" in tresc and "office:value-type=\"float\"" in tresc

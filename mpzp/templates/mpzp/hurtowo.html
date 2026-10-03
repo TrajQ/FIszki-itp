@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
 {% macro m2(x) %}{% if x is none %}—{% else %}{{ '{:,.0f}'.format(x).replace(',', ' ') }}{% endif %}{% endmacro %}
 
 {% block tytul %}Lista działek — MPZP — Warsztat{% endblock %}
@@ -23,7 +24,15 @@
 
 {% if wyniki %}
 <section class="karta stos">
-    <h3>Wynik: {{ wyniki | selectattr('stan', 'equalto', 'ok') | list | length }} z {{ wyniki | length }} z przeznaczeniem w planie</h3>
+    <div class="rzad rzad--miedzy">
+        <h3>Wynik: {{ wyniki | selectattr('stan', 'equalto', 'ok') | list | length }} z {{ wyniki | length }} z przeznaczeniem w planie</h3>
+        {# ETAP 192: druk i arkusz #}
+        <form method="post" action="{{ url_for('mpzp.hurtowo_ods') }}" class="rzad akcje-listy">
+            <input type="hidden" name="lista" value="{{ tekst }}">
+            <button type="submit" class="przycisk--drugi" title="Arkusz LibreOffice / Excel — działki sprawdzane jeszcze raz">Arkusz ODS</button>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </form>
+    </div>
     <div class="przewijanie-mpzp">
     <table class="tabela" id="tabela-hurtowa">
         <tr><th>Wpis</th><th>Działka</th><th class="liczba">Pow. [m²]</th><th>Przeznaczenie</th><th>Stan</th></tr>
@@ -40,5 +49,6 @@
     </div>
     <p class="wyciszony">Przeznaczenie w punkcie wewnątrz działki (działka może leżeć w kilku przeznaczeniach — sprawdź ją na mapie). Opisy symboli wg rozporządzenia z 2003 r. są orientacyjne; wiążący jest tekst i rysunek planu. Źródła: ULDK (GUGiK), WFS gminy albo krajowa integracja planów (GUGiK).</p>
 </section>
+{{ stopka_wydruku("MPZP", "ULDK, WFS gminy albo krajowa integracja planów (GUGiK)") }}
 {% endif %}
 {% endblock %}

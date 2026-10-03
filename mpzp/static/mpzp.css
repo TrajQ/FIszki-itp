@@ -1068,3 +1068,14 @@ button.wpis-zapisany {
 .przewijanie-mpzp #tabela-hurtowa {
     min-width: 760px; /* przewijanie w bok zamiast bardzo wysokich wierszy */
 }
+
+@media print {
+    #formularz-listy,
+    .akcje-listy {
+        display: none;
+    }
+
+    .przewijanie-mpzp #tabela-hurtowa {
+        min-width: 0;
+    }
+}

@@ -9,7 +9,7 @@ pobierania. Wynik nie trafia do historii (to nie są działki „oglądane”).
 
 import re
 
-from flask import render_template, request
+from flask import Response, render_template, request
 
 from dane.uldk import WZOR_ID_DZIALKI, BladULDK
 
@@ -80,6 +80,29 @@ def sprawdz_wpis(wpis: str) -> dict:
     elif not wynik.get("uwaga"):
         wynik.update(stan="bez planu", uwaga="brak planu miejscowego w tym miejscu")
     return wynik
+
+
+def _wiersze_arkusza(wyniki: list[dict]) -> list[list]:
+    wiersze = [["wpis", "działka", "powierzchnia [m²]", "przeznaczenie", "opis symbolu", "źródło planu", "stan", "uwaga"]]
+    for w in wyniki:
+        opis = "; ".join(f"{o['symbol']} — {o['opis'] or 'brak w słowniku'}" for o in w.get("opis") or [])
+        wiersze.append([w["wpis"], w["dzialka_id"], w["powierzchnia_m2"], w["przeznaczenie"], opis, w.get("zrodlo"), w["stan"], w["uwaga"]])
+    return wiersze
+
+
+@mpzp_bp.route("/hurtowo.ods", methods=["POST"])
+def hurtowo_ods():
+    """ETAP 192: ta sama lista jako arkusz ODS — sprawdzana ponownie (liczby
+    z usług, nie z przeglądarki)."""
+    from dane.arkusz import arkusz_ods
+
+    wpisy = wpisy_z_tekstu(request.form.get("lista", ""))[:MAKS_DZIALEK]
+    wyniki = [sprawdz_wpis(w) for w in wpisy]
+    plik = arkusz_ods([{"nazwa": "Działki", "wiersze": _wiersze_arkusza(wyniki),
+                        "przypisy": ["Przeznaczenie w punkcie wewnątrz działki; opisy symboli orientacyjne — wiążący jest plan miejscowy.",
+                                     "Źródła: ULDK (GUGiK), WFS gminy albo krajowa integracja planów (GUGiK). Opracowanie: aplikacja Warsztat."]}])
+    return Response(plik, mimetype="application/vnd.oasis.opendocument.spreadsheet",
+                    headers={"Content-Disposition": "attachment; filename=lista_dzialek.ods"})
 
 
 @mpzp_bp.route("/hurtowo", methods=["GET", "POST"])

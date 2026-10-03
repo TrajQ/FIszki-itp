@@ -1030,3 +1030,6 @@
 
 ## ETAP 191 — 2026-10-03
 - MPZP: lista działek — przeznaczenie do 30 działek naraz z wklejonej listy
+
+## ETAP 192 — 2026-10-03
+- MPZP: lista działek do druku i jako arkusz ODS

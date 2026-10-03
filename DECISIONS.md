@@ -3987,3 +3987,19 @@ lista z arkusza by ją zalała.
   obsługi formatów; plik można dodać, jeśli będzie potrzebny.
 - Udziały przeznaczeń dla każdej działki — kolejne zapytanie WFS na
   działkę; zostaje na karcie działki.
+
+## D-200 — Arkusz listy działek liczony ponownie na serwerze
+Data: 2026-10-03
+
+**Decyzja:** „Arkusz ODS” wysyła tę samą listę wpisów, a serwer sprawdza
+działki jeszcze raz i zapisuje wynik. Nie przyjmujemy wyników z
+przeglądarki (np. ukrytego pola z tabelą).
+
+**Uzasadnienie:** Liczby i symbole w pliku mają pochodzić z usług, nie z
+treści formularza (CLAUDE.md: liczby z danych). Lista ma najwyżej 30
+działek, więc ponowne zapytania są do przyjęcia; zapamiętywanie wyników na
+serwerze wymagałoby nowej tabeli i sprzątania.
+
+**Odrzucone alternatywy:**
+- Pamięć podręczna wyników listy — oszczędza zapytania, ale dokłada stan
+  bez wyraźnej potrzeby.
