@@ -1449,3 +1449,37 @@ def test_trasa_podobnych(raport_client, monkeypatch):
     assert d["gmina"]["nazwa"] == "gmina 03" and d["podobne"][0]["nazwa"] in ("gmina 04", "gmina 05") and len(d["skladowe"]) == 2
     assert c.get(f"/atlas/typologia/podobne?{zapytanie}&gmina=9999999").status_code == 400
     assert 'id="pole-podobne"' in c.get("/atlas/typologia").get_data(as_text=True)
+
+
+# ---------- ETAP 178: trend w gminach ----------
+
+
+def test_trendy_gmin():
+    from atlas.trasy_trend import trendy_gmin
+
+    lata = {r: [{"teryt": "A", "nazwa": "Rosnąca", "wartosc": 100.0 + 10 * (r - 2015)},
+                {"teryt": "B", "nazwa": "Malejąca", "wartosc": 200.0 - 4 * (r - 2015) + (5 if r % 2 else -5)},
+                *([{"teryt": "C", "nazwa": "Krótka", "wartosc": 1.0}] if r > 2020 else [])] for r in range(2015, 2024)}
+    t = trendy_gmin(lata)
+    assert [g["nazwa"] for g in t] == ["Rosnąca", "Malejąca"]  # „Krótka” — za mało lat
+    assert t[0]["zmiana_roczna"] == pytest.approx(10) and t[0]["zmiana_roczna_proc"] == pytest.approx(10 / 140 * 100) and t[0]["stabilny"]
+    assert t[1]["zmiana_roczna"] < 0 and t[1]["r2"] < 1
+
+
+def test_strona_trendu(client, monkeypatch):
+    from atlas import trasy_trend
+
+    monkeypatch.setattr(trasy_trend, "_wartosci_wskaznika", lambda zid, rok, woj, m, mn: [
+        {"bdl_id": "011212161011", "teryt": "1261011", "nazwa": "Kraków", "wartosc": 800000.0 + 1000 * (rok - 2013)},
+        {"bdl_id": "011212106032", "teryt": "1206032", "nazwa": "Wieliczka", "wartosc": 60000.0 + 2000 * (rok - 2013)}])
+    cechy = [{"type": "Feature", "properties": {"teryt": t, "nazwa": n},
+              "geometry": {"type": "Polygon", "coordinates": [[[19 + i, 50], [20 + i, 50], [20 + i, 51], [19 + i, 51], [19 + i, 50]]]}}
+             for i, (t, n) in enumerate([("1261011", "Kraków"), ("1206032", "Wieliczka"), ("1206000", "Bez danych")])]
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {"type": "FeatureCollection", "features": cechy})
+    strona = client.get(f"/atlas/trend?{ZAPYTANIE}").get_data(as_text=True)
+    assert 'value="2013"' in strona and "Najszybszy wzrost" in strona and "Wieliczka" in strona and "stopka-wydruku" in strona
+    svg = client.get(f"/atlas/trend.svg?{ZAPYTANIE}&od=2013&do=2023").get_data(as_text=True)
+    assert "trend 2013–2023" in svg and "wzrost ponad 3%" in svg and "mniej niż 5 lat danych" in svg
+    for zle in ("od=2020&do=2023", "od=2000&do=2023", "od=x&do=2023"):
+        assert client.get(f"/atlas/trend.svg?{ZAPYTANIE}&{zle}").status_code == 400
+    assert 'id="link-trend"' in client.get("/atlas/").get_data(as_text=True)

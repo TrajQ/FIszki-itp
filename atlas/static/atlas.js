@@ -537,6 +537,10 @@
         lata.delete("rok_bazowy");
         document.getElementById("link-lata").href = `${URL_DRUK.replace(/druk$/, "lata")}?${lata}`;
         document.getElementById("link-gminy-czas").href = urlGminWCzasie("");
+        // ETAP 178: trend w gminach — domyślnie ostatnie 10 lat do roku na mapie
+        const trend = new URLSearchParams(biezaceParametry);
+        trend.delete("rok_bazowy");
+        document.getElementById("link-trend").href = `${URL_DRUK.replace(/druk$/, "trend")}?${trend}`;
     }
 
     // ETAP 171: kilka gmin na jednym wykresie w czasie — parametry wskaźnika, bez roku bazowego

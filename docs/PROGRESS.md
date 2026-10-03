@@ -3096,3 +3096,21 @@ Status: zamknięty
   przeglądarce 1300/390 px
 - Pomoc: „Gminy podobne”
 - `DECISIONS.md`: D-185
+
+## ETAP 178 — Atlas: trend liniowy w gminach jako kartogram
+Data: 2026-10-03
+Status: zamknięty
+
+- `atlas/trasy_trend.py`: wartości wskaźnika (także względnego) z każdego
+  roku okresu (5–11 lat, cache BDL jak mapa), `trendy_gmin` — dla gminy z
+  co najmniej 5 latami `raport.prognoza_trendu` (nachylenie, R²,
+  stabilność) i zmiana w % średniej gminy
+- Kartogram SVG `/atlas/trend.svg`: 5 klas (spadek > 3%, spadek
+  0,5–3%, stabilnie ±0,5%, wzrost 0,5–3%, wzrost > 3% rocznie), przypis
+  z liczbą trendów niestabilnych, gminy bez danych szare
+- Strona `/atlas/trend`: wybór lat, mapa, tabele 10 najszybszych
+  wzrostów i spadków z R², druk i SVG; link „Trend ↗” pod mapą Atlasu
+- Testy: trend gmin (krótki szereg pominięty), strona, SVG, złe lata;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: „Trend w gminach”
+- `DECISIONS.md`: D-186

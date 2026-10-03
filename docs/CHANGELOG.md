@@ -988,3 +988,6 @@
 
 ## ETAP 177 — 2026-10-03
 - Atlas: gminy podobne do wybranej w przestrzeni kilku wskaźników
+
+## ETAP 178 — 2026-10-03
+- Atlas: kartogram trendu liniowego wskaźnika w gminach (średnia roczna zmiana, R²)

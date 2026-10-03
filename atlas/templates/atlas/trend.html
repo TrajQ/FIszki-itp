@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+{% macro z(x, miejsca=1) %}{% if x is none %}—{% else %}{% set s = ('{:+,.%df}' % miejsca).format(x) %}{{ s.replace(',', ' ').replace('.', ',') }}{% endif %}{% endmacro %}
+
+{% block tytul %}Trend w gminach — Atlas{% endblock %}
+{% block klasa_body %}strona-druku-mapy{% endblock %}
+{% block klasa_main %}tresc tresc--szeroka{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('atlas.static', filename='atlas.css') }}">{% endblock %}
+
+{% block tresc %}
+{# ETAP 178: trend liniowy w każdej gminie — liczby z atlas/trasy_trend.py #}
+<div class="druk-mapy">
+    <div class="druk-mapy__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
+        {% if wynik %}<div class="rzad">
+            <a class="przycisk przycisk--drugi" href="{{ url_for('atlas.trend_svg', pobierz=1, **parametry) }}">Pobierz SVG</a>
+            <button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>
+        </div>{% endif %}
+    </div>
+    <form method="get" class="rzad druk-mapy__opis wybor-trendu">
+        {% for k, v in parametry.items() if k not in ('od', 'do') %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+        <label class="rzad">Od <input type="number" name="od" value="{{ parametry.get('od', '') }}" min="1995" max="2100" required></label>
+        <label class="rzad">do <input type="number" name="do" value="{{ parametry.get('do', '') }}" min="1995" max="2100" required></label>
+        <button type="submit" class="przycisk--drugi">Pokaż</button>
+        <span class="wyciszony">{{ min_lat }}–{{ maks_lat }} lat</span>
+    </form>
+    {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+    {% if wynik %}
+    <p class="wyciszony druk-mapy__opis">Kolor gminy — średnia roczna zmiana wskaźnika w % jej średniej wartości (prosta najmniejszych kwadratów przez wartości z lat {{ wynik.od }}–{{ wynik.do }}). R² mówi, jak równomierna była zmiana: od {{ r2_stabilny | string | replace('.', ',') }} trend stabilny.</p>
+    <img class="druk-mapy__obraz" src="{{ url_for('atlas.trend_svg', **parametry) }}" alt="Kartogram trendu wskaźnika w gminach">
+    <div class="raport-trendu">
+        {% for tytul, lista in [('Najszybszy wzrost', wynik.gminy[:10]), ('Najszybszy spadek', (wynik.gminy | reverse | list)[:10])] %}
+        <section>
+            <h3>{{ tytul }}</h3>
+            <div class="przewijanie-tabeli">
+            <table class="tabela tabela-trendu">
+                <tr><th>Gmina</th><th class="liczba">Na rok</th><th class="liczba">% średniej</th><th class="liczba">R²</th></tr>
+                {% for g in lista %}<tr><td>{{ g.nazwa }}</td><td class="liczba">{{ z(g.zmiana_roczna, 2) }}</td><td class="liczba">{{ z(g.zmiana_roczna_proc) }}%</td>
+                    <td class="liczba {{ '' if g.stabilny else 'wyciszony' }}">{{ ('%.2f' % g.r2) | replace('.', ',') }}{{ '' if g.stabilny else ' *' }}</td></tr>{% endfor %}
+            </table>
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+    <p class="wyciszony druk-mapy__opis">* trend niestabilny — zmiana nierówna w latach, nachylenie mało mówi. Jednostka: {{ wynik.zmienna.jednostka or '–' }} na rok. Gmin z trendem: {{ wynik.gminy | length }}.</p>
+    {{ stopka_wydruku("Atlas", "GUS, Bank Danych Lokalnych; granice gmin — PRG (GUGiK)") }}
+    {% endif %}
+</div>
+{% endblock %}

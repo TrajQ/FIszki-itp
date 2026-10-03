@@ -3724,3 +3724,23 @@ największej różnicy tłumaczy wynik słowami bez modelu językowego.
   ETAPie planu (193) korzysta z tej funkcji.
 - Odległość Mahalanobisa (uwzględnia korelacje wskaźników) — trudniejsza
   do wyjaśnienia na pierwszym roku; euklidesowa w z jest standardem.
+
+## D-186 — Trend w gminach: ta sama metoda co prognoza, zmiana w % średniej
+Data: 2026-10-03
+
+**Decyzja:** Kartogram trendu używa `raport.prognoza_trendu` (najmniejsze
+kwadraty, najwyżej 10 lat wstecz od końca okresu, min. 5 punktów, R² ≥ 0,7
+— stabilny). Kolor to nachylenie w % średniej wartości gminy w okresie,
+w stałych klasach ±0,5% i ±3% rocznie.
+
+**Uzasadnienie:** Ta sama gmina ma wtedy ten sam trend na mapie i w
+raporcie gminy. Nachylenie bezwzględne faworyzowałoby duże gminy (Kraków
+„rośnie” najszybciej każdym wskaźnikiem liczonym w osobach); procent
+średniej porównuje tempo. Stałe klasy pozwalają zestawiać mapy różnych
+wskaźników i okresów.
+
+**Odrzucone alternatywy:**
+- Klasy z danych (kwantyle) — dzielą gminy po równo nawet wtedy, gdy
+  wszystkie są „stabilne”, co sugeruje różnice, których nie ma.
+- Ukrycie trendów niestabilnych na mapie — gubi informację; przypis i
+  gwiazdka w tabeli wystarczą.
