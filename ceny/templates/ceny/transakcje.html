@@ -199,6 +199,11 @@
             <h3>Według piętra</h3>
             <div class="przewijanie-cen"><table class="tabela" id="pietra-rcn"></table></div>
             <p id="pietra-brak" class="wyciszony opis-cen" hidden>Brak numerów kondygnacji — plik zaimportowany przed ETAPem 112 (zaimportuj go ponownie) albo plik ich nie zawiera.</p>
+            <div id="premia-lat-rcn" class="stos" hidden>
+                <h3>Premia rynku pierwotnego w latach</h3>
+                <div class="przewijanie-cen"><table class="tabela" id="tabela-premii-lat"></table></div>
+                <p class="wyciszony opis-cen">O ile mediana ceny za m² na rynku pierwotnym jest wyższa niż na wtórnym w tym samym roku (w nawiasie — liczba transakcji). Liczymy przy co najmniej 5 transakcjach na obu rynkach; to różnica median (inne mieszkania na każdym rynku), nie cena tego samego lokalu.</p>
+            </div>
             {% endif %}
             <p class="wyciszony opis-cen">Źródło: Rejestr Cen Nieruchomości (GUGiK), ceny brutto z aktów notarialnych. Statystyki liczy aplikacja.</p>
         </section>

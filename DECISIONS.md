@@ -4207,3 +4207,20 @@ zapisany wynik pokazuje, ile się zmieniło. Lista dozwolonych pól sprawia,
   rozjeżdża się z nim po imporcie.
 - Zapis w pamięci przeglądarki — znika przy czyszczeniu danych i nie
   trafia do kopii zapasowej.
+
+## D-211 — Premia w latach z tej samej funkcji co premia w obszarach
+Data: 2026-10-03
+
+**Decyzja:** Premię rynku pierwotnego w każdym roku liczymy funkcją
+`_rynki` z ETAPu 135 (mediany osobno, próg 5 transakcji na rynku), bez
+nowej metody. Rok bez progu pokazuje „za mało danych”.
+
+**Uzasadnienie:** Ta sama definicja w obszarach i w latach — liczby da
+się porównać, a opis ograniczeń (różnica median, nie ten sam lokal) jest
+jeden. Próg chroni przed premią z dwóch transakcji.
+
+**Odrzucone alternatywy:**
+- Premia z regresji (ETAP 156) w każdym roku — model z kilkoma cechami
+  na rok wymaga dużo więcej transakcji, a wynik trudniej wyjaśnić.
+- Premia w kwartałach — za mało transakcji pierwotnych w kwartale w
+  typowym powiecie.

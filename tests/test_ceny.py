@@ -976,3 +976,32 @@ def test_zapisane_wyceny(client, tmp_path, monkeypatch):
     assert client.delete(f"/ceny/transakcje/wyceny/{lista[0]['id']}").get_json() == {"ok": True}
     assert client.get("/ceny/transakcje/1/wyceny").get_json() == []
     assert client.delete(f"/ceny/transakcje/wyceny/{lista[0]['id']}").status_code == 404
+
+
+# ---------- ETAP 203: premia rynku pierwotnego w latach ----------
+
+
+def test_premia_w_latach(client, tmp_path, monkeypatch):
+    def lok(rok, rynek, c):
+        return {"rok": rok, "rynek": rynek, "cena_m2": float(c)}
+    lokale = ([lok(2023, "pierwotny", 12000)] * 5 + [lok(2023, "wtórny", 10000)] * 5 +
+              [lok(2024, "pierwotny", 13200)] * 6 + [lok(2024, "wtórny", 12000)] * 5 + [lok(2024, "nieznany", 1)] * 3 +
+              [lok(2025, "pierwotny", 15000)] * 2 + [lok(2025, "wtórny", 12500)] * 7)
+    lata = rcn.premia_w_latach(lokale)
+    assert [r["rok"] for r in lata] == [2023, 2024, 2025]
+    assert lata[0]["premia_pierwotnego_proc"] == pytest.approx(20) and lata[1]["premia_pierwotnego_proc"] == pytest.approx(10)
+    assert lata[2]["premia_pierwotnego_proc"] is None and lata[2]["rynki"]["pierwotny"]["liczba"] == 2  # za mało pierwotnych
+    assert rcn.premia_w_latach([l for l in lokale if l["rynek"] == "wtórny"]) == []
+    # trasa i raport
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, tran_rodzaj_rynku="pierwotny" if i % 2 else "wtorny", lok_cena_brutto=50 * (11000 if i % 2 else 10000))
+                       for i in range(12)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    st = client.get("/ceny/transakcje/1/dane").get_json()["statystyki"]
+    assert st["premia_lat"][0]["rok"] == 2024 and st["premia_lat"][0]["premia_pierwotnego_proc"] == pytest.approx(10)
+    assert client.get("/ceny/transakcje/1/dane?rynek=pierwotny").get_json()["statystyki"]["premia_lat"] == []
+    raport = client.get("/ceny/transakcje/1/raport").get_data(as_text=True)
+    assert "Premia rynku pierwotnego w latach" in raport and "+10,0%" in raport

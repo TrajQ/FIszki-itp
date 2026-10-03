@@ -458,6 +458,7 @@ def statystyki(lokale: list[dict]) -> dict | None:
         "trend": trend,
         "grupy": grupy,
         "pietra": _pietra(lokale) if "kondygnacja" in lokale[0] else [],
+        "premia_lat": premia_w_latach(lokale) if "kondygnacja" in lokale[0] else [],  # tylko mieszkania
         "histogram": histogram,
     }
 
@@ -533,6 +534,18 @@ def _rynki(zbior: list[dict]) -> dict:
     p, w = rynki["pierwotny"], rynki["wtórny"]
     premia = 100 * (p["mediana_m2"] / w["mediana_m2"] - 1) if min(p["liczba"], w["liczba"]) >= MIN_W_RYNKU else None
     return {"rynki": rynki, "premia_pierwotnego_proc": premia}
+
+
+def premia_w_latach(lokale: list[dict]) -> list[dict]:
+    """ETAP 203: premia rynku pierwotnego w każdym roku (te same zasady co
+    `_rynki`: mediany osobno, premia przy co najmniej MIN_W_RYNKU transakcjach
+    na obu rynkach). Pusta lista, gdy w żadnym roku nie da się jej policzyć —
+    np. przy filtrze jednego rynku."""
+    po_roku: dict[int, list[dict]] = {}
+    for l in lokale:
+        po_roku.setdefault(l["rok"], []).append(l)
+    lata = [{"rok": rok, **_rynki(zbior)} for rok, zbior in sorted(po_roku.items())]
+    return lata if any(r["premia_pierwotnego_proc"] is not None for r in lata) else []
 
 
 def porownanie(lokale: list[dict], obszary: list[dict]) -> dict:

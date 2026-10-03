@@ -3542,3 +3542,19 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Zapisane wyceny”
 - `DECISIONS.md`: D-210
+
+## ETAP 203 — Ceny: premia rynku pierwotnego w latach
+Data: 2026-10-03
+Status: zamknięty
+
+- `ceny/rcn.py`: `premia_w_latach` — `_rynki` (ETAP 135) w każdym roku:
+  mediany pierwotnego i wtórnego, premia przy co najmniej `MIN_W_RYNKU`
+  transakcjach na obu rynkach; `statystyki` zwraca `premia_lat` (tylko
+  mieszkania, pusta przy filtrze jednego rynku)
+- Transakcje: tabela „Premia rynku pierwotnego w latach” z paskiem
+  (ujemna premia innym kolorem) pod tabelą pięter
+- Raport do druku: ta sama tabela, niezależnie od narysowanych obszarów
+- Test: premia w latach, rok z za małą liczbą, filtr rynku, trasa i
+  raport; sprawdzone w przeglądarce 1300/390 px
+- Pomoc: zdanie przy tabeli pięter
+- `DECISIONS.md`: D-211

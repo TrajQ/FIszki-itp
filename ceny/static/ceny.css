@@ -544,3 +544,16 @@
     padding: 6px 0;
     border-top: 1px solid var(--linia);
 }
+
+/* ETAP 203: pasek premii rynku pierwotnego w latach */
+.premia-lat__pasek span {
+    display: inline-block;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--akcent);
+    vertical-align: middle;
+}
+
+.premia-lat__pasek span.premia-lat__ujemna {
+    background: var(--ostrzezenie);
+}

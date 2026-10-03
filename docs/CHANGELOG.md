@@ -1063,3 +1063,6 @@
 
 ## ETAP 202 — 2026-10-03
 - Ceny: zapisane wyceny porównawcze — lista, karta liczona od nowa z wynikiem z dnia zapisu
+
+## ETAP 203 — 2026-10-03
+- Ceny: premia rynku pierwotnego w latach (tabela na stronie transakcji i w raporcie)

@@ -250,6 +250,33 @@
         }
         rysujMape(d.mapa);
         pokazPietra(st.pietra);
+        pokazPremieLat(st.premia_lat);
+    }
+
+    // ETAP 203: premia rynku pierwotnego w latach (rcn.premia_w_latach)
+    function pokazPremieLat(lata) {
+        const blok = document.getElementById("premia-lat-rcn");
+        if (!blok) return; // działki
+        blok.hidden = !lata.length;
+        const tabela = document.getElementById("tabela-premii-lat");
+        const glowa = el("tr");
+        for (const [t, k] of [["Rok", ""], ["Pierwotny za m²", "liczba"], ["Wtórny za m²", "liczba"], ["Premia", "liczba"], ["", ""]]) glowa.appendChild(el("th", k, t));
+        tabela.replaceChildren(glowa);
+        const maks = Math.max(...lata.map((r) => Math.abs(r.premia_pierwotnego_proc ?? 0)), 1);
+        const rynek = (r) => (r.liczba ? `${liczba.format(r.mediana_m2)} zł (${r.liczba})` : "—");
+        for (const r of lata) {
+            const p = r.premia_pierwotnego_proc;
+            const pasek = el("td", "premia-lat__pasek");
+            if (p !== null) {
+                const s = el("span", p < 0 ? "premia-lat__ujemna" : "");
+                s.style.width = `${Math.round((60 * Math.abs(p)) / maks)}px`;
+                pasek.appendChild(s);
+            }
+            const tr = el("tr");
+            tr.append(el("td", "", String(r.rok)), el("td", "liczba", rynek(r.rynki.pierwotny)), el("td", "liczba", rynek(r.rynki["wtórny"])),
+                el("td", p === null ? "liczba wyciszony" : "liczba", p === null ? "za mało danych" : `${procent.format(p)}%`), pasek);
+            tabela.appendChild(tr);
+        }
     }
 
     // ETAP 112: lokale według piętra
