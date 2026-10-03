@@ -52,19 +52,43 @@ PRZEDZIALY_DNI = [(1, 1), (2, 3), (4, 7), (8, 14), (15, 30), (31, None)]
 MIN_POWTOREK_PRZEDZIALU = 5
 
 
+# ETAP 226: dziennik tylko przybywa (nic go nie zmienia ani nie usuwa), więc
+# krzywa zależy od pliku bazy, ostatniego id i liczby wpisów — liczymy ją
+# ponownie dopiero po nowych odpowiedziach.
+_pamiec_krzywej: dict = {}
+
+
 def krzywa_zapominania(db: sqlite3.Connection) -> list[dict]:
-    wiersze = db.execute("SELECT fiszka_id, data, wynik FROM dziennik_powtorek ORDER BY fiszka_id, data, id").fetchall()
+    plik = db.execute("PRAGMA database_list").fetchone()[2]
+    stan = tuple(db.execute("SELECT MAX(id), COUNT(*) FROM dziennik_powtorek").fetchone())
+    klucz = (plik, stan) if plik else None  # baza w pamięci (testy) — bez zapamiętywania
+    if klucz and klucz in _pamiec_krzywej:
+        return _pamiec_krzywej[klucz]
+    wynik = _licz_krzywa(db)
+    if klucz:
+        _pamiec_krzywej.clear()  # jedna baza fiszek — trzymamy tylko ostatni wynik
+        _pamiec_krzywej[klucz] = wynik
+    return wynik
+
+
+def _licz_krzywa(db: sqlite3.Connection) -> list[dict]:
+    # ETAP 226: odstęp od poprzedniej powtórki tej samej fiszki liczy SQLite
+    # (funkcja okna LAG) — wcześniej pętla w Pythonie po całym dzienniku
+    # (przy 300 tys. odpowiedzi ok. 1,4 s przy każdym wejściu na stronę Fiszek).
+    wiersze = db.execute(
+        """WITH odstepy AS (
+               SELECT CAST(ROUND(julianday(data) - julianday(LAG(data) OVER (PARTITION BY fiszka_id ORDER BY data, id))) AS INTEGER) AS dni,
+                      wynik IN ('umiem', 'trudne') AS zapamietana
+               FROM dziennik_powtorek)
+           SELECT dni, COUNT(*), SUM(zapamietana) FROM odstepy WHERE dni >= 1 GROUP BY dni"""
+    ).fetchall()  # 0 dni (powtórka w tej samej sesji) i pierwsza powtórka fiszki (NULL) pomijamy
     licznik = [[0, 0] for _ in PRZEDZIALY_DNI]  # [powtórki, zapamiętane]
-    poprzednia = (None, None)
-    for w in wiersze:
-        if poprzednia[0] == w["fiszka_id"]:
-            dni = (date.fromisoformat(w["data"]) - date.fromisoformat(poprzednia[1])).days
-            for i, (od, do) in enumerate(PRZEDZIALY_DNI):
-                if dni >= od and (do is None or dni <= do):  # 0 dni (powtórka w tej samej sesji) pomijamy
-                    licznik[i][0] += 1
-                    licznik[i][1] += w["wynik"] in ("umiem", "trudne")
-                    break
-        poprzednia = (w["fiszka_id"], w["data"])
+    for dni, n, z in wiersze:
+        for i, (od, do) in enumerate(PRZEDZIALY_DNI):
+            if dni >= od and (do is None or dni <= do):
+                licznik[i][0] += n
+                licznik[i][1] += z
+                break
     return [{"od": od, "do": do, "powtorki": n, "zapamietane": z,
              "procent": 100 * z / n if n >= MIN_POWTOREK_PRZEDZIALU else None}
             for (od, do), (n, z) in zip(PRZEDZIALY_DNI, licznik)]

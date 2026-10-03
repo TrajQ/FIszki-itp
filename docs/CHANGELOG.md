@@ -1132,3 +1132,6 @@
 
 ## ETAP 225 — 2026-10-03
 - Przepisy: ustawy zmieniające ogłoszone po tekście jednolitym
+
+## ETAP 226 — 2026-10-03
+- Fiszki: strona główna i statystyki kilka razy szybsze przy dużym dzienniku powtórek

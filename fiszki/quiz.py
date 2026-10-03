@@ -72,17 +72,15 @@ def uloz_quiz(
 
 def najtrudniejsze(db: sqlite3.Connection, limit: int = 5) -> list[dict]:
     """Fiszki z największą liczbą odpowiedzi „nie umiem” w dzienniku powtórek."""
+    # ETAP 226: najpierw zliczenie w dzienniku (indeks po fiszce), potem złączenie
     wiersze = db.execute(
         """SELECT fiszki.id, fiszki.pdf_id, fiszki.pytanie, fiszki.strona,
-                  pdfy.nazwa_oryginalna,
-                  SUM(d.wynik = 'nie_umiem') AS bledy,
-                  COUNT(*) AS proby
-           FROM dziennik_powtorek d
+                  pdfy.nazwa_oryginalna, d.bledy, d.proby
+           FROM (SELECT fiszka_id, SUM(wynik = 'nie_umiem') AS bledy, COUNT(*) AS proby
+                 FROM dziennik_powtorek GROUP BY fiszka_id HAVING bledy > 0) d
            JOIN fiszki ON fiszki.id = d.fiszka_id
            JOIN pdfy ON pdfy.id = fiszki.pdf_id
-           GROUP BY fiszki.id
-           HAVING bledy > 0
-           ORDER BY bledy DESC, 1.0 * bledy / proby DESC, fiszki.id
+           ORDER BY d.bledy DESC, 1.0 * d.bledy / d.proby DESC, fiszki.id
            LIMIT ?""",
         (limit,),
     ).fetchall()

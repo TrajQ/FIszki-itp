@@ -4018,3 +4018,30 @@ Status: zamknięty
   podstawioną odpowiedzią API
 - Pomoc: akapit „Czy jest nowszy tekst?” uzupełniony
 - `DECISIONS.md`: D-233
+
+## ETAP 226 — Wydajność dużych baz: pomiar, indeksy i krzywa zapominania w SQL
+Data: 2026-10-03
+Status: zamknięty
+
+- Przegląd indeksów: Teren ma `UNIQUE (projekt_id, uid)` (import),
+  Przepisy `jednostki_akt`, Ceny indeksy po pliku (ETAP 117) — rośnie
+  bez ograniczeń dziennik powtórek Fiszek, więc pomiar na nim
+- `narzedzia/pomiar_fiszek.py`: baza jak po roku nauki (40 PDF, 20 tys.
+  fiszek, 300 tys. odpowiedzi, 3 egzaminy) i czasy stron
+- Wynik przed → po: `/fiszki/` 2085 → 285 ms, `/fiszki/statystyki`
+  1508 → 55 ms, strona główna 203 → 86 ms; kolejka powtórek bez zmian
+  (ok. 80 ms)
+- Przyczyny i zmiany: krzywa zapominania (pętla w Pythonie po całym
+  dzienniku przy każdym wejściu) → jedno zapytanie z funkcją okna `LAG`
+  + zapamiętanie do nowej odpowiedzi (dziennik tylko przybywa);
+  „najtrudniejsze” → zliczenie w dzienniku przed złączeniem; kalendarz
+  na stronie głównej → `egzaminy.lista(z_prognoza=False)` (prognoza z
+  ETAPu 224 była liczona niepotrzebnie)
+- Indeksy (`fiszki/baza.py`, `IF NOT EXISTS` — istniejące bazy dostają je
+  przy starcie): `dziennik_powtorek (fiszka_id, data, wynik)`,
+  `dziennik_powtorek (data, wynik)`, `tematy_fiszek (temat)`; indeksy
+  sprawdzone pomiarem pojedynczo — sam indeks bez zmiany krzywej nic nie
+  dawał (sortowanie 300 tys. wierszy)
+- Testy: krzywa w SQL = dawna pętla (3000 losowych odpowiedzi),
+  zapamiętanie i unieważnienie po nowej odpowiedzi
+- `DECISIONS.md`: D-234

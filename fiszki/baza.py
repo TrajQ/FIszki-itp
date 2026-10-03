@@ -117,6 +117,13 @@ CREATE TABLE IF NOT EXISTS dziennik_powtorek (
     data TEXT NOT NULL,
     wynik TEXT NOT NULL
 );
+
+-- ETAP 226: indeksy z pomiaru na dużej bazie (20 tys. fiszek, 300 tys.
+-- odpowiedzi): „najtrudniejsze” i odstępy w krzywej zapominania (grupowanie
+-- po fiszce), statystyki dni i udziały odpowiedzi (zakres dat), fiszki tematu.
+CREATE INDEX IF NOT EXISTS dziennik_fiszka_data ON dziennik_powtorek (fiszka_id, data, wynik);
+CREATE INDEX IF NOT EXISTS dziennik_data ON dziennik_powtorek (data, wynik);
+CREATE INDEX IF NOT EXISTS tematy_temat ON tematy_fiszek (temat);
 """
 
 

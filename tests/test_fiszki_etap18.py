@@ -201,3 +201,54 @@ def test_krzywa_zapominania(tmp_path):
     assert (cztery_siedem["powtorki"], cztery_siedem["zapamietane"], cztery_siedem["procent"]) == (10, 6, 60.0)
     assert k[1]["powtorki"] == 0 and k[1]["procent"] is None and k[-1]["do"] is None
     db.close()
+
+
+def test_krzywa_zapominania_sql_jak_dawna_petla():
+    """ETAP 226: wersja z funkcją okna daje to samo co pętla z ETAPu 186."""
+    import random
+    import sqlite3
+    from datetime import date, timedelta
+
+    from fiszki.statystyki_nauki import PRZEDZIALY_DNI, krzywa_zapominania
+
+    def dawna(wiersze):
+        licznik = [[0, 0] for _ in PRZEDZIALY_DNI]
+        poprzednia = (None, None)
+        for fiszka, data, wynik, _ in sorted(wiersze, key=lambda w: (w[0], w[1], w[3])):
+            if poprzednia[0] == fiszka:
+                dni = (date.fromisoformat(data) - date.fromisoformat(poprzednia[1])).days
+                for i, (od, do) in enumerate(PRZEDZIALY_DNI):
+                    if dni >= od and (do is None or dni <= do):
+                        licznik[i][0] += 1
+                        licznik[i][1] += wynik in ("umiem", "trudne")
+                        break
+            poprzednia = (fiszka, data)
+        return licznik
+
+    random.seed(7)
+    wpisy = [(random.randint(1, 40), (date(2026, 1, 1) + timedelta(days=random.randint(0, 120))).isoformat(),
+              random.choice(["umiem", "trudne", "nie_umiem"])) for _ in range(3000)]
+    db = sqlite3.connect(":memory:")
+    db.execute("CREATE TABLE dziennik_powtorek (id INTEGER PRIMARY KEY AUTOINCREMENT, fiszka_id INTEGER, data TEXT, wynik TEXT)")
+    db.executemany("INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (?, ?, ?)", wpisy)
+    z_id = [(f, d, w, i) for i, (f, d, w) in enumerate(wpisy, start=1)]
+    assert [[p["powtorki"], p["zapamietane"]] for p in krzywa_zapominania(db)] == dawna(z_id)
+    db.close()
+
+
+def test_krzywa_zapominania_zapamietana_do_nowej_odpowiedzi(tmp_path):
+    import sqlite3
+
+    from fiszki import statystyki_nauki as sn
+
+    db = sqlite3.connect(str(tmp_path / "f.db"))
+    db.execute("CREATE TABLE dziennik_powtorek (id INTEGER PRIMARY KEY AUTOINCREMENT, fiszka_id INTEGER, data TEXT, wynik TEXT)")
+    db.executemany("INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (?, ?, ?)", [(1, "2026-09-01", "umiem"), (1, "2026-09-02", "umiem")])
+    db.commit()
+    pierwsza = sn.krzywa_zapominania(db)
+    assert pierwsza[0]["powtorki"] == 1 and sn.krzywa_zapominania(db) is pierwsza  # bez zmian — z pamięci
+    db.execute("INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (1, '2026-09-03', 'nie_umiem')")
+    db.commit()
+    druga = sn.krzywa_zapominania(db)
+    assert druga is not pierwsza and (druga[0]["powtorki"], druga[0]["zapamietane"]) == (2, 1)
+    db.close()

@@ -104,7 +104,7 @@ def podsumowanie() -> dict:
 def terminy() -> list[dict]:
     """Nadchodzące egzaminy — do kalendarza na stronie głównej (ETAP 86)."""
     wynik = []
-    for e in egzaminy.lista(get_db(), powtorki.dzisiaj()):
+    for e in egzaminy.lista(get_db(), powtorki.dzisiaj(), z_prognoza=False):
         if e["minal"]:
             continue
         zakres = e["temat"] or e["nazwa_oryginalna"] or "wszystkie fiszki"

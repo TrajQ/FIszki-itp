@@ -180,10 +180,12 @@ def postep(pudelka: list[int], dni_do_egzaminu: int) -> dict:
     }
 
 
-def lista(db: sqlite3.Connection, dzis: date) -> list[dict]:
-    """Egzaminy od najbliższego, z postępem. Minione — na końcu."""
+def lista(db: sqlite3.Connection, dzis: date, z_prognoza: bool = True) -> list[dict]:
+    """Egzaminy od najbliższego, z postępem. Minione — na końcu.
+    z_prognoza=False — bez prognozy (kalendarz na stronie głównej jej nie
+    pokazuje, a przy dużej bazie to większość czasu, ETAP 226)."""
     wynik = []
-    udzialy = udzialy_odpowiedzi(db, dzis)
+    udzialy = udzialy_odpowiedzi(db, dzis) if z_prognoza else None
     for w in db.execute(
         """SELECT egzaminy.*, pdfy.nazwa_oryginalna FROM egzaminy
            LEFT JOIN pdfy ON pdfy.id = egzaminy.pdf_id ORDER BY data, id"""
@@ -193,7 +195,7 @@ def lista(db: sqlite3.Connection, dzis: date) -> list[dict]:
         egzamin["dni"] = dni
         egzamin["minal"] = dni < 0
         egzamin.update(postep(_pudelka_w_zakresie(db, egzamin["temat"], egzamin["pdf_id"]), dni))
-        if not egzamin["minal"] and egzamin["fiszki"]:
+        if z_prognoza and not egzamin["minal"] and egzamin["fiszki"]:
             egzamin["prognoza"] = prognoza(_stany_w_zakresie(db, egzamin["temat"], egzamin["pdf_id"], dzis), dni, udzialy)
         wynik.append(egzamin)
     return sorted(wynik, key=lambda e: (e["minal"], e["data"]))

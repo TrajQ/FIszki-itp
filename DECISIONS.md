@@ -4658,3 +4658,24 @@ opisane na stronie i w Pomocy.
   do zrobienia, gdy będzie można obejrzeć prawdziwą odpowiedź.
 - Szukanie rozporządzeń po słowach z tytułu ustawy — tytuły rozporządzeń
   zwykle jej nie wymieniają, wynik byłby przypadkowy.
+
+## D-234 — Najpierw pomiar i profil, potem indeksy
+Data: 2026-10-03
+
+**Decyzja:** Wydajność poprawiamy według profilu na powtarzalnej dużej
+bazie (`narzedzia/pomiar_fiszek.py`), nie według przeczucia. Indeks
+zostaje tylko, gdy pomiar pokazuje zysk; obliczenia po całej tabeli
+przenosimy do SQL i zapamiętujemy, gdy dane się nie zmieniły.
+
+**Uzasadnienie:** Pierwsza próba (pięć indeksów „na oko”) spowolniła
+stronę Fiszek — planista wybrał indeks dat dla zakresu obejmującego
+prawie całą tabelę. Profil pokazał, że czas zabiera krzywa zapominania
+liczona w Pythonie, a nie brak indeksu. Zapamiętanie krzywej jest
+bezpieczne, bo dziennik tylko przybywa (`kosz.TABELE_ZOSTAJA`, nic go nie
+usuwa ani nie zmienia) — klucz: plik bazy, ostatnie id, liczba wpisów.
+
+**Odrzucone alternatywy:**
+- Tabela z gotową krzywą aktualizowana przy każdej odpowiedzi — druga
+  kopia danych do pilnowania (także przy synchronizacji z telefonu).
+- Indeksy na wszystkich kolumnach z WHERE — część nie pomaga albo
+  szkodzi, a każdy spowalnia zapis odpowiedzi.
