@@ -4072,3 +4072,25 @@ Status: zamknięty
 - Wykresy i mapy SVG w raportach: `role="img"` z opisem na kontenerze (9)
 - Plan: porządkowanie poziomów nagłówków dopisane do ETAPu 249
 - `DECISIONS.md`: D-235
+
+## ETAP 228 — Testy: pokrycie najsłabszych plików (ULDK, granice, raport gminy)
+Data: 2026-10-03
+Status: zamknięty
+
+- Pomiar pokrycia: najsłabsze były `atlas/trasy_raport.py` (85%),
+  `dane/uldk.py` (85%), `atlas/granice.py` (88%) — niepokryte prawie
+  wyłącznie ścieżki błędów (sieć, dziwne odpowiedzi, walidacja)
+- `tests/test_uldk.py`: błąd sieci w wyszukiwaniu i po identyfikatorze,
+  pusta/dziwna odpowiedź, kod błędu, zły identyfikator, zła geometria,
+  WKT bez SRID, pomijanie niepełnych wierszy podpowiedzi
+- `tests/test_atlas.py` (granice): parametry zapytań WFS (warstwa, filtr
+  TERYT), błąd połączenia i HTTP 503, pusta odpowiedź gmin bez zapisu
+  cache, zły XML, obiekt bez geometrii, wielobok bez obwodu, kolejność
+  lon/lat
+- `tests/test_atlas.py` (raport gminy): walidacja zestawu (limit 20,
+  przesunięcie, usuwanie, nieznany wskaźnik), błąd BDL → 502 we wszystkich
+  trasach raportu (strona, CSV, opis, podobne, dodanie wskaźnika, lista
+  gmin), opis bez danych → 404
+- Wynik: `dane/uldk.py` 100%, `atlas/granice.py` 100%,
+  `atlas/trasy_raport.py` 97%; całość 95% → 96% (692 testy)
+- `DECISIONS.md`: D-236

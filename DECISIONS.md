@@ -4702,3 +4702,22 @@ nagłówków tworzonych w JS — to osobna praca (ETAP 249), nie przy okazji.
   ogłaszana.
 - `role="alert"` dla wszystkich komunikatów — informacje przerywałyby
   czytanie strony.
+
+## D-236 — Testy ścieżek błędów usług zewnętrznych na podstawionych odpowiedziach
+Data: 2026-10-03
+
+**Decyzja:** Ścieżki błędów usług zewnętrznych (ULDK, PRG, BDL) testujemy
+na podstawionych `requests.get` i odpowiedziach tekstowych — bez sieci.
+Sprawdzamy to, co widzi użytkownik: kod HTTP trasy (502 przy usłudze,
+400/404 przy danych) i czytelny komunikat.
+
+**Uzasadnienie:** Usługi bywają niedostępne (także w tym środowisku) — to
+właśnie te ścieżki działają wtedy u użytkownika, a testy ich nie
+dotykały. Podstawione odpowiedzi są powtarzalne i szybkie (cały zestaw
+ULDK w 0,3 s).
+
+**Odrzucone alternatywy:**
+- Nagrane prawdziwe odpowiedzi usług — z tego środowiska nie da się ich
+  nagrać (proxy), a formaty błędów i tak trzeba by dopisać ręcznie.
+- Cel pokrycia 100% w całym projekcie — część gałęzi (np. zabezpieczenia
+  przed wyścigiem przy zapisie) testowałaby się sztucznie.

@@ -136,3 +136,54 @@ def test_blad_sieci_ma_czytelny_komunikat(monkeypatch):
         uldk.znajdz_dzialke(52.4, 16.9)
     assert "brak połączenia z usługą" in str(blad.value)
     assert "HTTPSConnectionPool" not in str(blad.value)
+
+
+# ---------- ETAP 228: ścieżki błędów, których testy nie dotykały ----------
+
+import pytest  # noqa: E402
+
+ID = "306401_1.0051.AR_18.14"
+
+
+def _blad_sieci(*a, **k):
+    raise uldk.requests.ConnectionError("brak sieci")
+
+
+@pytest.mark.parametrize("funkcja, argument", [(uldk.znajdz_dzialke_po_id, ID), (uldk.szukaj_dzialek, "Jeżyce 18/14")])
+def test_blad_sieci_w_wyszukiwaniu_i_po_id(monkeypatch, funkcja, argument):
+    monkeypatch.setattr(uldk.requests, "get", _blad_sieci)
+    with pytest.raises(uldk.BladULDK, match="Błąd połączenia z ULDK"):
+        funkcja(argument)
+
+
+@pytest.mark.parametrize("tekst, komunikat", [
+    ("", "Pusta odpowiedź"),
+    ("\n  \n", "Pusta odpowiedź"),
+    ("abc coś", "Nieoczekiwany format"),
+    ("-2 błąd usługi", "zwrócił błąd"),
+])
+def test_podpowiedzi_zle_odpowiedzi(tekst, komunikat):
+    with pytest.raises(uldk.BladULDK, match=komunikat):
+        uldk._sparsuj_podpowiedzi(tekst)
+
+
+def test_podpowiedzi_pomijaja_niepelne_wiersze():
+    tekst = f"3\n{ID}|Poznań|Jeżyce|18/14\nza|malo\nbez-podkreslnika|Poznań|Jeżyce|1"
+    assert [p.id for p in uldk._sparsuj_podpowiedzi(tekst)] == [ID]
+
+
+@pytest.mark.parametrize("tekst, komunikat", [
+    ("", "Pusta odpowiedź"),
+    ("2\ncoś", "zwrócił błąd"),
+    ("0", "Nieoczekiwany format odpowiedzi"),
+    ("0\n306401|POLYGON((0 0,1 0,1 1,0 0))", "format identyfikatora"),
+    (f"0\n{ID}|SRID=4326;POLYGON((to nie liczby))", "sparsować geometrii"),
+])
+def test_odpowiedz_po_id_zle_dane(tekst, komunikat):
+    with pytest.raises(uldk.BladULDK, match=komunikat):
+        uldk._sparsuj_odpowiedz(tekst)
+
+
+def test_odpowiedz_bez_srid_tez_dziala():
+    d = uldk._sparsuj_odpowiedz(f"0\n{ID}|POLYGON((16.93 52.40,16.94 52.40,16.94 52.41,16.93 52.40))")
+    assert d.teryt_gminy == "306401" and d.geometria.geom_type == "Polygon"

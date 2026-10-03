@@ -1138,3 +1138,6 @@
 
 ## ETAP 227 — 2026-10-03
 - Dostępność: komunikaty ogłaszane przez czytnik ekranu, opisy pól, map i wykresów
+
+## ETAP 228 — 2026-10-03
+- Testy: ścieżki błędów usług zewnętrznych (ULDK, PRG, BDL) pokryte testami

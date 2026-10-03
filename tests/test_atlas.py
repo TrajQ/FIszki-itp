@@ -1628,3 +1628,109 @@ def test_powiaty_klasy_autokorelacja_eksport_druk_opis(client, monkeypatch):
     client.post("/atlas/opis", json={"zmienna": 1, "rok": 2023, "woj": "011200000000", "poziom": "powiaty"})
     assert "Obszar: powiaty województwa MAŁOPOLSKIE" in otrzymane and any(f.startswith("3 powiaty o najwyższej") for f in otrzymane)
     assert 'id="pole-poziom"' in client.get("/atlas/").get_data(as_text=True)
+
+
+# ---------- ETAP 228: granice — zapytania do PRG i nietypowy GML ----------
+
+
+class _OdpPRG:
+    def __init__(self, tekst="", status=200):
+        self.text, self.status_code = tekst, status
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(f"{self.status_code}")
+
+
+def test_zapytania_do_prg_maja_warstwe_i_filtr(monkeypatch):
+    zapytania = []
+    monkeypatch.setattr(granice.requests, "get", lambda url, params=None, **k: zapytania.append(params) or _OdpPRG("<x/>"))
+    assert granice._pobierz_gml("12") == "<x/>"
+    assert granice._pobierz_gml_wojewodztw() == "<x/>"
+    gminy, wojewodztwa = zapytania
+    assert gminy["typeNames"] == granice.WARSTWA_GMIN and "<fes:Literal>12*</fes:Literal>" in gminy["filter"]
+    assert granice.POLE_TERYT in gminy["filter"] and gminy["srsName"] == "EPSG:4326"
+    assert wojewodztwa["typeNames"] == granice.WARSTWA_WOJEWODZTW and "filter" not in wojewodztwa
+
+
+@pytest.mark.parametrize("blad", [requests.ConnectionError("brak sieci"), None])
+def test_blad_polaczenia_z_prg(monkeypatch, blad):
+    def get(*a, **k):
+        if blad:
+            raise blad
+        return _OdpPRG(status=503)
+    monkeypatch.setattr(granice.requests, "get", get)
+    with pytest.raises(granice.BladGranic, match="Błąd połączenia z PRG"):
+        granice._pobierz_gml("12")
+
+
+def test_gminy_pusta_odpowiedz_i_zly_xml(tmp_path, monkeypatch):
+    monkeypatch.setattr(granice, "_pobierz_gml", lambda teryt: '<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0"/>')
+    with pytest.raises(granice.BladGranic, match="żadnej gminy"):
+        granice.granice_gmin("12", str(tmp_path))
+    assert not os.listdir(tmp_path)
+    with pytest.raises(granice.BladGranic, match="sparsować"):
+        granice._sparsuj_gml("<niedomknięty", "12")
+
+
+def test_gml_bez_geometrii_bez_obwodu_i_kolejnosc_lon_lat():
+    gml = """<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:ms="m">
+      <wfs:member><ms:A03 gml:id="a"><ms:JPT_KOD_JE>1201011</ms:JPT_KOD_JE><ms:JPT_NAZWA_>bez geometrii</ms:JPT_NAZWA_></ms:A03></wfs:member>
+      <wfs:member><ms:A03 gml:id="b"><ms:g><gml:Polygon><gml:interior/></gml:Polygon></ms:g>
+        <ms:JPT_KOD_JE>1201022</ms:JPT_KOD_JE><ms:JPT_NAZWA_>wielobok bez obwodu</ms:JPT_NAZWA_></ms:A03></wfs:member>
+      <wfs:member><ms:A03 gml:id="c"><ms:g><gml:Polygon><gml:exterior><gml:LinearRing>
+        <gml:posList>19.0 50.0 19.1 50.0 19.1 50.1 19.0 50.0</gml:posList></gml:LinearRing></gml:exterior></gml:Polygon></ms:g>
+        <ms:JPT_KOD_JE>1201033</ms:JPT_KOD_JE><ms:JPT_NAZWA_>długość pierwsza</ms:JPT_NAZWA_></ms:A03></wfs:member>
+    </wfs:FeatureCollection>"""
+    k = granice._sparsuj_gml(gml, "12")
+    assert [c["properties"]["teryt"] for c in k["features"]] == ["1201033"]  # dwie pierwsze bez geometrii — pominięte
+    lon, lat = k["features"][0]["geometry"]["coordinates"][0][0]
+    assert (lon, lat) == (19.0, 50.0)  # kolejność lon, lat rozpoznana i zostawiona
+
+
+# ---------- ETAP 228: raport gminy — ścieżki błędów ----------
+
+
+def _blad_bdl(*a, **k):
+    raise bdl.BladBDL("BDL nie odpowiada")
+
+
+def test_raport_gminy_walidacja_zestawu(raport_client):
+    c = raport_client
+    assert c.get("/atlas/gminy/123").status_code == 400
+    assert c.get("/atlas/raport-gminy/12345").status_code == 404  # identyfikator nie ma 12 cyfr
+    assert c.delete("/atlas/raport-wskazniki/999").status_code == 404
+    w = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    assert c.post(f"/atlas/raport-wskazniki/{w}/przesun", json={"o": 2}).status_code == 400
+    assert c.post("/atlas/raport-wskazniki/999/przesun", json={"o": 1}).status_code == 404
+    assert c.get(f"/atlas/raport-gminy/{GMINA}/wskaznik/999").status_code == 404
+    from atlas import baza as baza_atlasu
+    for _ in range(baza_atlasu.MAKS_WSKAZNIKOW_RAPORTU - 1):
+        c.post("/atlas/raport-wskazniki", json={"zmienna": 1})
+    r = c.post("/atlas/raport-wskazniki", json={"zmienna": 2})
+    assert r.status_code == 400 and "najwyżej" in r.get_json()["blad"]
+
+
+def test_raport_gminy_blad_bdl_to_502(raport_client, monkeypatch):
+    c = raport_client
+    w = c.post("/atlas/raport-wskazniki", json={"zmienna": 1}).get_json()["id"]
+    c.post("/atlas/raport-wskazniki", json={"zmienna": 2})  # „podobne” potrzebuje co najmniej dwóch
+    monkeypatch.setattr(bdl, "szereg_gminy", _blad_bdl)
+    assert c.get(f"/atlas/raport-gminy/{GMINA}/wskaznik/{w}").status_code == 502
+    assert c.get(f"/atlas/raport-gminy/{GMINA}.csv").status_code == 502
+    assert c.post(f"/atlas/raport-gminy/{GMINA}/opis").status_code == 502
+    assert c.get(f"/atlas/raport-gminy/{GMINA}/podobne").status_code == 502
+    monkeypatch.setattr(bdl, "pobierz_zmienna", _blad_bdl)
+    assert c.post("/atlas/raport-wskazniki", json={"zmienna": 77}).status_code == 502  # zmiennej nie ma jeszcze w cache
+    monkeypatch.setattr(bdl, "gminy_wojewodztwa", _blad_bdl)
+    assert c.get("/atlas/gminy/011212000000").status_code == 502
+    strona = c.get("/atlas/raport-gminy/021412345011")  # inne województwo — listy gmin nie ma w cache
+    assert strona.status_code == 502 and "BDL nie odpowiada" in strona.get_data(as_text=True)
+
+
+def test_raport_gminy_opis_bez_danych(raport_client, monkeypatch):
+    c = raport_client
+    c.post("/atlas/raport-wskazniki", json={"zmienna": 1})
+    monkeypatch.setattr(bdl, "szereg_gminy", lambda zid, gid: [])
+    r = c.post(f"/atlas/raport-gminy/{GMINA}/opis")
+    assert r.status_code == 404 and "Brak danych" in r.get_json()["blad"]
