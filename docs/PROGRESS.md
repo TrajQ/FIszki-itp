@@ -3201,3 +3201,20 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: „Zasięgi jako wieloboki”
 - `DECISIONS.md`: D-191
+
+## ETAP 184 — Dostępność: dzielnice w porównaniu scenariuszy przed/po
+Data: 2026-10-03
+Status: zamknięty
+
+- `dostepnosc/obszary.py`: `porownanie_w_obszarach` — te same obszary
+  w dwóch plikach (`w_obszarach` dla każdego), zmiana średniej, mediany i
+  udziału w zasięgu 15 min (punkty procentowe)
+- Trasa POST `/dostepnosc/plik/<nazwa>/obszary` przyjmuje `po` (plik
+  scenariusza)
+- Karta „Dzielnice” w trybie porównania: „przed → po”, zmiana czasu
+  (krótszy czas zielony, dłuższy czerwony) i zmiana zasięgu; odświeża się
+  po „Porównaj”
+- Testy: liczby porównania na ręcznej siatce, trasa na plikach
+  przykładowych; sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Dzielnice”
+- `DECISIONS.md`: D-192

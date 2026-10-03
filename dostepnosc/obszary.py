@@ -68,3 +68,21 @@ def w_obszarach(wyniki: dict, kolumna: str, obszary: list[dict]) -> dict:
         wynik.append({"nazwa": nazwa, **_statystyki([wartosci[i] for i in indeksy], [ludnosc[i] for i in indeksy], minuty)})
     calosc = _statystyki([wartosci[i] for i in z_wartoscia], [ludnosc[i] for i in z_wartoscia], minuty)
     return {"obszary": wynik, "calosc": calosc, "minuty": minuty, "prog": PROG_MIASTA_15}
+
+
+def _zmiana(przed: dict, po: dict) -> dict:
+    wynik = {"przed": przed, "po": po}
+    for klucz in ("srednia", "mediana", "w_zasiegu_proc"):
+        if klucz in przed and klucz in po:
+            wynik[f"zmiana_{klucz}"] = po[klucz] - przed[klucz]
+    return wynik
+
+
+def porownanie_w_obszarach(przed: dict, po: dict, kolumna: str, obszary: list[dict]) -> dict:
+    """ETAP 184: te same obszary w dwóch scenariuszach (np. przed i po nowej
+    szkole) — statystyki obu plików i zmiana (po − przed; ujemna zmiana
+    czasu = poprawa, zmiana udziału w zasięgu w punktach procentowych)."""
+    a, b = w_obszarach(przed, kolumna, obszary), w_obszarach(po, kolumna, obszary)
+    return {"porownanie": True, "minuty": a["minuty"], "prog": a["prog"],
+            "obszary": [{"nazwa": x["nazwa"], **_zmiana(x, y)} for x, y in zip(a["obszary"], b["obszary"])],
+            "calosc": _zmiana(a["calosc"], b["calosc"])}

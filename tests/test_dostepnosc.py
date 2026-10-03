@@ -529,3 +529,27 @@ def test_kontury_zasiegow(client):
     assert dane["features"] and {"minuty", "komorek", "powierzchnia_km2", "wskaznik"} <= set(dane["features"][0]["properties"])
     assert client.get(f"/dostepnosc/kontury.geojson?plik={przyklad}&kolumna=laczny").status_code == 200
     assert client.get(f"/dostepnosc/kontury.geojson?plik={przyklad}&kolumna=nie_ma").status_code == 404
+
+
+# ---------- ETAP 184: dzielnice w porównaniu scenariuszy ----------
+
+
+def test_dzielnice_w_porownaniu(client):
+    import h3
+
+    from dostepnosc import obszary
+
+    komorki = [h3.latlng_to_cell(52.40 + i * 0.003, 16.92, 9) for i in range(4)]
+    przed = {"komorki": komorki, "kolumny": {"czas_min": [10.0, 20.0, 30.0, 12.0]}, "ludnosc": [100.0, 100.0, 100.0, 100.0]}
+    po = {"komorki": komorki, "kolumny": {"czas_min": [8.0, 12.0, 30.0, 12.0]}, "ludnosc": [100.0, 100.0, 100.0, 100.0]}
+    caly = {"nazwa": "wszystko", "geometria": {"type": "Polygon", "coordinates": [[[16.9, 52.39], [16.95, 52.39], [16.95, 52.42], [16.9, 52.42], [16.9, 52.39]]]}}
+    w = obszary.porownanie_w_obszarach(przed, po, "czas_min", [caly])
+    o = w["obszary"][0]
+    assert w["porownanie"] and o["przed"]["srednia"] == 18.0 and o["po"]["srednia"] == 15.5 and o["zmiana_srednia"] == -2.5
+    assert o["zmiana_w_zasiegu_proc"] == pytest.approx(25.0)  # 2 z 4 → 3 z 4 mieszkańców do 15 min
+    przyklad = "przyklad_poznan_syntetyczny.csv"
+    obszar = {"nazwa": "Jeżyce", "geometria": {"type": "Polygon", "coordinates": [[[16.85, 52.38], [16.95, 52.38], [16.95, 52.44], [16.85, 52.44], [16.85, 52.38]]]}}
+    d = client.post(f"/dostepnosc/plik/{przyklad}/obszary", json={"kolumna": "czas_szkola_min", "obszary": [obszar],
+                                                                   "po": "przyklad_poznan_nowa_szkola_syntetyczny.csv"}).get_json()
+    assert d["porownanie"] and "zmiana_srednia" in d["obszary"][0] and d["obszary"][0]["po"]["srednia"] <= d["obszary"][0]["przed"]["srednia"]
+    assert client.post(f"/dostepnosc/plik/{przyklad}/obszary", json={"kolumna": "czas_szkola_min", "obszary": [obszar], "po": "nie_ma.csv"}).status_code >= 400

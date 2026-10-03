@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 183 (Dostępność: zasięgi czasu dojścia jako wieloboki — zamknięty)
-Ostatni ZIP: releases/warsztat_etap183_20261003.zip
-Testy: 601 passed / 0 failed
+ETAP: 184 (Dostępność: dzielnice w porównaniu scenariuszy — zamknięty)
+Ostatni ZIP: releases/warsztat_etap184_20261003.zip
+Testy: 602 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

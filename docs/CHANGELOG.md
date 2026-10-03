@@ -1006,3 +1006,6 @@
 
 ## ETAP 183 — 2026-10-03
 - Dostępność: zasięgi 5–30 min jako wieloboki (izochrony) do QGIS
+
+## ETAP 184 — 2026-10-03
+- Dostępność: tabela dzielnic w porównaniu scenariuszy (przed → po, zmiana)

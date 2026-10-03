@@ -308,10 +308,12 @@
             const odp = await fetch(`${urlPliku}/obszary`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ kolumna: biezacaKolumna === WARTOSC_LACZNY ? "laczny" : biezacaKolumna, obszary: dzielnice }),
+                body: JSON.stringify({ kolumna: biezacaKolumna === WARTOSC_LACZNY ? "laczny" : biezacaKolumna, obszary: dzielnice,
+                    po: !trybPorownania.hidden && poleScenariusz.value ? poleScenariusz.value : undefined }),
             });
             const w = await odp.json().catch(() => ({}));
             if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+            if (w.porownanie) return pokazPorownanieDzielnic(w);
             const naglowek = document.createElement("tr");
             const kolumny = [["Obszar", ""], ["Komórek", "liczba"], ["Mieszkańcy", "liczba"], [w.minuty ? "Czas śr. [min]" : "Średnia", "liczba"], ["Mediana", "liczba"]];
             if (w.minuty) kolumny.push([`Do ${w.prog} min`, "liczba"]);
@@ -344,6 +346,47 @@
             status.textContent = e.message;
             status.hidden = false;
         }
+    }
+
+    // ETAP 184: dzielnice w porównaniu scenariuszy — przed → po i zmiana (liczy serwer)
+    function pokazPorownanieDzielnic(w) {
+        const tabela = document.getElementById("tabela-dzielnic");
+        const td = (tekst, klasa = "liczba") => {
+            const e = document.createElement("td");
+            e.className = klasa;
+            e.textContent = tekst;
+            return e;
+        };
+        const naglowek = document.createElement("tr");
+        const kolumny = [["Obszar", ""], [w.minuty ? "Czas śr. przed → po" : "Średnia przed → po", "liczba"], ["Zmiana", "liczba"]];
+        if (w.minuty) kolumny.push([`Do ${w.prog} min przed → po`, "liczba"], ["Zmiana [p.p.]", "liczba"]);
+        for (const [t, k] of kolumny) {
+            const th = document.createElement("th");
+            th.className = k;
+            th.textContent = t;
+            naglowek.appendChild(th);
+        }
+        tabela.replaceChildren(naglowek);
+        const liczbaLub = (x) => (x === undefined ? "—" : formatLiczby.format(x));
+        const wiersz = (nazwa, o) => {
+            const tr = document.createElement("tr");
+            tr.append(td(nazwa, ""), td(`${liczbaLub(o.przed.srednia)} → ${liczbaLub(o.po.srednia)}`));
+            const zm = td(o.zmiana_srednia === undefined ? "—" : formatZmiany.format(o.zmiana_srednia));
+            // krótszy czas = poprawa (jak kolory mapy zmian)
+            if (w.minuty && o.zmiana_srednia !== undefined && Math.abs(o.zmiana_srednia) >= 0.05) zm.classList.add(o.zmiana_srednia < 0 ? "stan--ok" : "stan--zle");
+            tr.appendChild(zm);
+            if (w.minuty) {
+                const proc = (x) => (x === undefined ? "—" : `${formatProcentu.format(x)}%`);
+                tr.append(td(`${proc(o.przed.w_zasiegu_proc)} → ${proc(o.po.w_zasiegu_proc)}`),
+                    td(o.zmiana_w_zasiegu_proc === undefined ? "—" : formatZmiany.format(o.zmiana_w_zasiegu_proc)));
+            }
+            return tr;
+        };
+        w.obszary.forEach((o, i) => tabela.appendChild(wiersz(`${i + 1}. ${o.nazwa}`, o)));
+        const calosc = wiersz("cały plik", w.calosc);
+        calosc.className = "tabela-dzielnic__calosc";
+        tabela.appendChild(calosc);
+        tabela.hidden = false;
     }
 
     // ---------- gdzie nowa placówka (ETAP 78) ----------
@@ -683,6 +726,7 @@
         }
         trybPorownania.hidden = false;
         ustawLinkGeojson(poleScenariusz.value);
+        odswiezDzielnice(); // ETAP 184: tabela dzielnic przed → po
         opisPorownania.textContent = `Porównanie: ${NAZWA_PLIKU} → ${poleScenariusz.value}`;
         ogniwoEl.hidden = true;
         krzywaBlok.hidden = true;

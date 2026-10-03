@@ -3842,3 +3842,20 @@ pytaniu „co jest w zasięgu 15 minut” i nakładają się w QGIS bez dziur.
   obszary, których dane nie obejmują.
 - Pierścienie przedziałów — dostępne z heksagonów w zwykłym eksporcie
   (pole `klasa`).
+
+## D-192 — Dzielnice w porównaniu: każdy scenariusz liczony osobno
+Data: 2026-10-03
+
+**Decyzja:** W porównaniu scenariuszy statystyki dzielnicy liczymy
+osobno w pliku „przed” i „po” (komórki ze środkiem w wieloboku), a
+zmiana to różnica tych statystyk. Nie łączymy komórek obu plików w pary.
+
+**Uzasadnienie:** Pliki scenariuszy mogą mieć różny zasięg siatki;
+statystyka dzielnicy z każdego pliku osobno odpowiada temu, co pokazuje
+pojedynczy plik (ETAP 163), więc liczby się zgadzają. Średnia ważona
+mieszkańcami z każdego scenariusza osobno uwzględnia też ewentualną zmianę
+ludności (np. scenariusz z nowym osiedlem).
+
+**Odrzucone alternatywy:**
+- Średnia ze zmian w komórkach wspólnych (jak mapa porównania) — inne
+  liczby niż w tabeli pojedynczego pliku, trudne do wyjaśnienia.

@@ -414,6 +414,8 @@ def wyniki_w_obszarach(nazwa):
     if kolumna == "laczny":
         kolumna = wyniki_h3.NAZWA_LACZNEGO
     try:
+        if dane.get("po"):  # ETAP 184: porównanie scenariuszy w tych samych obszarach
+            return jsonify(obszary.porownanie_w_obszarach(_wczytaj(nazwa), _wczytaj(str(dane["po"])), kolumna, dane.get("obszary")))
         return jsonify(obszary.w_obszarach(_wczytaj(nazwa), kolumna, dane.get("obszary")))
     except KeyError:
         return jsonify({"blad": f"Plik nie ma kolumny „{kolumna}”."}), 404
