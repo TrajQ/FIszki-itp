@@ -478,6 +478,7 @@ function pokazEdytorZaslon(li, fiszka) {
     pytanie.setAttribute("aria-label", "Pytanie wspólne dla zasłoniętych fragmentów");
     const komunikat = document.createElement("p");
     komunikat.className = "komunikat komunikat--blad";
+    komunikat.setAttribute("role", "alert"); // ETAP 227
     komunikat.hidden = true;
     const prostokaty = []; // [{x, y, w, h, el, pole}]
 

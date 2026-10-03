@@ -17,7 +17,7 @@
     </div>
 </div>
 
-{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+{% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
 
 <div class="uklad-dostepnosci">
     <aside class="stos panel-dostepnosci">
@@ -56,7 +56,7 @@
             <label>Wskaźnik
                 <select id="pole-kolumna"></select>
             </label>
-            <div id="tryb-porownania" class="komunikat komunikat--sukces tryb-porownania" hidden>
+            <div id="tryb-porownania" class="komunikat komunikat--sukces tryb-porownania" hidden role="status">
                 <span id="opis-porownania"></span>
                 <button id="zakoncz-porownanie" type="button" class="przycisk--tekst">Zakończ</button>
             </div>
@@ -184,7 +184,7 @@
             {# ETAP 222: lista punktów — nazwa, pokaż, usuń; znaczniki można przeciągać #}
             <ol id="lista-punktow-modelu" class="lista-punktow-modelu" hidden></ol>
             <button id="model-policz" type="button" disabled>Policz i zapisz jako nowy plik</button>
-            <p id="model-blad" class="komunikat komunikat--blad" hidden></p>
+            <p id="model-blad" class="komunikat komunikat--blad" hidden role="alert"></p>
         </section>
 
     </aside>
@@ -192,7 +192,7 @@
     <section class="karta karta-mapy">
         <div id="mapa-dostepnosci"></div>
         <div id="legenda" class="legenda"></div>
-        <p id="komunikat" class="komunikat komunikat--blad komunikat-mapy" hidden></p>
+        <p id="komunikat" class="komunikat komunikat--blad komunikat-mapy" hidden role="alert"></p>
     </section>
 </div>
 {% endblock %}

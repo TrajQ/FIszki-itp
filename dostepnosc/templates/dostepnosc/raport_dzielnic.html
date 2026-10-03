@@ -16,13 +16,13 @@
         </div>
     </div>
 
-    <p id="brak-dzielnic" class="komunikat" hidden>Brak narysowanych obszarów dla tego pliku. Wróć do Dostępności, w karcie „Dzielnice” narysuj obszary i otwórz raport jeszcze raz.</p>
-    <p id="blad-raportu" class="komunikat komunikat--blad" hidden></p>
+    <p id="brak-dzielnic" class="komunikat" hidden role="status">Brak narysowanych obszarów dla tego pliku. Wróć do Dostępności, w karcie „Dzielnice” narysuj obszary i otwórz raport jeszcze raz.</p>
+    <p id="blad-raportu" class="komunikat komunikat--blad" hidden role="alert"></p>
 
     <div id="tresc-raportu" hidden>
         <img id="mapa-dzielnic" class="raport-dostepnosci__mapa" alt="Mapa: {{ r.tytul }} — obszary z numerami">
         <section class="raport-dostepnosci__strona">
-            <h2>{{ r.tytul }} — w obszarach</h2>
+            <h1 class="tytul-raportu">{{ r.tytul }} — w obszarach</h1>
             <p class="wyciszony">{{ r.podtytul }}</p>
             <div class="przewijanie-dzielnic"><table class="tabela" id="tabela-raportu-dzielnic"></table></div>
             <p id="opis-raportu-dzielnic" class="wyciszony"></p>

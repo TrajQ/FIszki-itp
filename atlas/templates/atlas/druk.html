@@ -8,6 +8,7 @@
 
 {% block tresc %}
 <div class="druk-mapy">
+    <h1 class="tylko-czytnik">Mapa do druku — Atlas</h1>
     <div class="druk-mapy__akcje">
         <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
         <div class="rzad">
@@ -18,7 +19,7 @@
     <p class="wyciszony druk-mapy__opis">Arkusz A4 poziomo. SVG da się edytować w Inkscape albo wstawić do pracy (Word, LibreOffice). Przy druku do PDF wybierz orientację poziomą.</p>
     <img id="mapa-druk" class="druk-mapy__obraz" src="{{ url_for('atlas.mapa_do_druku_svg', **parametry) }}"
          alt="Kartogram do druku" onerror="document.getElementById('blad-druku').hidden = false; this.hidden = true;">
-    <p id="blad-druku" class="komunikat komunikat--blad" hidden>Nie udało się przygotować mapy (brak danych albo granic gmin). Wróć do atlasu i sprawdź, czy mapa wyświetla się na ekranie.</p>
+    <p id="blad-druku" class="komunikat komunikat--blad" hidden role="alert">Nie udało się przygotować mapy (brak danych albo granic gmin). Wróć do atlasu i sprawdź, czy mapa wyświetla się na ekranie.</p>
     {{ stopka_wydruku("Atlas", "GUS, Bank Danych Lokalnych; granice gmin — PRG (GUGiK)") }}
 </div>
 {% endblock %}

@@ -19,10 +19,10 @@
         <p class="wyciszony">Miejsce {{ '%.5f' | format(p.lat) }}, {{ '%.5f' | format(p.lng) }} · powierzchnia {{ z(p.pow, 1) }} m² (± {{ (p.tolerancja * 100) | round | int }}%) · promień {{ z(p.promien) }} m{% if opis_filtrow %} · {{ opis_filtrow | join(', ') }}{% endif %}</p>
 
         {% if zapisana %}
-        <p class="komunikat">Zapisana wycena „{{ zapisana.nazwa }}” z {{ zapisana.data_zapisu }}: {{ zapisana.liczba }} transakcji, orientacyjnie {{ z(zapisana.szacunek) }} zł{% if zapisana.szacunek_po_korekcie is not none %} (po korekcie na datę {{ z(zapisana.szacunek_po_korekcie) }} zł){% endif %}. Poniżej — policzone dziś z tymi samymi parametrami (po ponownym imporcie pliku dane mogą być nowsze).</p>
+        <p class="komunikat" role="status">Zapisana wycena „{{ zapisana.nazwa }}” z {{ zapisana.data_zapisu }}: {{ zapisana.liczba }} transakcji, orientacyjnie {{ z(zapisana.szacunek) }} zł{% if zapisana.szacunek_po_korekcie is not none %} (po korekcie na datę {{ z(zapisana.szacunek_po_korekcie) }} zł){% endif %}. Poniżej — policzone dziś z tymi samymi parametrami (po ponownym imporcie pliku dane mogą być nowsze).</p>
         {% endif %}
         {% if wynik.liczba %}
-        {% if not wynik.wystarczy %}<p class="komunikat">Tylko {{ wynik.liczba }} podobnych transakcji (mniej niż {{ wynik.min_podobnych }}) — mediana jest niepewna.</p>{% endif %}
+        {% if not wynik.wystarczy %}<p class="komunikat" role="status">Tylko {{ wynik.liczba }} podobnych transakcji (mniej niż {{ wynik.min_podobnych }}) — mediana jest niepewna.</p>{% endif %}
         <div class="kafelki-rcn">
             <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Podobnych transakcji</span><span class="kafelek-rcn__wartosc">{{ wynik.liczba }}</span><span class="wyciszony kafelek-rcn__dopisek">{{ wynik.od }} – {{ wynik.do }}</span></div>
             <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Mediana ceny za m²</span><span class="kafelek-rcn__wartosc">{{ z(wynik.mediana_m2) }} zł</span><span class="wyciszony kafelek-rcn__dopisek">połowa: {{ z(wynik.q1_m2) }}–{{ z(wynik.q3_m2) }} zł</span></div>
@@ -33,10 +33,10 @@
         <p>Po korekcie na {{ k.rok_bazowy }} r.: mediana <strong>{{ z(k.mediana_m2) }} zł/m²</strong> (połowa: {{ z(k.q1_m2) }}–{{ z(k.q3_m2) }} zł), orientacyjnie <strong>{{ z(k.szacunek) }} zł</strong> ({{ z(k.szacunek_od) }}–{{ z(k.szacunek_do) }} zł){% if k.pominiete %}; bez korekty {{ k.pominiete }} transakcji z lat, w których plik ma mniej niż 10 transakcji{% endif %}.</p>
         <p class="wyciszony opis-cen">Korekta na datę: cena za m² transakcji × mediana ceny m² w {{ k.rok_bazowy }} r. / mediana w roku transakcji (te same filtry, cały plik) — {% for rok, f in k.wspolczynniki.items() %}{{ rok }} × {{ z(f, 3) }}{{ ', ' if not loop.last }}{% endfor %}.</p>
         {% endif %}
-        <div class="raport-cen__mapa raport-cen__mapa--kwadrat">{{ mapa }}</div>
+        <div class="raport-cen__mapa raport-cen__mapa--kwadrat" role="img" aria-label="Mapa podobnych transakcji wokół wskazanego miejsca">{{ mapa }}</div>
         <p class="wyciszony opis-cen">Schemat: przerywany okrąg — promień {{ z(p.promien) }} m od wskazanego miejsca (niebieski znacznik), numery — podobne transakcje jak w tabeli (od najbliższej).</p>
         {% else %}
-        <p class="komunikat">Brak podobnych transakcji w tym promieniu — zwiększ promień albo tolerancję powierzchni.</p>
+        <p class="komunikat" role="status">Brak podobnych transakcji w tym promieniu — zwiększ promień albo tolerancję powierzchni.</p>
         {% endif %}
     </section>
 

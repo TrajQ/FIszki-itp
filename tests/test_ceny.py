@@ -1066,5 +1066,5 @@ def test_zestawienie_ma_mape(client, tmp_path, monkeypatch):
     for nazwa in ("krakow.gpkg", "wieliczka.gpkg"):
         client.post("/ceny/transakcje/import", data={"sciezka": str(pobrane / nazwa)})
     wynik = client.get("/ceny/transakcje/zestawienie?pliki=1&pliki=2").get_data(as_text=True)
-    mapa = wynik.split('id="mapa-zestawienia">')[1].split("</div>")[0]
+    mapa = wynik.split('id="mapa-zestawienia"')[1].split(">", 1)[1].split("</div>")[0]
     assert mapa.startswith("<svg") and "krakow" not in mapa  # nazwy tylko w tabeli

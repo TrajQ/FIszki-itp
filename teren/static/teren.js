@@ -491,6 +491,7 @@
         opcje.type = "text";
         opcje.value = pole.opcje.join(", ");
         opcje.placeholder = "opcje po przecinku, np. dobry, średni, zły";
+        opcje.setAttribute("aria-label", "Opcje pola po przecinku"); // ETAP 227
         opcje.dataset.rola = "opcje";
         opcje.hidden = pole.typ !== "wybor" && pole.typ !== "wiele";
         const skala = element("label", "edytor-pol__skala");

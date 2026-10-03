@@ -105,6 +105,38 @@ SPRAWDZ_DOSTEPNOSC = """() => {
     const id = {};
     for (const e of document.querySelectorAll("[id]")) id[e.id] = (id[e.id] || 0) + 1;
     for (const [k, n] of Object.entries(id)) if (n > 1) p.push(`id powtórzony ${n}×: ${k}`);
+    // ETAP 227: ARIA — to, czego czytnik ekranu nie ogłosi albo przeczyta jako symbol
+    if (!document.querySelector("main")) p.push("brak <main>");
+    if (document.querySelectorAll("h1").length !== 1) p.push(`h1: ${document.querySelectorAll("h1").length}`);
+    let poziom = 1;
+    for (const h of document.querySelectorAll("h1, h2, h3, h4, h5, h6")) {
+        const n = Number(h.tagName[1]);
+        // tylko informacja: WCAG nie wymaga kolejnych poziomów (porządkowanie — ETAP 249)
+        if (n > poziom + 1) p.push(`info: nagłówek h${n} po h${poziom}: ${h.textContent.trim().slice(0, 30)}`);
+        poziom = n;
+    }
+    for (const e of document.querySelectorAll("button, a[href]")) {
+        if (!widoczny(e) || nazwa(e)) continue;
+        const t = e.textContent.trim();
+        if (t && !/[\p{L}\p{N}]/u.test(t)) p.push(`${e.tagName.toLowerCase()} z samym symbolem „${t}”: ${e.id || e.className}`);
+    }
+    for (const e of document.querySelectorAll(".komunikat, [id*=komunikat], [id*=blad]")) {
+        if (e.closest("[aria-live], [role=status], [role=alert]")) continue;
+        if (e.matches("input, select, textarea, button, label, template")) continue;
+        p.push("komunikat bez aria-live: " + (e.id || e.className));
+    }
+    for (const e of document.querySelectorAll("svg")) {
+        if (!widoczny(e) || e.closest("button, a, [aria-hidden=true], .leaflet-container")) continue;
+        if (e.getBBox && (e.getBoundingClientRect().width < 40)) continue;  // ikonki
+        const opisany = e.closest("[role=img][aria-label]") || (e.getAttribute("role") === "img" && (nazwa(e) || e.querySelector("title")));
+        if (!opisany) p.push("svg bez role=img i opisu: " + (e.id || e.parentElement.id || e.parentElement.className));
+    }
+    for (const e of document.querySelectorAll("input:not([type=hidden]), select, textarea")) {
+        if (!widoczny(e)) continue;
+        const etykieta = e.closest("label") || (e.id && document.querySelector(`label[for="${e.id}"]`));
+        if (!etykieta && !nazwa(e) && e.getAttribute("placeholder")) p.push("pole opisane tylko placeholderem: " + (e.id || e.name));
+    }
+    for (const e of document.querySelectorAll("[aria-hidden=true] a[href], [aria-hidden=true] button, [aria-hidden=true] input")) p.push("fokusowalny w aria-hidden: " + (e.id || e.className));
     return p;
 }"""
 
@@ -120,7 +152,7 @@ STRONY += ["/teren/projekty/1", "/teren/projekty/1/raport", "/osiedle/koncepcje/
            "/dostepnosc/raport?plik=przyklad_poznan_syntetyczny.csv&kolumna=czas_szkola_min",
            "/dostepnosc/raport-dzielnic?plik=przyklad_poznan_syntetyczny.csv&kolumna=czas_szkola_min"]
 srv = make_server("127.0.0.1", 5218, app, threaded=True); threading.Thread(target=srv.serve_forever, daemon=True).start()
-problemy = 0
+problemy = informacje = 0
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path=os.environ.get("CHROMIUM") or None)
     for szer, schemat in ((390, "dark"), (1300, "light")):
@@ -146,9 +178,11 @@ with sync_playwright() as p:
             winni = pg.evaluate("[...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && !e.closest('nav, .leaflet-container, [class*=przewijanie], [class*=wrap], .zlozony__przewijanie, table')).slice(0,3).map(e => e.tagName + '.' + e.className)")
             # ETAP 130: podstawowa dostępność — tylko na jednej szerokości (wynik ten sam)
             dostepnosc = pg.evaluate(SPRAWDZ_DOSTEPNOSC) if szer == 1300 else []
+            informacje += sum(1 for x in dostepnosc if x.startswith("info:"))
+            dostepnosc = [x for x in dostepnosc if not x.startswith("info:")]
             if dostepnosc:
                 problemy += 1
-                print("dostępność", adres, dostepnosc[:6])
+                print("dostępność", adres, dostepnosc[:int(os.environ.get("ILE", 6))])
             if odp.status >= 400 or bledy or sw > szer:
                 problemy += 1
                 print(szer, adres, odp.status, "| szer:", sw, winni, "| bledy:", bledy)
@@ -156,5 +190,5 @@ with sync_playwright() as p:
         ctx.close()
     b.close()
 srv.shutdown()
-print("stron:", len(STRONY), "| problemów:", problemy)
+print("stron:", len(STRONY), "| problemów:", problemy, "| informacji (kolejność nagłówków):", informacje)
 sys.exit(1 if problemy else 0)

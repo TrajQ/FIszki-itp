@@ -64,7 +64,7 @@
 </form>
 <p id="wybrany-wskaznik" class="wybrany-wskaznik wyciszony">Wybierz wskaźnik z listy podpowiedzi.</p>
 
-<p id="komunikat-atlasu" class="komunikat komunikat--blad" hidden></p>
+<p id="komunikat-atlasu" class="komunikat komunikat--blad" hidden role="alert"></p>
 
 <div id="wyniki" hidden>
     <div class="pasek-wynikow">
@@ -105,7 +105,7 @@
         <section class="karta karta-mapy">
             <div id="mapa-atlasu"></div>
             <div id="legenda" class="legenda"></div>
-            <p id="komunikat-mapy" class="komunikat komunikat--ostrzezenie komunikat-mapy" hidden></p>
+            <p id="komunikat-mapy" class="komunikat komunikat--ostrzezenie komunikat-mapy" hidden role="status"></p>
         </section>
 
         <aside class="stos">
@@ -137,7 +137,7 @@
                     <h3>Opis</h3>
                     <button id="przycisk-opis" type="button" class="przycisk--drugi">✦ Wygeneruj opis</button>
                 </div>
-                <p id="opis" class="wyciszony">Gemini opisze wynik słowami. Liczby w opisie są sprawdzane: każda musi pochodzić z danych GUS.</p>
+                <p id="opis" class="wyciszony" aria-live="polite">Gemini opisze wynik słowami. Liczby w opisie są sprawdzane: każda musi pochodzić z danych GUS.</p>
                 <details id="fakty-opisu" hidden>
                     <summary>Fakty przekazane modelowi</summary>
                     <ul id="lista-faktow"></ul>

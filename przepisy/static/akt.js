@@ -135,6 +135,7 @@
             try {
                 const wynik = await wyslij(`${URL_JEDNOSTKI}${id}/fiszki`, { fiszki, tematy: temat.value ? [temat.value] : [] });
                 const gotowe = element("p", "komunikat komunikat--sukces");
+                gotowe.setAttribute("role", "status"); // ETAP 227
                 const link = element("a", "", "otwórz w Fiszkach ›");
                 link.href = wynik.url;
                 gotowe.append(`Dodane fiszki: ${wynik.dodane} (z kotwicą w PDF-ie aktu) — `, link);

@@ -21,8 +21,8 @@
         <button id="usun-akt" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń</button>
     </div>
 </div>
-<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
-<div id="aktualnosc" class="karta stos aktualnosc-aktu" hidden></div>
+<p id="komunikat" class="komunikat komunikat--blad" hidden role="alert"></p>
+<div id="aktualnosc" class="karta stos aktualnosc-aktu" hidden aria-live="polite"></div>
 {% if zrodla_przeniesienia %}
 <details class="karta stos przeniesienie-notatek" id="przeniesienie-notatek"{{ ' open' if z_aktu in zrodla_przeniesienia | map(attribute='id') | list }}>
     <summary>Przenieś notatki i „Moje przepisy” z innego tekstu</summary>

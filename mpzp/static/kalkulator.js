@@ -28,8 +28,10 @@
 
     function dodajBudynek(rzut = "", kondygnacje = "", wysokosc = "") {
         const wiersz = el("div", "wiersz-budynku");
+        const opisy = { rzut_m2: "Rzut budynku [m²]", kondygnacje: "Kondygnacje", wysokosc_m: "Wysokość [m]" }; // ETAP 227: dla czytnika ekranu
         for (const [nazwa, wartosc, podpowiedz] of [["rzut_m2", rzut, "np. 150"], ["kondygnacje", kondygnacje, "np. 2"], ["wysokosc_m", wysokosc, "np. 8,5"]]) {
             const pole = el("input");
+            pole.setAttribute("aria-label", opisy[nazwa]);
             pole.type = "text";
             pole.inputMode = "decimal";
             pole.dataset.pole = nazwa;

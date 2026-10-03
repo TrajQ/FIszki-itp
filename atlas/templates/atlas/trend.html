@@ -10,6 +10,7 @@
 {% block tresc %}
 {# ETAP 178: trend liniowy w każdej gminie — liczby z atlas/trasy_trend.py #}
 <div class="druk-mapy">
+    <h1 class="tylko-czytnik">Trend w gminach — Atlas</h1>
     <div class="druk-mapy__akcje">
         <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
         {% if wynik %}<div class="rzad">
@@ -24,7 +25,7 @@
         <button type="submit" class="przycisk--drugi">Pokaż</button>
         <span class="wyciszony">{{ min_lat }}–{{ maks_lat }} lat</span>
     </form>
-    {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+    {% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
     {% if wynik %}
     <p class="wyciszony druk-mapy__opis">Kolor gminy — średnia roczna zmiana wskaźnika w % jej średniej wartości (prosta najmniejszych kwadratów przez wartości z lat {{ wynik.od }}–{{ wynik.do }}). R² mówi, jak równomierna była zmiana: od {{ r2_stabilny | string | replace('.', ',') }} trend stabilny.</p>
     <img class="druk-mapy__obraz" src="{{ url_for('atlas.trend_svg', **parametry) }}" alt="Kartogram trendu wskaźnika w gminach">

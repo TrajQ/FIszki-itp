@@ -4045,3 +4045,30 @@ Status: zamknięty
 - Testy: krzywa w SQL = dawna pętla (3000 losowych odpowiedzi),
   zapamiętanie i unieważnienie po nowej odpowiedzi
 - `DECISIONS.md`: D-234
+
+## ETAP 227 — Dostępność dla czytników ekranu: przegląd ARIA
+Data: 2026-10-03
+Status: zamknięty
+
+- `narzedzia/przeglad_stron.py`: nowe kontrole — `<main>`, dokładnie
+  jeden `h1`, przyciski i linki z samym symbolem bez nazwy, komunikaty
+  bez `aria-live`/roli, wykresy SVG bez `role="img"` i opisu, pola
+  opisane tylko placeholderem, elementy fokusowalne w `aria-hidden`;
+  kolejność poziomów nagłówków — tylko jako informacja (zmienna `ILE` —
+  ile uwag na stronę)
+- Pierwszy przebieg: 47 stron z uwagami → po poprawkach 0 problemów na
+  99 stronach (31 informacji o kolejności nagłówków)
+- Komunikaty w szablonach (58): `role="alert"` dla błędów, `role="status"`
+  dla pozostałych; komunikaty tworzone w JS — rola przy utworzeniu
+  (Fiszki, MPZP — `blad()`, Przepisy); kontenery wyników z
+  `aria-live="polite"` (propozycje fiszek, opis Gemini w Atlasie i raporcie
+  gminy, sprawdzanie aktualności aktu)
+- Pola z samym placeholderem: `aria-label` (szukanie fiszek, symbole,
+  działka, Dziennik Ustaw, nowa koncepcja, wskaźnik GUS, temat importu,
+  budynki w kalkulatorze, opcje pola w Terenie)
+- `h1`: raporty Dostępności i Osiedla — tytuł jako `h1.tytul-raportu`
+  (wygląd jak h2); strony druku Atlasu — `h1.tylko-czytnik`; nowe klasy w
+  `static/style.css`
+- Wykresy i mapy SVG w raportach: `role="img"` z opisem na kontenerze (9)
+- Plan: porządkowanie poziomów nagłówków dopisane do ETAPu 249
+- `DECISIONS.md`: D-235

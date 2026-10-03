@@ -37,7 +37,7 @@
             </div>
             <select id="wybor-koncepcji" aria-label="Koncepcja"></select>
             <form id="formularz-nowej" class="rzad">
-                <input id="nazwa-nowej" type="text" placeholder="Nowa: np. Jeżyce — wariant A" maxlength="80">
+                <input id="nazwa-nowej" type="text" aria-label="Nazwa nowej koncepcji" placeholder="Nowa: np. Jeżyce — wariant A" maxlength="80">
                 <button type="submit" class="przycisk--drugi">Utwórz</button>
             </form>
             <div id="akcje-koncepcji" class="rzad" hidden>
@@ -52,7 +52,7 @@
             <label id="warstwa-terenu" class="warstwa-terenu" hidden>Punkty z inwentaryzacji (moduł Teren)
                 <select id="projekt-terenu"><option value="">— nie pokazuj —</option></select>
             </label>
-            <p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+            <p id="komunikat" class="komunikat komunikat--blad" hidden role="alert"></p>
         </section>
 
         <section id="sekcja-rysowania" class="karta stos" hidden>
@@ -177,7 +177,7 @@
                     <tr><td>zieleń urządzona na mieszkańca [m²]</td><td class="liczba" colspan="2" data-program="zielen_na_mieszkanca_m2"></td></tr>
                 </tbody>
             </table>
-            <p id="uwaga-parkingi" class="komunikat komunikat--ostrzezenie" hidden></p>
+            <p id="uwaga-parkingi" class="komunikat komunikat--ostrzezenie" hidden role="status"></p>
             <details class="zalozenia">
                 <summary>Założenia (typowe wartości — zmień pod swoją gminę)</summary>
                 <div class="rzad zestawy-zalozen">

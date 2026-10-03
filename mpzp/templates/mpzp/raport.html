@@ -72,7 +72,7 @@
     <section class="karta">
         <h3>Przeznaczenie w planie miejscowym</h3>
         {% if blad %}
-        <p class="komunikat komunikat--ostrzezenie">{{ blad }}</p>
+        <p class="komunikat komunikat--ostrzezenie" role="status">{{ blad }}</p>
         {% elif plan_krajowy %}
         {# Gmina bez WFS: atrybuty z krajowej integracji, bez podziału działki. #}
         <table class="tabela">

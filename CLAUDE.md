@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 226 (Wydajność dużych baz: pomiar i indeksy (Fiszki) — zamknięty)
-Ostatni ZIP: releases/warsztat_etap226_20261003.zip
+ETAP: 227 (Dostępność dla czytników ekranu: przegląd ARIA — zamknięty)
+Ostatni ZIP: releases/warsztat_etap227_20261003.zip
 Testy: 672 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

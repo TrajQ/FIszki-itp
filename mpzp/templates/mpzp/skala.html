@@ -21,7 +21,7 @@
             {% for s in skale %}<button type="button" class="przycisk--drugi" data-skala="{{ s }}">1:{{ '{:,}'.format(s).replace(',', ' ') }}</button>{% endfor %}
         </div>
     </section>
-    <p id="blad-skali" class="komunikat komunikat--blad" hidden></p>
+    <p id="blad-skali" class="komunikat komunikat--blad" hidden role="alert"></p>
 
     <div class="siatka-kart siatka-skali">
         <section class="karta stos">

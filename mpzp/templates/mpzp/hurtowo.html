@@ -20,7 +20,7 @@
         <textarea name="lista" rows="6" placeholder="306401_1.0012.18/14&#10;Jeżyce 18/15&#10;146501_1.0001.AR_1.1" required>{{ tekst }}</textarea></label>
     <div class="rzad"><button type="submit">Sprawdź</button><span class="wyciszony">Działki są sprawdzane po kolei — przy 30 działkach to może potrwać kilkadziesiąt sekund.</span></div>
 </form>
-{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+{% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
 
 {% if wyniki %}
 <section class="karta stos">

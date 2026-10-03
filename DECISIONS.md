@@ -4679,3 +4679,26 @@ usuwa ani nie zmienia) — klucz: plik bazy, ostatnie id, liczba wpisów.
   kopia danych do pilnowania (także przy synchronizacji z telefonu).
 - Indeksy na wszystkich kolumnach z WHERE — część nie pomaga albo
   szkodzi, a każdy spowalnia zapis odpowiedzi.
+
+## D-235 — Komunikaty: alert dla błędów, status dla reszty; nagłówki później
+Data: 2026-10-03
+
+**Decyzja:** Błędy dostają `role="alert"` (czytnik przerywa i ogłasza),
+pozostałe komunikaty `role="status"` (ogłasza po skończeniu zdania).
+Opis wykresu SVG jest na kontenerze (`role="img"` + `aria-label`), bo SVG
+wstawia serwer bez tekstów (D-048). Kolejność poziomów nagłówków na razie
+tylko raportujemy.
+
+**Uzasadnienie:** Rola na elemencie obecnym od załadowania strony
+(ukrytym) sprawia, że późniejsza zmiana treści jest ogłaszana — dodana
+dopiero razem z treścią bywa pomijana. Opis na kontenerze nie zmienia
+SVG z serwera (tylko liczby i kolory). WCAG nie wymaga kolejnych poziomów
+nagłówków; zmiana h3 → h2 na 31 stronach dotyka 34 reguł CSS z h3 i
+nagłówków tworzonych w JS — to osobna praca (ETAP 249), nie przy okazji.
+
+**Odrzucone alternatywy:**
+- Jeden skrypt (MutationObserver) dopisujący role wszystkim
+  komunikatom — rola dodana po wstawieniu treści nie jest pewnie
+  ogłaszana.
+- `role="alert"` dla wszystkich komunikatów — informacje przerywałyby
+  czytanie strony.

@@ -20,7 +20,7 @@
         <h1>Zestawienie plików RCN</h1>
         <p class="wyciszony opis-cen">Pliki różnych powiatów obok siebie, z tymi samymi filtrami. Każdy plik liczony osobno — transakcje się nie mieszają. Różnica mediany — wobec pierwszego zaznaczonego pliku.</p>
         {% if pliki | length < 2 %}
-        <p class="komunikat">Do zestawienia potrzeba co najmniej dwóch zaimportowanych plików (np. miasto i powiat ościenny) — zaimportuj je w module Ceny → Transakcje.</p>
+        <p class="komunikat" role="status">Do zestawienia potrzeba co najmniej dwóch zaimportowanych plików (np. miasto i powiat ościenny) — zaimportuj je w module Ceny → Transakcje.</p>
         {% else %}
         <form method="get" class="stos" id="formularz-zestawienia">
             <fieldset class="wybor-plikow-rcn">
@@ -44,7 +44,7 @@
             </div>
         </form>
         {% endif %}
-        {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+        {% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
     </section>
 
     {% if zestawienie %}
@@ -69,12 +69,12 @@
 
         {# ETAP 221: mapa schematyczna — numery jak w tabeli #}
         <h3>Gdzie są transakcje</h3>
-        <div class="raport-cen__mapa" id="mapa-zestawienia">{{ mapa }}</div>
+        <div class="raport-cen__mapa" id="mapa-zestawienia" role="img" aria-label="Mapa schematyczna: zasięg transakcji każdego pliku z numerem jak w tabeli">{{ mapa }}</div>
         <p class="wyciszony opis-cen">Numery jak w tabeli, w środku plików (mediana położenia transakcji). Linia przerywana obejmuje 95% transakcji pliku najbliższych środka — pozostałe 5%, często z błędnym położeniem w rejestrze, nie są rysowane i nie wyznaczają zasięgu. Kropki: najwyżej 1500 najnowszych transakcji pliku. Schemat bez podkładu — do pokazania, jak pliki leżą względem siebie.</p>
 
         {% if zestawienie.lata %}
         <h3>Mediana ceny za m² w latach [zł]</h3>
-        <div class="raport-cen__mapa">{{ wykres }}</div>
+        <div class="raport-cen__mapa" role="img" aria-label="Wykres median ceny za m² w latach — liczby w tabeli pod wykresem">{{ wykres }}</div>
         <p class="wyciszony opis-cen">Numery jak w tabeli. Pusty punkt: w tym roku mniej niż {{ min_w_roku }} transakcji w pliku, mediana niepewna.</p>
         <div class="przewijanie-cen">
         <table class="tabela">

@@ -36,7 +36,7 @@
             <button id="przycisk-fiszki-strony" type="button" title="Gemini zaproponuje kilka fiszek z całej bieżącej strony">✦ Fiszki z tej strony</button>
             <button id="przycisk-wycinka" type="button" class="przycisk--drugi" aria-pressed="false" title="Zaznacz prostokątem rysunek, mapę albo schemat — powstanie fiszka z tym wycinkiem">✂ Wycinek rysunku</button>
         </div>
-        <p id="blad-pdf" class="komunikat komunikat--blad" hidden></p>
+        <p id="blad-pdf" class="komunikat komunikat--blad" hidden role="alert"></p>
         <p class="podpowiedz wyciszony">Zaznacz myszką fragment tekstu, żeby utworzyć fiszkę.</p>
         <div id="kontener-pdf">
             <div id="warstwa-pdf">
@@ -54,7 +54,7 @@
     <aside id="panel-fiszek">
         <div id="propozycje-strony" class="karta stos" hidden>
             <h3>Propozycje ze strony</h3>
-            <p id="status-propozycji" class="wyciszony"></p>
+            <p id="status-propozycji" class="wyciszony" aria-live="polite"></p>
             <ul id="lista-propozycji" class="lista-propozycji"></ul>
             <div class="rzad">
                 <button id="zapisz-propozycje" type="button" hidden>Zapisz zaznaczone</button>
@@ -95,7 +95,7 @@
             <p class="wyciszony">Eksport z Anki (.txt), Quizlet (pojęcie ⇥ definicja) albo CSV: kolumny pytanie i odpowiedź. Z eksportu CSV tej aplikacji wraca też kotwica w PDF-ie. Powtórzone fiszki są pomijane.</p>
             <form id="formularz-importu" class="stos">
                 <input type="file" name="plik" accept=".txt,.csv,.tsv,text/plain,text/csv" required aria-label="Plik z fiszkami do importu (TXT lub CSV)">
-                <input type="text" name="tematy" placeholder="Temat importowanych fiszek (opcjonalnie)" list="lista-tematow-podpowiedzi" maxlength="200">
+                <input type="text" name="tematy" aria-label="Temat importowanych fiszek" placeholder="Temat importowanych fiszek (opcjonalnie)" list="lista-tematow-podpowiedzi" maxlength="200">
                 <button type="submit" class="przycisk--drugi">Importuj</button>
             </form>
             <p id="wynik-importu" class="wyciszony" hidden></p>

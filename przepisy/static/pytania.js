@@ -101,6 +101,7 @@
         lTemat.append(temat);
         f.append(lTemat);
         const stan = element("p", "wyciszony");
+        stan.setAttribute("aria-live", "polite"); // ETAP 227
         const zapisz = element("button", "", "Utwórz fiszkę");
         zapisz.type = "submit";
         const wroc = element("button", "przycisk--tekst", "Anuluj");
@@ -124,6 +125,7 @@
                 const dane = await odp.json().catch(() => ({}));
                 if (!odp.ok) throw new Error(dane.blad || `Błąd ${odp.status}`);
                 const gotowe = element("p", "komunikat komunikat--sukces");
+                gotowe.setAttribute("role", "status");
                 const link = element("a", "", "otwórz w Fiszkach ›");
                 link.href = dane.url;
                 gotowe.append(`Fiszka dodana (kotwica: strona ${dane.strona} PDF-a) — `, link);

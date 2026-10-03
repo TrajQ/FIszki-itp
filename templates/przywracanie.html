@@ -19,8 +19,8 @@
     <p><a class="przycisk" href="{{ url_for('index') }}">Przejdź do strony głównej</a></p>
 </section>
 {% else %}
-{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
-{% if sprawdzenie %}<p class="komunikat {{ 'komunikat--ok' if sprawdzenie.ok else 'komunikat--blad' }}" id="wynik-sprawdzenia"><strong>{{ sprawdzenie.nazwa }}</strong>: {{ sprawdzenie.opis }}</p>{% endif %}
+{% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
+{% if sprawdzenie %}<p class="komunikat {{ 'komunikat--ok' if sprawdzenie.ok else 'komunikat--blad' }}" id="wynik-sprawdzenia" role="status"><strong>{{ sprawdzenie.nazwa }}</strong>: {{ sprawdzenie.opis }}</p>{% endif %}
 <section class="karta stos">
     <h3>Co się stanie</h3>
     <ol>

@@ -492,6 +492,7 @@ button.model__wstawiaj--aktywny {
     box-shadow: var(--cien);
 }
 
+.raport-dostepnosci__strona h1,
 .raport-dostepnosci__strona h2,
 .raport-dostepnosci__strona h3 {
     margin: 12px 0 0;

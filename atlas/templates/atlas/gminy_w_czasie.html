@@ -20,7 +20,7 @@
         <h1>{{ zmienna.nazwa if zmienna else 'Gminy w czasie' }}</h1>
         {% if zmienna %}<p class="wyciszony">{{ zmienna.jednostka or '–' }} · gminy województwa {{ wojewodztwo.nazwa }} · GUS, Bank Danych Lokalnych</p>{% endif %}
     </div>
-    {% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+    {% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
 
     {% if gminy %}
     <form method="get" class="karta stos wybor-gmin-czasu" id="formularz-gmin">

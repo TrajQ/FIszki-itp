@@ -7,7 +7,7 @@
 </section>
 
 {% if nowe_etapy %}
-<p class="komunikat komunikat--sukces co-nowego__pasek">Warsztat zaktualizowany — {{ nowe_etapy | length }} {{ 'nowy ETAP' if nowe_etapy | length == 1 else ('nowe ETAPy' if nowe_etapy | length % 10 in [2, 3, 4] and nowe_etapy | length % 100 not in [12, 13, 14] else 'nowych ETAPów') }}, m.in.: {{ nowe_etapy[0].punkty[0] | truncate(120) if nowe_etapy[0].punkty else 'ETAP ' ~ nowe_etapy[0].etap }} <a href="{{ url_for('co_nowego') }}">Zobacz, co nowego ›</a></p>
+<p class="komunikat komunikat--sukces co-nowego__pasek" role="status">Warsztat zaktualizowany — {{ nowe_etapy | length }} {{ 'nowy ETAP' if nowe_etapy | length == 1 else ('nowe ETAPy' if nowe_etapy | length % 10 in [2, 3, 4] and nowe_etapy | length % 100 not in [12, 13, 14] else 'nowych ETAPów') }}, m.in.: {{ nowe_etapy[0].punkty[0] | truncate(120) if nowe_etapy[0].punkty else 'ETAP ' ~ nowe_etapy[0].etap }} <a href="{{ url_for('co_nowego') }}">Zobacz, co nowego ›</a></p>
 {% endif %}
 
 {% if pierwsze_kroki %}

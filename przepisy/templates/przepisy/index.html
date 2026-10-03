@@ -16,7 +16,7 @@
     </div>
 </div>
 
-{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+{% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
 
 <section class="karta stos">
     <h3>Zapytaj</h3>
@@ -27,7 +27,7 @@
             <span class="wyciszony opis-panelu">Zakres jak w wyszukiwarce niżej. Gemini odpowiada tylko z wybranych artykułów; każdy cytat jest sprawdzany w tekście.</span>
         </div>
     </form>
-    <p id="stan-pytania" class="komunikat" hidden></p>
+    <p id="stan-pytania" class="komunikat" hidden role="status"></p>
     <div id="odpowiedzi" class="odpowiedzi"></div>
     <p class="wyciszony opis-panelu">Pomoc w czytaniu przepisów, nie porada prawna. Sprawdzaj cytat w źródle i aktualność tekstu jednolitego.</p>
 </section>
@@ -69,7 +69,7 @@
 <section class="karta stos">
     <h3>Pobierz z Dziennika Ustaw</h3>
     <form id="formularz-sejmu" class="rzad">
-        <input id="pole-sejmu" type="search" placeholder="słowa z tytułu, np. planowaniu i zagospodarowaniu" autocomplete="off" required>
+        <input id="pole-sejmu" type="search" aria-label="Szukaj aktu w Dzienniku Ustaw po tytule" placeholder="słowa z tytułu, np. planowaniu i zagospodarowaniu" autocomplete="off" required>
         <button type="submit" class="przycisk--drugi">Szukaj</button>
     </form>
     <p class="wyciszony opis-panelu">Urzędowe teksty z API Sejmu (ta sama baza co ISAP). Aktualny tekst ustawy to zwykle najnowsze „Obwieszczenie … w sprawie ogłoszenia jednolitego tekstu” — takie pozycje są oznaczone.</p>

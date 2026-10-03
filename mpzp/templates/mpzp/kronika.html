@@ -24,8 +24,8 @@
     </div>
 </div>
 
-{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
-<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+{% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
+<p id="komunikat" class="komunikat komunikat--blad" hidden role="alert"></p>
 
 <section class="karta stos kronika">
     <div id="panel-suwaka" class="kronika__suwak">

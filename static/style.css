@@ -141,6 +141,22 @@ h3 {
     font-size: 1.15rem;
 }
 
+/* ETAP 227: tytuł raportu to h1 dla czytnika ekranu, a wygląda jak h2 */
+h1.tytul-raportu {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* ETAP 227: tekst tylko dla czytnika ekranu (np. tytuł strony z samą mapą) */
+.tylko-czytnik {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
 p {
     margin: 0 0 1em;
 }

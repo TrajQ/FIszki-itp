@@ -19,7 +19,7 @@
         <h1>Porównanie inwentaryzacji</h1>
         <p><strong>A</strong> — {{ a.nazwa }} ({{ liczba_a }} punktów) · <strong>B</strong> — {{ b.nazwa }} ({{ liczba_b }} punktów)</p>
         {% if not pola %}
-        <p class="komunikat komunikat--ostrzezenie">Projekty nie mają wspólnych pól (ta sama nazwa i typ) — nie ma czego zestawić. Do powtórzonej inwentaryzacji użyj „Utwórz podobny”.</p>
+        <p class="komunikat komunikat--ostrzezenie" role="status">Projekty nie mają wspólnych pól (ta sama nazwa i typ) — nie ma czego zestawić. Do powtórzonej inwentaryzacji użyj „Utwórz podobny”.</p>
         {% endif %}
         {% if tylko_a or tylko_b %}<p class="wyciszony przypis">Pola tylko w A: {{ tylko_a | join(', ') or '—' }}; tylko w B: {{ tylko_b | join(', ') or '—' }} — pominięte.</p>{% endif %}
 

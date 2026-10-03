@@ -279,6 +279,7 @@ button.przycisk--niebezpieczny-tekst {
     box-shadow: var(--cien);
 }
 
+.raport-osiedla__strona h1,
 .raport-osiedla__strona h2,
 .raport-osiedla__strona h3 {
     margin: 12px 0 0;

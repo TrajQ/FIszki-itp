@@ -20,9 +20,9 @@
     </div>
 
     <section class="raport-osiedla__strona">
-        <h2>{{ k.nazwa }}</h2>
+        <h1 class="tytul-raportu">{{ k.nazwa }}</h1>
         <p class="wyciszony">Koncepcja zagospodarowania · stan z {{ k.data_zmiany[:10] }} · Warsztat, moduł Osiedle</p>
-        <div class="raport-osiedla__szkic">{{ szkic }}</div>
+        <div class="raport-osiedla__szkic" role="img" aria-label="Szkic koncepcji: tereny w kolorach funkcji z numerami jak w bilansie">{{ szkic }}</div>
         <ul class="legenda-osiedla">
             <li><span class="funkcja__probka funkcja__probka--obszar"></span> obszar opracowania</li>
             {% for f in b.funkcje %}<li><span class="funkcja__probka" style="background: {{ f.kolor }}"></span> <strong>{{ f.funkcja }}</strong> {{ f.nazwa }}</li>{% endfor %}
@@ -46,7 +46,7 @@
             <tr><th>Teren</th><th class="liczba">Wysokość [m]</th><th class="liczba">Cień w południe [m]</th><th class="liczba">Od granicy obszaru [m]</th></tr>
             {% for t in cien.tereny %}<tr><td>{{ t.nr }}. <strong>{{ t.funkcja }}</strong></td><td class="liczba">{{ m(t.wysokosc_m) }}</td><td class="liczba">{{ m(t.cien_w_poludnie_m) if t.cien_w_poludnie_m is not none else '—' }}</td><td class="liczba">{% if t.od_granicy_m is none %}—{% elif t.od_granicy_m == 0 %}0 — sięga granicy{% else %}{{ m(t.od_granicy_m) }}{% endif %}</td></tr>{% endfor %}
         </table></div>
-        {% if cien.tereny | selectattr('od_granicy_m', 'equalto', 0) | list %}<p class="komunikat komunikat--ostrzezenie">Teren zabudowy sięga granicy obszaru — budynki trzeba będzie odsunąć od granicy działki (minimalne odległości: § 12 warunków technicznych).</p>{% endif %}
+        {% if cien.tereny | selectattr('od_granicy_m', 'equalto', 0) | list %}<p class="komunikat komunikat--ostrzezenie" role="status">Teren zabudowy sięga granicy obszaru — budynki trzeba będzie odsunąć od granicy działki (minimalne odległości: § 12 warunków technicznych).</p>{% endif %}
         {% if cien.zacienione %}
         <h3>Tereny w strefie możliwego cienia</h3>
         <table class="tabela">
@@ -72,8 +72,8 @@
                     {% if b.kontrole.niezagospodarowane_m2 %}<tr class="wyciszony"><td>bez funkcji (w obszarze)</td><td class="liczba">{{ m(b.kontrole.niezagospodarowane_m2, 0) }}</td><td class="liczba">{{ m(b.kontrole.niezagospodarowane_proc) }}</td></tr>{% endif %}
                     <tr class="tabela-bilansu__razem"><td>{{ 'obszar opracowania' if b.obszar_m2 is not none else 'razem (bez obszaru opracowania)' }}</td><td class="liczba">{{ m(b.obszar_m2 if b.obszar_m2 is not none else b.razem_m2, 0) }}</td><td class="liczba">100</td></tr>
                 </table>
-                {% if b.kontrole.nakladanie_m2 and b.kontrole.nakladanie_m2 >= 1 %}<p class="komunikat komunikat--ostrzezenie">Tereny nakładają się na {{ m(b.kontrole.nakladanie_m2, 0) }} m² — bilans liczy tę część podwójnie.</p>{% endif %}
-                {% if b.kontrole.poza_obszarem_m2 and b.kontrole.poza_obszarem_m2 >= 1 %}<p class="komunikat komunikat--ostrzezenie">{{ m(b.kontrole.poza_obszarem_m2, 0) }} m² terenów leży poza obszarem opracowania.</p>{% endif %}
+                {% if b.kontrole.nakladanie_m2 and b.kontrole.nakladanie_m2 >= 1 %}<p class="komunikat komunikat--ostrzezenie" role="status">Tereny nakładają się na {{ m(b.kontrole.nakladanie_m2, 0) }} m² — bilans liczy tę część podwójnie.</p>{% endif %}
+                {% if b.kontrole.poza_obszarem_m2 and b.kontrole.poza_obszarem_m2 >= 1 %}<p class="komunikat komunikat--ostrzezenie" role="status">{{ m(b.kontrole.poza_obszarem_m2, 0) }} m² terenów leży poza obszarem opracowania.</p>{% endif %}
 
                 {% if w %}
                 <h3>Wskaźniki zabudowy</h3>
@@ -88,7 +88,7 @@
                     <tr><td>powierzchnia biologicznie czynna</td><td class="liczba">{{ m(w.pbc_proc) }}%</td>{% if wb %}<td class="liczba wyciszony">—</td>{% endif %}</tr>
                     <tr><td>najwyższa zabudowa</td><td class="liczba">{{ m(w.max_kondygnacje) }} kond.</td>{% if wb %}<td class="liczba">{{ m(wb.max_kondygnacje) }} kond.</td>{% endif %}</tr>
                 </table>
-                {% if b.budynki and b.budynki.przecina_linie %}<p class="komunikat komunikat--ostrzezenie">Budynków przecinających nieprzekraczalną linię zabudowy: {{ b.budynki.przecina_linie }}.</p>{% endif %}
+                {% if b.budynki and b.budynki.przecina_linie %}<p class="komunikat komunikat--ostrzezenie" role="status">Budynków przecinających nieprzekraczalną linię zabudowy: {{ b.budynki.przecina_linie }}.</p>{% endif %}
                 {% if wb %}<p class="wyciszony">Z budynków: {{ b.budynki.liczba }} narysowanych obrysów, rzut × kondygnacje każdego budynku; powierzchnia biologicznie czynna tylko z terenów.</p>{% endif %}
                 {% endif %}
 
@@ -139,7 +139,7 @@
                     <tr><td>dzieci w wieku szkolnym / oddziały</td><td class="liczba">{{ m(p.dzieci_szkola, 0) }} / {{ m(p.oddzialy_szkolne, 0) }}</td></tr>
                     <tr><td>zieleń urządzona na mieszkańca [m²]</td><td class="liczba">{{ m(p.zielen_na_mieszkanca_m2) }}</td></tr>
                 </table>
-                {% if p.miejsca_brakuje %}<p class="komunikat komunikat--ostrzezenie">Na terenach KS brakuje {{ m(p.miejsca_brakuje, 0) }} miejsc postojowych.</p>{% endif %}
+                {% if p.miejsca_brakuje %}<p class="komunikat komunikat--ostrzezenie" role="status">Na terenach KS brakuje {{ m(p.miejsca_brakuje, 0) }} miejsc postojowych.</p>{% endif %}
 
                 <h3>Przyjęte założenia</h3>
                 <table class="tabela raport-osiedla__zalozenia">

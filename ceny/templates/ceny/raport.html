@@ -34,7 +34,7 @@
             <div class="kafelek-rcn"><span class="kafelek-rcn__etykieta">Mediana powierzchni</span><span class="kafelek-rcn__wartosc">{{ z(statystyki.mediana_pow, 1) }} m²</span></div>
         </div>
         {% endif %}
-        <div class="raport-cen__mapa">{{ mapa }}</div>
+        <div class="raport-cen__mapa" role="img" aria-label="Mapa transakcji w klasach ceny za m² z obszarami jak w tabeli">{{ mapa }}</div>
         <ul class="legenda-rcn">
             {% set granice = [none] + progi + [none] %}
             {% if progi %}{% for kolor in kolory %}
@@ -63,7 +63,7 @@
         </div>
         {% if porownanie.lata %}
         <h3>Mediana ceny za m² w latach [zł]</h3>
-        <div class="raport-cen__mapa">{{ wykres_lat }}</div>
+        <div class="raport-cen__mapa" role="img" aria-label="Wykres median ceny za m² w latach — liczby w tabeli">{{ wykres_lat }}</div>
         <p class="wyciszony opis-cen">Linia przerywana — cały plik. Pusty punkt: w tym roku mniej niż {{ min_w_roku }} transakcji w obszarze, mediana niepewna.</p>
         <div class="przewijanie-cen">
         <table class="tabela">

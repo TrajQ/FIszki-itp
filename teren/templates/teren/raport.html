@@ -35,7 +35,7 @@
             (z położeniem: {{ z_polozeniem }}, ze zdjęciem: {{ punkty | selectattr('zdjecie') | list | length }}){% endif %}
             {% if od %} · pomiary {{ od[:10] }}{% if do[:10] != od[:10] %} – {{ do[:10] }}{% endif %}{% endif %}
         </p>
-        {% if not ankieta or z_polozeniem %}<div class="raport-terenu__mapa">{{ mapa }}</div>
+        {% if not ankieta or z_polozeniem %}<div class="raport-terenu__mapa" role="img" aria-label="Mapa punktów z numerami jak w tabeli">{{ mapa }}</div>
         {% if pole %}
         <ul class="raport-terenu__legenda">
             <li class="wyciszony">{{ pole.nazwa }}:</li>
@@ -50,7 +50,7 @@
     <section class="raport-terenu__strona">
         <h2>Rozmieszczenie {{ 'odpowiedzi' if ankieta else 'punktów' }}</h2>
         <p class="wyciszony">Siatka heksagonów H3 o krawędzi ok. {{ heksagony.krawedz_m }} m (dobrana tak, żeby w komórce było średnio co najmniej 2 punkty); liczba w heksagonie — ile punktów w nim zebrano.</p>
-        <div class="raport-terenu__mapa">{{ mapa_heksagonow }}</div>
+        <div class="raport-terenu__mapa" role="img" aria-label="Mapa liczby punktów w heksagonach">{{ mapa_heksagonow }}</div>
         <div class="raport-terenu__przewijanie"><table class="tabela">
             <tr><th class="liczba">Heksagon</th><th class="liczba">Punktów</th><th>Numery punktów</th>{% if pole %}<th>Najczęściej: {{ pole.nazwa }}</th>{% endif %}</tr>
             {% for k in heksagony.komorki %}
@@ -125,7 +125,7 @@
         <p>Test chi-kwadrat niezależności: χ² = {{ liczba(t.chi2) }}, df = {{ t.df }}, p {{ ('= ' ~ ('%.3f' % t.p)) | replace('.', ',') if t.p >= 0.001 else '< 0,001' }} —
             {{ 'odpowiedzi na oba pytania są ze sobą związane (p < 0,05)' if t.p < 0.05 else 'brak podstaw, by twierdzić, że odpowiedzi są ze sobą związane (p ≥ 0,05)' }}.
             Siła związku (V Craméra): {{ liczba(t.v_cramera) }} — {{ 'słaba' if t.v_cramera < 0.2 else 'umiarkowana' if t.v_cramera < 0.4 else 'silna' }}.</p>
-        {% if t.male_oczekiwane %}<p class="komunikat komunikat--ostrzezenie">W {{ t.male_oczekiwane }} z {{ t.komorek }} komórek liczność oczekiwana jest mniejsza niż 5 — test chi-kwadrat jest wtedy niepewny; zbierz więcej odpowiedzi albo połącz rzadkie odpowiedzi.</p>{% endif %}
+        {% if t.male_oczekiwane %}<p class="komunikat komunikat--ostrzezenie" role="status">W {{ t.male_oczekiwane }} z {{ t.komorek }} komórek liczność oczekiwana jest mniejsza niż 5 — test chi-kwadrat jest wtedy niepewny; zbierz więcej odpowiedzi albo połącz rzadkie odpowiedzi.</p>{% endif %}
         {% else %}
         <p class="wyciszony">Za mało różnych odpowiedzi, żeby policzyć test (potrzeba co najmniej dwóch wierszy i dwóch kolumn z odpowiedziami).</p>
         {% endif %}

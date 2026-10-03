@@ -35,7 +35,7 @@
         </div>
         {% if lata | length > 1 %}
         <h3>Wartość w latach{{ jednostka }}</h3>
-        <div class="raport-cen__mapa">{{ wykres }}</div>
+        <div class="raport-cen__mapa" role="img" aria-label="Wykres cen w latach — liczby w tabeli obok">{{ wykres }}</div>
         <ul class="legenda-rcn">
             {% for m in miasta %}{% if m.szereg %}<li class="legenda-rcn__pozycja"><strong style="color: {{ m.kolor }}">{{ loop.index }}</strong> {{ m.nazwa }}</li>{% endif %}{% endfor %}
         </ul>

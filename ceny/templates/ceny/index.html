@@ -12,7 +12,7 @@
     <a class="przycisk przycisk--drugi" href="{{ url_for('ceny.transakcje') }}" title="Pojedyncze transakcje z Rejestru Cen Nieruchomości: mediana za m², rozkład, mapa">Transakcje (RCN)</a>
 </div>
 
-<p id="komunikat" class="komunikat komunikat--blad" hidden></p>
+<p id="komunikat" class="komunikat komunikat--blad" hidden role="alert"></p>
 
 <section class="karta stos">
     <h3>1. Wskaźnik ceny</h3>
@@ -22,7 +22,7 @@
     <details class="wybor-zmiennej" {{ '' if zmienna else 'open' }}>
         <summary>{{ 'Zmień wskaźnik' if zmienna else 'Wybierz wskaźnik' }}</summary>
         <form id="formularz-zmiennej" class="rzad">
-            <input id="pole-zmiennej" type="search" placeholder="np. mediana cen za 1 m2" autocomplete="off" required>
+            <input id="pole-zmiennej" type="search" aria-label="Wskaźnik GUS — szukaj po nazwie" placeholder="np. mediana cen za 1 m2" autocomplete="off" required>
             <button type="submit" class="przycisk--drugi">Szukaj w GUS</button>
         </form>
         <div class="szybki-wybor">

@@ -106,6 +106,13 @@
         numerAnalizy += 1;
     }
 
+    // ETAP 227: komunikat błędu ogłaszany przez czytnik ekranu
+    function blad(tekst) {
+        const p = element("p", "komunikat komunikat--blad", tekst);
+        p.setAttribute("role", "alert");
+        return p;
+    }
+
     function element(tag, klasa, tekst) {
         const el = document.createElement(tag);
         if (klasa) el.className = klasa;
@@ -116,7 +123,7 @@
     function pokazBlad(tresc, dzialka) {
         panelWyniku.replaceChildren();
         if (dzialka) panelWyniku.appendChild(sekcjaDzialki(dzialka));
-        panelWyniku.appendChild(element("p", "komunikat komunikat--blad", tresc));
+        panelWyniku.appendChild(blad(tresc));
     }
 
     const KOLORY_UDZIALOW = ["#34c759", "#ff9f0a", "#0a84ff", "#bf5af2", "#ff375f", "#64d2ff"];
@@ -604,7 +611,7 @@
                 });
             } catch (e) {
                 pobrane = false; // przy następnym rozwinięciu spróbuj jeszcze raz
-                tresc.replaceChildren(element("p", "komunikat komunikat--blad", e.message));
+                tresc.replaceChildren(blad(e.message));
             }
             tresc.appendChild(element("p", "przypis", przypis));
         });
@@ -674,7 +681,7 @@
                 link.target = "_blank";
                 tresc.replaceChildren(przewijanie, link);
             } catch (e) {
-                tresc.replaceChildren(element("p", "komunikat komunikat--blad", e.message));
+                tresc.replaceChildren(blad(e.message));
             }
             tresc.appendChild(element("p", "przypis", "Ceny brutto z aktów notarialnych z pliku RCN zaimportowanego w module Ceny (plik powiatu z największą liczbą transakcji w zasięgu). Działki: cena za m² gruntu; przy zabudowanych obejmuje budynek."));
         }

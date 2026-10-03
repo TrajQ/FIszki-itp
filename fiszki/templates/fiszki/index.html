@@ -11,7 +11,7 @@
     </div>
 </div>
 
-{% if blad %}<p class="komunikat komunikat--blad">{{ blad }}</p>{% endif %}
+{% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
 
 {# Egzaminy (ETAP 51): ile dni zostało i jak idzie przygotowanie. #}
 <section id="egzaminy" class="karta stos egzaminy">
@@ -179,7 +179,7 @@
         <input id="plik-wynikow" type="file" accept=".json,application/json" required aria-label="Plik z wynikami nauki z telefonu">
         <button type="submit" class="przycisk--drugi">Importuj wyniki</button>
     </form>
-    <p id="wynik-importu" class="komunikat" hidden></p>
+    <p id="wynik-importu" class="komunikat" hidden role="status"></p>
 </section>
 {% endif %}
 
@@ -256,7 +256,7 @@
             <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.druk') }}">Drukuj karty</a>
         </span>
     </div>
-    <input id="pole-szukaj-fiszek" type="search" data-skrot-szukaj placeholder="Fraza z pytania, odpowiedzi albo fragmentu…" autocomplete="off">
+    <input id="pole-szukaj-fiszek" type="search" aria-label="Szukaj w fiszkach" data-skrot-szukaj placeholder="Fraza z pytania, odpowiedzi albo fragmentu…" autocomplete="off">
     <ul id="wyniki-szukania" class="wyniki-szukania"></ul>
 </section>
 

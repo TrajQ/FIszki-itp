@@ -1135,3 +1135,6 @@
 
 ## ETAP 226 — 2026-10-03
 - Fiszki: strona główna i statystyki kilka razy szybsze przy dużym dzienniku powtórek
+
+## ETAP 227 — 2026-10-03
+- Dostępność: komunikaty ogłaszane przez czytnik ekranu, opisy pól, map i wykresów

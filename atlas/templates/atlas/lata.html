@@ -8,6 +8,7 @@
 
 {% block tresc %}
 <div class="druk-mapy">
+    <h1 class="tylko-czytnik">Mapy w kilku latach — Atlas</h1>
     <div class="druk-mapy__akcje">
         <a class="przycisk przycisk--tekst" href="{{ url_for('atlas.index') }}">‹ Atlas</a>
         <div class="rzad">
@@ -23,7 +24,7 @@
     <p class="wyciszony druk-mapy__opis">Ten sam wskaźnik na kilku mapach obok siebie, w klasach wspólnych dla wszystkich lat — ten sam kolor to ta sama wartość na każdej mapie. Arkusz A4 poziomo.</p>
     <img id="mapa-druk" class="druk-mapy__obraz" src="{{ url_for('atlas.mapy_w_latach_svg', **parametry) }}"
          alt="Mapy wskaźnika w kilku latach" onerror="document.getElementById('blad-druku').hidden = false; this.hidden = true;">
-    <p id="blad-druku" class="komunikat komunikat--blad" hidden>Nie udało się przygotować map — sprawdź, czy GUS ma dane dla co najmniej dwóch z wybranych lat.</p>
+    <p id="blad-druku" class="komunikat komunikat--blad" hidden role="alert">Nie udało się przygotować map — sprawdź, czy GUS ma dane dla co najmniej dwóch z wybranych lat.</p>
     {{ stopka_wydruku("Atlas", "GUS, Bank Danych Lokalnych; granice gmin — PRG (GUGiK)") }}
 </div>
 {% endblock %}

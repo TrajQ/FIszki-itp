@@ -51,7 +51,7 @@
                 <svg class="szkic-porownania" viewBox="{{ d.szkic.viewbox }}" role="img" aria-label="Szkic działki {{ d.id }}">
                     <path d="{{ d.szkic.sciezka }}" fill="rgba(10,132,255,0.18)" stroke="currentColor" stroke-width="1.5"/>
                 </svg>
-                {% else %}<span class="komunikat komunikat--blad">{{ d.blad }}</span>{% endif %}
+                {% else %}<span class="komunikat komunikat--blad" role="alert">{{ d.blad }}</span>{% endif %}
             </td>
             {% endfor %}
         </tr>
