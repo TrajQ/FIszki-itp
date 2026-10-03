@@ -18,6 +18,9 @@
         <h1>Wycena porównawcza {{ 'działki' if dzialki else 'mieszkania' }}</h1>
         <p class="wyciszony">Miejsce {{ '%.5f' | format(p.lat) }}, {{ '%.5f' | format(p.lng) }} · powierzchnia {{ z(p.pow, 1) }} m² (± {{ (p.tolerancja * 100) | round | int }}%) · promień {{ z(p.promien) }} m{% if opis_filtrow %} · {{ opis_filtrow | join(', ') }}{% endif %}</p>
 
+        {% if zapisana %}
+        <p class="komunikat">Zapisana wycena „{{ zapisana.nazwa }}” z {{ zapisana.data_zapisu }}: {{ zapisana.liczba }} transakcji, orientacyjnie {{ z(zapisana.szacunek) }} zł{% if zapisana.szacunek_po_korekcie is not none %} (po korekcie na datę {{ z(zapisana.szacunek_po_korekcie) }} zł){% endif %}. Poniżej — policzone dziś z tymi samymi parametrami (po ponownym imporcie pliku dane mogą być nowsze).</p>
+        {% endif %}
         {% if wynik.liczba %}
         {% if not wynik.wystarczy %}<p class="komunikat">Tylko {{ wynik.liczba }} podobnych transakcji (mniej niż {{ wynik.min_podobnych }}) — mediana jest niepewna.</p>{% endif %}
         <div class="kafelki-rcn">

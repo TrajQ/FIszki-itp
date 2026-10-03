@@ -13,6 +13,7 @@ import io
 import json
 import os
 import tempfile
+from urllib.parse import urlencode
 
 from flask import Response, abort, jsonify, redirect, render_template, request, url_for
 from markupsafe import Markup
@@ -315,6 +316,51 @@ def podobne_transakcje(plik_id):
     return jsonify(_wynik_wyceny(plik_id, p))
 
 
+# ---------- zapisane wyceny (ETAP 202) ----------
+
+MAKS_WYCEN = 50
+POLA_WYCENY = ("co", "rynek", "od", "do", "rodzaj", "izby", "pietro", "przeznaczenie", "nieruchomosc", "lat", "lng", "pow", "promien", "tolerancja")
+
+
+def _parametry_do_zapisu() -> str:
+    """Parametry wyceny (filtry + miejsce) jako zapytanie URL — tylko znane pola, niepuste."""
+    return urlencode([(k, request.args[k]) for k in POLA_WYCENY if request.args.get(k)])
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/wyceny")
+def lista_wycen(plik_id):
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    return jsonify(baza.wyceny_rcn(plik_id))
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/wyceny", methods=["POST"])
+def zapisz_wycene(plik_id):
+    """Parametry jak w /podobne (w adresie), nazwa w JSON; wynik liczony i zapisany z dniem zapisu."""
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    nazwa = str((request.get_json(silent=True) or {}).get("nazwa") or "").strip()
+    try:
+        if not nazwa or len(nazwa) > 80:
+            raise ValueError("Podaj nazwę wyceny (do 80 znaków).")
+        if len(baza.wyceny_rcn(plik_id)) >= MAKS_WYCEN:
+            raise ValueError(f"Najwyżej {MAKS_WYCEN} zapisanych wycen w pliku — usuń starsze.")
+        p = _parametry_wyceny()
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    wynik = _wynik_wyceny(plik_id, p)
+    if not wynik["liczba"]:
+        return jsonify({"blad": "Brak podobnych transakcji — nie ma czego zapisać."}), 400
+    return jsonify({"id": baza.zapisz_wycene_rcn(plik_id, nazwa, _parametry_do_zapisu(), wynik)}), 201
+
+
+@ceny_bp.route("/transakcje/wyceny/<int:wycena_id>", methods=["DELETE"])
+def usun_wycene(wycena_id):
+    if not baza.usun_wycene_rcn(wycena_id):
+        abort(404)
+    return jsonify({"ok": True})
+
+
 @ceny_bp.route("/transakcje/<int:plik_id>/regresja")
 def regresja_transakcji(plik_id):
     """ETAP 156: związek czasu, powierzchni, piętra i rynku z ceną m² (mieszkania, filtry strony)."""
@@ -359,8 +405,12 @@ def karta_wyceny(plik_id):
             opis_filtrow.append(f"{etykieta}: {p['filtry'][klucz]}")
     if request.args.get("pietro") in rcn.OPISY_PIETER:
         opis_filtrow.append(rcn.OPISY_PIETER[request.args["pietro"]])
+    # ETAP 202: otwarta z listy zapisanych — wynik z dnia zapisu obok dzisiejszego
+    zapisana = baza.wycena_rcn(request.args.get("zapisana", type=int) or 0)
+    if zapisana and zapisana["plik_id"] != plik_id:
+        zapisana = None
     return render_template(
-        "ceny/wycena.html", plik=plik, p=p, wynik=wynik, opis_filtrow=opis_filtrow,
+        "ceny/wycena.html", plik=plik, p=p, wynik=wynik, opis_filtrow=opis_filtrow, zapisana=zapisana,
         mapa=Markup(rcn.mapa_wyceny_svg(wynik, p["lat"], p["lng"])),  # tylko liczby i kolory z kodu
         powrot=url_for("ceny.transakcje", plik=plik_id, co=p["co"]),
     )

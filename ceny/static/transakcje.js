@@ -602,6 +602,8 @@
             const w = await odp.json();
             if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
             pokazPodobne(w);
+            ostatnieParametry = w.liczba ? parametry : null; // ETAP 202: do zapisu wyceny
+            zapisWyceny.hidden = !w.liczba;
             if (w.liczba) { // ETAP 113: ta sama wycena jako karta do druku
                 const karta = el("a", "przycisk przycisk--drugi", "Karta wyceny do druku ↗");
                 karta.href = `${URL_TRANSAKCJE}/${PLIK_ID}/wycena?${parametry}`;
@@ -613,6 +615,54 @@
             wynikPodobnych.replaceChildren(el("p", "komunikat komunikat--blad", e.message));
         }
     }
+
+    // ---------- zapisane wyceny (ETAP 202) ----------
+    const zapisWyceny = document.getElementById("zapis-wyceny");
+    const zapisaneWyceny = document.getElementById("zapisane-wyceny");
+    let ostatnieParametry = null;
+
+    async function wczytajWyceny() {
+        const lista = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/wyceny`).then((o) => o.json()).catch(() => []);
+        zapisaneWyceny.hidden = !lista.length;
+        document.getElementById("liczba-wycen").textContent = String(lista.length);
+        const ul = document.getElementById("lista-wycen");
+        ul.replaceChildren();
+        for (const w of lista) {
+            const li = el("li");
+            const karta = el("a", "", w.nazwa);
+            karta.href = `${URL_TRANSAKCJE}/${PLIK_ID}/wycena?${w.parametry}&zapisana=${w.id}`;
+            karta.target = "_blank";
+            karta.rel = "noopener";
+            const rodzaj = new URLSearchParams(w.parametry).get("co") === "dzialki" ? "działka" : "mieszkanie";
+            const usun = el("button", "przycisk--tekst przycisk--niebezpieczny-tekst", "usuń");
+            usun.type = "button";
+            usun.addEventListener("click", async () => {
+                if (!confirm(`Usunąć zapisaną wycenę „${w.nazwa}”?`)) return;
+                await fetch(`${URL_TRANSAKCJE}/wyceny/${w.id}`, { method: "DELETE" });
+                wczytajWyceny();
+            });
+            li.append(karta, el("span", "wyciszony", ` ${rodzaj} · ${w.data_zapisu} · ${liczba.format(w.szacunek)} zł`), usun);
+            ul.appendChild(li);
+        }
+    }
+
+    zapisWyceny.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!ostatnieParametry) return;
+        const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/wyceny?${ostatnieParametry}`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nazwa: zapisWyceny.elements.nazwa.value }),
+        });
+        const w = await odp.json().catch(() => ({}));
+        if (!odp.ok) {
+            wynikPodobnych.appendChild(el("p", "komunikat komunikat--blad", w.blad || `Błąd ${odp.status}`));
+            return;
+        }
+        zapisWyceny.reset();
+        await wczytajWyceny();
+        zapisaneWyceny.open = true;
+    });
+    wczytajWyceny();
 
     function pokazPodobne(w) {
         L.circle(miejsce, { radius: w.promien_m, color: "#0071e3", weight: 1.5, fill: false, dashArray: "6 5", interactive: false }).addTo(warstwaPodobnych);

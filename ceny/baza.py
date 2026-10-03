@@ -75,6 +75,19 @@ CREATE TABLE IF NOT EXISTS rcn_obszary (
     geojson TEXT NOT NULL
 );
 
+-- ETAP 202: zapisane wyceny porównawcze — parametry (do ponownego policzenia) i wynik z dnia zapisu
+CREATE TABLE IF NOT EXISTS rcn_wyceny (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plik_id INTEGER NOT NULL REFERENCES rcn_pliki(id) ON DELETE CASCADE,
+    nazwa TEXT NOT NULL,
+    parametry TEXT NOT NULL,
+    data_zapisu TEXT NOT NULL,
+    liczba INTEGER NOT NULL,
+    mediana_m2 REAL,
+    szacunek REAL,
+    szacunek_po_korekcie REAL
+);
+
 CREATE TABLE IF NOT EXISTS cache_bdl (
     klucz TEXT PRIMARY KEY,
     dane_json TEXT NOT NULL,
@@ -284,6 +297,35 @@ def zmien_nazwe_obszaru(obszar_id: int, nazwa: str) -> bool:
     zmienione = db.execute("UPDATE rcn_obszary SET nazwa = ? WHERE id = ?", (nazwa, obszar_id)).rowcount
     db.commit()
     return bool(zmienione)
+
+
+def wyceny_rcn(plik_id: int) -> list[dict]:
+    """ETAP 202: zapisane wyceny pliku, od najnowszej."""
+    return [dict(w) for w in get_db().execute("SELECT * FROM rcn_wyceny WHERE plik_id = ? ORDER BY id DESC", (plik_id,))]
+
+
+def wycena_rcn(wycena_id: int) -> dict | None:
+    w = get_db().execute("SELECT * FROM rcn_wyceny WHERE id = ?", (wycena_id,)).fetchone()
+    return dict(w) if w else None
+
+
+def zapisz_wycene_rcn(plik_id: int, nazwa: str, parametry: str, wynik: dict) -> int:
+    db = get_db()
+    korekta = wynik.get("korekta") or {}
+    wycena_id = db.execute(
+        "INSERT INTO rcn_wyceny (plik_id, nazwa, parametry, data_zapisu, liczba, mediana_m2, szacunek, szacunek_po_korekcie) "
+        "VALUES (?, ?, ?, date('now', 'localtime'), ?, ?, ?, ?)",
+        (plik_id, nazwa, parametry, wynik["liczba"], wynik.get("mediana_m2"), wynik.get("szacunek"), korekta.get("szacunek")),
+    ).lastrowid
+    db.commit()
+    return wycena_id
+
+
+def usun_wycene_rcn(wycena_id: int) -> bool:
+    db = get_db()
+    usuniete = db.execute("DELETE FROM rcn_wyceny WHERE id = ?", (wycena_id,)).rowcount
+    db.commit()
+    return bool(usuniete)
 
 
 def usun_obszar_rcn(obszar_id: int) -> bool:

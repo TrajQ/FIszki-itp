@@ -3523,3 +3523,22 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300 (działki) / 390 px (mieszkania)
 - Pomoc: akapit o wycenie porównawczej; PLAN: pozycje 201–202
 - `DECISIONS.md`: D-209
+
+## ETAP 202 — Ceny: zapisane wyceny porównawcze
+Data: 2026-10-03
+Status: zamknięty
+
+- `ceny/baza.py`: tabela `rcn_wyceny` (parametry jako zapytanie URL,
+  dzień zapisu, liczba, mediana, szacunek, szacunek po korekcie; kasowana
+  z plikiem), `wyceny_rcn`, `wycena_rcn`, `zapisz_wycene_rcn`,
+  `usun_wycene_rcn`
+- `ceny/trasy_rcn.py`: `GET/POST /ceny/transakcje/<id>/wyceny` (parametry
+  w adresie jak w `/podobne`, tylko znane, niepuste pola — `POLA_WYCENY`;
+  `MAKS_WYCEN=50`), `DELETE /ceny/transakcje/wyceny/<id>`; karta wyceny
+  z `?zapisana=` pokazuje wynik z dnia zapisu obok dzisiejszego
+- Transakcje: formularz „Zapisz wycenę” pod wynikiem, lista „Zapisane
+  wyceny” (rodzaj, dzień, kwota, karta, usuń)
+- Test: zapis, oczyszczone parametry, karta z zapisaną, błędy, usuwanie;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: akapit „Zapisane wyceny”
+- `DECISIONS.md`: D-210

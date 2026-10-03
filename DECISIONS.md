@@ -4189,3 +4189,21 @@ użytkownik powinien widzieć i móc pominąć.
 - Trend liniowy z regresji (ETAP 156) — zakłada stałe tempo, a ceny
   rosną i spadają skokowo; mediana roku tego nie zakłada.
 - Korekta zawsze włączona, bez wyniku surowego — ukrywa założenie.
+
+## D-210 — Wycena zapisana jako parametry plus wynik z dnia zapisu
+Data: 2026-10-03
+
+**Decyzja:** Zapisujemy parametry wyceny (zapytanie URL z listy znanych
+pól) i kilka liczb wyniku z dnia zapisu. Karta liczy wycenę od nowa i
+pokazuje zapisany wynik obok.
+
+**Uzasadnienie:** Parametry pozwalają odtworzyć wycenę na nowszych
+danych (ponowny import pliku zachowuje jego id, jak przy obszarach), a
+zapisany wynik pokazuje, ile się zmieniło. Lista dozwolonych pól sprawia,
+że do bazy nie trafiają przypadkowe parametry z adresu.
+
+**Odrzucone alternatywy:**
+- Zapis pełnej listy transakcji wyniku — kopia danych pliku, która
+  rozjeżdża się z nim po imporcie.
+- Zapis w pamięci przeglądarki — znika przy czyszczeniu danych i nie
+  trafia do kopii zapasowej.

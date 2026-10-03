@@ -1060,3 +1060,6 @@
 
 ## ETAP 201 — 2026-10-03
 - Ceny: korekta cen na datę w wycenie porównawczej (wg median roku w pliku), na stronie i na karcie do druku
+
+## ETAP 202 — 2026-10-03
+- Ceny: zapisane wyceny porównawcze — lista, karta liczona od nowa z wynikiem z dnia zapisu

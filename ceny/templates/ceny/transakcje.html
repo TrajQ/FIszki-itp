@@ -161,7 +161,7 @@
 
         <section class="karta stos" id="karta-podobnych">
             <h3>Podobne transakcje — wycena porównawcza</h3>
-            <p class="wyciszony opis-cen">Kliknij na mapie miejsce {{ 'działki' if co == 'dzialki' else 'mieszkania' }} i podaj powierzchnię. Warsztat znajdzie transakcje w promieniu o podobnej powierzchni (z filtrami strony{{ '' if co == 'dzialki' else ', np. izby' }}) i poda ich medianę ceny za m². To orientacja z danych, nie operat szacunkowy — bez korekt na stan, piętro czy datę.</p>
+            <p class="wyciszony opis-cen">Kliknij na mapie miejsce {{ 'działki' if co == 'dzialki' else 'mieszkania' }} i podaj powierzchnię. Warsztat znajdzie transakcje w promieniu o podobnej powierzchni (z filtrami strony{{ '' if co == 'dzialki' else ', np. izby' }}) i poda ich medianę ceny za m². To orientacja z danych, nie operat szacunkowy — bez korekt na stan i piętro; korekta na datę pojawi się, gdy plik ma dość transakcji w latach.</p>
             <form id="podobne-form" class="filtry-rcn">
                 <label>Powierzchnia [m²] <input type="number" name="pow" min="1" step="0.1" required value="{{ 1000 if co == 'dzialki' else 50 }}"></label>
                 <label>Tolerancja powierzchni <select name="tolerancja">{% for t in tolerancje %}<option value="{{ t }}" {{ 'selected' if t == (0.3 if co == 'dzialki' else 0.2) }}>± {{ (t * 100) | round | int }}%</option>{% endfor %}</select></label>
@@ -170,6 +170,15 @@
             </form>
             <p id="podobne-miejsce" class="wyciszony opis-cen">Miejsce: nie wskazano — kliknij mapę.</p>
             <div id="podobne-wynik" class="stos"></div>
+            <form id="zapis-wyceny" class="rzad" hidden>
+                <input name="nazwa" type="text" maxlength="80" required placeholder="nazwa, np. działka przy Polnej" aria-label="Nazwa wyceny do zapisania">
+                <button type="submit" class="przycisk--drugi">Zapisz wycenę</button>
+            </form>
+            <details id="zapisane-wyceny" class="zapisane-wyceny" hidden>
+                <summary>Zapisane wyceny (<span id="liczba-wycen">0</span>)</summary>
+                <p class="wyciszony opis-cen">Karta liczy wycenę jeszcze raz z zapisanymi parametrami i pokazuje obok wynik z dnia zapisu — po imporcie nowszego pliku widać zmianę.</p>
+                <ul id="lista-wycen" class="lista-wycen"></ul>
+            </details>
         </section>
 
         <div class="kolumny-rcn">

@@ -946,3 +946,33 @@ def test_korekta_w_trasie_i_karcie(client, tmp_path, monkeypatch):
     assert w["korekta"]["mediana_m2"] == pytest.approx(12000) and w["mediana_m2"] == pytest.approx(11000)
     karta = client.get(f"/ceny/transakcje/1/wycena?{parametry}").get_data(as_text=True)
     assert "Po korekcie na 2024 r." in karta and "2023 × 1,200" in karta and "Za m² (2024)" in karta
+
+
+# ---------- ETAP 202: zapisane wyceny ----------
+
+
+def test_zapisane_wyceny(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_cena_brutto=500000, geom=geometria_gpkg(50.06 + i / 100000, 19.94)) for i in range(6)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    parametry = "lat=50.06&lng=19.94&pow=50&promien=500&tolerancja=0.2&rynek=wt%C3%B3rny&izby="
+    r = client.post(f"/ceny/transakcje/1/wyceny?{parametry}&obce=1", json={"nazwa": "  Mieszkanie <A>  "})
+    assert r.status_code == 201
+    lista = client.get("/ceny/transakcje/1/wyceny").get_json()
+    assert len(lista) == 1 and lista[0]["nazwa"] == "Mieszkanie <A>" and lista[0]["liczba"] == 6
+    assert lista[0]["szacunek"] == pytest.approx(500000) and lista[0]["szacunek_po_korekcie"] is None
+    assert lista[0]["parametry"] == "rynek=wt%C3%B3rny&lat=50.06&lng=19.94&pow=50&promien=500&tolerancja=0.2"  # tylko znane, niepuste pola
+    karta = client.get(f"/ceny/transakcje/1/wycena?{lista[0]['parametry']}&zapisana={lista[0]['id']}").get_data(as_text=True)
+    assert "Zapisana wycena „Mieszkanie &lt;A&gt;”" in karta and "orientacyjnie 500 000 zł" in karta
+    assert "Zapisana wycena" not in client.get(f"/ceny/transakcje/1/wycena?{parametry}&zapisana=99").get_data(as_text=True)
+    assert client.post(f"/ceny/transakcje/1/wyceny?{parametry}", json={"nazwa": ""}).status_code == 400
+    assert client.post(f"/ceny/transakcje/1/wyceny?{parametry}", json={"nazwa": "x" * 81}).status_code == 400
+    assert client.post("/ceny/transakcje/1/wyceny?lat=50.06&lng=19.94&pow=50&promien=500&tolerancja=0.2&izby=4%2B",
+                       json={"nazwa": "pusto"}).status_code == 400  # brak podobnych
+    assert client.post("/ceny/transakcje/9/wyceny", json={"nazwa": "a"}).status_code == 404
+    assert client.delete(f"/ceny/transakcje/wyceny/{lista[0]['id']}").get_json() == {"ok": True}
+    assert client.get("/ceny/transakcje/1/wyceny").get_json() == []
+    assert client.delete(f"/ceny/transakcje/wyceny/{lista[0]['id']}").status_code == 404
