@@ -149,11 +149,12 @@
     const opisTrasy = document.getElementById("opis-trasy");
     const linkGpx = document.getElementById("trasa-gpx");
     const przyciskUkryj = document.getElementById("ukryj-trase");
+    const linkFormularza = document.getElementById("formularz-trasy"); // ETAP 199
 
     function ukryjTrase() {
         warstwaTrasy.clearLayers();
         znaczniki.forEach((z) => z.unbindTooltip());
-        opisTrasy.hidden = linkGpx.hidden = przyciskUkryj.hidden = true;
+        opisTrasy.hidden = linkGpx.hidden = przyciskUkryj.hidden = linkFormularza.hidden = true;
     }
 
     async function wyznaczTrase(startId) {
@@ -175,7 +176,8 @@
         const km = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 }).format(t.dlugosc_m / 1000);
         opisTrasy.textContent = `${t.kolejnosc.length} pkt, ok. ${km} km w linii prostej (ok. ${t.czas_min} min marszu bez postojów; po ulicach dalej).`;
         linkGpx.href = `${URL_PROJEKTU}/trasa.gpx?${parametry}`;
-        opisTrasy.hidden = linkGpx.hidden = przyciskUkryj.hidden = false;
+        linkFormularza.href = `${URL_PROJEKTU}/formularz.html?do_sprawdzenia=${t.kolejnosc.join(",")}`;
+        opisTrasy.hidden = linkGpx.hidden = przyciskUkryj.hidden = linkFormularza.hidden = false;
     }
 
     document.getElementById("wyznacz-trase").addEventListener("click", () => wyznaczTrase(null));

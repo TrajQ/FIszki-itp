@@ -4123,3 +4123,26 @@ sposobem wyboru punktów.
 - Dokładne rozwiązanie komiwojażera (np. OR-Tools) — nowa, ciężka
   zależność dla zysku rzędu kilku procent długości.
 - Biblioteka gpxpy — kilkanaście wierszy XML nie uzasadnia zależności.
+
+## D-207 — Punkty do sprawdzenia wpisane w plik formularza; ✓ w localStorage
+Data: 2026-10-03
+
+**Decyzja:** Punkty do ponownej wizyty trafiają do samodzielnego pliku
+formularza jako JSON (położenie, numer trasy, krótki opis), wybrane przez
+trasę obchodu. Oznaczenie „sprawdzony” trzyma telefon w localStorage;
+nie jest eksportowane.
+
+**Uzasadnienie:** Telefon nie łączy się z Warsztatem (D-071), więc dane
+muszą być w pliku — tak jak podkład mapy. Trasa daje sensowną kolejność
+i wybór punktów filtrem legendy. ✓ to pomoc w terenie, nie wynik
+inwentaryzacji: wynikiem jest nowy punkt, porównywalny z poprzednim
+(porównanie projektów, ETAP 157).
+
+**Odrzucone alternatywy:**
+- Nowy magazyn w IndexedDB na stan sprawdzenia — zmiana wersji bazy
+  formularzy już używanych na telefonach dla danych pomocniczych.
+- Powiązanie nowego punktu ze starym (identyfikator w pliku eksportu) —
+  zmiana formatu pliku i importu; porównanie projektów paruje punkty po
+  odległości bez tego.
+- Pełne dane starych punktów w formularzu (zdjęcia) — plik urósłby o
+  megabajty; opis i położenie wystarczą do odnalezienia miejsca.

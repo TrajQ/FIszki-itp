@@ -682,3 +682,25 @@ def test_trasa_przez_trase_i_gpx(client):
     import xml.etree.ElementTree as ET
     ET.fromstring(tekst.encode())
     assert client.get("/teren/projekty/99/trasa").status_code == 404
+
+
+# ---------- ETAP 199: punkty do sprawdzenia w formularzu ----------
+
+
+def test_formularz_z_punktami_do_sprawdzenia(client):
+    client.post("/teren/projekty", data={"nazwa": "Kontrola", "wzor": "zielen"})
+    klucz = re.search(r'"klucz": "([^"]+)"', client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)).group(1)
+    pkt = [punkt("p1000000000", lat=52.40, uwagi="Lipa <b>stara</b> " + "x" * 80), punkt("p2000000000", lat=52.41, wartosci={"obiekt": "krzew"}, uwagi=""),
+           punkt("p3000000000", lat=None, lng=None)]
+    client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(json.dumps(plik(klucz, *pkt)).encode()), "t.json")},
+                content_type="multipart/form-data")
+    ids = [p["id"] for p in client.get("/teren/projekty/1/punkty").get_json()]
+    zwykly = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert "const DO_SPRAWDZENIA = [];" in zwykly and "karta-do-sprawdzenia" not in zwykly
+    html = client.get(f"/teren/projekty/1/formularz.html?do_sprawdzenia={ids[1]},{ids[0]},{ids[2]},{ids[1]},999").get_data(as_text=True)
+    cele = json.loads(re.search(r"const DO_SPRAWDZENIA = (\[.*?\]);", html).group(1))
+    assert [c["id"] for c in cele] == [ids[1], ids[0]] and [c["nr"] for c in cele] == [1, 2]  # kolejność trasy, bez duplikatów i punktów bez GPS
+    assert cele[0]["opis"] == "krzew" and cele[1]["opis"].startswith("drzewo · 120 · dobry · Lipa <b>stara</b>") and cele[1]["opis"].endswith("…")
+    assert "<b>stara" not in html  # tekst użytkownika w JSON jest zabezpieczony (<)
+    assert 'id="karta-do-sprawdzenia"' in html
+    assert client.get("/teren/projekty/1/formularz.html?do_sprawdzenia=a,b").status_code == 400

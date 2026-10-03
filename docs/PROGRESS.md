@@ -3465,3 +3465,22 @@ Status: zamknięty
   1300/390 px
 - Pomoc: „W jakiej kolejności obejść punkty?”
 - `DECISIONS.md`: D-206
+
+## ETAP 199 — Teren: punkty „do sprawdzenia” w formularzu na telefon
+Data: 2026-10-03
+Status: zamknięty
+
+- `teren/routes.py`: `formularz.html?do_sprawdzenia=3,1,2` — punkty z
+  położeniem w podanej kolejności (bez powtórzeń, do 200), krótki opis z
+  wartości pól i początku uwag (`_opis_do_sprawdzenia`, liczby bez „.0”)
+- Formularz na telefon: karta „Do sprawdzenia” (numer, opis, odległość
+  od pozycji z GPS, przycisk ✓), fioletowe pierścienie z numerem na
+  mapie offline (szare po sprawdzeniu); stan „sprawdzony” w
+  localStorage telefonu (z try/catch)
+- Projekt: link „Formularz z tymi punktami do sprawdzenia” po wyznaczeniu
+  trasy (ETAP 198)
+- Test: kolejność, duplikaty, punkty bez GPS, opis, zabezpieczenie
+  tekstu w JSON, błędne numery; sprawdzone w przeglądarce 390/1300 px
+  (symulowany GPS, ✓ po przeładowaniu)
+- Pomoc: akapit „Punkty do sprawdzenia w telefonie”
+- `DECISIONS.md`: D-207

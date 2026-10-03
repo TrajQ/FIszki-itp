@@ -168,13 +168,51 @@ def usun_projekt(projekt_id):
     return jsonify({"ok": True})
 
 
+def _opis_do_sprawdzenia(pt: dict) -> str:
+    """Krótki opis punktu na liście w telefonie: wartości pól i początek uwag."""
+    def tekst(w):
+        if isinstance(w, list):
+            return "; ".join(map(str, w))
+        if isinstance(w, bool):
+            return "tak" if w else "nie"
+        if isinstance(w, float):
+            return f"{w:g}".replace(".", ",")  # 120.0 → „120”, 2.5 → „2,5”
+        return str(w)
+
+    czesci = [tekst(w) for w in pt["wartosci"].values() if w not in (None, "", [])]
+    if pt["uwagi"]:
+        czesci.append(pt["uwagi"][:60] + ("…" if len(pt["uwagi"]) > 60 else ""))
+    return " · ".join(czesci)[:160]
+
+
+def _do_sprawdzenia(projekt_id: int, tekst: str) -> list[dict]:
+    """ETAP 199: ?do_sprawdzenia=3,1,2 — punkty (z położeniem) w podanej
+    kolejności, np. trasy obchodu; numer na liście = miejsce w kolejności."""
+    if not tekst.strip():
+        return []
+    try:
+        ids = [int(x) for x in tekst.split(",") if x.strip()]
+    except ValueError:
+        raise ValueError("Numery punktów do sprawdzenia muszą być liczbami.") from None
+    if len(ids) > trasa.MAKS_PUNKTOW_TRASY:
+        raise ValueError(f"Najwyżej {trasa.MAKS_PUNKTOW_TRASY} punktów do sprawdzenia.")
+    po_id = {pt["id"]: pt for pt in baza.punkty(projekt_id) if pt["lat"] is not None}
+    wybrane = [po_id[i] for i in dict.fromkeys(ids) if i in po_id]
+    return [{"nr": nr, "id": pt["id"], "lat": pt["lat"], "lng": pt["lng"], "opis": _opis_do_sprawdzenia(pt)}
+            for nr, pt in enumerate(wybrane, start=1)]
+
+
 @teren_bp.route("/projekty/<int:projekt_id>/formularz.html")
 def formularz(projekt_id):
     """Samodzielny formularz na telefon: cały CSS i JS w jednym pliku."""
     p = _projekt_albo_404(projekt_id)
     # ETAP 83: z obszarem prac — mapa z podkładem ortofotomapy w pliku.
     mapa = podklad.podklad(p["obszar"]) if p["obszar"] else None
-    html = render_template("teren/telefon.html", projekt=p, format_pliku=FORMAT, mapa=mapa)
+    try:
+        do_sprawdzenia = _do_sprawdzenia(projekt_id, request.args.get("do_sprawdzenia", ""))
+    except ValueError as e:
+        return Response(str(e), status=400, mimetype="text/plain")
+    html = render_template("teren/telefon.html", projekt=p, format_pliku=FORMAT, mapa=mapa, do_sprawdzenia=do_sprawdzenia)
     return Response(
         html,
         mimetype="text/html",

@@ -63,6 +63,11 @@
            background: var(--karta); border-top: 1px solid var(--linia); }
     details summary { color: var(--akcent); font-size: 14px; cursor: pointer; margin-top: 10px; }
     .mapa { display: block; width: 100%; margin-top: 8px; border-radius: 10px; background: var(--tlo); touch-action: manipulation; }
+    .lista button.cel { color: var(--akcent); }
+    .lista button.cel.sprawdzony { color: var(--ok); }
+    .lista li.zrobiony div strong { text-decoration: line-through; color: var(--drugi); }
+    .numer-celu { flex: 0 0 auto; min-width: 28px; height: 28px; border-radius: 999px; border: 2px solid #bf5af2;
+                  color: #bf5af2; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
     [hidden] { display: none !important; }
 </style>
 </head>
@@ -109,6 +114,14 @@
     <p id="mapa-opis" class="wyciszony"></p>
 </section>
 
+{% if do_sprawdzenia %}
+<section class="karta" id="karta-do-sprawdzenia">
+    <h2>Do sprawdzenia: <span id="liczba-do-sprawdzenia"></span></h2>
+    <p class="wyciszony">Punkty z Warsztatu w kolejności trasy obchodu (fioletowe kółka na mapie). „✓” oznacza punkt jako sprawdzony — pamięta to ten telefon. Nowy stan miejsca zapisz jak zwykły punkt.</p>
+    <ul id="lista-do-sprawdzenia" class="lista"></ul>
+</section>
+{% endif %}
+
 <section class="karta">
     <h2>{{ 'Zapisane odpowiedzi' if ankieta else 'Zapisane punkty' }}: <span id="liczba">0</span></h2>
     <ul id="lista" class="lista"></ul>
@@ -133,6 +146,7 @@
     const FORMAT = {{ format_pliku | tojson }};
     // ETAP 83: podkład mapy (jeden obraz ortofotomapy obszaru prac) albo null.
     const MAPA = {{ mapa | tojson if mapa else 'null' }};
+    const DO_SPRAWDZENIA = {{ do_sprawdzenia | tojson }}; // ETAP 199: [{nr, id, lat, lng, opis}]
     const MAKS_BOK_ZDJECIA = 1600;
     const DOBRA_DOKLADNOSC_M = 10;
     const CZAS_GPS_MS = 30000;
@@ -463,7 +477,7 @@
 
     function zasieg() {
         if (MAPA) return MAPA.bbox_3857;
-        const xy = ostatniePunkty.filter((p) => p.lat !== null).map((p) => merkator(p.lat, p.lng));
+        const xy = [...ostatniePunkty, ...DO_SPRAWDZENIA].filter((p) => p.lat !== null).map((p) => merkator(p.lat, p.lng));
         if (polozenie) xy.push(merkator(polozenie.lat, polozenie.lng));
         if (!xy.length) return null;
         const xs = xy.map((p) => p[0]), ys = xy.map((p) => p[1]);
@@ -494,6 +508,16 @@
             return [(x - x1) / (x2 - x1) * szer, (y2 - y) / (y2 - y1) * wys];
         };
         if (obrazPodkladu && obrazPodkladu.complete) c.drawImage(obrazPodkladu, 0, 0, szer, wys);
+
+        // ETAP 199: punkty do sprawdzenia — fioletowe pierścienie z numerem trasy, sprawdzone szare
+        for (const cel of DO_SPRAWDZENIA) {
+            const [x, y] = px(cel.lat, cel.lng);
+            const kolor = sprawdzone.has(cel.id) ? "#8e8e93" : "#bf5af2";
+            c.beginPath(); c.arc(x, y, 10, 0, 2 * Math.PI);
+            c.fillStyle = "rgba(255,255,255,0.85)"; c.fill(); c.lineWidth = 3; c.strokeStyle = kolor; c.stroke();
+            c.fillStyle = kolor; c.font = "bold 10px sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
+            c.fillText(String(cel.nr), x, y);
+        }
 
         // zapisane punkty — numery w kolejności zapisu
         const wKolejnosci = [...ostatniePunkty].sort((a, b) => a.czas.localeCompare(b.czas));
@@ -536,6 +560,45 @@
             if (x < 0 || y < 0 || x > szer || y > wys) opis.push("Jesteś poza obszarem prac.");
         }
         $("mapa-opis").textContent = opis.join(" ");
+        pokazDoSprawdzenia();
+    }
+
+    // ---------- punkty do sprawdzenia (ETAP 199) ----------
+    // Stan „sprawdzony” to wygoda tego telefonu — localStorage; bez niego lista działa, tylko nie pamięta.
+
+    const KLUCZ_SPRAWDZONYCH = `warsztat-teren-${PROJEKT.klucz}-sprawdzone`;
+    const sprawdzone = new Set((() => {
+        try { return JSON.parse(localStorage.getItem(KLUCZ_SPRAWDZONYCH) || "[]"); } catch (e) { return []; }
+    })());
+
+    function odlegloscM(a, b) {
+        const r = Math.PI / 180;
+        const h = Math.sin((b.lat - a.lat) * r / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin((b.lng - a.lng) * r / 2) ** 2;
+        return 2 * 6371009 * Math.asin(Math.min(1, Math.sqrt(h)));
+    }
+
+    function pokazDoSprawdzenia() {
+        const lista = $("lista-do-sprawdzenia");
+        if (!lista) return;
+        $("liczba-do-sprawdzenia").textContent = `${DO_SPRAWDZENIA.length - DO_SPRAWDZENIA.filter((c) => sprawdzone.has(c.id)).length} z ${DO_SPRAWDZENIA.length}`;
+        lista.replaceChildren();
+        for (const cel of DO_SPRAWDZENIA) {
+            const zrobiony = sprawdzone.has(cel.id);
+            const li = element("li", { className: zrobiony ? "zrobiony" : "" });
+            const opis = element("div");
+            opis.append(element("strong", {}, cel.opis || `punkt ${cel.id}`),
+                element("div", { className: "wyciszony" }, polozenie ? `${Math.round(odlegloscM(polozenie, cel))} m od ciebie` : "włącz „Gdzie jestem”, żeby zobaczyć odległość"));
+            const przycisk = element("button", { type: "button", className: zrobiony ? "cel sprawdzony" : "cel" }, zrobiony ? "✓ sprawdzony" : "✓");
+            przycisk.setAttribute("aria-pressed", String(zrobiony));
+            przycisk.setAttribute("aria-label", `Punkt ${cel.nr}: ${zrobiony ? "sprawdzony — cofnij" : "oznacz jako sprawdzony"}`);
+            przycisk.addEventListener("click", () => {
+                zrobiony ? sprawdzone.delete(cel.id) : sprawdzone.add(cel.id);
+                try { localStorage.setItem(KLUCZ_SPRAWDZONYCH, JSON.stringify([...sprawdzone])); } catch (e) { /* bez pamięci — tylko do zamknięcia strony */ }
+                rysujMape();
+            });
+            li.append(element("span", { className: "numer-celu" }, String(cel.nr)), opis, przycisk);
+            lista.appendChild(li);
+        }
     }
 
     $("gdzie-jestem").addEventListener("click", () => {
@@ -555,6 +618,7 @@
     // ---------- start ----------
 
     rysujPola();
+    pokazDoSprawdzenia();
     otworzBaze()
         .then((b) => {
             baza = b;

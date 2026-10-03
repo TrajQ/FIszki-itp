@@ -1051,3 +1051,6 @@
 
 ## ETAP 198 — 2026-10-03
 - Teren: trasa obchodu punktów (najbliższy sąsiad + 2-opt) na mapie i jako GPX do nawigacji w telefonie
+
+## ETAP 199 — 2026-10-03
+- Teren: punkty „do sprawdzenia” (z trasy obchodu) w formularzu na telefon — lista, odległość, mapa, ✓
