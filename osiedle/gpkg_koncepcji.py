@@ -13,12 +13,10 @@ Liczby (pola) liczy kod z geometrii w metrach układu, jak reszta modułu.
 Warstwy bez obiektów pomijamy.
 """
 
-from xml.sax.saxutils import quoteattr
-
 from shapely.geometry import MultiPolygon, shape
 from shapely.ops import transform
 
-from dane.geopaczka import geopackage
+from dane.geopaczka import geopackage, styl_kategorie, styl_pojedynczy, symbol_linii, symbol_wypelnienia
 from mpzp.uklady import gauss_kruger
 
 from . import wskazniki as wsk
@@ -35,56 +33,21 @@ def _na_pl1992(geometria):
     return transform(przelicz, geometria)
 
 
-def _rgb(kolor: str, alfa: int = 255) -> str:
-    kolor = kolor.lstrip("#")
-    return f"{int(kolor[0:2], 16)},{int(kolor[2:4], 16)},{int(kolor[4:6], 16)},{alfa}"
-
-
-def _symbol(nazwa: str, typ: str, warstwa: str) -> str:
-    return f'<symbol type="{typ}" name="{nazwa}" alpha="1" clip_to_extent="1" force_rhr="0">{warstwa}</symbol>'
-
-
-def _wypelnienie(kolor: str, alfa: int, obrys: str = "35,35,35,255", styl: str = "solid", szerokosc: float = 0.26) -> str:
-    return ('<layer class="SimpleFill" enabled="1" locked="0" pass="0"><Option type="Map">'
-            f'<Option type="QString" name="color" value="{_rgb(kolor, alfa) if kolor else "0,0,0,0"}"/>'
-            f'<Option type="QString" name="style" value="{styl}"/>'
-            f'<Option type="QString" name="outline_color" value="{obrys}"/>'
-            f'<Option type="QString" name="outline_width" value="{szerokosc}"/>'
-            '<Option type="QString" name="outline_width_unit" value="MM"/>'
-            '</Option></layer>')
-
-
-def _qml(renderer: str) -> str:
-    return f'<!DOCTYPE qgis PUBLIC \'http://mrcc.com/qgis.dtd\' \'SYSTEM\'><qgis version="3.28.0" styleCategories="Symbology">{renderer}</qgis>'
-
-
 def styl_terenow() -> str:
     """Styl kategoryzowany po kolumnie „funkcja” — kolory jak na mapie w aplikacji."""
-    kategorie = "".join(f'<category render="true" symbol="{i}" value={quoteattr(kod)} label={quoteattr(kod + " — " + f["nazwa"])}/>'
-                        for i, (kod, f) in enumerate(FUNKCJE.items()))
-    symbole = "".join(_symbol(str(i), "fill", _wypelnienie(f["kolor"], 170)) for i, f in enumerate(FUNKCJE.values()))
-    return _qml(f'<renderer-v2 type="categorizedSymbol" attr="funkcja" symbollevels="0" enableorderby="0" forceraster="0">'
-                f'<categories>{kategorie}</categories><symbols>{symbole}</symbols></renderer-v2>')
-
-
-def _pojedynczy(symbol: str) -> str:
-    return _qml(f'<renderer-v2 type="singleSymbol" symbollevels="0" enableorderby="0" forceraster="0"><symbols>{symbol}</symbols></renderer-v2>')
+    return styl_kategorie("funkcja", [(kod, f"{kod} — {f['nazwa']}", symbol_wypelnienia(f["kolor"])) for kod, f in FUNKCJE.items()])
 
 
 def styl_budynkow() -> str:
-    return _pojedynczy(_symbol("0", "fill", _wypelnienie(KOLOR_BUDYNKU, 230, obrys="255,255,255,255", szerokosc=0.2)))
+    return styl_pojedynczy(symbol_wypelnienia(KOLOR_BUDYNKU, 230, obrys="#ffffff", szerokosc_obrysu=0.2))
 
 
 def styl_obszaru() -> str:
-    return _pojedynczy(_symbol("0", "fill", _wypelnienie("", 0, obrys="29,29,31,255", szerokosc=0.6)))
+    return styl_pojedynczy(symbol_wypelnienia("", obrys="#1d1d1f", szerokosc_obrysu=0.6))
 
 
 def styl_linii() -> str:
-    linia = ('<layer class="SimpleLine" enabled="1" locked="0" pass="0"><Option type="Map">'
-             f'<Option type="QString" name="line_color" value="{_rgb(KOLOR_LINII)}"/>'
-             '<Option type="QString" name="line_width" value="0.6"/><Option type="QString" name="line_width_unit" value="MM"/>'
-             '<Option type="QString" name="line_style" value="dash"/></Option></layer>')
-    return _pojedynczy(_symbol("0", "line", linia))
+    return styl_pojedynczy(symbol_linii(KOLOR_LINII, 0.6, "dash"))
 
 
 def koncepcja_gpkg(geojson: dict, nazwa: str) -> bytes:

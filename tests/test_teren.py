@@ -734,3 +734,38 @@ def test_kosz_projektow(client, tmp_path):
         baza.get_db().commit()
     assert "Kosz (" not in client.get("/teren/").get_data(as_text=True)
     assert os.listdir(folder) == []  # na dobre — ze zdjęciem
+
+
+# ---------- ETAP 214: GeoPackage projektu ----------
+
+
+def test_gpkg_projektu(client, tmp_path):
+    import sqlite3
+    import xml.etree.ElementTree as ET
+
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    # pola o nazwach jak stałe kolumny i z cudzysłowem — w pliku mają się zmieścić
+    client.put("/teren/projekty/1", json={"nazwa": "Zieleń", "pola": [
+        {"nazwa": "stan", "typ": "wybor", "opcje": ["dobry", "zły"]}, {"nazwa": "obwód", "typ": "liczba"},
+        {"nazwa": "ID", "typ": "tekst"}, {"nazwa": 'nazwa "lokalna"', "typ": "tekst"}]})
+    klucz = re.search(r'"klucz": "([^"]+)"', client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)).group(1)
+    pkt = [punkt("a0000000001", wartosci={"stan": "dobry", "obwód": 120, "ID": "x", 'nazwa "lokalna"': "Lipa"}),
+           punkt("a0000000002", lat=None, lng=None, wartosci={"stan": "zły"})]
+    client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(json.dumps(plik(klucz, *pkt)).encode()), "t.json")},
+                content_type="multipart/form-data")
+    r = client.get("/teren/projekty/1.gpkg")
+    assert r.mimetype == "application/geopackage+sqlite3" and "teren_zielen.gpkg" in r.headers["Content-Disposition"]
+    sciezka = tmp_path / "p.gpkg"
+    sciezka.write_bytes(r.data)
+    db = sqlite3.connect(sciezka)
+    try:
+        kolumny = [w[1] for w in db.execute("PRAGMA table_info(punkty)")]
+        assert kolumny[:6] == ["fid", "geom", "id", "czas", "dokladnosc_m", "polozenie_reczne"]
+        assert "ID_2" in kolumny and 'nazwa "lokalna"' in kolumny
+        wiersze = db.execute('SELECT stan, "obwód", "nazwa ""lokalna""" FROM punkty').fetchall()
+        assert wiersze == [("dobry", 120.0, "Lipa")]  # punkt bez położenia pominięty
+        qml = db.execute("SELECT styleQML FROM layer_styles WHERE f_table_name = 'punkty'").fetchone()[0]
+        ET.fromstring(qml.split(">", 1)[1])
+        assert 'attr="stan"' in qml and 'value="dobry"' in qml
+    finally:
+        db.close()

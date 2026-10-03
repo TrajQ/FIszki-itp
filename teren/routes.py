@@ -333,6 +333,16 @@ def _wiersze_punktow(p: dict) -> list[list]:
     return wiersze
 
 
+@teren_bp.route("/projekty/<int:projekt_id>.gpkg")
+def eksport_gpkg(projekt_id):
+    """ETAP 214: punkty jako GeoPackage dla QGIS (PL-1992, styl jak mapa projektu)."""
+    from .gpkg_projektu import projekt_gpkg
+
+    p = _projekt_albo_404(projekt_id)
+    return Response(projekt_gpkg(p, baza.punkty(projekt_id)), mimetype="application/geopackage+sqlite3",
+                    headers={"Content-Disposition": f"attachment; filename=teren_{_nazwa_pliku(p['nazwa'])}.gpkg"})
+
+
 @teren_bp.route("/projekty/<int:projekt_id>.ods")
 def eksport_ods(projekt_id):
     """ETAP 189: punkty projektu jako arkusz ODS (liczby jako liczby)."""

@@ -757,6 +757,7 @@
         document.getElementById("geojson-transakcje").href = `${URL_TRANSAKCJE}/${PLIK_ID}.geojson?${parametry}`;
         document.getElementById("geojson-heksagony").href = `${URL_TRANSAKCJE}/${PLIK_ID}/heksagony.geojson?${hex}`;
         document.getElementById("geojson-obszary").href = `${URL_TRANSAKCJE}/${PLIK_ID}/obszary.geojson?${parametry}`;
+        document.getElementById("gpkg-rcn").href = `${URL_TRANSAKCJE}/${PLIK_ID}.gpkg?${parametry}`; // ETAP 214
         try {
             const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/dane?${parametry}`);
             const d = await odp.json();

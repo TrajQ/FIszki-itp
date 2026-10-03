@@ -589,6 +589,19 @@ def geojson_obszarow(plik_id):
     return _geojson(cechy, f"rcn_{co}_{plik_id}_obszary.geojson")
 
 
+@ceny_bp.route("/transakcje/<int:plik_id>.gpkg")
+def gpkg_transakcji(plik_id):
+    """ETAP 214: transakcje (z filtrami strony) i obszary jako GeoPackage dla QGIS."""
+    from .gpkg_rcn import rcn_gpkg
+
+    _, co, filtry = _filtry_eksportu(plik_id)
+    rekordy = _rekordy(plik_id, co, filtry)
+    obszary = baza.obszary_rcn(plik_id)
+    plik = rcn_gpkg(rekordy, obszary, rcn.porownanie(rekordy, obszary), co)
+    return Response(plik, mimetype="application/geopackage+sqlite3",
+                    headers={"Content-Disposition": f"attachment; filename=rcn_{co}_{plik_id}.gpkg"})
+
+
 @ceny_bp.route("/transakcje/<int:plik_id>/usun", methods=["POST"])
 def usun_transakcje(plik_id):
     if not baza.usun_plik_rcn(plik_id):

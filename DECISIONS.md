@@ -4425,3 +4425,22 @@ atrybuty i tak są w pliku (Pomoc mówi, jak wybrać styl z bazy).
   QGIS-a nie da się sprawdzić, czy projekt się otwiera.
 - GDAL/fiona jako zależność — duża biblioteka binarna dla zapisu, który
   sqlite3 robi w kilkudziesięciu wierszach (jak DXF i ODS).
+
+## D-222 — Klocki stylów QML w dane/geopaczka.py
+Data: 2026-10-03
+
+**Decyzja:** Funkcje budujące styl QML (symbol, kategorie, przedziały)
+są w `dane/geopaczka.py` obok zapisu GeoPackage; każdy moduł sam wybiera
+kolumny, kolory i klasy (Osiedle — funkcje terenu, Teren — pole wyboru,
+Ceny — kwintyle ceny).
+
+**Uzasadnienie:** Trzy moduły piszą ten sam format stylu — to kod
+formatu, jak `dane/arkusz.py` dla ODS, a nie wspólna abstrakcja
+modułów. Decyzje „co i jakim kolorem” zostają w modułach, z tymi samymi
+źródłami kolorów co ich mapy (FUNKCJE, kolory_pola, KOLORY_KLAS).
+
+**Odrzucone alternatywy:**
+- Osobny XML stylu w każdym module — trzy kopie tych samych znaczników
+  QML, łatwo o rozjazd przy poprawce.
+- Szablony Jinja dla QML — styl to dane, nie strona; f-stringi z
+  `quoteattr` są krótsze i testowane jako poprawny XML.

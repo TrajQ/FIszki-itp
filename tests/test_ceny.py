@@ -1005,3 +1005,33 @@ def test_premia_w_latach(client, tmp_path, monkeypatch):
     assert client.get("/ceny/transakcje/1/dane?rynek=pierwotny").get_json()["statystyki"]["premia_lat"] == []
     raport = client.get("/ceny/transakcje/1/raport").get_data(as_text=True)
     assert "Premia rynku pierwotnego w latach" in raport and "+10,0%" in raport
+
+
+# ---------- ETAP 214: GeoPackage transakcji ----------
+
+
+def test_gpkg_transakcji(client, tmp_path, monkeypatch):
+    import sqlite3
+
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_cena_brutto=50 * (9000 + 300 * i), geom=geometria_gpkg(50.06 + i / 10000, 19.94)) for i in range(12)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    kw = {"type": "Polygon", "coordinates": [[[19.93, 50.055], [19.95, 50.055], [19.95, 50.07], [19.93, 50.07], [19.93, 50.055]]]}
+    client.post("/ceny/transakcje/1/obszary", json={"nazwa": "Centrum", "geometria": kw})
+    r = client.get("/ceny/transakcje/1.gpkg?izby=2")
+    wynik = tmp_path / "w.gpkg"
+    wynik.write_bytes(r.data)
+    db = sqlite3.connect(wynik)
+    try:
+        assert db.execute("SELECT COUNT(*), MIN(cena_m2), MAX(cena_m2) FROM transakcje").fetchone() == (12, 9000.0, 12300.0)
+        assert db.execute("SELECT nr, nazwa, liczba FROM obszary").fetchone() == (1, "Centrum", 12)
+        style = dict(db.execute("SELECT f_table_name, styleQML FROM layer_styles"))
+        assert style["transakcje"].count("<range ") == 5 and 'attr="cena_m2"' in style["transakcje"]
+        assert "Centrum" in style["obszary"]
+        assert db.execute("SELECT srs_id FROM gpkg_geometry_columns WHERE table_name = 'transakcje'").fetchone() == (2180,)
+    finally:
+        db.close()
+    assert client.get("/ceny/transakcje/9.gpkg").status_code == 404

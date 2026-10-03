@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 213 (Osiedle: GeoPackage dla QGIS — zamknięty)
-Ostatni ZIP: releases/warsztat_etap213_20261003.zip
-Testy: 638 passed / 0 failed
+ETAP: 214 (Teren i Ceny: GeoPackage dla QGIS — zamknięty)
+Ostatni ZIP: releases/warsztat_etap214_20261003.zip
+Testy: 640 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -3765,3 +3765,26 @@ Status: zamknięty
   poprawny XML; sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Do QGIS”; PLAN: pozycje 213–214
 - `DECISIONS.md`: D-221
+
+## ETAP 214 — Teren i Ceny: GeoPackage ze stylami dla QGIS
+Data: 2026-10-03
+Status: zamknięty
+
+- `dane/geopaczka.py`: klocki stylów QML (`symbol_wypelnienia`,
+  `symbol_linii`, `symbol_punktu`, `styl_pojedynczy`, `styl_kategorie`,
+  `styl_przedzialy`, `kolor_qml` — także kolory `hsl()` ze skali Terenu);
+  nazwy tabel i kolumn w cudzysłowie SQL (nazwy pól wpisuje użytkownik);
+  Osiedle (ETAP 213) przepisane na te klocki
+- `teren/gpkg_projektu.py`: warstwa punkty w PL-1992, pola formularza jako
+  kolumny (liczby jako liczby, nazwy kolidujące ze stałymi kolumnami z
+  przyrostkiem), styl wg pierwszego pola wyboru (`kolory_pola` z raportu)
+- `ceny/gpkg_rcn.py`: transakcje (filtry strony) w pięciu klasach ceny za
+  m² (kwintyle, `KOLORY_KLAS`), obszary z konturami `KOLORY_OBSZAROW`
+- Trasy `/teren/projekty/<id>.gpkg`, `/ceny/transakcje/<id>.gpkg`; linki
+  na stronie projektu i pod mapą transakcji
+- Sprawdzenie GDAL-em 3.12 (poza projektem): warstwy, EPSG:2180,
+  położenie (Poznań, Kraków) poprawne
+- Testy: kolumny, cudzysłów i kolizja nazw, punkty bez położenia, klasy
+  i obszary, układ; sprawdzone w przeglądarce 1300/390 px
+- Pomoc: zdania przy eksporcie Terenu i Cen
+- `DECISIONS.md`: D-222

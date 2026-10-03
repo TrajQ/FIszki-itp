@@ -1096,3 +1096,6 @@
 
 ## ETAP 213 — 2026-10-03
 - Osiedle: koncepcja jako GeoPackage dla QGIS (warstwy w PL-1992 ze stylami)
+
+## ETAP 214 — 2026-10-03
+- Teren i Ceny: GeoPackage ze stylami dla QGIS (punkty projektu; transakcje w klasach ceny i obszary)
