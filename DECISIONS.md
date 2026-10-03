@@ -4616,3 +4616,24 @@ Wierzch bez zmian: stare pliki punktów i kod, który czyta tylko
   jednym pliku.
 - Nowy format pliku punktów bez pól na wierzchu — wymagałby konwersji
   zapisanych plików.
+
+## D-232 — Prognoza egzaminu: rachunek prawdopodobieństwa, nie losowanie
+Data: 2026-10-03
+
+**Decyzja:** Prognozę liczymy dokładnie: dla każdej fiszki rozkład
+prawdopodobieństwa stanu (pudełko, termin powtórki) przesuwany dzień po
+dniu, z udziałami odpowiedzi z dziennika. Druga liczba — same „umiem” —
+to twarda górna granica z odstępów Leitnera.
+
+**Uzasadnienie:** Wynik jest powtarzalny (ta sama baza → ta sama liczba)
+i sprawdzalny w testach ręcznym rachunkiem. Losowanie (Monte Carlo)
+dawałoby przy każdym odświeżeniu inną liczbę. Stanów jest mało (pudełka
+1–5 × dni do egzaminu), a identyczne fiszki liczymy raz. Udziały z
+dziennika zamiast założonej skuteczności — liczby z danych, nie z
+przyjęcia; przy mniej niż 30 odpowiedziach pokazujemy tylko granicę.
+
+**Odrzucone alternatywy:**
+- Monte Carlo — wynik zmienny między odświeżeniami.
+- Skuteczność osobno dla każdego pudełka — przy kilkudziesięciu
+  odpowiedziach w pudełku udziały byłyby losowe.
+- Stała skuteczność (np. 80%) bez danych — liczba niepochodząca z danych.

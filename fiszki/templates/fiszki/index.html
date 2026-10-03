@@ -38,6 +38,17 @@
         {% elif not e.minal %}
         <p class="egzamin__plan">Wszystko utrwalone — przed egzaminem wystarczy przegląd.</p>
         {% endif %}
+        {% if e.prognoza %}{% set g = e.prognoza %}
+        {# ETAP 224: prognoza z harmonogramu Leitnera — liczby z fiszki/egzaminy.py #}
+        <details class="egzamin__prognoza">
+            <summary>Prognoza na dzień egzaminu: {% if g.oczekiwane is defined %}ok. <strong>{{ g.oczekiwane }}</strong> z {{ g.fiszki }} utrwalonych ({{ g.oczekiwane_proc }}%){% else %}najwyżej <strong>{{ g.maksimum }}</strong> z {{ g.fiszki }} utrwalonych ({{ g.maksimum_proc }}%){% endif %}</summary>
+            <p class="egzamin__plan">Jeśli codziennie przerobisz wszystko, co wypada do powtórki ({{ g.dni_nauki }} {{ 'dzień' if g.dni_nauki == 1 else 'dni' }} nauki — do dnia przed egzaminem).
+            {% if g.udzialy %}Przy Twoich odpowiedziach z ostatnich {{ dni_dziennika }} dni ({{ g.udzialy.odpowiedzi }}: „umiem” {{ (100 * g.udzialy.umiem) | round | int }}%, „trudne” {{ (100 * g.udzialy.trudne) | round | int }}%, „nie umiem” {{ (100 * g.udzialy.nie_umiem) | round | int }}%) — ok. {{ g.oczekiwane }}; najwięcej ok. {{ g.oczekiwane_powtorek_dziennie }} powtórek jednego dnia.
+            {% else %}Prognozy przy Twojej skuteczności jeszcze nie ma: w dzienniku z ostatnich {{ dni_dziennika }} dni jest mniej niż {{ min_odpowiedzi }} odpowiedzi.{% endif %}
+            Przy samych „umiem” — {{ g.maksimum }} ({{ g.maksimum_proc }}%).</p>
+            {% if g.maksimum < g.fiszki %}<p class="egzamin__plan">{{ g.fiszki - g.maksimum }} fiszek nie zdąży trafić do pudełka 3 nawet przy samych „umiem” (odstępy powtórek są dłuższe niż czas do egzaminu) — przejrzyj je trybem „Przed egzaminem”.</p>{% endif %}
+        </details>
+        {% endif %}
         {% else %}
         <p class="wyciszony egzamin__plan">W tym zakresie nie ma jeszcze fiszek.</p>
         {% endif %}

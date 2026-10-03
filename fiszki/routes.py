@@ -61,6 +61,8 @@ def index():
         tematy=tematy.wszystkie(db, _WARUNEK_DO_POWTORKI, dzis),
         egzaminy=egzaminy.lista(db, powtorki.dzisiaj()),
         utrwalone=egzaminy.utrwalone_w_plikach(db),
+        dni_dziennika=egzaminy.DNI_DZIENNIKA,
+        min_odpowiedzi=egzaminy.MIN_ODPOWIEDZI,
         blad=request.args.get("blad"),
         kosz=kosz.lista(db),
     )

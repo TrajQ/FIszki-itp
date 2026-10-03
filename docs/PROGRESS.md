@@ -3975,3 +3975,25 @@ Status: zamknięty
   przy „change” znaleziony i poprawiony)
 - Pomoc: „Kilka rodzajów usług naraz w szybkim modelu”
 - `DECISIONS.md`: D-231
+
+## ETAP 224 — Fiszki: prognoza gotowości na dzień egzaminu z harmonogramu Leitnera
+Data: 2026-10-03
+Status: zamknięty
+
+- `fiszki/egzaminy.py`: `prognoza` — dla każdej fiszki zakresu rozkład
+  (pudełko, termin) przesuwany dzień po dniu do dnia przed egzaminem;
+  „umiem” → następne pudełko, „trudne” → to samo jutro, „nie umiem” →
+  powrót tego dnia do „umiem” → pudełko 2 (`PUDELKO_PO_POWROCIE`);
+  wynik: oczekiwane utrwalone, maksimum (same „umiem”), najwięcej
+  powtórek jednego dnia; identyczne stany liczone raz (`Counter`)
+- `udzialy_odpowiedzi` — udziały odpowiedzi z dziennika z ostatnich 60
+  dni (`DNI_DZIENNIKA`), od 30 odpowiedzi (`MIN_ODPOWIEDZI`); mniej — tylko
+  maksimum z uwagą
+- `_stany_w_zakresie`; `lista` dodaje `prognoza` do nadchodzących
+  egzaminów z fiszkami; karta egzaminu: rozwijana „Prognoza na dzień
+  egzaminu” z założeniami
+- Testy: maksimum z odstępów (6 przypadków), wartości przy udziałach
+  (w tym spadek utrwalonej), okno 60 dni dziennika, strona z i bez
+  prognozy przy skuteczności; przeglądarka 1300/390 px
+- Pomoc: „Prognoza gotowości na dzień egzaminu”
+- `DECISIONS.md`: D-232

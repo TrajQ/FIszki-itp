@@ -1126,3 +1126,6 @@
 
 ## ETAP 223 — 2026-10-03
 - Dostępność: kilka rodzajów usług naraz w szybkim modelu (kolumna na usługę)
+
+## ETAP 224 — 2026-10-03
+- Fiszki: prognoza, ile fiszek będzie utrwalonych w dniu egzaminu

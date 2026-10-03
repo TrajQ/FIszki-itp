@@ -87,3 +87,47 @@ def test_egzamin_pliku_znika_z_plikiem_i_usuwanie(client):
     client.post(f"/fiszki/egzaminy/{egzamin_id}/usun")
     assert "Ogólny" not in client.get("/fiszki/").get_data(as_text=True)
     assert client.post("/fiszki/egzaminy", data={"nazwa": "X", "data": "2026-10-05", "zakres": "pdf:99"}).status_code == 404
+
+
+# ---------- ETAP 224: prognoza gotowości na dzień egzaminu ----------
+
+
+def test_prognoza_przy_samych_umiem_wynika_z_odstepow():
+    # nowa fiszka (pudełko 1, dziś): dziś → pudełko 2 (powtórka za 2 dni) → pudełko 3
+    assert egzaminy.prognoza([(1, 0)], 3, None)["maksimum"] == 1  # nauka w dniach 0, 1, 2
+    assert egzaminy.prognoza([(1, 0)], 2, None)["maksimum"] == 0  # dzień 2 to już egzamin
+    assert egzaminy.prognoza([(2, 5)], 30, None)["maksimum"] == 1  # zaplanowana na za 5 dni
+    assert egzaminy.prognoza([(2, 5)], 5, None)["maksimum"] == 0  # powtórka wypada w dniu egzaminu
+    assert egzaminy.prognoza([(4, 40)], 3, None)["maksimum"] == 1  # utrwalona, powtórka po egzaminie
+    g = egzaminy.prognoza([(1, -3)] * 4, 0, None)  # zaległe, egzamin dziś
+    assert (g["dni_nauki"], g["maksimum"], g["maksimum_powtorek_dziennie"]) == (1, 0, 4)
+    assert "oczekiwane" not in g and g["udzialy"] is None
+
+
+def test_prognoza_przy_udzialach_odpowiedzi():
+    u = {"umiem": 0.5, "trudne": 0.0, "nie_umiem": 0.5, "odpowiedzi": 100}
+    # pudełko 2 na jutro, egzamin za 3 dni (nauka 0–2): jedna szansa (dzień 1) → 50%;
+    # po „nie umiem” wraca do pudełka 2 na dzień 3 — już po nauce
+    g = egzaminy.prognoza([(2, 1)] * 10, 3, u)
+    assert (g["oczekiwane"], g["oczekiwane_proc"], g["maksimum"]) == (5, 50, 10)
+    assert g["oczekiwane_powtorek_dziennie"] == 15  # 10 powtórek + połowa jeszcze raz tego dnia
+    # utrwalona może wypaść: pudełko 3 z powtórką jutro, egzamin za 2 dni
+    assert egzaminy.prognoza([(3, 1)], 2, u)["oczekiwane_proc"] == 50
+
+
+def test_udzialy_z_dziennika_i_prognoza_na_stronie(client):
+    ids = [dodaj_fiszke(client, "kolokwium") for _ in range(3)]
+    client.post("/fiszki/egzaminy", data={"nazwa": "Kolokwium 1", "data": "2026-10-05", "zakres": "temat:kolokwium"})
+    strona = client.get("/fiszki/").get_data(as_text=True)
+    assert "Prognoza na dzień egzaminu: najwyżej <strong>3</strong> z 3" in strona and "mniej niż 30 odpowiedzi" in strona
+    with client.application.app_context():
+        from fiszki.baza import get_db
+        db = get_db()
+        db.executemany("INSERT INTO dziennik_powtorek (fiszka_id, data, wynik) VALUES (?, ?, ?)",
+                       [(ids[0], "2026-09-20", "umiem")] * 24 + [(ids[0], "2026-09-20", "nie_umiem")] * 6
+                       + [(ids[0], "2026-06-01", "nie_umiem")] * 50)  # stare — poza 60 dniami
+        db.commit()
+        u = egzaminy.udzialy_odpowiedzi(db, date(2026, 10, 1))
+    assert (u["odpowiedzi"], u["umiem"], u["nie_umiem"]) == (30, 0.8, 0.2)
+    strona = client.get("/fiszki/").get_data(as_text=True)
+    assert "Prognoza na dzień egzaminu: ok. <strong>" in strona and "„umiem” 80%" in strona

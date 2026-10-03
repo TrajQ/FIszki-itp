@@ -1261,3 +1261,13 @@ button.przycisk--ocena-trudne:hover {
 .lista-kosza form {
     margin: 0;
 }
+
+/* ETAP 224: prognoza gotowości na dzień egzaminu */
+.egzamin__prognoza summary {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.egzamin__prognoza[open] summary {
+    margin-bottom: 4px;
+}
