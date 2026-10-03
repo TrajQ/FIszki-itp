@@ -94,10 +94,18 @@
             otworzPoprawke(p);
         });
         div.appendChild(popraw);
+        const start = element("button", "przycisk--tekst", "Zacznij trasę tutaj"); // ETAP 198
+        start.type = "button";
+        start.addEventListener("click", () => {
+            mapa.closePopup();
+            wyznaczTrase(p.id);
+        });
+        div.appendChild(start);
         return div;
     }
 
     function rysuj() {
+        ukryjTrase(); // trasa dotyczyła poprzedniego zestawu punktów
         warstwaPunktow.clearLayers();
         znaczniki.clear();
         const paleta = kolory();
@@ -133,6 +141,45 @@
             legenda.appendChild(b);
         }
     }
+
+    // ---------- trasa obchodu (ETAP 198) ----------
+    // Kolejność liczy serwer (teren/trasa.py); tu linia i numery na mapie.
+
+    const warstwaTrasy = L.layerGroup().addTo(mapa);
+    const opisTrasy = document.getElementById("opis-trasy");
+    const linkGpx = document.getElementById("trasa-gpx");
+    const przyciskUkryj = document.getElementById("ukryj-trase");
+
+    function ukryjTrase() {
+        warstwaTrasy.clearLayers();
+        znaczniki.forEach((z) => z.unbindTooltip());
+        opisTrasy.hidden = linkGpx.hidden = przyciskUkryj.hidden = true;
+    }
+
+    async function wyznaczTrase(startId) {
+        const ids = [...znaczniki.keys()];
+        const parametry = new URLSearchParams({ punkty: ids.join(",") });
+        if (startId) parametry.set("start", startId);
+        let t;
+        try {
+            t = await zapytaj(`${URL_PROJEKTU}/trasa?${parametry}`);
+        } catch (e) {
+            komunikat(e.message, true);
+            return;
+        }
+        komunikat("");
+        ukryjTrase();
+        const polozenie = new Map(punkty.map((p) => [p.id, [p.lat, p.lng]]));
+        L.polyline(t.kolejnosc.map((id) => polozenie.get(id)), { color: "#ff375f", weight: 3, dashArray: "6 6", interactive: false }).addTo(warstwaTrasy).bringToBack();
+        t.kolejnosc.forEach((id, i) => znaczniki.get(id).bindTooltip(String(i + 1), { permanent: true, direction: "top", className: "numer-trasy" }));
+        const km = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 }).format(t.dlugosc_m / 1000);
+        opisTrasy.textContent = `${t.kolejnosc.length} pkt, ok. ${km} km w linii prostej (ok. ${t.czas_min} min marszu bez postojów; po ulicach dalej).`;
+        linkGpx.href = `${URL_PROJEKTU}/trasa.gpx?${parametry}`;
+        opisTrasy.hidden = linkGpx.hidden = przyciskUkryj.hidden = false;
+    }
+
+    document.getElementById("wyznacz-trase").addEventListener("click", () => wyznaczTrase(null));
+    przyciskUkryj.addEventListener("click", ukryjTrase);
 
     // ---------- tabela ----------
 

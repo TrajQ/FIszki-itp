@@ -558,3 +558,10 @@ button.przycisk--niebezpieczny-tekst {
         print-color-adjust: exact;
     }
 }
+
+/* ETAP 198: numery kolejności trasy obchodu przy punktach */
+.leaflet-tooltip.numer-trasy {
+    padding: 0 5px;
+    font-weight: 600;
+    font-size: 12px;
+}

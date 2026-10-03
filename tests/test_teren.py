@@ -634,3 +634,51 @@ def test_wykres_tabeli_krzyzowej():
     assert svg.count("<rect") == 1 + 3  # tło + młodzi (2 części) + starsi (1); „dzieci” bez odpowiedzi pominięte
     assert ">75%<" in svg and ">100%<" in svg and ">2</text>" in svg
     assert r.kolory_kolumn({"nazwa": "x", "typ": "tak_nie", "opcje": []}) == r.PALETA[:2]
+
+
+# ---------- ETAP 198: trasa obchodu ----------
+
+from teren import trasa as trasa_terenu  # noqa: E402
+
+
+def test_trasa_najblizszy_i_dwa_opt():
+    # punkty na prostej co ok. 111 m (0,001° szerokości), podane w pomieszanej kolejności
+    punkty = [{"id": i, "lat": 52.0 + 0.001 * k, "lng": 16.9} for i, k in [(1, 3), (2, 0), (3, 4), (4, 1), (5, 2)]]
+    t = trasa_terenu.trasa(punkty)
+    assert t["kolejnosc"] in ([2, 4, 5, 1, 3], [3, 1, 5, 4, 2])  # od końca do końca
+    assert t["dlugosc_m"] == pytest.approx(4 * 111.2, rel=0.01) and len(t["odcinki_m"]) == 4
+    assert t["czas_min"] == round(t["dlugosc_m"] / 1000 / 4.5 * 60)
+    # stały start w środku: musi zacząć od niego
+    t = trasa_terenu.trasa(punkty, start_id=5)
+    assert t["kolejnosc"][0] == 5 and sorted(t["kolejnosc"]) == [1, 2, 3, 4, 5]
+    # 2-opt nie wydłuża trasy z „najbliższego sąsiada”
+    import random
+    los = random.Random(7)
+    chmura = [{"id": i, "lat": 52 + los.random() * 0.01, "lng": 16.9 + los.random() * 0.015} for i in range(40)]
+    t = trasa_terenu.trasa(chmura)
+    assert t["dlugosc_m"] <= t["dlugosc_najblizszy_m"] and len(set(t["kolejnosc"])) == 40
+    for zle, start in (([punkty[0]], None), (punkty, 99), ([{"id": i, "lat": 52, "lng": 16} for i in range(201)], None)):
+        with pytest.raises(trasa_terenu.BladTrasy):
+            trasa_terenu.trasa(zle, start)
+
+
+def test_trasa_przez_trase_i_gpx(client):
+    client.post("/teren/projekty", data={"nazwa": "Obchód <Jeżyce>", "wzor": "zielen"})
+    klucz = re.search(r'"klucz": "([^"]+)"', client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)).group(1)
+    pkt = [punkt(f"p{i:010d}", lat=52.4 + 0.001 * i, lng=16.9) for i in range(4)] + [punkt("bezgps0000", lat=None, lng=None)]
+    client.post("/teren/projekty/1/import", data={"plik": (io.BytesIO(json.dumps(plik(klucz, *pkt)).encode()), "t.json")},
+                content_type="multipart/form-data")
+    ids = [p["id"] for p in client.get("/teren/projekty/1/punkty").get_json() if p["lat"] is not None]
+    t = client.get("/teren/projekty/1/trasa").get_json()
+    assert sorted(t["kolejnosc"]) == sorted(ids)  # punkt bez położenia pominięty
+    t = client.get(f"/teren/projekty/1/trasa?punkty={ids[1]},{ids[3]},{ids[2]}&start={ids[3]}").get_json()
+    assert t["kolejnosc"] == [ids[3], ids[2], ids[1]]
+    assert client.get("/teren/projekty/1/trasa?punkty=x").status_code == 400
+    assert client.get(f"/teren/projekty/1/trasa?punkty={ids[0]}").status_code == 400
+    r = client.get(f"/teren/projekty/1/trasa.gpx?start={ids[0]}")
+    tekst = r.get_data(as_text=True)
+    assert r.mimetype == "application/gpx+xml" and "trasa_obchod_jezyce.gpx" in r.headers["Content-Disposition"]
+    assert tekst.count("<wpt ") == 4 and tekst.count("<rtept ") == 4 and "&lt;Jeżyce&gt;" in tekst
+    import xml.etree.ElementTree as ET
+    ET.fromstring(tekst.encode())
+    assert client.get("/teren/projekty/99/trasa").status_code == 404

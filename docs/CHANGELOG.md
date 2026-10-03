@@ -1048,3 +1048,6 @@
 
 ## ETAP 197 — 2026-10-03
 - Osiedle: chłonność terenu wg wpisanych ustaleń planu — dopuszczalna powierzchnia całkowita, wykorzystanie i zapas
+
+## ETAP 198 — 2026-10-03
+- Teren: trasa obchodu punktów (najbliższy sąsiad + 2-opt) na mapie i jako GPX do nawigacji w telefonie

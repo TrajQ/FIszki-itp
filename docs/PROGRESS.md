@@ -3445,3 +3445,23 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px (także zmiana ustalenia)
 - Pomoc: akapit o ustaleniach planu
 - `DECISIONS.md`: D-205
+
+## ETAP 198 — Teren: trasa obchodu punktów
+Data: 2026-10-03
+Status: zamknięty
+
+- `teren/trasa.py`: `odleglosc_m` (haversine), `trasa` — najbliższy
+  sąsiad od startu (wybranego albo punktu najdalszego od środka) i
+  poprawki 2-opt dla trasy otwartej; długość, odcinki, czas marszu
+  (`PREDKOSC_KMH=4.5`), `MAKS_PUNKTOW_TRASY=200`; `gpx` — GPX 1.1 z
+  punktami (wpt) i trasą (rte), numery kolejności jako nazwy
+- Trasy `/teren/projekty/<id>/trasa` (JSON) i `/trasa.gpx`
+  (`?punkty=` — puste: wszystkie z położeniem, `?start=`)
+- Projekt: karta „Trasa obchodu” (punkty widoczne na mapie), numery
+  przy punktach, przerywana linia, „Zacznij trasę tutaj” w dymku; zmiana
+  filtra ukrywa nieaktualną trasę
+- Testy: punkty na prostej, stały start, 2-opt nie wydłuża, limity,
+  trasa i GPX (escape nazwy, poprawny XML); sprawdzone w przeglądarce
+  1300/390 px
+- Pomoc: „W jakiej kolejności obejść punkty?”
+- `DECISIONS.md`: D-206

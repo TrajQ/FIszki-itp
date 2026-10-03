@@ -4101,3 +4101,25 @@ wartość to faktyczne ograniczenie. Mieszkania MW dają górny szacunek
   liczbowo dla każdego planu.
 - Mieszkania wg proporcji MN/MW z koncepcji — zapas nie ma jeszcze
   funkcji; przyjęcie proporcji byłoby założeniem kodu.
+
+## D-206 — Trasa obchodu: heurystyka w linii prostej, GPX bez zależności
+Data: 2026-10-03
+
+**Decyzja:** Kolejność punktów liczymy w Pythonie heurystyką „najbliższy
+sąsiad + 2-opt” na odległościach po kuli; trasę zapisujemy jako GPX 1.1
+składany ręcznie (jak DXF i ODS). Punkty trasy = punkty widoczne na mapie
+po filtrze legendy.
+
+**Uzasadnienie:** Dla kilkudziesięciu punktów 2-opt daje trasę bliską
+optimum w ułamku sekundy, bez bibliotek. GPX czytają aplikacje
+nawigacyjne na telefonie, także offline — formularz na telefon (ETAP 65)
+nie musi dostawać własnej nawigacji. Filtr legendy jest już znanym
+sposobem wyboru punktów.
+
+**Odrzucone alternatywy:**
+- Trasa po sieci ulic (OSRM, GraphHopper) — zewnętrzna usługa routingu
+  albo duży graf lokalnie; długość w linii prostej jest opisana jako
+  dolne oszacowanie.
+- Dokładne rozwiązanie komiwojażera (np. OR-Tools) — nowa, ciężka
+  zależność dla zysku rzędu kilku procent długości.
+- Biblioteka gpxpy — kilkanaście wierszy XML nie uzasadnia zależności.

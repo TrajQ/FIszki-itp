@@ -106,6 +106,17 @@
             <div id="legenda" class="legenda"></div>
         </section>
 
+        <section class="karta stos" id="karta-trasy">
+            <h3>Trasa obchodu</h3>
+            <p class="wyciszony opis">Kolejność odwiedzenia punktów widocznych na mapie (legenda filtra ukrywa resztę) — krótka droga w linii prostej. Start wybierzesz w dymku punktu („Zacznij trasę tutaj”).</p>
+            <div class="rzad">
+                <button id="wyznacz-trase" type="button" class="przycisk--drugi">Wyznacz trasę</button>
+                <a id="trasa-gpx" class="przycisk przycisk--tekst" href="#" hidden title="Do aplikacji nawigacyjnej na telefonie (OsmAnd, Locus) — działa bez internetu z mapą offline">GPX</a>
+                <button id="ukryj-trase" type="button" class="przycisk--tekst" hidden>Ukryj</button>
+            </div>
+            <p id="opis-trasy" class="opis" hidden></p>
+        </section>
+
         <details class="karta stos edycja-pol">
             <summary><h3>Pola formularza</h3></summary>
             <p class="wyciszony opis">Po zmianie pól pobierz formularz na telefon jeszcze raz. Punkty z telefonu zachowują wartości pól o tych samych nazwach.</p>

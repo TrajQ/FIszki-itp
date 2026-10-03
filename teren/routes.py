@@ -17,7 +17,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 
 from markupsafe import Markup
 
-from . import baza, podklad, porownanie, raport
+from . import baza, podklad, porownanie, raport, trasa
 from .projekt import FORMAT, RODZAJE, TYPY_POL, WZORY, BladDanych, braki, odczytaj_geojson, odczytaj_plik, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
@@ -309,6 +309,41 @@ def eksport_csv(projekt_id):
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename=teren_{_nazwa_pliku(p['nazwa'])}.csv"},
     )
+
+
+def _trasa_z_zapytania(projekt_id: int) -> tuple[dict, list[dict], dict]:
+    """ETAP 198: ?punkty=1,2,3 (puste — wszystkie z położeniem) i ?start=id."""
+    p = _projekt_albo_404(projekt_id)
+    punkty = [{"id": pt["id"], "lat": pt["lat"], "lng": pt["lng"]} for pt in baza.punkty(projekt_id) if pt["lat"] is not None]
+    try:
+        wybrane = {int(x) for x in request.args.get("punkty", "").split(",") if x.strip()}
+        start = int(request.args["start"]) if request.args.get("start") else None
+    except ValueError:
+        raise trasa.BladTrasy("Numery punktów muszą być liczbami.") from None
+    if wybrane:
+        punkty = [pt for pt in punkty if pt["id"] in wybrane]
+    return p, punkty, trasa.trasa(punkty, start)
+
+
+@teren_bp.route("/projekty/<int:projekt_id>/trasa")
+def trasa_obchodu(projekt_id):
+    """Kolejność obchodu punktów: najbliższy sąsiad + 2-opt (teren/trasa.py)."""
+    try:
+        _, _, wynik = _trasa_z_zapytania(projekt_id)
+    except trasa.BladTrasy as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify(wynik)
+
+
+@teren_bp.route("/projekty/<int:projekt_id>/trasa.gpx")
+def trasa_gpx(projekt_id):
+    """Ta sama trasa jako GPX — do nawigacji na telefonie."""
+    try:
+        p, punkty, wynik = _trasa_z_zapytania(projekt_id)
+    except trasa.BladTrasy as e:
+        return Response(str(e), status=400, mimetype="text/plain")
+    return Response(trasa.gpx(punkty, wynik["kolejnosc"], f"Trasa obchodu — {p['nazwa']}"), mimetype="application/gpx+xml",
+                    headers={"Content-Disposition": f"attachment; filename=trasa_{_nazwa_pliku(p['nazwa'])}.gpx"})
 
 
 @teren_bp.route("/projekty/<int:projekt_id>/raport")
