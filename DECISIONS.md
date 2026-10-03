@@ -4057,3 +4057,26 @@ opisie nad tabelą.
   nieczytelne na małym ekranie.
 - Przełącznik źródła w interfejsie — dodatkowa decyzja dla użytkownika
   bez wyraźnej korzyści; tereny bez budynków nadal działają.
+
+## D-204 — Etapy realizacji liczone osobno, grunt poza etapami
+Data: 2026-10-03
+
+**Decyzja:** Etap jest właściwością terenu (liczba 1–10). Każdy etap
+liczymy tymi samymi funkcjami co całą koncepcję (`program`, `koszty`),
+tylko na jego terenach. Miejsca postojowe muszą się zmieścić w tym samym
+etapie; koszt gruntu nie jest dzielony.
+
+**Uzasadnienie:** Ponowne użycie `program.py` i `koszty.py` daje liczby
+spójne z całością bez drugiej implementacji. Osobny bilans parkingów
+odpowiada pytaniu, które etapowanie stawia: czy oddany etap działa sam,
+zanim powstanie następny. Grunt kupuje się zwykle naraz, a podział
+proporcjonalny do powierzchni byłby założeniem, którego autor nie wpisał.
+
+**Odrzucone alternatywy:**
+- Etap jako osobny wielobok na mapie (teren należy do etapu, w którym
+  leży) — kolejny rodzaj obiektu do rysowania, a tereny na granicy
+  etapów wymagałyby cięcia.
+- Parking narastająco (KS z wcześniejszych etapów obsługuje późniejsze) —
+  ukrywa braki w pierwszym etapie, który jest najważniejszy.
+- Grunt proporcjonalnie do powierzchni etapu — liczba wynikająca z
+  założenia kodu, nie z danych autora.

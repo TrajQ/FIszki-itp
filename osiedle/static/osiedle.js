@@ -250,7 +250,19 @@
             pole.placeholder = klucz in domyslne ? String(domyslne[klucz]) : "";
             pole.value = wlasciwosci[klucz] ?? "";
         });
+        // ETAP 196: etap realizacji — tylko tereny z funkcją (nie obszar, budynek, linia)
+        etapTerenu.hidden = !(warstwa.funkcja in DOMYSLNE);
+        etapTerenu.querySelector("input").value = wlasciwosci.etap ?? "";
     }
+
+    const etapTerenu = document.getElementById("etap-terenu");
+    etapTerenu.querySelector("input").addEventListener("input", (e) => {
+        if (!wybranaWarstwa) return;
+        wybranaWarstwa.wlasciwosci = { ...(wybranaWarstwa.wlasciwosci || {}) };
+        if (e.target.value === "") delete wybranaWarstwa.wlasciwosci.etap;
+        else wybranaWarstwa.wlasciwosci.etap = Number(e.target.value);
+        zapiszRysunek();
+    });
 
     polaParametrow.forEach((etykieta) => {
         etykieta.querySelector("input").addEventListener("input", (e) => {
@@ -514,6 +526,32 @@
         pokazProgram(b.program);
         pokazKoszty(b.koszty);
         pokazBudynki(b.budynki);
+        pokazEtapy(b.etapy);
+    }
+
+    // ETAP 196: etapy realizacji — program i koszty liczy serwer (osiedle/etapy.py)
+    function pokazEtapy(e) {
+        const sekcja = document.getElementById("sekcja-etapow");
+        sekcja.hidden = !e;
+        if (!e) return;
+        const zKosztem = e.lista.some((x) => x.koszt !== null);
+        const tabela = document.getElementById("tabela-etapow");
+        const naglowek = element("tr");
+        ["Etap", "Pow. m²", "Mieszk. (narast.)", ...(zKosztem ? ["Koszt zł", "Narastająco"] : [])].forEach((t, i) => naglowek.appendChild(element("th", i ? "liczba" : "", t)));
+        tabela.replaceChildren(naglowek);
+        for (const x of e.lista) {
+            const tr = element("tr", x.etap === null ? "wyciszony" : "");
+            tr.append(element("td", "", x.etap === null ? "bez etapu" : String(x.etap)), element("td", "liczba", formatM2.format(x.powierzchnia_m2)),
+                element("td", "liczba", `${x.mieszkania} (${x.mieszkania_narastajaco})`));
+            if (zKosztem) tr.append(element("td", "liczba", formatM2.format(x.koszt)), element("td", "liczba", formatM2.format(x.koszt_narastajaco)));
+            tabela.appendChild(tr);
+        }
+        const kontrole = document.getElementById("kontrole-etapow");
+        kontrole.replaceChildren();
+        for (const x of e.lista) {
+            if (x.miejsca_brakuje) kontrole.appendChild(element("li", "", `${x.etap === null ? "Bez etapu" : `Etap ${x.etap}`}: na terenach KS tego etapu brakuje ${x.miejsca_brakuje} miejsc postojowych.`));
+        }
+        if (e.bez_etapu) kontrole.appendChild(element("li", "", "Część terenów nie ma numeru etapu — są w wierszu „bez etapu”."));
     }
 
     // ETAP 173: zestawienie budynków — rzut, kondygnacje, powierzchnia całkowita, teren pod budynkiem

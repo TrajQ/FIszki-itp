@@ -1042,3 +1042,6 @@
 
 ## ETAP 195 — 2026-10-03
 - Osiedle: cień liczony od narysowanych budynków (gdy są), zamiast od całych terenów
+
+## ETAP 196 — 2026-10-03
+- Osiedle: etapy realizacji — numer etapu przy terenie, program i koszty na etap z sumą narastającą (karta, raport, ODS)

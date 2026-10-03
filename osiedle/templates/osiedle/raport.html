@@ -149,6 +149,19 @@
         </div>
         <p class="wyciszony">{% if k.na_mieszkanie is not none %}{{ m(k.na_mieszkanie, 0) }} zł na mieszkanie / dom{% endif %}{% if k.na_mieszkanie is not none and k.na_m2_calkowitej is not none %} · {% endif %}{% if k.na_m2_calkowitej is not none %}{{ m(k.na_m2_calkowitej, 0) }} zł na m² powierzchni całkowitej{% endif %}. Stawki wpisane przez autora koncepcji; ilości z rysunku.</p>
         {% endif %}
+        {% set e = b.etapy %}
+        {% if e %}
+        <h3>Etapy realizacji</h3>
+        <div class="przewijanie-osiedla">
+        <table class="tabela raport-osiedla__etapy">
+            <tr><th>etap</th><th class="liczba">tereny</th><th class="liczba">powierzchnia [m²]</th><th class="liczba">pow. całkowita [m²]</th><th class="liczba">mieszkania</th><th class="liczba">mieszkańcy</th><th class="liczba">brak miejsc post.</th>{% if e.lista[0].koszt is not none %}<th class="liczba">koszt [zł]</th><th class="liczba">narastająco [zł]</th>{% endif %}</tr>
+            {% for x in e.lista %}
+            <tr><td>{{ x.etap if x.etap is not none else 'bez etapu' }}</td><td class="liczba">{{ x.terenow }}</td><td class="liczba">{{ m(x.powierzchnia_m2, 0) }}</td><td class="liczba">{{ m(x.calkowita_m2, 0) }}</td><td class="liczba">{{ x.mieszkania }} <span class="wyciszony">(razem {{ x.mieszkania_narastajaco }})</span></td><td class="liczba">{{ x.mieszkancy }}</td><td class="liczba">{{ x.miejsca_brakuje }}</td>{% if x.koszt is not none %}<td class="liczba">{{ m(x.koszt, 0) }}</td><td class="liczba">{{ m(x.koszt_narastajaco, 0) }}</td>{% endif %}</tr>
+            {% endfor %}
+        </table>
+        </div>
+        <p class="wyciszony">Każdy etap liczony osobno: miejsca postojowe z terenów KS tego samego etapu, koszt gruntu tylko w szacunku całości; mieszkania w etapach mogą różnić się od całości o zaokrąglenia.</p>
+        {% endif %}
         <p class="wyciszony raport-osiedla__stopka">Szacunek koncepcyjny: wskaźniki z parametrów terenów, program z założeń powyżej{{ ', koszty ze stawek autora' if k }}. Liczy kod aplikacji, nie model językowy.</p>
     </section>
 

@@ -18,6 +18,7 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
+from . import etapy as etp
 from . import koszty as kosz
 from . import program as prog
 from . import wskazniki as wsk
@@ -186,12 +187,13 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
         kosz.stawki(ustawienia)  # ETAP 155
         for t in tereny:
             t["parametry"] = wsk.parametry_terenu(t["funkcja"], t["wlasciwosci"])
-    except (wsk.BladParametru, prog.BladZalozen, kosz.BladStawek) as e:
+            t["etap"] = etp.etap_terenu(t["funkcja"], t["wlasciwosci"])  # ETAP 196
+    except (wsk.BladParametru, prog.BladZalozen, kosz.BladStawek, etp.BladEtapu) as e:
         raise BladKoncepcji(str(e)) from None
     wszystko = [t["geometria"] for t in tereny] + [b["geometria"] for b in budynki] + ([obszar] if obszar is not None else [])
     if not wszystko:
         return {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None,
-                "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": []}
+                "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": [], "etapy": None}
     szerokosc = unary_union(wszystko).centroid.y
 
     def pole(geometria):
@@ -253,4 +255,5 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
         "budynki": zestawienie_budynkow,
         "wskazniki_budynkow": wskazniki_budynkow,
         "zgodnosc_budynkow": wsk.zgodnosc(wskazniki_budynkow, plan) if wskazniki_budynkow else [],
+        "etapy": etp.etapy(tereny, ustawienia),
     }

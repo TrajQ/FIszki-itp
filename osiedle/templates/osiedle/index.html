@@ -92,6 +92,8 @@
                         <input type="number" min="0" max="50" step="1" inputmode="decimal"></label>
                     <label data-parametr="pbc_proc" title="Jaka część terenu jest biologicznie czynna">PBC %
                         <input type="number" min="0" max="100" step="1" inputmode="decimal"></label>
+                    <label id="etap-terenu" title="Numer etapu realizacji 1–10 (ETAP 196); puste — bez etapu">Etap
+                        <input type="number" min="1" max="10" step="1" inputmode="numeric" placeholder="—"></label>
                 </div>
                 <p class="wyciszony opis-panelu">Procenty powierzchni tego terenu; PBC — powierzchnia biologicznie czynna. Puste pole = wartość typowa (szara podpowiedź).</p>
                 <div class="rzad">
@@ -194,6 +196,13 @@
                     {% endfor %}
                 </div>
             </details>
+        </section>
+
+        <section id="sekcja-etapow" class="karta stos" hidden>
+            <h3>Etapy realizacji</h3>
+            <p class="wyciszony opis-panelu">Numer etapu wpisujesz przy zaznaczonym terenie (pole „Etap”). Każdy etap liczony osobno: miejsca postojowe z terenów KS tego samego etapu, koszt gruntu tylko w szacunku całości.</p>
+            <div class="przewijanie-osiedla"><table class="tabela tabela-etapow" id="tabela-etapow"></table></div>
+            <ul id="kontrole-etapow" class="kontrole"></ul>
         </section>
 
         <section id="sekcja-cienia" class="karta stos" hidden>

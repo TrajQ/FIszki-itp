@@ -50,7 +50,7 @@ def test_bilans_bez_obszaru_procent_od_sumy_i_pusty():
     b = bilans(kolekcja(prostokat(0, 0, 30, 10, "MN"), prostokat(40, 0, 10, 10, "ZP")))
     assert b["obszar_m2"] is None and [f["procent"] for f in b["funkcje"]] == [75.0, 25.0]
     assert bilans(kolekcja()) == {"obszar_m2": None, "funkcje": [], "razem_m2": 0.0, "kontrole": {}, "wskazniki": None, "zgodnosc": [], "program": None, "koszty": None,
-                                     "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": []}
+                                     "budynki": None, "wskazniki_budynkow": None, "zgodnosc_budynkow": [], "etapy": None}
 
 
 def test_teren_poza_obszarem():
@@ -654,3 +654,41 @@ def test_cien_od_budynkow():
     assert zielen_z < zielen_bez
     mw = next(x for x in z["zacienione"] if x["funkcja"] == "MW")
     assert mw["w_cieniu_m2"] < 20 * 20 * 10  # cień na terenie MW, bez obrysu samego budynku
+
+
+# ---------- ETAP 196: etapy realizacji ----------
+
+
+def test_etapy_realizacji(client):
+    # etap 1: MW 50 × 40 m (30%, 5 kond. → 3000 m²) + KS 20 × 10 m; etap 2: MW 50 × 40 m (3000 m²); ZP bez etapu
+    geo = kolekcja(prostokat(0, 0, 100, 100, "obszar"),
+                   prostokat(0, 0, 50, 40, "MW", zabudowa_proc=30, kondygnacje=5, etap=1),
+                   prostokat(0, 50, 20, 10, "KS", etap=1),
+                   prostokat(50, 0, 50, 40, "MW", zabudowa_proc=30, kondygnacje=5, etap="2"),
+                   prostokat(50, 50, 50, 50, "ZP"))
+    assert bilans(kolekcja(prostokat(0, 0, 50, 40, "MW")))["etapy"] is None  # bez numerów nie ma zestawienia
+    b = bilans(geo, {"koszty": {"budowa_mw": 6000, "grunt": 500}})
+    e = b["etapy"]
+    assert [x["etap"] for x in e["lista"]] == [1, 2, None] and e["bez_etapu"]
+    pierwszy, drugi, bez = e["lista"]
+    assert pierwszy["terenow"] == 2 and pierwszy["calkowita_m2"] == pytest.approx(3000, rel=1e-3)
+    assert pierwszy["mieszkania"] == drugi["mieszkania"] == 38  # 3000 × 70% / 55 m²
+    assert drugi["mieszkania_narastajaco"] == 76 and bez["mieszkania"] == 0
+    # grunt nie jest dzielony na etapy; budowa — tak
+    assert pierwszy["koszt"] == pytest.approx(18_000_000, rel=1e-3) and bez["koszt"] == 0
+    assert drugi["koszt_narastajaco"] == pierwszy["koszt"] + drugi["koszt"]
+    # KS z etapu 1 nie pomaga etapowi 2
+    assert drugi["miejsca_brakuje"] > pierwszy["miejsca_brakuje"]
+    assert sum(x["powierzchnia_m2"] for x in e["lista"]) == pytest.approx(b["razem_m2"], abs=0.5)
+    assert bilans(geo)["etapy"]["lista"][0]["koszt"] is None  # bez stawek
+    for zly in (0, 11, 1.5, "pierwszy", True):
+        with pytest.raises(BladKoncepcji):
+            bilans(kolekcja(prostokat(0, 0, 50, 40, "MW", etap=zly)))
+    # raport i arkusz
+    k_id = client.post("/osiedle/koncepcje", json={"nazwa": "Etapy"}).get_json()["id"]
+    client.put(f"/osiedle/koncepcje/{k_id}", json={"geojson": geo, "ustawienia": {"koszty": {"budowa_mw": 6000}}})
+    raport = client.get(f"/osiedle/koncepcje/{k_id}/raport").get_data(as_text=True)
+    assert "Etapy realizacji" in raport and "bez etapu" in raport
+    import io, zipfile
+    with zipfile.ZipFile(io.BytesIO(client.get(f"/osiedle/koncepcje/{k_id}.ods").data)) as z:
+        assert 'table:name="Etapy"' in z.read("content.xml").decode()

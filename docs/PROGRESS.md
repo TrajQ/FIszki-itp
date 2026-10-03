@@ -3408,3 +3408,21 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px
 - Pomoc: akapit „Odległości od granicy i cień”
 - `DECISIONS.md`: D-203
+
+## ETAP 196 — Osiedle: etapy realizacji — program i koszty na etap
+Data: 2026-10-03
+Status: zamknięty
+
+- `osiedle/etapy.py`: `etap_terenu` (numer 1–10 z właściwości terenu,
+  `MAKS_ETAPOW`), `etapy` — dla każdego etapu program (`program.py`) i
+  koszty (`koszty.py`) z terenów tego etapu, bez pozycji gruntu; sumy
+  narastające mieszkań i kosztów; grupa „bez etapu”
+- `bilans.py`: walidacja etapu razem z parametrami terenu, klucz `etapy`
+- Osiedle: pole „Etap” przy zaznaczonym terenie, karta „Etapy realizacji”
+  z ostrzeżeniami o brakujących miejscach postojowych w etapie
+- Raport: tabela etapów; arkusz ODS: zakładka „Etapy”
+- Test: dwa etapy i tereny bez etapu, grunt poza etapami, parking nie
+  przechodzi między etapami, błędne numery, raport i ODS; sprawdzone w
+  przeglądarce 1300/390 px (także zmiana etapu w panelu)
+- Pomoc: akapit „Etapy realizacji”
+- `DECISIONS.md`: D-204

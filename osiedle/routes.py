@@ -217,6 +217,13 @@ def arkusze_koncepcji(k: dict, b: dict) -> list[dict]:
         wiersze += [["razem", None, None, None, None, kz["razem"]], ["na mieszkanie", None, None, None, None, kz["na_mieszkanie"]],
                     ["na m² powierzchni całkowitej", None, None, None, None, kz["na_m2_calkowitej"]]]
         arkusze.append({"nazwa": "Koszty", "wiersze": wiersze, "przypisy": ["Stawki wpisane przez użytkownika.", *zrodlo]})
+    if b.get("etapy"):
+        wiersze = [["etap", "tereny", "powierzchnia [m²]", "powierzchnia całkowita [m²]", "mieszkania", "mieszkania narastająco",
+                    "mieszkańcy", "brak miejsc postojowych", "koszt [zł]", "koszt narastająco [zł]"]]
+        wiersze += [[x["etap"] if x["etap"] is not None else "bez etapu", x["terenow"], x["powierzchnia_m2"], x["calkowita_m2"], x["mieszkania"],
+                     x["mieszkania_narastajaco"], x["mieszkancy"], x["miejsca_brakuje"], x["koszt"], x["koszt_narastajaco"]] for x in b["etapy"]["lista"]]
+        arkusze.append({"nazwa": "Etapy", "wiersze": wiersze,
+                        "przypisy": ["Każdy etap liczony osobno; koszt gruntu tylko w całości (zakładka Koszty).", *zrodlo]})
     if b.get("budynki"):
         wiersze = [["nr", "teren", "rzut [m²]", "kondygnacje", "powierzchnia całkowita [m²]"]]
         wiersze += [[x["nr"], x["teren"], x["pole_m2"], x["kondygnacje"], x["calkowita_m2"]] for x in b["budynki"]["lista"]]
