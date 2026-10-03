@@ -4262,3 +4262,24 @@ SVG; mapa jako obraz z Bloba nie wstawia znaczników do strony.
   jednego raportu; obszary są własnością przeglądarki i pliku.
 - Obszary w adresie strony — geometria kilku wieloboków przekracza
   rozsądną długość URL.
+
+## D-214 — Przeplatanie: zachłanne, w ramach kolejki dnia, na serwerze
+Data: 2026-10-03
+
+**Decyzja:** Przeplatanie zmienia tylko kolejność fiszek, które i tak są
+do powtórki — nie dokłada nowych ani nie zmienia harmonogramu. Układa je
+serwer zachłannie: następna fiszka z innej grupy niż poprzednia, z grupy,
+w której zostało najwięcej; w grupie zostaje kolejność od niższych
+pudełek.
+
+**Uzasadnienie:** Przeplatanie (interleaving) pomaga rozróżniać podobne
+pojęcia z różnych działów; zachowanie kolejności pudełek w grupie nie
+psuje zasady „najpierw słabiej znane”. Wybór grupy z największą resztą
+nie zostawia jednego tematu blokiem na końcu. Funkcja w Pythonie jest
+testowana jak reszta systemu Leitnera.
+
+**Odrzucone alternatywy:**
+- Losowe tasowanie — może dać kilka kart tego samego tematu z rzędu i
+  gubi kolejność pudełek.
+- Przeplatanie w JavaScripcie — druga implementacja do utrzymania (także
+  w formularzu na telefon), bez testów pytest.

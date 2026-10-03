@@ -1072,3 +1072,6 @@
 
 ## ETAP 205 — 2026-10-03
 - Dostępność: raport dzielnic do druku — mapa z konturami i numerami obszarów, tabela
+
+## ETAP 206 — 2026-10-03
+- Fiszki: powtórka z przeplataniem tematów (przełącznik, temat na karcie)

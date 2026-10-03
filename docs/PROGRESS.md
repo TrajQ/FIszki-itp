@@ -3599,3 +3599,22 @@ Status: zamknięty
   1300/390 px
 - Pomoc: akapit o dzielnicach
 - `DECISIONS.md`: D-213
+
+## ETAP 206 — Fiszki: powtórka z przeplataniem tematów
+Data: 2026-10-03
+Status: zamknięty
+
+- `fiszki/powtorki.py`: `przeplec` — kolejność, w której sąsiednie
+  fiszki są z różnych grup (zachłannie: grupa inna niż poprzednia, z
+  największą liczbą pozostałych; w grupie kolejność wejściowa)
+- `fiszki/trasy_nauka.py`: kolejka zwraca `tematy` każdej fiszki;
+  `?przeplatanie=1` (bez filtra tematu) — grupa = pierwszy temat, bez
+  tematu plik PDF; działa też w trybie „przed egzaminem” (po losowaniu)
+- Powtórka: przełącznik „Przeplataj tematy” (localStorage), zmiana w
+  trakcie układa na nowo pozostałe karty (bieżąca z odpowiedzią zostaje),
+  etykieta tematu na karcie
+- Testy: kolejność i zachowanie kolejności w grupie, kolejka z
+  przeplataniem, filtr tematu, przełącznik na stronie; sprawdzone w
+  przeglądarce 1300/390 px
+- Pomoc: akapit „Przeplataj tematy”
+- `DECISIONS.md`: D-214

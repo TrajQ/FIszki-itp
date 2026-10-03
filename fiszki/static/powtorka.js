@@ -108,6 +108,9 @@
         fragmentEl.textContent = fiszka.fragment_tekstu;
         fragmentEl.hidden = !fiszka.fragment_tekstu; // fiszka z importu nie ma cytatu
         pudelkoEl.textContent = `Pudełko ${fiszka.pudelko} z 5`;
+        const tematEl = document.getElementById("temat-fiszki"); // ETAP 206
+        tematEl.hidden = !(fiszka.tematy && fiszka.tematy.length);
+        tematEl.textContent = (fiszka.tematy || []).join(", ");
         zrodloEl.textContent = fiszka.strona ? `${fiszka.nazwa_oryginalna}, s. ${fiszka.strona} ↗` : `${fiszka.nazwa_oryginalna} (import) ↗`;
         zrodloEl.href = URL_PDF_WZOR.replace("/0/", `/${fiszka.pdf_id}/`) + `?fiszka=${fiszka.id}`;
 
@@ -342,11 +345,52 @@
         }
     });
 
-    fetch(URL_KOLEJKA)
-        .then((odpowiedz) => {
+    // ---------- ETAP 206: przeplatanie tematów — kolejność układa serwer (powtorki.przeplec) ----------
+    const trybPrzeplatania = document.getElementById("tryb-przeplatania"); // brak przy powtórce jednego tematu
+    const KLUCZ_PRZEPLATANIA = "fiszki.trybPrzeplatania";
+    try {
+        if (trybPrzeplatania) trybPrzeplatania.checked = localStorage.getItem(KLUCZ_PRZEPLATANIA) === "1";
+    } catch (e) {
+        // bez localStorage — zwykła kolejność
+    }
+
+    function adresKolejki() {
+        if (!trybPrzeplatania || !trybPrzeplatania.checked) return URL_KOLEJKA;
+        return `${URL_KOLEJKA}${URL_KOLEJKA.includes("?") ? "&" : "?"}przeplatanie=1`;
+    }
+
+    function pobierzKolejke() {
+        return fetch(adresKolejki()).then((odpowiedz) => {
             if (!odpowiedz.ok) throw new Error(`HTTP ${odpowiedz.status}`);
             return odpowiedz.json();
-        })
+        });
+    }
+
+    if (trybPrzeplatania) {
+        trybPrzeplatania.addEventListener("change", () => {
+            try {
+                localStorage.setItem(KLUCZ_PRZEPLATANIA, trybPrzeplatania.checked ? "1" : "0");
+            } catch (e) {
+                // zapamiętanie to tylko wygoda
+            }
+            if (!kolejka.length) return;
+            // Te same fiszki, które zostały w kolejce — tylko w nowej kolejności;
+            // karta z odsłoniętą odpowiedzią zostaje na miejscu do oceny.
+            const biezaca = odpowiedzWidoczna ? kolejka[0] : null;
+            const zostaly = new Set(kolejka.filter((f) => f !== biezaca).map((f) => f.id));
+            pobierzKolejke().then((fiszki) => {
+                const reszta = fiszki.filter((f) => zostaly.has(f.id));
+                if (biezaca) {
+                    kolejka = [biezaca, ...reszta];
+                } else {
+                    kolejka = reszta;
+                    pokazFiszke();
+                }
+            }).catch((e) => pokazBlad(`Nie udało się pobrać fiszek: ${e.message}`));
+        });
+    }
+
+    pobierzKolejke()
         .then((fiszki) => {
             kolejka = fiszki;
             liczbaStartowa = fiszki.length;

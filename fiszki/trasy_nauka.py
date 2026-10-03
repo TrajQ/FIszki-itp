@@ -9,7 +9,7 @@ import random
 
 from flask import abort, jsonify, redirect, render_template, request, url_for
 
-from . import egzaminy, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki
+from . import egzaminy, obrazy, powtorki, quiz as quiz_fiszek, statystyki_nauki, tematy
 from .baza import get_db
 from .routes import (
     _WARUNEK_DO_POWTORKI,
@@ -113,9 +113,14 @@ def kolejka_powtorki():
     ).fetchall()
     obrazki = obrazy.obrazy_fiszek(db)  # ETAP 154
     zaslony = obrazy.zaslony_fiszek(db)  # ETAP 185
-    fiszki = [{**dict(w), "obraz": url_obrazu(obrazki.get(w["id"])), "zaslona": zaslony.get(w["id"])} for w in wiersze]
+    po_fiszce = tematy.tematy_fiszek(db)  # ETAP 206: tematy na karcie i do przeplatania
+    fiszki = [{**dict(w), "obraz": url_obrazu(obrazki.get(w["id"])), "zaslona": zaslony.get(w["id"]), "tematy": po_fiszce.get(w["id"], [])}
+              for w in wiersze]
     if wszystkie:
         random.shuffle(fiszki)
+    # Przeplatanie: grupa = pierwszy temat fiszki, a bez tematu — plik PDF (przy filtrze tematu nie ma czego przeplatać).
+    if request.args.get("przeplatanie") == "1" and not temat:
+        fiszki = powtorki.przeplec(fiszki, lambda f: f["tematy"][0] if f["tematy"] else f"plik:{f['pdf_id']}")
     return jsonify(fiszki)
 
 

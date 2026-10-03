@@ -25,11 +25,17 @@
         <label class="przelacznik-pisania" title="Widzisz odpowiedź (np. definicję) i przypominasz sobie pojęcie">
             <input id="tryb-odwrocony" type="checkbox"> Odwróć: odpowiedź → pytanie
         </label>
+        {% if not temat %}
+        <label class="przelacznik-pisania" title="Fiszki z różnych tematów na zmianę (bez tematu — z różnych plików); w każdym temacie nadal najpierw słabiej znane">
+            <input id="tryb-przeplatania" type="checkbox"> Przeplataj tematy
+        </label>
+        {% endif %}
     </div>
 
     <section id="karta-powtorki" class="karta karta-powtorki" hidden>
         <div class="karta-powtorki__meta">
             <span id="pudelko-fiszki" class="etykieta"></span>
+            <span id="temat-fiszki" class="etykieta" hidden></span>
             <a id="zrodlo-fiszki" class="przycisk przycisk--tekst" target="_blank"></a>
         </div>
         <div class="karta-powtorki__tresc">

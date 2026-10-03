@@ -187,3 +187,32 @@ def test_kolejka_przed_egzaminem_ma_wszystkie_fiszki(client):
     assert sorted(f["id"] for f in egzamin) == sorted([pierwsza, druga])
     html = client.get("/fiszki/powtorka?wszystkie=1").get_data(as_text=True)
     assert "Przed egzaminem" in html and "TRYB_EGZAMINU = true" in html
+
+
+# ---------- ETAP 206: przeplatanie tematów ----------
+
+
+def test_przeplec_kolejnosc():
+    fiszki = [{"id": i, "g": g} for i, g in enumerate("AAAABBC")]
+    wynik = powtorki.przeplec(fiszki, lambda f: f["g"])
+    assert [f["g"] for f in wynik] == list("ABABACA") and sorted(f["id"] for f in wynik) == list(range(7))
+    assert [f["id"] for f in wynik if f["g"] == "A"] == [0, 1, 2, 3]  # w grupie kolejność wejściowa
+    assert powtorki.przeplec([], lambda f: 1) == []
+    assert [f["id"] for f in powtorki.przeplec(fiszki[:3], lambda f: f["g"])] == [0, 1, 2]  # jedna grupa — bez zmian
+
+
+def test_kolejka_z_przeplataniem(client):
+    wgraj_pdf(client)
+    ids = []
+    for i, temat in enumerate(["planowanie", "planowanie", "planowanie", "prawo", "prawo", ""]):
+        odp = client.post("/fiszki/1/fiszki", json={"strona": 1, "fragment_tekstu": "f", "pytanie": f"P{i}?", "odpowiedz": "O.", "tematy": temat})
+        ids.append(odp.get_json()["id"])
+    zwykla = client.get("/fiszki/powtorka/kolejka").get_json()
+    assert [f["id"] for f in zwykla] == ids and zwykla[0]["tematy"] == ["planowanie"] and zwykla[5]["tematy"] == []
+    przeplatana = client.get("/fiszki/powtorka/kolejka?przeplatanie=1").get_json()
+    grupy = [f["tematy"][0] if f["tematy"] else "plik" for f in przeplatana]
+    assert all(a != b for a, b in zip(grupy, grupy[1:])) and sorted(f["id"] for f in przeplatana) == sorted(ids)
+    # przy filtrze tematu przeplatanie nie działa (jedna grupa)
+    assert [f["id"] for f in client.get("/fiszki/powtorka/kolejka?przeplatanie=1&temat=prawo").get_json()] == ids[3:5]
+    assert "tryb-przeplatania" in client.get("/fiszki/powtorka").get_data(as_text=True)
+    assert "tryb-przeplatania" not in client.get("/fiszki/powtorka?temat=prawo").get_data(as_text=True)

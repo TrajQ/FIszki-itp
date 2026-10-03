@@ -44,3 +44,24 @@ def nastepny_stan(pudelko: int, wynik: str, dzien: date) -> tuple[int, date]:
 
     nowe = min(pudelko + 1, PUDELKO_MAX)
     return nowe, dzien + timedelta(days=ODSTEPY_DNI[nowe])
+
+
+def przeplec(fiszki: list[dict], grupa) -> list[dict]:
+    """ETAP 206: przeplatanie tematów — kolejność, w której sąsiednie fiszki
+    są (gdy się da) z różnych grup. W każdej grupie zostaje kolejność
+    wejściowa (np. najpierw niższe pudełka). Krok: z grup innych niż
+    poprzednia bierzemy tę, w której zostało najwięcej fiszek (remis — ta,
+    której następna fiszka była wcześniej na liście); dzięki temu duża grupa
+    nie zostaje sama na końcu."""
+    kolejki: dict = {}
+    for i, f in enumerate(fiszki):
+        kolejki.setdefault(grupa(f), []).append((i, f))
+    wynik, poprzednia = [], object()
+    while kolejki:
+        kandydaci = [g for g in kolejki if g != poprzednia] or list(kolejki)
+        g = min(kandydaci, key=lambda k: (-len(kolejki[k]), kolejki[k][0][0]))
+        wynik.append(kolejki[g].pop(0)[1])
+        if not kolejki[g]:
+            del kolejki[g]
+        poprzednia = g
+    return wynik
