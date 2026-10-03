@@ -1015,3 +1015,6 @@
 
 ## ETAP 186 — 2026-10-03
 - Fiszki: własna krzywa zapominania z dziennika powtórek
+
+## ETAP 187 — 2026-10-03
+- Przepisy: „Moje przepisy” — własny zbiór artykułów z wielu aktów, z notatkami i do druku

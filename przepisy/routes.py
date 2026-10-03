@@ -54,6 +54,7 @@ def index():
         akty=baza.lista_aktow(),
         historia=baza.historia_pytan(),
         blad=request.args.get("blad"),
+        liczba_moich=len(baza.moje_przepisy()),  # ETAP 187
     )
 
 
@@ -140,7 +141,7 @@ def widok_aktu(akt_id):
     for j in jednostki:  # ETAP 121: „art. 15 ust. 2” → odnośnik do artykułu tego aktu
         j["tekst_html"] = z_odeslaniami(j["tekst"], mapa, j["id"])
     return render_template("przepisy/akt.html", akt=akt, jednostki=jednostki, slowniczek=slowniczek(jednostki),
-                           notatki=baza.notatki_aktu(akt_id), maks_notatki=baza.MAKS_NOTATKI)
+                           notatki=baza.notatki_aktu(akt_id), maks_notatki=baza.MAKS_NOTATKI, moje=baza.moje_w_akcie(akt_id))
 
 
 @przepisy_bp.route("/akty/<int:akt_id>/druk")
@@ -173,6 +174,30 @@ def zapisz_notatke(jednostka_id):
     if len(tekst) > baza.MAKS_NOTATKI:
         return jsonify({"blad": f"Notatka może mieć najwyżej {baza.MAKS_NOTATKI} znaków."}), 400
     return jsonify({"notatka": baza.zapisz_notatke(jednostka, tekst)})
+
+
+@przepisy_bp.route("/jednostki/<int:jednostka_id>/moje", methods=["POST"])
+def przelacz_moje(jednostka_id):
+    """ETAP 187: dodaje jednostkę do „Moich przepisów” albo ją usuwa."""
+    jednostka = baza.jednostka(jednostka_id)
+    if jednostka is None:
+        abort(404)
+    try:
+        return jsonify({"moje": baza.przelacz_moje(jednostka)})
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+
+
+@przepisy_bp.route("/moje")
+def moje_przepisy():
+    """ETAP 187: artykuły z wielu aktów w jednym zbiorze — do nauki i druku."""
+    jednostki = baza.moje_przepisy()
+    akty = []
+    for j in jednostki:
+        if not akty or akty[-1]["id"] != j["akt_id"]:
+            akty.append({"id": j["akt_id"], "nazwa": j["akt"], "jednostki": []})
+        akty[-1]["jednostki"].append(j)
+    return render_template("przepisy/moje.html", akty=akty, liczba=len(jednostki))
 
 
 @przepisy_bp.route("/akty/<int:akt_id>/slowniczek")

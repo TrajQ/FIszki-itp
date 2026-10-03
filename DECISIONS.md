@@ -3899,3 +3899,21 @@ krótkotrwałą.
 **Odrzucone alternatywy:**
 - Algorytm SM-2/FSRS dopasowujący odstępy do krzywej — zmiana systemu
   powtórek, poza zakresem ETAPu.
+
+## D-195 — Moje przepisy: płaski zbiór jednostek, kolejność z aktów
+Data: 2026-10-03
+
+**Decyzja:** „Moje przepisy” to płaski zbiór jednostek (tabela
+`moje_przepisy`), wyświetlany po aktach w kolejności tekstu każdego aktu.
+Bez folderów, własnej kolejności i nazw zbiorów.
+
+**Uzasadnienie:** Potrzeba to ściąga z artykułów potrzebnych na zajęcia —
+kolejność ustawy jest naturalna i nie wymaga przeciągania. Jeden zbiór
+wystarczy na początek; foldery to dodatkowy interfejs bez pewności, że
+będą używane. Druk korzysta z tych samych stylów co druk aktu (ETAP 158).
+
+**Odrzucone alternatywy:**
+- Wiele nazwanych zbiorów (np. per przedmiot) — do rozważenia po
+  użyciu; tabela łatwo dostanie kolumnę zbioru.
+- Zakładki w przeglądarce (localStorage) — znikałyby przy kopii
+  zapasowej i na innym komputerze.

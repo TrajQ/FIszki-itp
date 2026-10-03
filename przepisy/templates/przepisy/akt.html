@@ -59,6 +59,7 @@
                 <strong>{{ j.oznaczenie }}</strong>
                 <span class="rzad jednostka__akcje">
                     <label class="do-druku" title="Zaznacz do wydruku"><input type="checkbox" class="wybor-do-druku" value="{{ j.id }}" aria-label="{{ j.oznaczenie }} — do druku"> druk</label>
+                    <button type="button" class="przycisk--tekst przycisk-moje" data-jednostka="{{ j.id }}" aria-pressed="{{ 'true' if j.id in moje else 'false' }}" title="Dodaj do „Moich przepisów” albo usuń">{{ '★ Moje' if j.id in moje else '☆ Moje' }}</button>
                     <button type="button" class="przycisk--tekst przycisk-notatki" data-jednostka="{{ j.id }}" title="Własna notatka przy tej jednostce">✎ {{ 'Notatka' if j.id in notatki else 'Dodaj notatkę' }}</button>
                     {% if j.oznaczenie != 'Tytuł' %}<button type="button" class="przycisk--tekst przycisk-fiszek" data-jednostka="{{ j.id }}" title="Gemini zaproponuje fiszki z tego artykułu; zostaną tylko te z cytatem w tekście">✦ Fiszki</button>{% endif %}
                     <a class="wyciszony" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}#page={{ j.strona_od }}" target="_blank" rel="noopener">PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</a>

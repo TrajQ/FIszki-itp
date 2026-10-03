@@ -538,3 +538,27 @@ def test_druk_wybranych_i_z_notatkami(client):
     assert "Wybrane artykuły · 2" in wybrane and "Art. 1" in wybrane and "Art. 2" in wybrane and "Na kolokwium!" not in wybrane
     assert "Nic nie wybrano" in client.get("/przepisy/akty/1/druk").get_data(as_text=True)
     assert client.get("/przepisy/akty/9/druk").status_code == 404
+
+
+# ---------- ETAP 187: Moje przepisy ----------
+
+
+def test_moje_przepisy(client):
+    wgraj(client)
+    assert "☆ Moje" in client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert "Jeszcze nic" in client.get("/przepisy/moje").get_data(as_text=True)
+    assert client.post("/przepisy/jednostki/4/moje").get_json() == {"moje": True}
+    assert client.post("/przepisy/jednostki/2/moje").get_json() == {"moje": True}
+    client.put("/przepisy/jednostki/4/notatka", json={"tekst": "Zapamiętać!"})
+    akt = client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert akt.count('aria-pressed="true"') == 2
+    moje = client.get("/przepisy/moje").get_data(as_text=True)
+    assert moje.index("Art. 1") < moje.index("Art. 15")  # kolejność tekstu aktu, nie dodania
+    assert "Zapamiętać!" in moje and "/przepisy/akty/1#j4" in moje and "stopka-wydruku" in moje
+    assert "★ Moje przepisy (2)" in client.get("/przepisy/").get_data(as_text=True)
+    assert client.post("/przepisy/jednostki/4/moje").get_json() == {"moje": False}  # drugi raz usuwa
+    assert client.post("/przepisy/jednostki/999/moje").status_code == 404
+    client.delete("/przepisy/akty/1")
+    with client.application.app_context():
+        from przepisy import baza
+        assert baza.get_db().execute("SELECT COUNT(*) FROM moje_przepisy").fetchone()[0] == 0

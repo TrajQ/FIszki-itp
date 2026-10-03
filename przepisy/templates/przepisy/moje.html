@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+
+{% block tytul %}Moje przepisy — Warsztat{% endblock %}
+{% block klasa_body %}strona-druku-aktu{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('przepisy.static', filename='przepisy.css') }}">{% endblock %}
+
+{% block tresc %}
+{# ETAP 187: artykuły z wielu aktów oznaczone ☆ Moje — tekst z wgranych PDF-ów #}
+<div class="druk-aktu">
+    <div class="druk-aktu__akcje">
+        <a class="przycisk przycisk--tekst" href="{{ url_for('przepisy.index') }}">‹ Przepisy</a>
+        {% if liczba %}<button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>{% endif %}
+    </div>
+    <section class="druk-aktu__strona">
+        <h1>Moje przepisy</h1>
+        <p class="wyciszony">{{ liczba }} {{ 'jednostka' if liczba == 1 else 'jednostki' if 2 <= liczba % 10 <= 4 and not 12 <= liczba % 100 <= 14 else 'jednostek' }} z {{ akty | length }} {{ 'aktu' if akty | length == 1 else 'aktów' }} — przy artykule kliknij „☆ Moje”, żeby go dodać albo usunąć.</p>
+        {% for a in akty %}
+        <h2 class="moje-przepisy__akt"><a href="{{ url_for('przepisy.widok_aktu', akt_id=a.id) }}">{{ a.nazwa }}</a></h2>
+        {% for j in a.jednostki %}
+        <article class="druk-aktu__jednostka" id="m{{ j.id }}">
+            <h3><a href="{{ url_for('przepisy.widok_aktu', akt_id=a.id) }}#j{{ j.id }}">{{ j.oznaczenie }}</a> <span class="wyciszony">· PDF s. {{ j.strona_od }}</span>
+                <button type="button" class="przycisk--tekst przycisk-usun-moje" data-jednostka="{{ j.id }}">Usuń</button></h3>
+            {% if j.naglowek %}<p class="wyciszony">{{ j.naglowek }}</p>{% endif %}
+            <p class="jednostka__tekst">{{ j.tekst }}</p>
+            {% if j.notatka %}<aside class="notatka"><span class="notatka__etykieta">Moja notatka</span><p class="notatka__tekst">{{ j.notatka }}</p></aside>{% endif %}
+        </article>
+        {% endfor %}
+        {% else %}
+        <p class="wyciszony">Jeszcze nic — otwórz akt i przy artykule kliknij „☆ Moje”.</p>
+        {% endfor %}
+        {% if liczba %}<p class="wyciszony druk-aktu__przypis">Tekst z wgranych PDF-ów; wiążący jest tekst ogłoszony w Dzienniku Ustaw.</p>{% endif %}
+    </section>
+    {% if liczba %}{{ stopka_wydruku("Przepisy", "własny zbiór artykułów z wgranych aktów") }}{% endif %}
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    // Usunięcie ze zbioru — ta sama trasa co gwiazdka przy artykule (przełącza)
+    document.querySelectorAll(".przycisk-usun-moje").forEach((p) => p.addEventListener("click", async () => {
+        const odp = await fetch("{{ url_for('przepisy.przelacz_moje', jednostka_id=0) }}".replace("/0/", `/${p.dataset.jednostka}/`), { method: "POST" });
+        if (odp.ok) location.reload();
+    }));
+</script>
+{% endblock %}

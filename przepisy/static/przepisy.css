@@ -626,3 +626,24 @@ button.przycisk--niebezpieczny-tekst {
         box-shadow: none;
     }
 }
+
+/* ---------- Moje przepisy (ETAP 187) ---------- */
+.moje-przepisy__akt {
+    margin: 24px 0 4px;
+    font-size: 20px;
+}
+
+.moje-przepisy__akt a,
+.druk-aktu__jednostka h3 a {
+    color: inherit;
+}
+
+.przycisk-moje[aria-pressed="true"] {
+    color: var(--ostrzezenie);
+}
+
+@media print {
+    .przycisk-usun-moje {
+        display: none;
+    }
+}

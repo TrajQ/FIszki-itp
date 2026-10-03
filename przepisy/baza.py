@@ -55,6 +55,13 @@ CREATE TABLE IF NOT EXISTS notatki (
     data_zmiany TEXT NOT NULL
 );
 
+-- ETAP 187: „Moje przepisy” — artykuły z różnych aktów w jednym zbiorze
+CREATE TABLE IF NOT EXISTS moje_przepisy (
+    jednostka_id INTEGER PRIMARY KEY REFERENCES jednostki(id),
+    akt_id INTEGER NOT NULL,
+    data_dodania TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS pytania (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     pytanie TEXT NOT NULL,
@@ -172,6 +179,7 @@ def usun_akt(akt_id: int) -> str | None:
         if p["akt_id"] == akt_id or any(c.get("akt_id") == akt_id for c in cytaty):
             db.execute("DELETE FROM pytania WHERE id = ?", (p["id"],))
     db.execute("DELETE FROM notatki WHERE akt_id = ?", (akt_id,))
+    db.execute("DELETE FROM moje_przepisy WHERE akt_id = ?", (akt_id,))  # ETAP 187
     db.execute("DELETE FROM jednostki WHERE akt_id = ?", (akt_id,))
     db.execute("DELETE FROM akty WHERE id = ?", (akt_id,))
     db.commit()
@@ -204,6 +212,40 @@ def zapisz_notatke(jednostka: dict, tekst: str) -> dict | None:
     )
     db.commit()
     return {"tekst": tekst, "data_zmiany": teraz}
+
+
+# ---------- Moje przepisy (ETAP 187) ----------
+
+MAKS_MOICH = 300
+
+
+def moje_w_akcie(akt_id: int) -> set[int]:
+    return {w[0] for w in get_db().execute("SELECT jednostka_id FROM moje_przepisy WHERE akt_id = ?", (akt_id,))}
+
+
+def przelacz_moje(jednostka: dict) -> bool:
+    """Dodaje jednostkę do „Moich przepisów” albo ją usuwa → czy jest w zbiorze.
+    ValueError, gdy zbiór jest pełny."""
+    db = get_db()
+    if db.execute("DELETE FROM moje_przepisy WHERE jednostka_id = ?", (jednostka["id"],)).rowcount:
+        db.commit()
+        return False
+    if db.execute("SELECT COUNT(*) FROM moje_przepisy").fetchone()[0] >= MAKS_MOICH:
+        raise ValueError(f"W „Moich przepisach” może być najwyżej {MAKS_MOICH} jednostek.")
+    db.execute("INSERT INTO moje_przepisy (jednostka_id, akt_id, data_dodania) VALUES (?, ?, ?)",
+               (jednostka["id"], jednostka["akt_id"], datetime.now().isoformat(timespec="seconds")))
+    db.commit()
+    return True
+
+
+def moje_przepisy() -> list[dict]:
+    """Jednostki ze zbioru z nazwą aktu i notatką — akty od najstarszego dodanego,
+    w akcie w kolejności tekstu."""
+    return [dict(w) for w in get_db().execute(
+        """SELECT j.id, j.akt_id, j.oznaczenie, j.naglowek, j.strona_od, j.tekst, a.nazwa AS akt, n.tekst AS notatka
+           FROM moje_przepisy m JOIN jednostki j ON j.id = m.jednostka_id JOIN akty a ON a.id = j.akt_id
+           LEFT JOIN notatki n ON n.jednostka_id = j.id
+           ORDER BY (SELECT MIN(data_dodania) FROM moje_przepisy WHERE akt_id = j.akt_id), j.akt_id, j.kolejnosc""")]
 
 
 def szukaj_w_notatkach(fraza: str) -> list[dict]:

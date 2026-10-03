@@ -328,3 +328,21 @@
         }
     });
 })();
+
+// ---------- Moje przepisy (ETAP 187) — zbiór artykułów z wielu aktów ----------
+document.querySelectorAll(".przycisk-moje").forEach((przycisk) => {
+    przycisk.addEventListener("click", async () => {
+        przycisk.disabled = true;
+        try {
+            const odp = await fetch(`${URL_JEDNOSTKI}${przycisk.dataset.jednostka}/moje`, { method: "POST" });
+            const dane = await odp.json().catch(() => ({}));
+            if (!odp.ok) throw new Error(dane.blad || `Błąd ${odp.status}`);
+            przycisk.textContent = dane.moje ? "★ Moje" : "☆ Moje";
+            przycisk.setAttribute("aria-pressed", dane.moje ? "true" : "false");
+        } catch (e) {
+            alert(e.message);
+        } finally {
+            przycisk.disabled = false;
+        }
+    });
+});

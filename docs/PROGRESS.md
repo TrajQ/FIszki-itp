@@ -3257,3 +3257,21 @@ Status: zamknięty
   w przeglądarce 1300/390 px
 - Pomoc: „Po ilu dniach pamiętasz”
 - `DECISIONS.md`: D-194
+
+## ETAP 187 — Przepisy: „Moje przepisy” — artykuły z wielu aktów w jednym zbiorze
+Data: 2026-10-03
+Status: zamknięty
+
+- `przepisy/baza.py`: tabela `moje_przepisy` (jednostka, akt, data
+  dodania; do 300 jednostek), `przelacz_moje`, `moje_w_akcie`,
+  `moje_przepisy` (z nazwą aktu i notatką, w kolejności tekstu aktu);
+  usunięcie aktu czyści jego wpisy
+- Trasy: POST `/przepisy/jednostki/<id>/moje` (przełącza), strona
+  `/przepisy/moje` — jednostki pogrupowane po aktach, notatki, odnośnik
+  do artykułu w akcie, „Usuń”, druk ze stopką
+- Strona aktu: „☆ Moje / ★ Moje” przy każdej jednostce (`aria-pressed`);
+  strona Przepisów: link „★ Moje przepisy (N)”
+- Test: przełączanie, kolejność, notatki, licznik, usunięcie aktu;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: „Jak zebrać artykuły z kilku ustaw w jednym miejscu?”
+- `DECISIONS.md`: D-195
