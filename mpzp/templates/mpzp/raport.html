@@ -117,6 +117,15 @@
         <p class="przypis" id="zrodlo-cen-okolicy"></p>
     </section>
 
+    <!-- ETAP 176: punkty z inwentaryzacji (moduł Teren, POST /teren/okolica) do 100 m od działki;
+         bez punktów sekcja zostaje ukryta -->
+    <section id="punkty-terenu" class="karta stos" hidden>
+        <h2>Z inwentaryzacji w terenie</h2>
+        <p class="wyciszony">Punkty z projektów modułu Teren do 100 m od działki (także w jej granicach), od najbliższego.</p>
+        <div class="ceny-okolicy__tabela"><table class="tabela" id="tabela-punktow-terenu"></table></div>
+        <p class="przypis" id="zrodlo-punktow-terenu"></p>
+    </section>
+
     <footer class="raport__stopka wyciszony">
         Źródła: ULDK (GUGiK) — geometria działki; ortofotomapa — GUGiK; WFS planów miejscowych gminy albo krajowa integracja planów
         (KIMPZP, GUGiK) — przeznaczenie.
@@ -176,6 +185,56 @@
         document.getElementById("zrodlo-cen-okolicy").textContent =
             `Źródło: Rejestr Cen Nieruchomości (GUGiK), plik ${d.plik.nazwa} zaimportowany ${d.plik.data_importu}; ceny brutto z aktów notarialnych. Działki: cena za m² gruntu, przy zabudowanych obejmuje budynek.`;
         document.getElementById("ceny-okolicy").hidden = false;
+    })();
+
+    // ETAP 176: punkty z modułu Teren — tekst z formularzy wstawiany przez textContent
+    (async function () {
+        const geometria = {{ geometria_okolicy | tojson }};
+        if (!geometria) return;
+        let d;
+        try {
+            const odp = await fetch("{{ url_for('teren.okolica') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ geometria, promien: 100 }),
+            });
+            if (!odp.ok) return;
+            d = await odp.json();
+        } catch (e) {
+            return;
+        }
+        if (!d.punkty.length) return;
+        const komorka = (tag, tekst, klasa) => {
+            const e = document.createElement(tag);
+            e.textContent = tekst;
+            if (klasa) e.className = klasa;
+            return e;
+        };
+        const tabela = document.getElementById("tabela-punktow-terenu");
+        const glowa = document.createElement("tr");
+        glowa.append(komorka("th", "Odl.", "liczba"), komorka("th", "Projekt"), komorka("th", "Wartości"), komorka("th", "Data"), komorka("th", "Zdjęcie"));
+        tabela.appendChild(glowa);
+        const tekstWartosci = (w) => (w === true ? "tak" : w === false ? "nie" : Array.isArray(w) ? w.join(", ") : String(w));
+        for (const p of d.punkty) {
+            const tr = document.createElement("tr");
+            const opis = Object.entries(p.wartosci).map(([k, w]) => `${k}: ${tekstWartosci(w)}`).join("; ");
+            const wartosci = komorka("td", opis || "—");
+            if (p.uwagi) wartosci.append(document.createElement("br"), komorka("span", p.uwagi, "wyciszony"));
+            const foto = document.createElement("td");
+            if (p.zdjecie) {
+                const img = document.createElement("img");
+                img.src = p.zdjecie;
+                img.alt = "Zdjęcie z terenu";
+                img.className = "miniatura-terenu";
+                foto.appendChild(img);
+            }
+            tr.append(komorka("td", p.odleglosc_m ? `${Math.round(p.odleglosc_m)} m` : "w działce", "liczba"), komorka("td", p.projekt),
+                wartosci, komorka("td", new Date(p.czas).toLocaleDateString("pl-PL")), foto);
+            tabela.appendChild(tr);
+        }
+        document.getElementById("zrodlo-punktow-terenu").textContent =
+            `Źródło: własna inwentaryzacja (moduł Teren), ${d.punkty.length} pkt${d.punkty.length === 50 ? " (najbliższe 50)" : ""}; położenie z GPS telefonu (dokładność kilka metrów).`;
+        document.getElementById("punkty-terenu").hidden = false;
     })();
 </script>
 <script>

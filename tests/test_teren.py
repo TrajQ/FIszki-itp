@@ -560,3 +560,28 @@ def test_braki_w_liscie_punktow(client):
     assert [p["braki"] for p in punkty] == [["obwód poza zakresem 10–900"], ["brak: gatunek"]]
     formularz = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
     assert '"wymagane": true' in formularz and '"max": 900.0' in formularz and "problemPol" in formularz
+
+
+# ---------- ETAP 176: punkty w okolicy (dla karty działki MPZP) ----------
+
+
+def test_punkty_w_okolicy(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    client.post("/teren/projekty", data={"nazwa": "Ławki"})
+    with client.application.app_context():
+        from teren import baza
+        baza.zapisz_punkty(1, [
+            {"uid": "a0000001", "lat": 52.40000, "lng": 16.90000, "dokladnosc_m": 4, "czas": "2025-05-01T10:00", "wartosci": {"obiekt": "drzewo"}, "uwagi": "dąb", "zdjecie": None},
+            {"uid": "a0000002", "lat": 52.40050, "lng": 16.90000, "dokladnosc_m": 4, "czas": "2025-05-01T10:01", "wartosci": {}, "uwagi": "", "zdjecie": None},   # ok. 56 m na północ
+            {"uid": "a0000003", "lat": 52.41000, "lng": 16.90000, "dokladnosc_m": 4, "czas": "2025-05-01T10:02", "wartosci": {}, "uwagi": "", "zdjecie": None},   # ponad 1 km
+            {"uid": "a0000004", "lat": None, "lng": None, "dokladnosc_m": None, "czas": "2025-05-01T10:03", "wartosci": {}, "uwagi": "", "zdjecie": None}])
+        baza.zapisz_punkty(2, [{"uid": "b0000001", "lat": 52.40020, "lng": 16.90010, "dokladnosc_m": 4, "czas": "2025-06-01T10:00", "wartosci": {"uwaga": "ławka"}, "uwagi": "", "zdjecie": None}])
+    dzialka = {"type": "Polygon", "coordinates": [[[16.8999, 52.3999], [16.9001, 52.3999], [16.9001, 52.4001], [16.8999, 52.4001], [16.8999, 52.3999]]]}
+    w = client.post("/teren/okolica", json={"geometria": dzialka, "promien": 100}).get_json()
+    assert [p["projekt"] for p in w["punkty"]] == ["Zieleń", "Ławki", "Zieleń"] and w["projektow"] == 2
+    assert w["punkty"][0]["odleglosc_m"] == 0 and w["punkty"][0]["uwagi"] == "dąb"  # w granicach działki
+    assert 40 < w["punkty"][2]["odleglosc_m"] < 50  # 56 m od środka, ok. 45 m od krawędzi
+    assert len(client.post("/teren/okolica", json={"geometria": {"type": "Point", "coordinates": [16.9, 52.4]}, "promien": 50}).get_json()["punkty"]) == 2  # 56 m — za daleko od punktu
+    assert client.post("/teren/okolica", json={"geometria": dzialka, "promien": 1000}).status_code == 400
+    assert client.post("/teren/okolica", json={"geometria": {"type": "Point", "coordinates": [500000, 5800000]}}).status_code == 400
+    assert client.post("/teren/okolica", json={"geometria": {"type": "LineString", "coordinates": [[16, 52], [17, 52]]}}).status_code == 400

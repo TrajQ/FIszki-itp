@@ -3687,3 +3687,22 @@ jednoznaczne, a położenie po złej stronie widać na rysunku.
   krawędzi; plan podaje linię, nie pas.
 - Wskazanie strony strzałką przy linii — dodatkowy element interfejsu
   dla rzadkiego przypadku; do rozważenia, jeśli będzie potrzebne.
+
+## D-184 — Punkty z Terenu na karcie działki przez trasę Terenu
+Data: 2026-10-03
+
+**Decyzja:** Karta działki pobiera punkty inwentaryzacji z POST
+`/teren/okolica` (stały promień 100 m), tak jak ceny z `/ceny/okolica`
+(D-117, D-123). Sekcja pojawia się tylko, gdy są punkty w zasięgu.
+
+**Uzasadnienie:** Moduły zostają niezależne (osobne bazy), a karta łączy
+to, co student ma o działce: przeznaczenie w planie, ceny w okolicy i
+własne obserwacje z terenu. 100 m wystarcza na działkę i sąsiedztwo,
+a dokładność GPS telefonu (kilka metrów) nie uzasadnia mniejszych
+promieni na wydruku.
+
+**Odrzucone alternatywy:**
+- Wspólna funkcja „okolica” dla Cen i Terenu — dwa moduły z innymi
+  danymi i zasadami (CLAUDE.md: bez abstrakcji dla dwóch modułów).
+- Wybór projektu na karcie — karta ma być powtarzalna; projekt widać
+  w kolumnie.

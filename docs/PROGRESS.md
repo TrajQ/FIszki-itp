@@ -3062,3 +3062,22 @@ Status: zamknięty
   sprawdzone w przeglądarce (rysowanie łamanej myszą) 1300/390 px
 - Pomoc: „Linia zabudowy”
 - `DECISIONS.md`: D-183
+
+## ETAP 176 — MPZP: karta terenu — punkty z inwentaryzacji obok planu i cen
+Data: 2026-10-03
+Status: zamknięty
+
+- `teren/okolica.py`: kształt z GeoJSON (punkt / wielobok, WGS84),
+  punkty ze wszystkich projektów do 50/100/250 m od kształtu (odległość
+  w lokalnym układzie metrycznym), od najbliższego, najwyżej 50
+- Trasa POST `/teren/okolica` — jak `/ceny/okolica` (D-117): MPZP nie
+  czyta bazy Terenu
+- Karta działki: sekcja „Z inwentaryzacji w terenie” (100 m): odległość
+  albo „w działce”, projekt, wartości pól, uwagi, data, miniatura
+  zdjęcia; tekst z formularzy przez `textContent`; bez punktów — ukryta.
+  Karta ma teraz plan, ceny w okolicy i punkty z terenu w jednym wydruku
+  (pozycja 217 planu — „punkty z Terenu przy działce” — zrobiona tutaj)
+- Testy: trasa (zasięg, kolejność, punkt bez położenia, złe dane), karta;
+  sprawdzone w przeglądarce 1300/390 px
+- Pomoc: „Inwentaryzacja na karcie działki”
+- `DECISIONS.md`: D-184

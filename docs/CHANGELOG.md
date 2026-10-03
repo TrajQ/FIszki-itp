@@ -982,3 +982,6 @@
 
 ## ETAP 175 — 2026-10-02
 - Osiedle: nieprzekraczalna linia zabudowy — odległość budynków i kontrola przecięcia
+
+## ETAP 176 — 2026-10-03
+- MPZP: karta działki pokazuje punkty z inwentaryzacji terenowej do 100 m

@@ -327,6 +327,37 @@ def raport_projektu(projekt_id):
     )
 
 
+@teren_bp.route("/okolica", methods=["POST"])
+def okolica():
+    """ETAP 176: JSON {geometria: GeoJSON punktu/wieloboku, promien: m} →
+    punkty ze wszystkich projektów w zasięgu (dla karty działki w MPZP)."""
+    from . import okolica as ok
+
+    dane = request.get_json(silent=True) or {}
+    promien = dane.get("promien", 100)
+    if promien not in ok.PROMIENIE_M:
+        return jsonify({"blad": f"Promień: {', '.join(map(str, ok.PROMIENIE_M))} m."}), 400
+    try:
+        k = ok.ksztalt(dane.get("geometria"))
+    except ok.BladOkolicy as e:
+        return jsonify({"blad": str(e)}), 400
+    projekty = baza.projekty()
+    w_zasiegu = ok.punkty_w_okolicy(k, promien, [(p, baza.punkty(p["id"])) for p in projekty])
+    return jsonify({
+        "promien": promien,
+        "projektow": len(projekty),
+        "punkty": [{
+            "projekt": w["projekt"]["nazwa"],
+            "projekt_url": url_for("teren.widok_projektu", projekt_id=w["projekt"]["id"]),
+            "odleglosc_m": w["odleglosc_m"],
+            "czas": w["punkt"]["czas"],
+            "wartosci": w["punkt"]["wartosci"],
+            "uwagi": w["punkt"]["uwagi"],
+            "zdjecie": url_for("teren.zdjecie", projekt_id=w["projekt"]["id"], punkt_id=w["punkt"]["id"]) if w["punkt"]["zdjecie"] else None,
+        } for w in w_zasiegu],
+    })
+
+
 @teren_bp.route("/porownanie")
 def porownanie_projektow():
     """ETAP 157: dwie inwentaryzacje obok siebie (?a=…&b=…)."""

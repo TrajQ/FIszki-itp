@@ -453,6 +453,7 @@ def test_raport_dzialki(client, monkeypatch):
     assert "1MN" in strona and "2KDD" in strona
     assert "nie jest wypisem" in strona
     assert "<path" in strona
+    assert 'id="punkty-terenu"' in strona and "/teren/okolica" in strona  # ETAP 176
 
     monkeypatch.setattr(mpzp_routes, "znajdz_dzialke_po_id", lambda i: None)
     assert client.get("/mpzp/raport?id=306401_1.0051.AR_18.14").status_code == 404
