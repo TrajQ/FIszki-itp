@@ -4484,3 +4484,19 @@ sumowalne.
 **Odrzucone alternatywy:**
 - Osobna strona „Atlas powiatów” — powielenie interfejsu i tras.
 - Wartości powiatów jako suma gmin — błędne dla wskaźników względnych.
+
+## D-225 — Moje działki w ODS z tych samych danych co zestawienie do druku
+Data: 2026-10-03
+
+**Decyzja:** Arkusz „Moje działki” powstaje z tej samej funkcji co
+zestawienie do druku (`zestawienie.wiersze` — numery, opis symbolu,
+PL-2000) i ma te same dwie części: listę i podsumowanie według
+przeznaczenia. Liczby (powierzchnia, współrzędne) zapisujemy jako liczby.
+
+**Uzasadnienie:** Ten sam numer działki na wydruku i w arkuszu ułatwia
+pracę z jednym i drugim; arkusz z liczbami pozwala od razu sumować i
+filtrować bez zamiany przecinków jak w CSV.
+
+**Odrzucone alternatywy:**
+- Rozszerzenie CSV o kolumny PL-2000 — CSV i tak zostaje dla prostych
+  zastosowań; dwie zakładki wymagają formatu arkusza.

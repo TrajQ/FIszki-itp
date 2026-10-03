@@ -70,6 +70,27 @@ def zapisane_druk():
     )
 
 
+@mpzp_bp.route("/zapisane.ods")
+def zapisane_ods():
+    """ETAP 217: „Moje działki” jako arkusz ODS — lista (liczby jako liczby, współrzędne
+    WGS84 i PL-2000, opis symbolu planu) i zestawienie według przeznaczenia."""
+    from dane.arkusz import arkusz_ods
+
+    dzialki = zestawienie.wiersze(list(reversed(zapisane())))  # numeracja jak w zestawieniu do druku
+    lista = [["nr", "id_dzialki", "przeznaczenie", "opis przeznaczenia", "powierzchnia [m²]", "szerokość", "długość",
+              "X PL-2000", "Y PL-2000", "układ", "notatka", "dodano"]]
+    lista += [[d["nr"], d["dzialka_id"], d["przeznaczenie"] or "", d["opis_przeznaczenia"], d["powierzchnia_m2"], round(d["lat"], 6),
+               round(d["lon"], 6), round(d["x2000"], 2), round(d["y2000"], 2), d["uklad"], d["notatka"], d["data_dodania"]] for d in dzialki]
+    grupy = [["przeznaczenie", "działek", "powierzchnia [m²]"]]
+    grupy += [[g["przeznaczenie"] or "(bez planu)", g["liczba"], None if g["pow_m2"] is None else round(g["pow_m2"], 1)]
+              for g in zestawienie.wedlug_przeznaczenia(dzialki)]
+    zrodlo = ["Moje działki — aplikacja Warsztat (moduł MPZP); przeznaczenie z planów miejscowych w dniu zapisania, powierzchnia z ULDK."]
+    plik = arkusz_ods([{"nazwa": "Działki", "wiersze": lista, "przypisy": zrodlo},
+                       {"nazwa": "Według przeznaczenia", "wiersze": grupy, "przypisy": zrodlo}])
+    return Response(plik, mimetype="application/vnd.oasis.opendocument.spreadsheet",
+                    headers={"Content-Disposition": "attachment; filename=moje_dzialki.ods"})
+
+
 @mpzp_bp.route("/zapisane.csv")
 def zapisane_csv():
     """„Moje działki” do arkusza (średnik i BOM — Excel z polskimi ustawieniami)."""

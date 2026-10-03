@@ -3833,3 +3833,20 @@ Status: zamknięty
   sprawdzone w przeglądarce 1300/390 px (przełączanie w obie strony)
 - Pomoc: „Powiaty zamiast gmin”
 - `DECISIONS.md`: D-224
+
+## ETAP 217 — MPZP: „Moje działki” do arkusza ODS
+Data: 2026-10-03
+Status: zamknięty
+
+- `mpzp/trasy_zapisane.py`: `/mpzp/zapisane.ods` — zakładka „Działki”
+  (numeracja jak w zestawieniu do druku, przeznaczenie i opis symbolu,
+  powierzchnia, WGS84 i PL-2000 jako liczby, notatka, data) i „Według
+  przeznaczenia” (`zestawienie.wedlug_przeznaczenia`); zapis przez
+  `dane/arkusz.py` (D-196)
+- MPZP: link „ODS” obok „CSV” w panelu „Moje działki”
+- Pozycja planu 217 zastąpiona w ETAPie 190 (D-198): punkty z Terenu przy
+  działce są od ETAPu 176
+- Test: obie zakładki, liczby, działka bez planu, link; sprawdzone w
+  przeglądarce 1300/390 px
+- Pomoc: zdanie przy zestawieniu działek
+- `DECISIONS.md`: D-225

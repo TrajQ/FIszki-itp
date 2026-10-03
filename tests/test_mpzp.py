@@ -1005,3 +1005,23 @@ def test_lista_dzialek_ods_i_druk(client, monkeypatch):
     odp = client.post("/mpzp/hurtowo.ods", data={"lista": "306401_1.0051.AR_18.14\n146501_1.0001.AR_9.9"})
     tresc = zipfile.ZipFile(io.BytesIO(odp.data)).read("content.xml").decode()
     assert "ZP" in tresc and "WFS gminy Poznań" in tresc and "nie znaleziono" in tresc and "office:value-type=\"float\"" in tresc
+
+
+# ---------- ETAP 217: Moje działki do ODS ----------
+
+
+def test_zapisane_ods(client):
+    import io
+    import re
+    import zipfile
+
+    _zapisz(client)
+    _zapisz(client, id="306401_1.0051.AR_18.15", przeznaczenie=None, powierzchnia_m2=None, notatka="bez planu")
+    r = client.get("/mpzp/zapisane.ods")
+    assert r.mimetype == "application/vnd.oasis.opendocument.spreadsheet" and "moje_dzialki.ods" in r.headers["Content-Disposition"]
+    with zipfile.ZipFile(io.BytesIO(r.data)) as z:
+        tresc = z.read("content.xml").decode()
+    assert 'table:name="Działki"' in tresc and 'table:name="Według przeznaczenia"' in tresc
+    assert 'office:value="612.4"' in tresc and "306401_1.0051.AR_18.14/2" in tresc and "(bez planu)" in tresc
+    assert re.search(r'office:value="5\d{6}\.\d+"', tresc)  # X w PL-2000 jako liczba (Poznań: strefa 6)
+    assert "ODS" in client.get("/mpzp/").get_data(as_text=True)

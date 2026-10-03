@@ -1105,3 +1105,6 @@
 
 ## ETAP 216 — 2026-10-03
 - Atlas: powiaty zamiast gmin — kartogram, ranking, analizy, druk i eksport
+
+## ETAP 217 — 2026-10-03
+- MPZP: „Moje działki” do arkusza ODS (lista i zestawienie według przeznaczenia)
