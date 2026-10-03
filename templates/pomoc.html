@@ -252,6 +252,9 @@
             <li>Po pracy „Eksportuj plik” na telefonie i zaimportuj JSON na stronie projektu.</li>
         </ol>
     </details>
+    <details><summary>Import punktów z tabeli CSV</summary>
+        <p>Punkty spisane w arkuszu (np. z GPS-u turystycznego albo z innej inwentaryzacji) zaimportujesz bez QGIS: zapisz arkusz jako CSV i wybierz plik w „Import z telefonu”. Pierwszy wiersz to nagłówek. Kolumny ze współrzędnymi w stopniach (WGS84, np. 52,4064 i 16,9252) nazwij „lat” i „lng” (działa też „szerokosc”/„dlugosc”, „latitude”/„longitude”, „lon”). Separator — średnik, przecinek albo tabulator — Warsztat rozpozna po nagłówku; przecinek dziesiętny w liczbach jest w porządku. Kolumny o nazwach pól projektu trafiają do pól (wielkość liter bez znaczenia), kolumna „uwagi” (albo „opis”, „notatka”) do uwag, „czas”/„data” do czasu pomiaru, pozostałe kolumny — do uwag jako „nazwa: wartość”. Wiersz z pustymi współrzędnymi to punkt bez położenia. Ponowny import tego samego pliku pomija punkty, które już są. CSV wyeksportowany z Warsztatu też da się wczytać (kolumny identyfikatora, dokładności i zdjęcia są pomijane).</p>
+    </details>
     <details><summary>Opis i kierunek zdjęcia</summary>
         <p>W formularzu na telefonie po zrobieniu zdjęcia pojawiają się dwa pola: „Opis zdjęcia” (np. „elewacja frontowa”) i „Kierunek patrzenia” — jedna z ośmiu stron świata (N, NE, E… NW). Kierunek wybiera się ręcznie: formularz nie odczytuje kompasu telefonu. Oba pola są opcjonalne. Po imporcie opis i kierunek widać w dymku punktu na mapie, w podpisie zdjęcia w raporcie („widok ↗ NE”) oraz w eksporcie CSV, ODS, GeoJSON i GeoPackage (kierunek w stopniach od północy: 0, 45 … 315). Poprawić je można przyciskiem „Popraw”. Formularze pobrane przed tą zmianą działają dalej — punkty z nich nie mają opisu ani kierunku; nowe pola daje ponowne pobranie formularza.</p>
     </details>

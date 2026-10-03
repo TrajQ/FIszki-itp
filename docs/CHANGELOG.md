@@ -1114,3 +1114,6 @@
 
 ## ETAP 219 — 2026-10-03
 - Teren: opis i kierunek zdjęcia z telefonu, w raporcie, dymku i eksportach
+
+## ETAP 220 — 2026-10-03
+- Teren: import punktów z tabeli CSV ze współrzędnymi

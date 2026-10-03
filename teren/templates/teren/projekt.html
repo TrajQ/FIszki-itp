@@ -46,10 +46,10 @@
         <section class="karta stos">
             <h3>Import z telefonu albo QGIS</h3>
             <form id="formularz-importu" class="rzad">
-                <input id="plik-importu" type="file" accept=".json,.geojson,application/json,application/geo+json" required aria-label="Plik z punktami: z telefonu (JSON) albo GeoJSON">
+                <input id="plik-importu" type="file" accept=".json,.geojson,.csv,.txt,application/json,application/geo+json,text/csv" required aria-label="Plik z punktami: z telefonu (JSON), GeoJSON albo CSV">
                 <button type="submit" class="przycisk--drugi">Importuj</button>
             </form>
-            <p class="wyciszony opis">Plik JSON z przycisku „Eksportuj plik” w formularzu na telefonie albo warstwa punktowa GeoJSON (np. z QGIS, układ EPSG:4326) — atrybuty o nazwach pól projektu trafią do pól, pozostałe do uwag. Punkty już zaimportowane są pomijane.</p>
+            <p class="wyciszony opis">Plik JSON z przycisku „Eksportuj plik” w formularzu na telefonie albo warstwa punktowa GeoJSON (np. z QGIS, układ EPSG:4326), albo tabela CSV z kolumnami „lat” i „lng” w stopniach — atrybuty i kolumny o nazwach pól projektu trafią do pól, pozostałe do uwag. Punkty już zaimportowane są pomijane.</p>
         </section>
 
         <section class="karta stos">

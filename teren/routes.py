@@ -18,7 +18,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 from markupsafe import Markup
 
 from . import baza, podklad, porownanie, raport, trasa
-from .projekt import FORMAT, KIERUNKI, RODZAJE, TYPY_POL, WZORY, BladDanych, braki, odczytaj_geojson, odczytaj_plik, opis_kierunku, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
+from .projekt import FORMAT, KIERUNKI, RODZAJE, TYPY_POL, WZORY, BladDanych, braki, odczytaj_csv, odczytaj_geojson, odczytaj_plik, opis_kierunku, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
     "teren",
@@ -235,10 +235,18 @@ def importuj(projekt_id):
     plik = request.files.get("plik")
     if plik is None or not plik.filename:
         return jsonify({"blad": "Nie wybrano pliku."}), 400
+    surowe = plik.read()
+    if plik.filename.lower().endswith((".csv", ".txt")):  # ETAP 220: tabela z arkusza
+        try:
+            punkty, niedopasowane = odczytaj_csv(surowe, p["pola"])
+        except BladDanych as e:
+            return jsonify({"blad": str(e)}), 400
+        dodane, pominiete = baza.zapisz_punkty(projekt_id, punkty)
+        return jsonify({"dodane": dodane, "pominiete": pominiete, "niedopasowane": niedopasowane})
     try:
-        dane = json.loads(plik.read().decode("utf-8"))
+        dane = json.loads(surowe.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return jsonify({"blad": "To nie jest plik JSON z formularza terenowego ani GeoJSON."}), 400
+        return jsonify({"blad": "To nie jest plik JSON z formularza terenowego, GeoJSON ani CSV."}), 400
     geojson = isinstance(dane, dict) and dane.get("type") == "FeatureCollection"  # ETAP 133: GeoJSON, np. z QGIS
     try:
         if geojson:

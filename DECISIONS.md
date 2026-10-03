@@ -4537,3 +4537,24 @@ Dokładność ośmiu kierunków wystarcza do opisu dokumentacji fotograficznej
   przeglądarki i kalibracji; może wrócić po testach na telefonach.
 - Dowolne stopnie wpisywane ręcznie — fałszywa precyzja przy ocenie „na
   oko”, wolniejsze w terenie.
+
+## D-228 — CSV tylko ze współrzędnymi w stopniach, kolumny po nazwie
+Data: 2026-10-03
+
+**Decyzja:** Import CSV przyjmuje współrzędne WGS84 w stopniach z kolumn o
+ustalonych nazwach (lat/lng, szerokosc/dlugosc i kilka wariantów).
+Separator wybierany jako najczęstszy z ; , tab w nagłówku. Nieczytelny
+UTF-8 → Windows-1250. Bez okna przypisywania kolumn.
+
+**Uzasadnienie:** Arkusz to najprostsza droga od notatek do mapy; reguły
+nazw są te same co w GeoJSON (ETAP 133), więc jedno miejsce w Pomocy
+opisuje oba importy. Układy PL-1992/PL-2000 w CSV mają kolumny x/y o
+odwróconym znaczeniu i łatwo o pomyłkę — takie dane łatwiej przeliczyć w
+QGIS do EPSG:4326 i wczytać jako GeoJSON. Współrzędne spoza zakresu stopni dają jasny błąd z numerem
+wiersza zamiast punktów w złym miejscu.
+
+**Odrzucone alternatywy:**
+- Okno przypisywania kolumn do pól — dodatkowy ekran dla rzadkiego
+  przypadku; zmiana nazwy kolumny w arkuszu jest prostsza.
+- `csv.Sniffer` — zgaduje także inne znaki i myli się na krótkich
+  plikach; trzy dozwolone separatory wystarczą.

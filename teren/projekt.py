@@ -21,7 +21,9 @@ zewnątrz (plik przeniesiony z telefonu), więc sprawdzamy każde pole.
 """
 
 import base64
+import csv
 import hashlib
+import io
 import json
 import math
 import re
@@ -326,6 +328,38 @@ def _wartosc_z_geojson(w, pole: dict):
     return w
 
 
+def _punkt_z_atrybutow(lat, lng, atrybuty: dict, pola: list[dict], opis: str, prefiks: str, niedopasowane: set) -> dict:
+    """Wspólne dla GeoJSON i CSV: atrybuty dopasowane do pól po nazwie (bez
+    wielkości liter), uwagi i czas z kolumn o typowych nazwach, reszta do uwag.
+    Identyfikator z położenia i atrybutów — ponowny import pomija punkty."""
+    po_nazwie = {p["nazwa"].strip().casefold(): p for p in pola}
+    surowe, reszta, uwagi, czas = {}, [], "", None
+    for klucz, w in atrybuty.items():
+        k = str(klucz).strip().casefold()
+        if k in po_nazwie:
+            surowe[po_nazwie[k]["nazwa"]] = _wartosc_z_geojson(w, po_nazwie[k])
+        elif k in POLA_UWAG and w not in (None, ""):
+            uwagi = str(w)
+        elif k in POLA_CZASU and w not in (None, ""):
+            try:
+                czas = datetime.fromisoformat(str(w).replace("Z", "+00:00")).isoformat(timespec="seconds")
+            except ValueError:
+                reszta.append(f"{klucz}: {w}")
+        elif w not in (None, ""):
+            niedopasowane.add(str(klucz))
+            reszta.append(f"{klucz}: {w}")
+    tekst_uwag = "; ".join(x for x in [uwagi, *reszta] if x)[:MAKS_UWAGI]
+    klucz = [None, atrybuty] if lat is None else [round(lng, 7), round(lat, 7), atrybuty]  # jak w ETAPie 133 — stare uid bez zmian
+    uid = prefiks + hashlib.sha1(json.dumps(klucz, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:24]
+    return {
+        "uid": uid, "lat": lat, "lng": lng, "dokladnosc_m": None,
+        "czas": czas or datetime.now().isoformat(timespec="seconds"),
+        "wartosci": _wartosci(surowe, pola, opis),
+        "uwagi": sprawdz_tekst(tekst_uwag, f"{opis}, uwagi", MAKS_UWAGI, wymagany=False),
+        "zdjecie": None,
+    }
+
+
 def odczytaj_geojson(dane, pola: list[dict]) -> tuple[list[dict], list[str]]:
     """FeatureCollection punktów (WGS84) → (punkty do zapisania, nazwy
     atrybutów bez pasującego pola). Atrybuty dopasowujemy do pól projektu po
@@ -337,7 +371,6 @@ def odczytaj_geojson(dane, pola: list[dict]) -> tuple[list[dict], list[str]]:
     cechy = dane["features"]
     if len(cechy) > MAKS_PUNKTOW:
         raise BladDanych(f"Najwyżej {MAKS_PUNKTOW} punktów w jednym pliku.")
-    po_nazwie = {p["nazwa"].strip().casefold(): p for p in pola}
     niedopasowane: set[str] = set()
     wynik = []
     for i, c in enumerate(cechy, start=1):
@@ -354,28 +387,69 @@ def odczytaj_geojson(dane, pola: list[dict]) -> tuple[list[dict], list[str]]:
         atrybuty = (c.get("properties") or {})
         if not isinstance(atrybuty, dict):
             raise BladDanych(f"{opis}: zły format atrybutów.")
-        surowe, reszta, uwagi, czas = {}, [], "", None
-        for klucz, w in atrybuty.items():
-            k = str(klucz).strip().casefold()
-            if k in po_nazwie:
-                surowe[po_nazwie[k]["nazwa"]] = _wartosc_z_geojson(w, po_nazwie[k])
-            elif k in POLA_UWAG and w not in (None, ""):
-                uwagi = str(w)
-            elif k in POLA_CZASU and w not in (None, ""):
-                try:
-                    czas = datetime.fromisoformat(str(w).replace("Z", "+00:00")).isoformat(timespec="seconds")
-                except ValueError:
-                    reszta.append(f"{klucz}: {w}")
-            elif w not in (None, ""):
-                niedopasowane.add(str(klucz))
-                reszta.append(f"{klucz}: {w}")
-        tekst_uwag = "; ".join(x for x in [uwagi, *reszta] if x)[:MAKS_UWAGI]
-        uid = "gj_" + hashlib.sha1(json.dumps([round(lng, 7), round(lat, 7), atrybuty], sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:24]
-        wynik.append({
-            "uid": uid, "lat": lat, "lng": lng, "dokladnosc_m": None,
-            "czas": czas or datetime.now().isoformat(timespec="seconds"),
-            "wartosci": _wartosci(surowe, pola, opis),
-            "uwagi": sprawdz_tekst(tekst_uwag, f"{opis}, uwagi", MAKS_UWAGI, wymagany=False),
-            "zdjecie": None,
-        })
+        wynik.append(_punkt_z_atrybutow(lat, lng, atrybuty, pola, opis, "gj_", niedopasowane))
+    return wynik, sorted(niedopasowane)
+
+
+# ---------- import punktów z CSV, np. z arkusza (ETAP 220) ----------
+
+KOLUMNY_SZEROKOSCI = ("lat", "latitude", "szerokosc", "szerokość", "szer")
+KOLUMNY_DLUGOSCI = ("lng", "lon", "long", "longitude", "dlugosc", "długość", "dl")
+# kolumny z eksportu CSV Warsztatu (ETAP 189), które nie wracają przy imporcie:
+# zdjęcia nie ma w CSV, a identyfikator, dokładność i znacznik poprawki dotyczą starego punktu
+KOLUMNY_POMIJANE = ("id", "dokladnosc_m", "polozenie_reczne", "zdjecie", "zdjecie_opis", "zdjecie_kierunek")
+
+
+def _tekst_csv(surowe: bytes) -> str:
+    """UTF-8 (z BOM albo bez); gdy się nie da — Windows-1250 (polski Excel)."""
+    try:
+        return surowe.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return surowe.decode("cp1250", errors="replace")
+
+
+def _wspolrzedna(w: str, opis: str) -> float:
+    return _liczba(w.strip().replace(" ", "").replace(",", "."), opis)  # przecinek dziesiętny z arkusza
+
+
+def odczytaj_csv(surowe: bytes, pola: list[dict]) -> tuple[list[dict], list[str]]:
+    """Tabela CSV (separator ; , albo tabulator) z kolumnami szerokości i
+    długości w stopniach WGS84 → (punkty, nazwy kolumn bez pasującego pola).
+    Wiersz bez obu współrzędnych to punkt bez położenia (jak z telefonu bez GPS).
+    Dopasowanie kolumn do pól jak w GeoJSON."""
+    tekst = _tekst_csv(surowe)
+    linie = tekst.splitlines()
+    if not linie or not linie[0].strip():
+        raise BladDanych("Plik CSV jest pusty.")
+    naglowek = linie[0]
+    separator = max(";,\t", key=naglowek.count)  # najczęstszy znak w nagłówku
+    if naglowek.count(separator) == 0:
+        raise BladDanych("Nie rozpoznano separatora — nagłówek CSV musi mieć kolumny rozdzielone średnikiem, przecinkiem albo tabulatorem.")
+    wiersze = list(csv.reader(io.StringIO(tekst), delimiter=separator))
+    kolumny = [k.strip() for k in wiersze[0]]
+    klucze = [k.casefold() for k in kolumny]
+    i_lat = next((klucze.index(k) for k in KOLUMNY_SZEROKOSCI if k in klucze), None)
+    i_lng = next((klucze.index(k) for k in KOLUMNY_DLUGOSCI if k in klucze), None)
+    if i_lat is None or i_lng is None:
+        raise BladDanych("Brak kolumn ze współrzędnymi — nazwij je np. „lat” i „lng” (albo „szerokosc” i „dlugosc”), w stopniach WGS84.")
+    dane = [w for w in wiersze[1:] if any(x.strip() for x in w)]
+    if len(dane) > MAKS_PUNKTOW:
+        raise BladDanych(f"Najwyżej {MAKS_PUNKTOW} punktów w jednym pliku.")
+    niedopasowane: set[str] = set()
+    wynik = []
+    for nr, w in enumerate(dane, start=2):
+        opis = f"Wiersz {nr}"
+        if len(w) > len(kolumny):
+            raise BladDanych(f"{opis}: więcej wartości niż kolumn w nagłówku — sprawdź separator i cudzysłowy.")
+        w = w + [""] * (len(kolumny) - len(w))
+        surowa_lat, surowa_lng = w[i_lat].strip(), w[i_lng].strip()
+        if not surowa_lat and not surowa_lng:
+            lat = lng = None
+        else:
+            lat, lng = _wspolrzedna(surowa_lat, f"{opis}, szerokość"), _wspolrzedna(surowa_lng, f"{opis}, długość")
+            if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+                raise BladDanych(f"{opis}: współrzędne nie wyglądają na stopnie (WGS84) — np. 52.4064 i 16.9252.")
+        atrybuty = {kolumny[j]: w[j].strip() for j in range(len(kolumny))
+                    if j not in (i_lat, i_lng) and kolumny[j] and klucze[j] not in KOLUMNY_POMIJANE}
+        wynik.append(_punkt_z_atrybutow(lat, lng, atrybuty, pola, opis, "csv_", niedopasowane))
     return wynik, sorted(niedopasowane)

@@ -817,3 +817,70 @@ def test_raport_bez_opisu_zdjecia_nie_pisze_none(client):
     client.post("/teren/projekty/1/import", content_type="multipart/form-data", data={"plik": (io.BytesIO(tresc), "t.json")})
     raport = client.get("/teren/projekty/1/raport").get_data(as_text=True)
     assert "widok ↗ NE" in raport and "None" not in raport
+
+
+# ---------- ETAP 220: import CSV ----------
+
+def test_odczytaj_csv_polski_arkusz():
+    from teren.projekt import odczytaj_csv
+    tekst = ("lat;lng;Obiekt;stan;obwód pnia [cm];uwagi;właściciel\n"
+             "52,4064;16,9252;drzewo;dobry;120,5;przy ławce;gmina\n"
+             ";;krzew;;;bez GPS;\n"
+             "\n")
+    punkty, niedopasowane = odczytaj_csv(tekst.encode("cp1250"), POLA)  # Excel po polsku zapisuje w Windows-1250
+    assert niedopasowane == ["właściciel"]
+    p = punkty[0]
+    assert (p["lat"], p["lng"]) == (52.4064, 16.9252)
+    assert p["wartosci"] == {"obiekt": "drzewo", "stan": "dobry", "obwód pnia [cm]": 120.5}
+    assert p["uwagi"] == "przy ławce; właściciel: gmina" and p["uid"].startswith("csv_")
+    assert punkty[1]["lat"] is None and punkty[1]["wartosci"] == {"obiekt": "krzew"}
+    # ten sam plik drugi raz — te same identyfikatory (import pominie)
+    assert [x["uid"] for x in odczytaj_csv(tekst.encode("cp1250"), POLA)[0]] == [x["uid"] for x in punkty]
+
+
+def test_odczytaj_csv_przecinek_i_eksport_warsztatu():
+    from teren.projekt import odczytaj_csv
+    punkty, _ = odczytaj_csv('﻿szerokosc,dlugosc,obiekt,id,zdjecie\n52.4,16.9,"drzewo",7,7.jpg\n'.encode(), POLA)
+    assert punkty[0]["wartosci"] == {"obiekt": "drzewo"} and punkty[0]["uwagi"] == ""  # kolumny eksportu pominięte
+
+
+@pytest.mark.parametrize("tekst, komunikat", [
+    ("", "pusty"),
+    ("x;y\n1;2\n", "Brak kolumn ze współrzędnymi"),
+    ("jedna\n1\n", "separatora"),
+    ("lat;lng\n5240;1690\n", "Wiersz 2: współrzędne nie wyglądają na stopnie"),
+    ("lat;lng\n52.4;\n", "Wiersz 2, długość"),
+    ("lat;lng;obiekt\n52.4;16.9;słoń\n", "Wiersz 2"),
+    ("lat;lng\n52.4;16.9;nadmiar\n", "więcej wartości"),
+])
+def test_odczytaj_csv_odrzuca(tekst, komunikat):
+    from teren.projekt import odczytaj_csv
+    with pytest.raises(BladDanych, match=komunikat):
+        odczytaj_csv(tekst.encode(), POLA)
+
+
+def test_import_csv_przez_strone(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    tresc = "lat;lng;obiekt;notatka\n52.4;16.9;drzewo;stare\n52.41;16.91;krzew;\n".encode()
+
+    def importuj(nazwa="punkty.csv"):
+        return client.post("/teren/projekty/1/import", content_type="multipart/form-data",
+                           data={"plik": (io.BytesIO(tresc), nazwa)}).get_json()
+
+    assert importuj() == {"dodane": 2, "pominiete": 0, "niedopasowane": []}
+    assert importuj()["pominiete"] == 2
+    assert client.get("/teren/projekty/1/punkty").get_json()[0]["uwagi"] == "stare"
+    assert "blad" in client.post("/teren/projekty/1/import", content_type="multipart/form-data",
+                                 data={"plik": (io.BytesIO(b"a;b\n1;2"), "x.csv")}).get_json()
+
+
+def test_geojson_uid_bez_zmian_po_przebudowie():
+    """Refaktoryzacja w ETAPie 220 nie może zmienić identyfikatorów z ETAPu 133 —
+    inaczej ponowny import starego GeoJSON zdublowałby punkty."""
+    import hashlib
+    from teren.projekt import odczytaj_geojson
+    atr = {"obiekt": "drzewo"}
+    punkty, _ = odczytaj_geojson({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [16.9, 52.4]}, "properties": atr}]}, POLA)
+    stary = "gj_" + hashlib.sha1(json.dumps([16.9, 52.4, atr], sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:24]
+    assert punkty[0]["uid"] == stary

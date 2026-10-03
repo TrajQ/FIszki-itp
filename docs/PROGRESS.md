@@ -3892,3 +3892,24 @@ Status: zamknięty
   (dymek, panel, raport, formularz na telefon)
 - Pomoc: „Opis i kierunek zdjęcia”
 - `DECISIONS.md`: D-227
+
+## ETAP 220 — Teren: import punktów z tabeli CSV (kolumny lat/lng)
+Data: 2026-10-03
+Status: zamknięty
+
+- `teren/projekt.py`: `odczytaj_csv` — separator z nagłówka (; , tab),
+  UTF-8 albo Windows-1250, przecinek dziesiętny we współrzędnych, wiersz
+  bez współrzędnych = punkt bez położenia, `KOLUMNY_SZEROKOSCI`,
+  `KOLUMNY_DLUGOSCI`, `KOLUMNY_POMIJANE` (kolumny eksportu Warsztatu)
+- Wspólna część z GeoJSON wydzielona do `_punkt_z_atrybutow`
+  (dopasowanie do pól, uwagi, czas, identyfikator); identyfikatory GeoJSON
+  bez zmian (test porównuje ze wzorem z ETAPu 133)
+- `teren/routes.py`: import rozpoznaje plik `.csv`/`.txt`; strona
+  projektu: pole pliku przyjmuje CSV, opis pod nim
+- Testy: arkusz po polsku (cp1250, średnik, przecinek dziesiętny), CSV z
+  przecinkiem i eksport Warsztatu, 7 błędów z numerem wiersza, import
+  przez stronę (ponowny pomija), stałość uid GeoJSON; przeglądarka
+  1300/390 px
+- Plan: przy ETAPie 244 dopisany przegląd formularzy na iPhonie (Safari)
+- Pomoc: „Import punktów z tabeli CSV”
+- `DECISIONS.md`: D-228
