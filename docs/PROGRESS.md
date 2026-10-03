@@ -3661,3 +3661,22 @@ Status: zamknięty
   1300/390 px
 - Pomoc: akapit „Notatki na nowy tekst”; PLAN: pozycja 208
 - `DECISIONS.md`: D-216
+
+## ETAP 209 — Przepisy: notatki do pliku tekstowego (Markdown)
+Data: 2026-10-03
+Status: zamknięty
+
+- `przepisy/eksport_notatek.py`: `plik_markdown` — nagłówek, data
+  eksportu, akt po akcie, przy jednostce oznaczenie, rozdział, strona
+  PDF, tekst przepisu jako cytat (opcjonalnie) i notatka bez zmian
+- Trasy `/przepisy/akty/<id>/notatki.md`, `/przepisy/notatki.md`
+  (wszystkie akty), `/przepisy/moje.md` („Moje przepisy”); `?bez_tekstu=1`
+  — same notatki
+- Linki: „Notatki do pliku” na stronie aktu (gdy są notatki), „Wszystkie
+  notatki do pliku” na stronie Przepisów, „Do pliku (.md)” w „Moich
+  przepisach”
+- Test: treść pliku, tylko jednostki z notatką, bez tekstu, wszystkie,
+  moje, linki, 404; sprawdzone w przeglądarce 1300/390 px (pobranie
+  plików)
+- Pomoc: akapit „Notatki do pliku”
+- `DECISIONS.md`: D-217

@@ -1081,3 +1081,6 @@
 
 ## ETAP 208 — 2026-10-03
 - Przepisy: przeniesienie notatek i „Moich przepisów” na nowszy tekst aktu (dopasowanie po oznaczeniu artykułu)
+
+## ETAP 209 — 2026-10-03
+- Przepisy: notatki do pliku Markdown (akt, wszystkie akty, „Moje przepisy”)

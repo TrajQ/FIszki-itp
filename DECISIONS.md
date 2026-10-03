@@ -4324,3 +4324,21 @@ ginie: stary akt zostaje bez zmian.
   przepisach o podobnej treści.
 - Automatyczne przeniesienie przy pobraniu — użytkownik może chcieć
   zachować notatki osobno; karta z wybranym źródłem to jeden klik.
+
+## D-217 — Notatki jako Markdown, nie TXT ani DOCX
+Data: 2026-10-03
+
+**Decyzja:** Eksport notatek to plik Markdown: czytelny jako zwykły tekst,
+a w edytorach notatek (Obsidian, Typora) i w Wordzie (od 2024 otwiera
+.md) — jako dokument z nagłówkami i cytatami. Pisany ręcznie, bez
+biblioteki.
+
+**Uzasadnienie:** Plan mówi „plik tekstowy” — Markdown nim jest, a
+struktura (nagłówek artykułu, cytat przepisu, notatka) zostaje widoczna.
+Student może dalej pracować na notatkach w swoim narzędziu; wydruk z
+notatkami jest od ETAPu 158.
+
+**Odrzucone alternatywy:**
+- Czysty TXT — gubi rozróżnienie tekstu przepisu i notatki.
+- DOCX — nowa zależność (python-docx) albo ręczne składanie ZIP-a z XML
+  dla formatu, który i tak jest edytowany w innym programie.

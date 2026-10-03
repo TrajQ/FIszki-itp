@@ -11,6 +11,7 @@
     </div>
     <div class="rzad">
         <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.moje_przepisy') }}" id="link-moje">★ Moje przepisy{% if liczba_moich %} ({{ liczba_moich }}){% endif %}</a>
+        {% if liczba_notatek %}<a class="przycisk przycisk--tekst" href="{{ url_for('przepisy.wszystkie_notatki_md') }}" title="Notatki ze wszystkich aktów z tekstem artykułów — plik Markdown">Wszystkie notatki do pliku</a>{% endif %}
         <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.porownanie_wersji') }}">Porównaj wersje aktu</a>
     </div>
 </div>

@@ -3,13 +3,13 @@
 import os
 import uuid
 
-from flask import Blueprint, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
+from flask import Blueprint, Response, abort, jsonify, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 
 from dane import gemini, sejm
 from fiszki import zewnetrzne as fiszki_zewnetrzne
 
-from . import baza, porownanie, przeniesienie, pytania
+from . import baza, eksport_notatek, porownanie, przeniesienie, pytania
 from .odeslania import mapa_jednostek, z_odeslaniami
 from .slowniczek import slowniczek
 from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
@@ -55,6 +55,7 @@ def index():
         historia=baza.historia_pytan(),
         blad=request.args.get("blad"),
         liczba_moich=len(baza.moje_przepisy()),  # ETAP 187
+        liczba_notatek=baza.get_db().execute("SELECT COUNT(*) FROM notatki").fetchone()[0],  # ETAP 209
     )
 
 
@@ -180,6 +181,48 @@ def druk_aktu(akt_id):
     for j in wybrane:
         j["tekst_html"] = z_odeslaniami(j["tekst"], mapa, j["id"])
     return render_template("przepisy/druk.html", akt=akt, jednostki=wybrane, notatki=notatki, tryb=tryb)
+
+
+# ---------- notatki do pliku tekstowego (ETAP 209) ----------
+
+
+def _plik_md(tresc: str, nazwa: str) -> Response:
+    return Response(tresc, mimetype="text/markdown",
+                    headers={"Content-Disposition": f"attachment; filename={secure_filename(nazwa) or 'notatki.md'}"})
+
+
+@przepisy_bp.route("/akty/<int:akt_id>/notatki.md")
+def notatki_aktu_md(akt_id):
+    """Notatki jednego aktu; ?bez_tekstu=1 — same notatki, bez treści przepisów."""
+    akt = _akt_albo_404(akt_id)
+    notatki = baza.notatki_aktu(akt_id)
+    jednostki = [{**j, "notatka": notatki[j["id"]]["tekst"]} for j in baza.jednostki_aktu(akt_id) if j["id"] in notatki]
+    tresc = eksport_notatek.plik_markdown(f"Notatki — {akt['nazwa']}", [{"nazwa": akt["nazwa"], "jednostki": jednostki}],
+                                          z_tekstem=not request.args.get("bez_tekstu"))
+    return _plik_md(tresc, f"notatki_{akt['nazwa'][:50]}.md")
+
+
+@przepisy_bp.route("/notatki.md")
+def wszystkie_notatki_md():
+    """Notatki ze wszystkich aktów, akt po akcie."""
+    db = baza.get_db()
+    akty = []
+    for akt in db.execute("SELECT id, nazwa FROM akty WHERE id IN (SELECT akt_id FROM notatki) ORDER BY nazwa").fetchall():
+        notatki = baza.notatki_aktu(akt["id"])
+        akty.append({"nazwa": akt["nazwa"],
+                     "jednostki": [{**j, "notatka": notatki[j["id"]]["tekst"]} for j in baza.jednostki_aktu(akt["id"]) if j["id"] in notatki]})
+    return _plik_md(eksport_notatek.plik_markdown("Moje notatki do przepisów", akty, z_tekstem=not request.args.get("bez_tekstu")), "notatki_przepisy.md")
+
+
+@przepisy_bp.route("/moje.md")
+def moje_przepisy_md():
+    """„Moje przepisy” (ETAP 187) z tekstem i notatkami."""
+    akty = []
+    for j in baza.moje_przepisy():
+        if not akty or akty[-1]["id"] != j["akt_id"]:
+            akty.append({"id": j["akt_id"], "nazwa": j["akt"], "jednostki": []})
+        akty[-1]["jednostki"].append(j)
+    return _plik_md(eksport_notatek.plik_markdown("Moje przepisy", akty), "moje_przepisy.md")
 
 
 @przepisy_bp.route("/jednostki/<int:jednostka_id>/notatka", methods=["PUT"])

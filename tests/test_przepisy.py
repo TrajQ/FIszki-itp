@@ -600,3 +600,26 @@ def test_przeniesienie_notatek_na_nowszy_tekst(client, monkeypatch):
     assert client.post("/przepisy/akty/2/przenies-z/2").status_code == 400
     assert client.post("/przepisy/akty/2/przenies-z/99").status_code == 404
     assert "przeniesienie-notatek\" open" not in client.get("/przepisy/akty/1").get_data(as_text=True)  # bez ?z= — zwinięte
+
+
+# ---------- ETAP 209: notatki do pliku ----------
+
+
+def test_notatki_do_pliku_md(client):
+    wgraj(client)
+    assert "Wszystkie notatki do pliku" not in client.get("/przepisy/").get_data(as_text=True)
+    client.put("/przepisy/jednostki/4/notatka", json={"tekst": "Na kolokwium:\nintensywność obowiązkowo"})  # Art. 15
+    client.post("/przepisy/jednostki/2/moje")  # Art. 1
+    r = client.get("/przepisy/akty/1/notatki.md")
+    tekst = r.get_data(as_text=True)
+    assert r.mimetype == "text/markdown" and "attachment; filename=notatki_" in r.headers["Content-Disposition"]
+    assert tekst.startswith("# Notatki — ") and "### Art. 15 — Rozdział 2 Plan miejscowy (s. 2)" in tekst and "> Art. 15. 1. Wójt sporządza" in tekst
+    assert "Na kolokwium:\nintensywność obowiązkowo" in tekst and "Art. 1 " not in tekst  # tylko jednostki z notatką
+    assert "> Art. 15" not in client.get("/przepisy/akty/1/notatki.md?bez_tekstu=1").get_data(as_text=True)
+    wszystkie = client.get("/przepisy/notatki.md").get_data(as_text=True)
+    assert "# Moje notatki do przepisów" in wszystkie and "### Art. 15 — " in wszystkie
+    moje = client.get("/przepisy/moje.md").get_data(as_text=True)
+    assert "# Moje przepisy" in moje and "### Art. 1 — " in moje and "(s. 1)" in moje
+    assert "Wszystkie notatki do pliku" in client.get("/przepisy/").get_data(as_text=True)
+    assert "Notatki do pliku" in client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert client.get("/przepisy/akty/9/notatki.md").status_code == 404
