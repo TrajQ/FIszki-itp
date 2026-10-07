@@ -11,6 +11,15 @@ if [[ -z "$DOMENA" ]]; then
     echo "Podaj domenę, np.: bash deploy/instaluj_serwer.sh warsztat-patryk.duckdns.org"
     exit 1
 fi
+# Skrypt jest dla Ubuntu (apt); Oracle Linux (użytkownik „opc”, dnf) — nie.
+if ! command -v apt-get >/dev/null; then
+    echo "Ten skrypt działa na Ubuntu. Utwórz maszynę z obrazem Canonical Ubuntu 24.04 (docs/ORACLE_CLOUD.md, krok 1)."
+    exit 1
+fi
+if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then
+    echo "Warsztat wymaga Pythona 3.11+ (jest: $(python3 --version)). Użyj Ubuntu 24.04."
+    exit 1
+fi
 KATALOG="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 UZYTKOWNIK="$(whoami)"
 cd "$KATALOG"

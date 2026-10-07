@@ -28,7 +28,10 @@ stronie Oracle przed założeniem konta.
    do weryfikacji.
 2. W panelu: **Compute → Instances → Create instance**.
    - Nazwa: `warsztat`.
-   - **Image**: Canonical **Ubuntu** (22.04 albo 24.04).
+   - **Image**: kliknij **Change image** → Canonical **Ubuntu 24.04**
+     (nie Oracle Linux — domyślny obraz; skrypt instalacji jest dla
+     Ubuntu, a Warsztat wymaga Pythona 3.11+, którego nie ma Ubuntu 22.04).
+     Na Ubuntu użytkownik to `ubuntu`, na Oracle Linux — `opc`.
    - **Shape**: wybierz kształt oznaczony jako „Always Free-eligible”
      (np. Ampere A1 z 1 OCPU i 6 GB pamięci — wystarczy z zapasem).
    - **Networking**: zostaw domyślną sieć, zaznacz przypisanie
