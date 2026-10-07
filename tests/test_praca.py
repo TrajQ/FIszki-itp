@@ -125,3 +125,82 @@ def test_zdjecie_bez_klucza_gemini(client, monkeypatch):
     monkeypatch.setattr(gemini.Config, "GEMINI_API_KEY", "")
     r = client.post("/praca/grafik/odczytaj", data={"plik": (io.BytesIO(b"\xff\xd8x"), "zdjecie.jpg")}, content_type="multipart/form-data")
     assert r.status_code == 502 and "wklej tekst grafiku ręcznie" in r.get_json()["blad"]
+
+
+# ---------- ETAP 231: notatki w Wordzie ----------
+
+import json  # noqa: E402
+import zipfile  # noqa: E402
+from xml.dom import minidom  # noqa: E402
+
+from praca import notatki, word  # noqa: E402
+
+ODPOWIEDZ = {
+    "tytul": "Planowanie w gminie", "podtytul": "Wykład 3", "streszczenie": "Plan ogólny zastępuje studium od 2026 r.",
+    "sekcje": [{"naglowek": "Akty", "bloki": [
+        {"typ": "akapit", "tekst": "Plan ogólny jest **aktem prawa miejscowego**."},
+        {"typ": "lista", "punkty": ["POG", "MPZP", ""]},
+        {"typ": "ramka", "tytul": "", "tekst": "Szkoła do 1500 m."},
+        {"typ": "wykres", "tekst": "nieznany typ — pominięty"}]},
+        {"naglowek": "Pusta sekcja", "bloki": []}],
+    "pojecia": [{"pojecie": "Strefa & <znaczniki>", "definicja": "Obszar \x0b o funkcji dominującej."}, {"pojecie": "bez definicji"}],
+    "do_zapamietania": ["Plan miejscowy zgodny z ogólnym."],
+}
+
+
+def test_oczysc_notatki():
+    n = notatki.oczysc("```json\n" + json.dumps(ODPOWIEDZ) + "\n```")
+    assert [s["naglowek"] for s in n["sekcje"]] == ["Akty"]  # pusta sekcja i nieznany blok odpadają
+    bloki = n["sekcje"][0]["bloki"]
+    assert [b["typ"] for b in bloki] == ["akapit", "lista", "ramka"] and bloki[1]["punkty"] == ["POG", "MPZP"]
+    assert bloki[2]["tytul"] == "Uwaga" and len(n["pojecia"]) == 1
+    for zle in ("nie json", "[]", json.dumps({"tytul": "x", "sekcje": []})):
+        with pytest.raises(notatki.BladNotatek):
+            notatki.oczysc(zle)
+
+
+def test_liczby_spoza_materialu():
+    n = notatki.oczysc(ODPOWIEDZ)
+    material = "Od 2026 roku plan ogólny. Szkoła w odległości do 1 500 m."
+    assert notatki.liczby_spoza_materialu(n, material) == ["3"]  # „Wykład 3” — nie ma w materiale
+    assert notatki.liczby_spoza_materialu(n, material + " Wykład 3") == []
+
+
+def test_plik_word():
+    n = notatki.oczysc(ODPOWIEDZ)
+    dane = word.notatki_docx(n, "Źródło: wyklad.pdf")
+    z = zipfile.ZipFile(io.BytesIO(dane))
+    assert z.namelist()[0] == "[Content_Types].xml"
+    for nazwa in z.namelist():
+        minidom.parseString(z.read(nazwa))  # każdy XML poprawny (znak sterujący \x0b usunięty)
+    dokument = z.read("word/document.xml").decode()
+    assert '<w:pStyle w:val="Title"/>' in dokument and '<w:pStyle w:val="Heading1"/>' in dokument
+    assert "Strefa &amp; &lt;znaczniki&gt;" in dokument
+    assert '<w:rPr><w:b/></w:rPr><w:t xml:space="preserve">aktem prawa miejscowego</w:t>' in dokument  # **…** → pogrubienie
+    assert "✓  Plan miejscowy" in dokument and "Źródło: wyklad.pdf" in dokument
+    assert "PAGE" in z.read("word/footer1.xml").decode() and "updateFields" not in z.read("word/settings.xml").decode()
+
+
+def test_trasy_notatek(client, monkeypatch):
+    from praca import routes
+    wywolania = []
+    monkeypatch.setattr(routes, "utworz_notatki", lambda material, pliki: wywolania.append((material, pliki)) or json.dumps(ODPOWIEDZ))
+    with open(PDF, "rb") as f:  # PDF z tekstem — idzie jako tekst, liczby sprawdzane
+        r = client.post("/praca/notatki/utworz", data={"pliki": [(f, "grafik.pdf")]}, content_type="multipart/form-data")
+    w = r.get_json()
+    assert r.status_code == 200 and wywolania[-1][1] == [] and "Patryk" in wywolania[-1][0]
+    assert "1500" in w["liczby_do_sprawdzenia"] and w["zrodlo"] == "grafik.pdf"
+    r = client.post("/praca/notatki/utworz", data={"pliki": [(io.BytesIO(b"\xff\xd8x"), "a.jpg"), (io.BytesIO(b"\xff\xd8y"), "b.PNG")]},
+                    content_type="multipart/form-data")
+    assert r.get_json()["liczby_do_sprawdzenia"] is None and [t for _, t in wywolania[-1][1]] == ["image/jpeg", "image/png"]
+    assert client.post("/praca/notatki/utworz", data={}, content_type="multipart/form-data").status_code == 400
+    r = client.post("/praca/notatki/utworz", data={"pliki": [(io.BytesIO(b"x"), "a.docx")]}, content_type="multipart/form-data")
+    assert r.status_code == 400
+    monkeypatch.setattr(routes, "utworz_notatki", lambda material, pliki: "nie json")
+    r = client.post("/praca/notatki/utworz", data={"pliki": [(io.BytesIO(b"\xff\xd8x"), "a.jpg")]}, content_type="multipart/form-data")
+    assert r.status_code == 422
+
+    r = client.post("/praca/notatki.docx", json={"notatki": ODPOWIEDZ, "zrodlo": "wyklad.pdf"})
+    assert r.status_code == 200 and r.data[:2] == b"PK"
+    assert r.headers["Content-Disposition"] == "attachment; filename*=UTF-8''Planowanie_w_gminie.docx"
+    assert client.post("/praca/notatki.docx", json={"notatki": {"tytul": "x"}}).status_code == 400

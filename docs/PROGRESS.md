@@ -4157,3 +4157,40 @@ Status: zamknięty
 - Plan: ETAPy 230–231 wstawione, reszta przesunięta o dwa; Oracle Cloud —
   osobny blok po planie
 - `DECISIONS.md`: D-238
+
+## ETAP 231 — Praca i notatki: notatki w Wordzie z PDF-u albo zdjęć
+Data: 2026-10-07
+Status: zamknięty
+
+- `dane/gemini.py`: `utworz_notatki(material, pliki)` — tekst z PDF-u
+  albo obrazy (zdjęcia, PDF-skan) → JSON notatki (tytuł, podtytuł,
+  streszczenie, sekcje z blokami akapit/lista/ramka, pojęcia, „do
+  zapamiętania”, „nieczytelne”); zasady: tylko z materiału, liczby
+  przepisywane dokładnie, wyróżnienia `**…**`
+- `praca/notatki.py`: `oczysc` (limity, puste pola, nieznane bloki,
+  owinięcie w ```json), `liczby_spoza_materialu` (jak `sprawdz_liczby`
+  w Atlasie, ale jako lista do sprawdzenia, nie odrzucenie)
+- `praca/word.py`: plik .docx budowany bez biblioteki (decyzja autora):
+  [Content_Types], relacje, document/styles/numbering/settings/footer,
+  docProps; style Title/Subtitle/Heading1/2 (okienko nawigacji Worda),
+  streszczenie i ramki na jasnoniebieskim tle z linią z lewej, punktory
+  w kolorze akcentu, tabela pojęć z granatowym nagłówkiem i naprzemiennym
+  tłem (nagłówek powtarzany na stronach), „Do zapamiętania” na zielonym
+  tle z ✓, stopka „tytuł · strona X z Y”, źródło na końcu; kolejność
+  elementów XML według schematu OOXML, bez `updateFields` (Word pytałby
+  o aktualizację pól), znaki sterujące usuwane
+- Trasy: `/praca/notatki/utworz` (do 10 plików, PDF z tekstem → tekst,
+  reszta → obrazy, materiał do ok. 50 stron), `/praca/notatki.docx`
+  (notatka z podglądu sprawdzana jeszcze raz, nazwa pliku z tytułu)
+- Strona: sekcja „Notatki w Wordzie” — pliki, „Zrób notatki”, uwagi o
+  liczbach, podgląd w kolorach pliku (treść przez textContent), „Pobierz
+  .docx”
+- Sprawdzenie pliku: każdy XML poprawny, wczytanie przez python-docx w
+  osobnym środowisku (style, tabela, stopka) — w tym środowisku nie ma
+  LibreOffice Writer, więc wyglądu w Wordzie nie dało się obejrzeć
+- Testy (4 nowe): czyszczenie odpowiedzi, liczby spoza materiału, plik
+  Word (XML, pogrubienia, znaki specjalne, stopka), trasy (PDF jako tekst,
+  zdjęcia jako obrazy, błędy); przeglądarka 1300/390 px z podstawionym
+  Gemini (podgląd, pobranie .docx)
+- Pomoc: „Jak zrobić notatki w Wordzie z PDF-u albo zdjęć?”
+- `DECISIONS.md`: D-239

@@ -1,6 +1,7 @@
-"""Moduł Praca i notatki (ETAP 230): godziny pracy z grafiku.
+"""Moduł Praca i notatki: godziny pracy z grafiku (ETAP 230) i notatki
+w Wordzie z PDF-u albo zdjęć (ETAP 231).
 
-Strona przyjmuje PDF grafiku albo zdjęcie/zrzut ekranu. Z PDF-u z warstwą
+Grafik: strona przyjmuje PDF albo zdjęcie/zrzut ekranu. Z PDF-u z warstwą
 tekstu tekst czyta pypdf; zdjęcie (i PDF-skan) przepisuje Gemini. Tekst
 trafia do pola na stronie — użytkownik może go poprawić — i dopiero z
 niego kod liczy godziny i kwotę (praca/grafik.py).
@@ -8,19 +9,24 @@ niego kod liczy godziny i kwotę (praca/grafik.py).
 
 import io
 import os
+import re
+from datetime import date
 from decimal import Decimal, InvalidOperation
+from urllib.parse import quote
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, Response, jsonify, render_template, request
 
-from dane.gemini import BladGemini, przepisz_grafik
+from dane.gemini import BladGemini, przepisz_grafik, utworz_notatki
 
-from . import grafik
+from . import grafik, notatki, word
 
 praca_bp = Blueprint("praca", __name__, template_folder="templates", static_folder="static")
 
 TYPY_PO_ROZSZERZENIU = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
                         ".webp": "image/webp", ".heic": "image/heic", ".heif": "image/heif"}
 MAKS_PLIK_B = 20 * 1024 * 1024
+MAKS_PLIKOW_NOTATEK = 10
+MIN_ZNAKOW_TEKSTU_PDF = 200  # mniej — PDF to najpewniej skan; wtedy Gemini czyta obraz strony
 
 
 @praca_bp.route("/")
@@ -78,3 +84,75 @@ def policz_grafik():
         return jsonify(grafik.rozliczenie(str(dane.get("tekst") or ""), str(dane.get("imie") or ""), stawka, miesiac, rok))
     except grafik.BladGrafiku as e:
         return jsonify({"blad": str(e)}), 400
+
+
+# ---------- notatki w Wordzie (ETAP 231) ----------
+
+
+@praca_bp.route("/notatki/utworz", methods=["POST"])
+def utworz_notatke():
+    """PDF albo zdjęcia (do 10) → notatka jako JSON do podglądu na stronie.
+    PDF z tekstem idzie do Gemini jako tekst (i liczby w notatce sprawdzamy
+    z tym tekstem); zdjęcia i skany — jako obrazy."""
+    pliki = [p for p in request.files.getlist("pliki") if p and p.filename]
+    if not pliki:
+        return jsonify({"blad": "Wybierz PDF albo zdjęcia notatek."}), 400
+    if len(pliki) > MAKS_PLIKOW_NOTATEK:
+        return jsonify({"blad": f"Najwyżej {MAKS_PLIKOW_NOTATEK} plików naraz."}), 400
+    teksty, obrazy, nazwy = [], [], []
+    for plik in pliki:
+        typ = TYPY_PO_ROZSZERZENIU.get(os.path.splitext(plik.filename.lower())[1])
+        if typ is None:
+            return jsonify({"blad": f"„{plik.filename}”: obsługiwane pliki to PDF, JPG, PNG, WebP, HEIC."}), 400
+        dane = plik.read(MAKS_PLIK_B + 1)
+        if len(dane) > MAKS_PLIK_B:
+            return jsonify({"blad": f"„{plik.filename}” jest za duży (limit 20 MB)."}), 400
+        nazwy.append(plik.filename)
+        if typ == "application/pdf":
+            try:
+                tekst = tekst_pdf(dane)
+            except grafik.BladGrafiku as e:
+                return jsonify({"blad": f"„{plik.filename}”: {e}"}), 400
+            if len(tekst.strip()) >= MIN_ZNAKOW_TEKSTU_PDF:
+                teksty.append(tekst)
+                continue
+        obrazy.append((dane, typ))
+    material = "\n\n".join(teksty)
+    obciete = len(material) > notatki.MAKS_ZNAKOW_MATERIALU
+    material = material[: notatki.MAKS_ZNAKOW_MATERIALU]
+    try:
+        n = notatki.oczysc(utworz_notatki(material or None, obrazy))
+    except BladGemini as e:
+        return jsonify({"blad": str(e)}), 502
+    except notatki.BladNotatek as e:
+        return jsonify({"blad": str(e)}), 422
+    return jsonify({
+        "notatki": n,
+        "zrodlo": ", ".join(nazwy),
+        # liczby da się sprawdzić tylko z tekstem; przy samych zdjęciach — None
+        "liczby_do_sprawdzenia": notatki.liczby_spoza_materialu(n, material) if material and not obrazy else None,
+        "obciete": obciete,
+    })
+
+
+def _nazwa_pliku(tytul: str) -> str:
+    nazwa = re.sub(r"[^\w\- ]+", "", tytul, flags=re.UNICODE).strip().replace(" ", "_")[:60]
+    return nazwa or "notatki"
+
+
+@praca_bp.route("/notatki.docx", methods=["POST"])
+def notatki_word():
+    """Notatka (ta z podglądu, JSON) → plik Word. Treść sprawdzana jeszcze raz."""
+    dane = request.get_json(silent=True) or {}
+    try:
+        n = notatki.oczysc(dane.get("notatki"))
+    except notatki.BladNotatek as e:
+        return jsonify({"blad": str(e)}), 400
+    zrodlo = " ".join(str(dane.get("zrodlo") or "").split())[:300]
+    stopka = (f"Źródło: {zrodlo} · " if zrodlo else "") + f"notatki ułożone przez Gemini z materiału — sprawdź z oryginałem · Warsztat, {date.today():%d.%m.%Y}"
+    nazwa = _nazwa_pliku(n["tytul"])
+    return Response(
+        word.notatki_docx(n, stopka),
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(nazwa)}.docx"},
+    )

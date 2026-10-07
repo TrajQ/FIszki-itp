@@ -7,7 +7,7 @@
 <div class="naglowek-strony">
     <div>
         <h1>Praca i notatki</h1>
-        <p>Godziny z grafiku pracy: wrzuć PDF albo zdjęcie grafiku, a dostaniesz listę swoich zmian, sumę godzin i wypłatę.</p>
+        <p>Godziny z grafiku pracy z sumą i wypłatą oraz notatki do nauki w Wordzie z PDF-u albo zdjęć.</p>
     </div>
 </div>
 
@@ -57,12 +57,39 @@
         <p id="uwagi-wyniku" class="wyciszony godziny__opis"></p>
     </div>
 </section>
+
+{# ETAP 231: notatki — treść układa Gemini z materiału, plik .docx buduje praca/word.py #}
+<section class="karta stos notatki" aria-labelledby="naglowek-notatek">
+    <h2 id="naglowek-notatek">Notatki w Wordzie</h2>
+    <form id="formularz-notatek" class="stos">
+        <label>PDF albo zdjęcia (do 10 naraz, np. kolejne strony zeszytu)
+            <input id="pliki-notatek" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,image/*" required>
+        </label>
+        <div class="rzad">
+            <button id="utworz-notatki" type="submit">Zrób notatki</button>
+            <span id="stan-notatek" class="wyciszony" aria-live="polite"></span>
+        </div>
+    </form>
+    <p class="wyciszony godziny__opis">Gemini układa notatki tylko z Twojego materiału: tytuł, streszczenie, rozdziały z punktami i ramkami, tabela pojęć i „Do zapamiętania”. Przy PDF-ie z tekstem Warsztat sprawdza, czy każda liczba w notatkach jest w materiale. Przy zdjęciach porównaj notatki z oryginałem.</p>
+    <p id="blad-notatek" class="komunikat komunikat--blad" hidden role="alert"></p>
+
+    <div id="wynik-notatek" hidden>
+        <p id="liczby-notatek" class="komunikat komunikat--ostrzezenie" hidden role="status"></p>
+        <div class="rzad">
+            <button id="pobierz-docx" type="button">Pobierz .docx (Word)</button>
+            <span id="stan-docx" class="wyciszony" aria-live="polite"></span>
+        </div>
+        <article id="podglad-notatek" class="podglad-notatek" aria-label="Podgląd notatek"></article>
+    </div>
+</section>
 {% endblock %}
 
 {% block skrypty %}
 <script>
     const URL_ODCZYTAJ = "{{ url_for('praca.odczytaj_grafik') }}";
     const URL_POLICZ = "{{ url_for('praca.policz_grafik') }}";
+    const URL_NOTATKI = "{{ url_for('praca.utworz_notatke') }}";
+    const URL_DOCX = "{{ url_for('praca.notatki_word') }}";
 </script>
 <script src="{{ url_for('praca.static', filename='praca.js') }}"></script>
 {% endblock %}

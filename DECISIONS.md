@@ -4767,3 +4767,29 @@ prawdziwego PDF-u z Google Docs nie było do sprawdzenia.
   z ciemnym motywem; Gemini już jest w projekcie.
 - Gemini od razu liczy godziny — liczby od modelu, wbrew zasadom.
 - Osobna baza modułu na historię miesięcy — nikt o nią nie prosił.
+
+## D-239 — Notatki: treść od Gemini jako JSON, wygląd i plik z kodu
+Data: 2026-10-07
+
+**Decyzja:** Gemini zwraca tylko strukturę i treść notatki (JSON z
+blokami), a wygląd i plik .docx tworzy kod (`praca/word.py`) — bez nowej
+biblioteki, zgodnie z decyzją autora. Liczby w notatce z PDF-u z tekstem
+są porównywane z materiałem i pokazywane do sprawdzenia.
+
+**Uzasadnienie:** Stały wygląd niezależnie od odpowiedzi modelu: model
+nie dostaje kontroli nad formatowaniem (tylko `**wyróżnienie**`), więc
+każda notatka wygląda tak samo starannie, a złośliwa treść z materiału
+nie wstrzyknie XML-a (wszystko escapowane). Notatki to przepisanie i
+uporządkowanie materiału, więc liczby są dopuszczalne — ale tylko te,
+które w materiale są; tych spoza materiału nie odrzucamy (mogą być
+odczytane ze zdjęcia albo zapisane inaczej), tylko wypisujemy.
+Struktura OOXML według schematu (kolejność elementów), bo Word jest
+na nią czulszy niż LibreOffice; style o standardowych nazwach dają
+nawigację i spis treści w Wordzie.
+
+**Odrzucone alternatywy:**
+- python-docx — wygodniejsze, ale nowa zależność (autor wybrał bez).
+- Model zwraca gotowy HTML/Markdown do konwersji — wygląd zależny od
+  odpowiedzi i ryzyko wstrzyknięcia treści.
+- Zapisywanie notatek w bazie modułu — nikt o to nie prosił; plik .docx
+  jest wynikiem.

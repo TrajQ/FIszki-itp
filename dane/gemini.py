@@ -371,3 +371,49 @@ def przepisz_grafik(dane: bytes, typ: str) -> str:
     if not tekst:
         raise BladGemini("Gemini nie odczytał grafiku z obrazu.")
     return tekst
+
+
+# ---------- Praca: notatki ze źródła (ETAP 231) ----------
+
+PROMPT_NOTATEK = (
+    "Jesteś starannym studentem, który robi czytelne notatki do nauki z materiału "
+    "(wykład, rozdział, zdjęcie tablicy albo zeszytu). Zrób notatki po polsku "
+    "WYŁĄCZNIE z dostarczonego materiału.\n"
+    "ZASADY BEZWZGLĘDNE:\n"
+    "- Nie dodawaj faktów, przykładów, dat, liczb ani nazw, których nie ma w materiale.\n"
+    "- Liczby, daty i wzory przepisuj dokładnie tak, jak są w materiale.\n"
+    "- Zachowaj logiczny porządek materiału; łącz powtórzenia, skracaj wodolejstwo.\n"
+    "- Najważniejsze słowa w zdaniu możesz wyróżnić **tak** (najwyżej kilka na akapit).\n"
+    "- Jeśli fragmentu nie da się odczytać, pomiń go i dodaj punkt w \"nieczytelne\".\n"
+    "Odpowiedz WYŁĄCZNIE obiektem JSON:\n"
+    '{"tytul": "...", "podtytul": "przedmiot albo temat, może być pusty", '
+    '"streszczenie": "2–3 zdania o czym jest materiał", '
+    '"sekcje": [{"naglowek": "...", "bloki": ['
+    '{"typ": "akapit", "tekst": "..."}, '
+    '{"typ": "lista", "punkty": ["...", "..."]}, '
+    '{"typ": "ramka", "tytul": "np. Przykład albo Uwaga", "tekst": "..."}]}], '
+    '"pojecia": [{"pojecie": "...", "definicja": "..."}], '
+    '"do_zapamietania": ["najważniejsze punkty, 3–7"], '
+    '"nieczytelne": []}'
+)
+
+
+def utworz_notatki(material: str | None = None, pliki: list[tuple[bytes, str]] | None = None) -> str:
+    """Surowa odpowiedź modelu (JSON jako tekst) — sprawdza i porządkuje ją
+    praca/notatki.py. `material` — tekst (np. z PDF-u), `pliki` — [(dane, typ)]
+    zdjęć albo PDF-u bez warstwy tekstu."""
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env) — notatki robi Gemini.")
+    from google.genai import types
+
+    zawartosc = []
+    for dane, typ in pliki or []:
+        if typ not in TYPY_OBRAZOW:
+            raise BladGemini("Obsługiwane pliki: zdjęcie (JPG, PNG, WebP, HEIC) albo PDF.")
+        zawartosc.append(types.Part.from_bytes(data=dane, mime_type=typ))
+    zawartosc.append("Materiał:\n" + material if material else "Zrób notatki z materiału na obrazach.")
+    odpowiedz = _generuj(zawartosc, system_instruction=PROMPT_NOTATEK, response_mime_type="application/json", temperature=0.2)
+    tekst = (odpowiedz.text or "").strip()
+    if not tekst:
+        raise BladGemini("Gemini nie zwrócił notatek.")
+    return tekst

@@ -67,3 +67,131 @@
 #stan-kopiowania {
     font-size: 13px;
 }
+
+/* ETAP 231: notatki — podgląd w kolorach pliku Word */
+.notatki {
+    max-width: 860px;
+}
+
+.podglad-notatek {
+    margin-top: 12px;
+    padding: 28px 32px;
+    border-radius: var(--promien-maly);
+    background: #ffffff;
+    box-shadow: var(--cien);
+    color: #262626;
+    font-family: Calibri, Carlito, var(--czcionka);
+    line-height: 1.55;
+}
+
+.podglad-notatek__tytul {
+    margin: 0 0 4px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #b4c6e7;
+    color: #1f3864;
+    font-size: 1.9rem;
+}
+
+.podglad-notatek__podtytul {
+    color: #595959;
+    font-size: 1.05rem;
+}
+
+.podglad-notatek__streszczenie {
+    padding: 10px 14px;
+    border-left: 4px solid #2e75b6;
+    background: #eaf1fb;
+    color: #595959;
+    font-style: italic;
+}
+
+.podglad-notatek__naglowek {
+    margin: 22px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #b4c6e7;
+    color: #1f3864;
+    font-size: 1.2rem;
+}
+
+.podglad-notatek__lista li::marker {
+    color: #2e75b6;
+}
+
+.podglad-notatek__ramka,
+.podglad-notatek__zapamietaj {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-left: 4px solid #2e75b6;
+    background: #eaf1fb;
+}
+
+.podglad-notatek__ramka strong {
+    color: #2e75b6;
+    font-size: 0.9rem;
+}
+
+.podglad-notatek__ramka p {
+    margin: 4px 0 0;
+}
+
+.podglad-notatek__zapamietaj {
+    margin-top: 22px;
+    border-left-color: #548235;
+    background: #e2f0d9;
+}
+
+.podglad-notatek__zapamietaj strong:first-child {
+    color: #548235;
+    font-size: 1.1rem;
+}
+
+.podglad-notatek__zapamietaj ul {
+    margin: 6px 0 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.podglad-notatek__zapamietaj li::before {
+    content: "✓  ";
+    color: #548235;
+    font-weight: 700;
+}
+
+.podglad-notatek__pojecia {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+}
+
+.podglad-notatek__pojecia th {
+    padding: 6px 10px;
+    background: #1f3864;
+    color: #ffffff;
+    text-align: left;
+}
+
+.podglad-notatek__pojecia td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #b4c6e7;
+    vertical-align: top;
+}
+
+.podglad-notatek__pojecia td:first-child {
+    width: 30%;
+    color: #1f3864;
+    font-weight: 700;
+}
+
+.podglad-notatek__pojecia tr:nth-child(odd) td {
+    background: #f3f6fb;
+}
+
+@media (max-width: 600px) {
+    .podglad-notatek {
+        padding: 18px 16px;
+    }
+}
+
+.podglad-notatek .przewijanie-tabeli {
+    overflow-x: auto;
+}

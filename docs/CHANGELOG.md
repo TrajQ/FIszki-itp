@@ -1147,3 +1147,6 @@
 
 ## ETAP 230 — 2026-10-07
 - Nowy moduł Praca i notatki: godziny pracy z grafiku (PDF albo zdjęcie), suma i wypłata
+
+## ETAP 231 — 2026-10-07
+- Praca i notatki: eleganckie notatki w Wordzie z PDF-u albo zdjęć z telefonu
