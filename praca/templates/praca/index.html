@@ -78,20 +78,32 @@
     <h2 id="naglowek-notatek">Notatki w Wordzie</h2>
     <form id="formularz-notatek" class="stos">
         <label>PDF albo zdjęcia (do 10 naraz, np. kolejne strony zeszytu)
-            <input id="pliki-notatek" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,image/*" required>
+            <input id="pliki-notatek" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,image/*">
+        </label>
+        {# ETAP 233: tekst wklejony (np. z maila, strony, czatu) i długość notatek #}
+        <label>…albo wklej tekst
+            <textarea id="tekst-notatek" rows="4" maxlength="120000" placeholder="Wklej tekst wykładu, rozdziału albo własne luźne notatki"></textarea>
+        </label>
+        <label>Notatki
+            <select id="dlugosc-notatek">
+                <option value="zwiezle">zwięzłe — ok. strony, same najważniejsze</option>
+                <option value="standard" selected>standardowe — wszystko, co ważne do egzaminu</option>
+                <option value="szczegolowe">szczegółowe — z definicjami i przykładami</option>
+            </select>
         </label>
         <div class="rzad">
             <button id="utworz-notatki" type="submit">Zrób notatki</button>
             <span id="stan-notatek" class="wyciszony" aria-live="polite"></span>
         </div>
     </form>
-    <p class="wyciszony godziny__opis">Gemini układa notatki tylko z Twojego materiału: tytuł, streszczenie, rozdziały z punktami i ramkami, tabela pojęć i „Do zapamiętania”. Przy PDF-ie z tekstem Warsztat sprawdza, czy każda liczba w notatkach jest w materiale. Przy zdjęciach porównaj notatki z oryginałem.</p>
+    <p class="wyciszony godziny__opis">Gemini układa notatki tylko z Twojego materiału: tytuł, streszczenie, rozdziały z punktami i ramkami, tabela pojęć, „Do zapamiętania” i pytania „Sprawdź się” (odpowiedzi na osobnej stronie). Przy PDF-ie z tekstem Warsztat sprawdza, czy każda liczba w notatkach jest w materiale. Przy zdjęciach porównaj notatki z oryginałem.</p>
     <p id="blad-notatek" class="komunikat komunikat--blad" hidden role="alert"></p>
 
     <div id="wynik-notatek" hidden>
         <p id="liczby-notatek" class="komunikat komunikat--ostrzezenie" hidden role="status"></p>
         <div class="rzad">
             <button id="pobierz-docx" type="button">Pobierz .docx (Word)</button>
+            <button id="pobierz-fiszki" type="button" class="przycisk--drugi" title="Pytania i pojęcia jako plik CSV — w Fiszkach: plik PDF → Import">Fiszki (CSV)</button>
             <span id="stan-docx" class="wyciszony" aria-live="polite"></span>
         </div>
         <article id="podglad-notatek" class="podglad-notatek" aria-label="Podgląd notatek"></article>
@@ -105,6 +117,7 @@
     const URL_POLICZ = "{{ url_for('praca.policz_grafik') }}";
     const URL_NOTATKI = "{{ url_for('praca.utworz_notatke') }}";
     const URL_DOCX = "{{ url_for('praca.notatki_word') }}";
+    const URL_FISZKI = "{{ url_for('praca.notatki_fiszki') }}";
     const URL_ROZLICZENIA = "{{ url_for('praca.lista_rozliczen') }}";
     const HISTORIA = {{ historia | tojson }};
 </script>

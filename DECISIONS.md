@@ -4813,3 +4813,23 @@ stare rozliczenie zamiast dublować.
 - Zapisywanie wyniku przysłanego przez stronę — liczby spoza kodu.
 - Edycja godzin pojedynczej zmiany na liście — tekst grafiku w polu już
   na to pozwala; lista służy do wyłączania całych zmian.
+
+## D-241 — Pytania kontrolne z odpowiedziami na osobnej stronie; fiszki przez istniejący import
+Data: 2026-10-07
+
+**Decyzja:** Notatka kończy się pytaniami „Sprawdź się”, a odpowiedzi są
+w pliku Word na nowej, ostatniej stronie. Pytania i pojęcia można pobrać
+jako CSV w formacie, który już przyjmuje import Fiszek (ETAP 54) — bez
+nowej trasy w module Fiszki.
+
+**Uzasadnienie:** Odpowiedź tuż pod pytaniem psuje samosprawdzenie;
+osobna strona to wydruk do zasłonięcia. Fiszki wymagają PDF-u jako
+kotwicy (fiszka bez kotwicy dostaje stronę 0 — tak działa import), więc
+zamiast tworzyć „fiszki bez PDF-u” w innym module, notatka oddaje plik,
+który użytkownik importuje do wybranego PDF-u. Moduły zostają niezależne.
+
+**Odrzucone alternatywy:**
+- Bezpośredni zapis do bazy Fiszek z modułu Praca — powiązanie dwóch
+  modułów i wybór PDF-u w obcym interfejsie.
+- Odpowiedzi w przypisach Worda — trudniejsze do zasłonięcia i do
+  zbudowania bez biblioteki.

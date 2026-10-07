@@ -292,6 +292,18 @@
             z.append(el("strong", "", "Do zapamiętania"), lista(n.do_zapamietania, ""));
             a.appendChild(z);
         }
+        if (n.pytania && n.pytania.length) { // ETAP 233: odpowiedź po rozwinięciu
+            a.appendChild(el("h4", "podglad-notatek__naglowek", "Sprawdź się"));
+            const ol = el("ol", "podglad-notatek__pytania");
+            for (const p of n.pytania) {
+                const li = el("li");
+                const d = el("details");
+                d.append(el("summary", "", p.pytanie), el("p", "", p.odpowiedz));
+                li.appendChild(d);
+                ol.appendChild(li);
+            }
+            a.appendChild(ol);
+        }
         if (n.nieczytelne.length) {
             a.append(el("h4", "podglad-notatek__naglowek", "Nie udało się odczytać"), lista(n.nieczytelne, "podglad-notatek__lista"));
         }
@@ -300,19 +312,27 @@
     $("formularz-notatek").addEventListener("submit", async (e) => {
         e.preventDefault();
         const pliki = $("pliki-notatek").files;
-        if (!pliki.length) return;
+        const tekst = $("tekst-notatek").value.trim();
         $("blad-notatek").hidden = true;
+        if (!pliki.length && !tekst) {
+            $("blad-notatek").textContent = "Wybierz PDF albo zdjęcia, albo wklej tekst.";
+            $("blad-notatek").hidden = false;
+            return;
+        }
         const guzik = $("utworz-notatki");
         guzik.disabled = true;
         $("stan-notatek").textContent = "Gemini układa notatki — to może potrwać do minuty…";
         const dane = new FormData();
         for (const p of pliki) dane.append("pliki", p);
+        dane.append("tekst", tekst);
+        dane.append("dlugosc", $("dlugosc-notatek").value);
         try {
             const odp = await fetch(URL_NOTATKI, { method: "POST", body: dane });
             const w = await odp.json().catch(() => ({}));
             if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
             biezace = { notatki: w.notatki, zrodlo: w.zrodlo };
             pokaz(w.notatki);
+            $("pobierz-fiszki").hidden = !(w.notatki.pytania.length || w.notatki.pojecia.length);
             const uwagi = [];
             if (w.liczby_do_sprawdzenia === null) uwagi.push("Notatki ze zdjęć — porównaj liczby, daty i nazwy z oryginałem.");
             else if (w.liczby_do_sprawdzenia.length) uwagi.push(`Liczby, których nie ma w materiale — sprawdź je: ${w.liczby_do_sprawdzenia.join(", ")}.`);
@@ -330,14 +350,14 @@
         }
     });
 
-    $("pobierz-docx").addEventListener("click", async () => {
+    async function pobierzPlik(url, zapasowaNazwa) {
         if (!biezace) return;
         $("stan-docx").textContent = "";
         try {
-            const odp = await fetch(URL_DOCX, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(biezace) });
+            const odp = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(biezace) });
             if (!odp.ok) throw new Error((await odp.json().catch(() => ({}))).blad || `Błąd ${odp.status}`);
             const naglowek = odp.headers.get("Content-Disposition") || "";
-            const nazwa = decodeURIComponent((/filename\*=UTF-8''([^;]+)/.exec(naglowek) || [])[1] || "notatki.docx");
+            const nazwa = decodeURIComponent((/filename\*=UTF-8''([^;]+)/.exec(naglowek) || [])[1] || zapasowaNazwa);
             const a = document.createElement("a");
             a.href = URL.createObjectURL(await odp.blob());
             a.download = nazwa;
@@ -351,5 +371,8 @@
         } catch (err) {
             $("stan-docx").textContent = err.message;
         }
-    });
+    }
+
+    $("pobierz-docx").addEventListener("click", () => pobierzPlik(URL_DOCX, "notatki.docx"));
+    $("pobierz-fiszki").addEventListener("click", () => pobierzPlik(URL_FISZKI, "notatki_fiszki.csv"));
 })();

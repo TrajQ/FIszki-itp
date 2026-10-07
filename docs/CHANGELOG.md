@@ -1153,3 +1153,6 @@
 
 ## ETAP 232 — 2026-10-07
 - Praca: odznaczanie zmian (zamiana z kimś), zapisane miesiące z sumą za rok
+
+## ETAP 233 — 2026-10-07
+- Praca: notatki z pytaniami „Sprawdź się”, wyborem długości, z wklejonego tekstu; pytania i pojęcia do Fiszek

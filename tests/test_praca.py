@@ -184,7 +184,7 @@ def test_plik_word():
 def test_trasy_notatek(client, monkeypatch):
     from praca import routes
     wywolania = []
-    monkeypatch.setattr(routes, "utworz_notatki", lambda material, pliki: wywolania.append((material, pliki)) or json.dumps(ODPOWIEDZ))
+    monkeypatch.setattr(routes, "utworz_notatki", lambda material, pliki, dlugosc="standard": wywolania.append((material, pliki)) or json.dumps(ODPOWIEDZ))
     with open(PDF, "rb") as f:  # PDF z tekstem — idzie jako tekst, liczby sprawdzane
         r = client.post("/praca/notatki/utworz", data={"pliki": [(f, "grafik.pdf")]}, content_type="multipart/form-data")
     w = r.get_json()
@@ -196,7 +196,7 @@ def test_trasy_notatek(client, monkeypatch):
     assert client.post("/praca/notatki/utworz", data={}, content_type="multipart/form-data").status_code == 400
     r = client.post("/praca/notatki/utworz", data={"pliki": [(io.BytesIO(b"x"), "a.docx")]}, content_type="multipart/form-data")
     assert r.status_code == 400
-    monkeypatch.setattr(routes, "utworz_notatki", lambda material, pliki: "nie json")
+    monkeypatch.setattr(routes, "utworz_notatki", lambda material, pliki, dlugosc="standard": "nie json")
     r = client.post("/praca/notatki/utworz", data={"pliki": [(io.BytesIO(b"\xff\xd8x"), "a.jpg")]}, content_type="multipart/form-data")
     assert r.status_code == 422
 
@@ -233,3 +233,48 @@ def test_historia_rozliczen(client):
     assert len(client.delete(f"/praca/rozliczenia/{pierwszy}").get_json()["miesiace"]) == 1
     assert client.delete(f"/praca/rozliczenia/{pierwszy}").status_code == 404
     assert len(client.get("/praca/rozliczenia").get_json()["miesiace"]) == 1
+
+
+
+# ---------- ETAP 233: pytania kontrolne, długość, wklejony tekst, fiszki ----------
+
+Z_PYTANIAMI = {**ODPOWIEDZ, "pytania": [{"pytanie": "Co zastąpił plan ogólny?", "odpowiedz": "Studium uwarunkowań."},
+                                        {"pytanie": "Bez odpowiedzi?", "odpowiedz": ""}]}
+
+
+def test_pytania_w_notatce_i_w_wordzie():
+    n = notatki.oczysc(Z_PYTANIAMI)
+    assert n["pytania"] == [{"pytanie": "Co zastąpił plan ogólny?", "odpowiedz": "Studium uwarunkowań."}]
+    z = zipfile.ZipFile(io.BytesIO(word.notatki_docx(n, "Źródło: x")))
+    dokument = z.read("word/document.xml").decode()
+    assert "Sprawdź się" in dokument and '<w:numId w:val="2"/>' in dokument
+    assert dokument.index("Co zastąpił") < dokument.index("<w:pageBreakBefore/>") < dokument.index("Studium uwarunkowań.") < dokument.index("Źródło: x")
+    minidom.parseString(z.read("word/numbering.xml"))
+    assert notatki.oczysc(ODPOWIEDZ)["pytania"] == []  # odpowiedź bez pytań (starsza) — bez sekcji
+    assert "Sprawdź się" not in zipfile.ZipFile(io.BytesIO(word.notatki_docx(notatki.oczysc(ODPOWIEDZ), "x"))).read("word/document.xml").decode()
+
+
+def test_fiszki_csv_do_importu():
+    from fiszki import importer
+    n = notatki.oczysc(Z_PYTANIAMI)
+    nowe, bledne = importer.wczytaj(notatki.fiszki_csv(n))
+    assert [(f["pytanie"], f["odpowiedz"]) for f in nowe] == [
+        ("Co zastąpił plan ogólny?", "Studium uwarunkowań."), ("Co to jest: Strefa & <znaczniki>?", "Obszar o funkcji dominującej.")]
+
+
+def test_wklejony_tekst_dlugosc_i_trasa_fiszek(client, monkeypatch):
+    from praca import routes
+    wywolania = []
+    monkeypatch.setattr(routes, "utworz_notatki", lambda material, pliki, dlugosc: wywolania.append((material, pliki, dlugosc)) or json.dumps(Z_PYTANIAMI))
+    tekst = "Plan ogólny gminy zastępuje studium od 2026 r. Szkoła do 1500 m. " * 2
+    r = client.post("/praca/notatki/utworz", data={"tekst": tekst, "dlugosc": "zwiezle"}, content_type="multipart/form-data")
+    w = r.get_json()
+    assert r.status_code == 200 and wywolania[-1] == (tekst.strip(), [], "zwiezle")
+    assert w["zrodlo"] == "wklejony tekst" and w["liczby_do_sprawdzenia"] == ["3"] and len(w["notatki"]["pytania"]) == 1
+    assert client.post("/praca/notatki/utworz", data={"tekst": "za krótko"}, content_type="multipart/form-data").status_code == 400
+    assert client.post("/praca/notatki/utworz", data={"tekst": tekst, "dlugosc": "epopeja"}, content_type="multipart/form-data").status_code == 400
+    r = client.post("/praca/notatki/fiszki.csv", json={"notatki": Z_PYTANIAMI})
+    assert r.status_code == 200 and r.get_data(as_text=True).startswith("\ufeffpytanie;odpowiedz")
+    assert r.headers["Content-Disposition"].endswith("Planowanie_w_gminie_fiszki.csv")
+    bez = {**ODPOWIEDZ, "pojecia": [], "pytania": []}
+    assert client.post("/praca/notatki/fiszki.csv", json={"notatki": bez}).status_code == 400

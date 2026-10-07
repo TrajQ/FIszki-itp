@@ -394,11 +394,20 @@ PROMPT_NOTATEK = (
     '{"typ": "ramka", "tytul": "np. Przykład albo Uwaga", "tekst": "..."}]}], '
     '"pojecia": [{"pojecie": "...", "definicja": "..."}], '
     '"do_zapamietania": ["najważniejsze punkty, 3–7"], '
-    '"nieczytelne": []}'
+    '"pytania": [{"pytanie": "pytanie sprawdzające zrozumienie", "odpowiedz": "krótka odpowiedź z materiału"}], '
+    '"nieczytelne": []}\n'
+    "Pytania (4–8): sprawdzają zrozumienie, nie pamięć pojedynczych słów; "
+    "odpowiedź na każde musi wynikać z materiału."
 )
+# ETAP 233: długość notatek wybierana na stronie
+DLUGOSCI_NOTATEK = {
+    "zwiezle": "Notatki ZWIĘZŁE: ok. 1 strony, tylko najważniejsze myśli, krótkie punkty zamiast akapitów.",
+    "standard": "Notatki o umiarkowanej długości: wszystko, co ważne do egzaminu, bez powtórzeń.",
+    "szczegolowe": "Notatki SZCZEGÓŁOWE: wszystkie istotne informacje, definicje i przykłady z materiału, w pełnych zdaniach.",
+}
 
 
-def utworz_notatki(material: str | None = None, pliki: list[tuple[bytes, str]] | None = None) -> str:
+def utworz_notatki(material: str | None = None, pliki: list[tuple[bytes, str]] | None = None, dlugosc: str = "standard") -> str:
     """Surowa odpowiedź modelu (JSON jako tekst) — sprawdza i porządkuje ją
     praca/notatki.py. `material` — tekst (np. z PDF-u), `pliki` — [(dane, typ)]
     zdjęć albo PDF-u bez warstwy tekstu."""
@@ -412,7 +421,8 @@ def utworz_notatki(material: str | None = None, pliki: list[tuple[bytes, str]] |
             raise BladGemini("Obsługiwane pliki: zdjęcie (JPG, PNG, WebP, HEIC) albo PDF.")
         zawartosc.append(types.Part.from_bytes(data=dane, mime_type=typ))
     zawartosc.append("Materiał:\n" + material if material else "Zrób notatki z materiału na obrazach.")
-    odpowiedz = _generuj(zawartosc, system_instruction=PROMPT_NOTATEK, response_mime_type="application/json", temperature=0.2)
+    prompt = PROMPT_NOTATEK + "\n" + DLUGOSCI_NOTATEK.get(dlugosc, DLUGOSCI_NOTATEK["standard"])
+    odpowiedz = _generuj(zawartosc, system_instruction=prompt, response_mime_type="application/json", temperature=0.2)
     tekst = (odpowiedz.text or "").strip()
     if not tekst:
         raise BladGemini("Gemini nie zwrócił notatek.")

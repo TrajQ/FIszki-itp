@@ -276,3 +276,31 @@
         padding: 4px 6px;
     }
 }
+
+/* ETAP 233: pytania kontrolne w podglądzie */
+.podglad-notatek__pytania {
+    padding-left: 1.4em;
+}
+
+.podglad-notatek__pytania li {
+    margin-bottom: 6px;
+}
+
+.podglad-notatek__pytania summary {
+    cursor: pointer;
+}
+
+.podglad-notatek__pytania p {
+    margin: 4px 0 0;
+    color: #595959;
+}
+
+.notatki textarea {
+    width: 100%;
+}
+
+#stan-docx {
+    min-width: 0;
+    overflow-wrap: anywhere; /* długa nazwa pliku w „Zapisano …” */
+    font-size: 13px;
+}

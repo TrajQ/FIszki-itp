@@ -8,6 +8,8 @@ których w materiale nie ma: model miał je tylko przepisywać.
 Plik Word buduje praca/word.py.
 """
 
+import csv
+import io
 import json
 
 from dane.gemini import liczby_w_tekscie
@@ -45,6 +47,30 @@ def _blok(b) -> dict | None:
     return None
 
 
+MAKS_PYTAN = 15
+
+
+def _pytania(x) -> list[dict]:
+    wynik = []
+    for p in (x if isinstance(x, list) else [])[:MAKS_PYTAN]:
+        if isinstance(p, dict) and _tekst(p.get("pytanie")) and _tekst(p.get("odpowiedz")):
+            wynik.append({"pytanie": _tekst(p.get("pytanie"), 500), "odpowiedz": _tekst(p.get("odpowiedz"), 1500)})
+    return wynik
+
+
+def fiszki_csv(n: dict) -> str:
+    """ETAP 233: pytania kontrolne i pojęcia jako CSV z nagłówkiem
+    `pytanie;odpowiedz` — format, który przyjmuje import Fiszek (fiszki/importer.py)."""
+    bufor = io.StringIO()
+    zapis = csv.writer(bufor, delimiter=";")
+    zapis.writerow(["pytanie", "odpowiedz"])
+    for p in n["pytania"]:
+        zapis.writerow([p["pytanie"], p["odpowiedz"]])
+    for p in n["pojecia"]:
+        zapis.writerow([f"Co to jest: {p['pojecie']}?", p["definicja"]])
+    return bufor.getvalue()
+
+
 def oczysc(dane) -> dict:
     """JSON od modelu albo notatka odesłana ze strony → notatka w stałym kształcie."""
     if isinstance(dane, str):
@@ -75,6 +101,7 @@ def oczysc(dane) -> dict:
         "sekcje": sekcje,
         "pojecia": pojecia,
         "do_zapamietania": _lista(dane.get("do_zapamietania"), 15),
+        "pytania": _pytania(dane.get("pytania")),  # ETAP 233
         "nieczytelne": _lista(dane.get("nieczytelne"), 20),
     }
     if not sekcje and not pojecia and not wynik["do_zapamietania"]:
@@ -91,6 +118,8 @@ def caly_tekst(n: dict) -> str:
             czesci += b.get("punkty", []) + [b.get("tytul", ""), b.get("tekst", "")]
     for p in n["pojecia"]:
         czesci += [p["pojecie"], p["definicja"]]
+    for p in n.get("pytania", []):
+        czesci += [p["pytanie"], p["odpowiedz"]]
     return "\n".join(c for c in czesci if c)
 
 

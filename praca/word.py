@@ -112,9 +112,15 @@ def _tresc(n: dict, zrodlo: str) -> str:
         panel = _panel(JASNY_ZIELONY, ZIELONY)
         czesci.append(_akapit("Do zapamiętania", "ZapamietajTytul", panel))  # keepNext — w stylu
         czesci += [_akapit("✓  " + p, "Zapamietaj", panel) for p in n["do_zapamietania"]]
+    if n.get("pytania"):  # ETAP 233: pytania tu, odpowiedzi na osobnej stronie — do samodzielnego sprawdzenia
+        czesci.append(_akapit("Sprawdź się", "Heading1"))
+        czesci += [_akapit(p["pytanie"], "Pytanie", '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="2"/></w:numPr>') for p in n["pytania"]]
     if n["nieczytelne"]:
         czesci.append(_akapit("Nie udało się odczytać", "Heading2"))
         czesci += [_punkt(p) for p in n["nieczytelne"]]
+    if n.get("pytania"):
+        czesci.append(_akapit("Odpowiedzi", "Heading1", '<w:pageBreakBefore/>'))
+        czesci += [_akapit(p["odpowiedz"], "Odpowiedz", '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="3"/></w:numPr>') for p in n["pytania"]]
     czesci.append(_akapit(zrodlo, "Zrodlo"))
     sekcja = ('<w:sectPr><w:footerReference w:type="default" r:id="rIdStopka"/>'
               '<w:pgSz w:w="11906" w:h="16838"/>'
@@ -156,6 +162,8 @@ def _style() -> str:
             + _styl("ZapamietajTytul", "Do zapamiętania — tytuł", '<w:keepNext/><w:spacing w:before="360" w:after="0"/><w:jc w:val="left"/>',
                     f'<w:b/><w:color w:val="{ZIELONY}"/><w:sz w:val="26"/><w:szCs w:val="26"/>')
             + _styl("Zapamietaj", "Do zapamiętania", '<w:spacing w:after="40"/><w:jc w:val="left"/>')
+            + _styl("Pytanie", "Pytanie kontrolne", '<w:spacing w:after="100"/><w:jc w:val="left"/>')
+            + _styl("Odpowiedz", "Odpowiedź", '<w:spacing w:after="100"/><w:jc w:val="left"/>', f'<w:color w:val="{SZARY}"/>')
             + _styl("Tabela", "Tekst w tabeli", '<w:spacing w:after="0" w:line="264" w:lineRule="auto"/><w:jc w:val="left"/>',
                     '<w:sz w:val="20"/><w:szCs w:val="20"/>')
             + _styl("Zrodlo", "Źródło", '<w:spacing w:before="480"/><w:jc w:val="left"/>',
@@ -170,7 +178,15 @@ NUMERACJA = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
              '<w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="singleLevel"/>'
              '<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/>'
              f'<w:pPr><w:ind w:left="397" w:hanging="284"/></w:pPr><w:rPr><w:b/><w:color w:val="{NIEBIESKI}"/></w:rPr></w:lvl>'
-             '</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>')
+             '</w:abstractNum>'
+             # ETAP 233: numeracja „1.” pytań i odpowiedzi (dwie osobne listy, każda od 1)
+             '<w:abstractNum w:abstractNumId="1"><w:multiLevelType w:val="singleLevel"/>'
+             '<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/>'
+             f'<w:pPr><w:ind w:left="397" w:hanging="397"/></w:pPr><w:rPr><w:b/><w:color w:val="{GRANAT}"/></w:rPr></w:lvl></w:abstractNum>'
+             '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>'
+             '<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>'
+             '<w:num w:numId="3"><w:abstractNumId w:val="1"/><w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride></w:num>'
+             '</w:numbering>')
 
 
 def _stopka(tytul: str) -> str:

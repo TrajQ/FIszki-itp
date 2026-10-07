@@ -4222,3 +4222,29 @@ Status: zamknięty
   błędy); przeglądarka 1300/390 px; przegląd 101 stron — 0 problemów
 - Pomoc: akapit „Zamiana zmian i historia”
 - `DECISIONS.md`: D-240
+
+## ETAP 233 — Praca: notatki — pytania kontrolne, długość, wklejony tekst, fiszki
+Data: 2026-10-07
+Status: zamknięty
+
+- `dane/gemini.py`: w JSON notatki pole `pytania` (4–8, odpowiedź z
+  materiału); `DLUGOSCI_NOTATEK` (zwięzłe / standardowe / szczegółowe)
+  dopisywane do instrukcji; `utworz_notatki(…, dlugosc)`
+- `praca/notatki.py`: `_pytania` (limit 15, pary bez odpowiedzi
+  odpadają), pytania w sprawdzaniu liczb, `fiszki_csv` — pytania i
+  pojęcia („Co to jest: …?”) z nagłówkiem `pytanie;odpowiedz`, czyli w
+  formacie importu Fiszek (test przez `fiszki.importer.wczytaj`)
+- `praca/word.py`: sekcja „Sprawdź się” (numeracja 1., 2., …) i
+  „Odpowiedzi” na nowej stronie (osobna lista od 1), style „Pytanie
+  kontrolne” i „Odpowiedź”; notatki bez pytań — bez tych sekcji
+- Trasy: `/praca/notatki/utworz` przyjmuje `tekst` (od 50 znaków; z
+  plikami albo sam) i `dlugosc`; `POST /praca/notatki/fiszki.csv`
+- Strona: pole „…albo wklej tekst”, wybór długości, pytania w podglądzie
+  (odpowiedź po kliknięciu), przycisk „Fiszki (CSV)”; poprawione
+  przewijanie w bok na telefonie przez długą nazwę pliku w „Zapisano …”
+- Testy (3 nowe + zmiana podstawionego Gemini): pytania w notatce i w
+  Wordzie (kolejność: pytania → nowa strona → odpowiedzi → źródło), CSV
+  wczytywany przez import Fiszek, wklejony tekst, długość, błędy;
+  przeglądarka 1300/390 px; przegląd 101 stron — 0 problemów
+- Pomoc: akapit „Tekst, długość, pytania, fiszki”
+- `DECISIONS.md`: D-241

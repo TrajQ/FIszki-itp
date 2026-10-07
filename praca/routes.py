@@ -16,7 +16,7 @@ from urllib.parse import quote
 
 from flask import Blueprint, Response, jsonify, render_template, request
 
-from dane.gemini import BladGemini, przepisz_grafik, utworz_notatki
+from dane.gemini import DLUGOSCI_NOTATEK, BladGemini, przepisz_grafik, utworz_notatki
 
 from . import baza, grafik, notatki, word
 
@@ -27,6 +27,7 @@ TYPY_PO_ROZSZERZENIU = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg"
 MAKS_PLIK_B = 20 * 1024 * 1024
 MAKS_PLIKOW_NOTATEK = 10
 MIN_ZNAKOW_TEKSTU_PDF = 200  # mniej — PDF to najpewniej skan; wtedy Gemini czyta obraz strony
+MIN_ZNAKOW_WKLEJONYCH = 50
 
 
 @praca_bp.route("/")
@@ -155,8 +156,12 @@ def utworz_notatke():
     PDF z tekstem idzie do Gemini jako tekst (i liczby w notatce sprawdzamy
     z tym tekstem); zdjęcia i skany — jako obrazy."""
     pliki = [p for p in request.files.getlist("pliki") if p and p.filename]
-    if not pliki:
-        return jsonify({"blad": "Wybierz PDF albo zdjęcia notatek."}), 400
+    wklejony = (request.form.get("tekst") or "").strip()  # ETAP 233: tekst wklejony zamiast (albo obok) plików
+    dlugosc = request.form.get("dlugosc") or "standard"
+    if dlugosc not in DLUGOSCI_NOTATEK:
+        return jsonify({"blad": "Nieznana długość notatek."}), 400
+    if not pliki and len(wklejony) < MIN_ZNAKOW_WKLEJONYCH:
+        return jsonify({"blad": "Wybierz PDF albo zdjęcia notatek, albo wklej tekst (co najmniej kilka zdań)."}), 400
     if len(pliki) > MAKS_PLIKOW_NOTATEK:
         return jsonify({"blad": f"Najwyżej {MAKS_PLIKOW_NOTATEK} plików naraz."}), 400
     teksty, obrazy, nazwy = [], [], []
@@ -177,11 +182,14 @@ def utworz_notatke():
                 teksty.append(tekst)
                 continue
         obrazy.append((dane, typ))
+    if wklejony:
+        teksty.append(wklejony)
+        nazwy.append("wklejony tekst")
     material = "\n\n".join(teksty)
     obciete = len(material) > notatki.MAKS_ZNAKOW_MATERIALU
     material = material[: notatki.MAKS_ZNAKOW_MATERIALU]
     try:
-        n = notatki.oczysc(utworz_notatki(material or None, obrazy))
+        n = notatki.oczysc(utworz_notatki(material or None, obrazy, dlugosc))
     except BladGemini as e:
         return jsonify({"blad": str(e)}), 502
     except notatki.BladNotatek as e:
@@ -215,4 +223,21 @@ def notatki_word():
         word.notatki_docx(n, stopka),
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(nazwa)}.docx"},
+    )
+
+
+@praca_bp.route("/notatki/fiszki.csv", methods=["POST"])
+def notatki_fiszki():
+    """ETAP 233: pytania kontrolne i pojęcia z notatki jako CSV do importu w Fiszkach."""
+    dane = request.get_json(silent=True) or {}
+    try:
+        n = notatki.oczysc(dane.get("notatki"))
+    except notatki.BladNotatek as e:
+        return jsonify({"blad": str(e)}), 400
+    if not n["pytania"] and not n["pojecia"]:
+        return jsonify({"blad": "W notatkach nie ma pytań ani pojęć."}), 400
+    return Response(
+        "\ufeff" + notatki.fiszki_csv(n),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(_nazwa_pliku(n['tytul']))}_fiszki.csv"},
     )
