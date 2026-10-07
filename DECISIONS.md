@@ -5038,3 +5038,24 @@ więc data to data aktu, którą zna student („ustawa z 27 marca 2003”).
 - Metryka z API Sejmu (ELI) — działa tylko z internetem i tylko dla
   aktów z Dziennika Ustaw; uchwały gmin i tak trzeba czytać z tytułu.
 - Kolumny w bazie — szybsze przy setkach aktów, ale wymagają migracji.
+
+## D-252 — „O danych”: lista usług w kodzie, licencje bibliotek z metadanych
+Data: 2026-10-07
+
+**Decyzja:** Lista usług to stała w `o_danych.py`, spisana z adresów w
+kodzie; licencje bibliotek Pythona czytamy w chwili wyświetlenia z
+metadanych pakietów, a bibliotek JS — z plików LICENSE dołączonych w
+static/. Przy danych publicznych nie podajemy nazw licencji, tylko
+link do zasad dostawcy (wyjątek: ODbL OpenStreetMap, podana na stronie
+copyright OSM).
+
+**Uzasadnienie:** Student, który publikuje mapę albo raport, musi
+wiedzieć, skąd są dane i jak je podpisać; strona zbiera to w jednym
+miejscu. Metadane pakietów nie rozjadą się z requirements.txt po
+aktualizacji. Nazwy licencji danych urzędowych zmieniały się wraz z
+przepisami — bez sprawdzenia w źródle lepiej odesłać do dostawcy niż
+podać nieaktualną (D-218).
+
+**Odrzucone alternatywy:**
+- Automatyczne zbieranie adresów z kodu — dawałoby też adresy z
+  testów i dokumentacji; ręczna lista jest krótka i czytelna.

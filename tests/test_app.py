@@ -600,3 +600,27 @@ def test_przypiete(czysty_client, tmp_path):
         f.write("{")
     assert przypiete.wczytaj(c.application.instance_path) == [] and c.get("/").status_code == 200
     assert przypiete.wczytaj(str(tmp_path / "brak")) == []
+
+
+# ---------- ETAP 244: strona „O danych” ----------
+
+
+def test_strona_o_danych(client):
+    html = client.get("/o-danych").get_data(as_text=True)
+    assert "Usługi w internecie" in html and "uldk.gugik.gov.pl" in html and "api.sejm.gov.pl" in html
+    assert "ODbL" in html and "Leaflet" in html and "BSD-2-Clause" in html
+    assert "Flask" in html and "3.0.3" in html  # wersja z zainstalowanego pakietu
+    assert 'href="/o-danych"' in client.get("/pomoc").get_data(as_text=True)
+
+
+def test_licencja_z_metadanych():
+    import o_danych
+
+    class Meta(dict):
+        def get_all(self, klucz):
+            return self.get(klucz + "s")
+
+    assert o_danych._licencja(Meta({"License-Expression": "MIT"})) == "MIT"
+    assert o_danych._licencja(Meta({"License": "długi\ntekst licencji", "Classifiers": ["License :: OSI Approved :: BSD License"]})) == "BSD License"
+    assert o_danych._licencja(Meta({})) == "zob. pakiet"
+    assert all(b["wersja"] for b in o_danych.biblioteki_pythona())

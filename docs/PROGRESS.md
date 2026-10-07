@@ -4462,3 +4462,23 @@ Status: zamknięty
   przeglądarka 1300/390 px
 - Pomoc: „Szukanie tylko w ustawach albo w aktach z danych lat”
 - `DECISIONS.md`: D-251
+
+## ETAP 244 — Strona „O danych”: źródła danych, usługi i licencje bibliotek
+Data: 2026-10-07
+Status: zamknięty
+
+- `o_danych.py`: `ZRODLA` — usługi, z którymi kod naprawdę się łączy
+  (GUS BDL, PRG, ULDK, krajowa integracja, plany ogólne i RCN WMS,
+  ortofotomapa, pliki RCN, WFS MPU Poznań, API Sejmu, kafelki OSM,
+  Gemini): dostawca, co pobieramy, moduły, link do strony dostawcy;
+  `biblioteki_pythona()` — wersje i licencje z metadanych zainstalowanych
+  pakietów; `BIBLIOTEKI_JS` — Leaflet i Leaflet.draw (pliki LICENSE w
+  static/)
+- `GET /o-danych` i `templates/o_danych.html`: usługi, „Twoje dane” (co
+  zostaje na komputerze, co trafia na zewnątrz, klucze w .env, dane
+  syntetyczne Dostępności), biblioteki; link z Pomocy
+- Bez nazw licencji danych publicznych, których nie sprawdzono w źródle
+  (D-218) — tylko ODbL dla OpenStreetMap i linki do zasad dostawców
+- Testy: strona (usługi, ODbL, biblioteki z wersją), odczyt licencji z
+  metadanych; przeglądarka 1300/390 px
+- `DECISIONS.md`: D-252

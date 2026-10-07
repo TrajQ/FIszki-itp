@@ -1236,3 +1236,12 @@ summary:focus-visible,
 .ostatnie__przypnij:focus-visible {
     opacity: 1;
 }
+
+/* ETAP 244: przewijana tabela na stronach wspólnych (np. O danych) */
+.przewijanie-tabeli {
+    overflow-x: auto;
+}
+
+.o-danych__tabela td {
+    vertical-align: top;
+}

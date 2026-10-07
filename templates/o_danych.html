@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block tytul %}O danych — Warsztat{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('pomoc') }}">‹ Pomoc</a>
+        <h1>O danych</h1>
+        <p>Skąd Warsztat bierze dane, co wysyła na zewnątrz i na czym jest zbudowany. Liczby w raportach pochodzą z tych źródeł albo z Twoich plików — model językowy tylko opisuje i tłumaczy.</p>
+    </div>
+</div>
+
+{# ETAP 244: lista usług z kodu (o_danych.py); zasady korzystania — na stronach dostawców #}
+<section class="karta stos">
+    <h2>Usługi w internecie</h2>
+    <p class="wyciszony">Warsztat łączy się tylko z poniższymi usługami (API i WMS/WFS — bez pobierania stron internetowych). Zasady korzystania i licencje danych opisują dostawcy na swoich stronach; przy publikacji map i raportów podaj źródło tak, jak podpisuje je Warsztat (np. „ortofotomapa: GUGiK”, „dane: GUS BDL”).</p>
+    <div class="przewijanie-tabeli">
+        <table class="tabela o-danych__tabela">
+            <thead><tr><th>Usługa</th><th>Dostawca</th><th>Co pobieramy</th><th>Moduły</th><th>Uwagi</th></tr></thead>
+            <tbody>
+                {% for z in zrodla %}
+                <tr>
+                    <td><a href="{{ z.url }}" target="_blank" rel="noopener noreferrer">{{ z.nazwa }} ↗</a></td>
+                    <td>{{ z.dostawca }}</td>
+                    <td>{{ z.co }}</td>
+                    <td>{{ z.moduly }}</td>
+                    <td class="wyciszony">{{ z.uwagi }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="karta stos">
+    <h2>Twoje dane</h2>
+    <ul>
+        <li>Bazy SQLite, wgrane pliki i zdjęcia są w katalogu <code>instance/</code> na tym komputerze. Warsztat działa tylko pod adresem 127.0.0.1 — nikt z sieci się z nim nie połączy.</li>
+        <li>Na zewnątrz trafia tylko to, o co pytasz usługę: współrzędne lub identyfikator działki (ULDK, plany), fraza wyszukiwania i kody wskaźnika i jednostek (GUS), fraza wyszukiwania aktu (Sejm), a przy mapach — zakres oglądanego widoku (kafelki OpenStreetMap, ortofotomapa). Do Gemini — tekst albo plik, który sam wskazujesz (pytanie, strona PDF, zdjęcie grafiku).</li>
+        <li>Klucze API (Gemini, GUS) są w pliku <code>.env</code>, poza repozytorium kodu.</li>
+        <li>Plik przykładowy Dostępności to dane syntetyczne — nie opisują rzeczywistego Poznania.</li>
+    </ul>
+</section>
+
+<section class="karta stos">
+    <h2>Biblioteki</h2>
+    <p class="wyciszony">Wersje i licencje bibliotek Pythona odczytane z zainstalowanych pakietów; biblioteki JavaScript są dołączone w katalogu <code>static/</code> razem z plikiem licencji.</p>
+    <div class="przewijanie-tabeli">
+        <table class="tabela">
+            <thead><tr><th>Biblioteka</th><th>Wersja</th><th>Licencja</th></tr></thead>
+            <tbody>
+                {% for b in biblioteki_py %}<tr><td>{{ b.nazwa }} <span class="wyciszony">(Python)</span></td><td>{{ b.wersja }}</td><td>{{ b.licencja }}</td></tr>{% endfor %}
+                {% for b in biblioteki_js %}<tr><td>{{ b.nazwa }} <span class="wyciszony">(JavaScript, {{ b.plik }})</span></td><td>{{ b.wersja }}</td><td>{{ b.licencja }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="wyciszony">Nazwy i symbole w słowniku MPZP — wg rozporządzenia z 2003 r. w sprawie zakresu projektu planu miejscowego; definicje wskaźników — wg ustawy o planowaniu i zagospodarowaniu przestrzennym i warunków technicznych (przywołania przy obliczeniach).</p>
+</section>
+{% endblock %}

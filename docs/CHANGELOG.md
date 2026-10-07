@@ -1186,3 +1186,6 @@
 
 ## ETAP 243 — 2026-10-07
 - Przepisy: filtry wyszukiwarki — rodzaj aktu i lata wydania
+
+## ETAP 244 — 2026-10-07
+- Nowa strona „O danych”: skąd są dane, co wysyłamy na zewnątrz, licencje bibliotek

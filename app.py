@@ -225,6 +225,14 @@ def create_app(instance_path=None):
         """Krótkie przepisy „jak zrobić…” dla każdego modułu (ETAP 87)."""
         return render_template("pomoc.html")
 
+    @app.route("/o-danych")
+    def o_danych():
+        """ETAP 244: źródła danych, usługi i licencje bibliotek."""
+        import o_danych as zrodla
+
+        return render_template("o_danych.html", zrodla=zrodla.ZRODLA, biblioteki_js=zrodla.BIBLIOTEKI_JS,
+                               biblioteki_py=zrodla.biblioteki_pythona())
+
     @app.route("/co-nowego")
     def co_nowego():
         """ETAP 159: zmiany z docs/CHANGELOG.md; obejrzenie strony zeruje pasek na stronie głównej."""
