@@ -4721,3 +4721,25 @@ ULDK w 0,3 s).
   nagrać (proxy), a formaty błędów i tak trzeba by dopisać ręcznie.
 - Cel pokrycia 100% w całym projekcie — część gałęzi (np. zabezpieczenia
   przed wyścigiem przy zapisie) testowałaby się sztucznie.
+
+## D-237 — CSP bez script-src; SECRET_KEY bez znaczenia, dopóki brak sesji
+Data: 2026-10-07
+
+**Decyzja:** Nagłówek CSP ogranicza połączenia JS i formularze do samej
+aplikacji, wyłącza wtyczki, `<base>` i osadzanie w ramkach. Nie
+ograniczamy `script-src` ani `img-src`.
+
+**Uzasadnienie:** Szablony mają bloki `<script>` i atrybuty `onclick`, więc
+`script-src` wymagałby `'unsafe-inline'` (bez wartości) albo przepisania
+wszystkich szablonów. `connect-src 'self'` daje realną ochronę: nawet
+wstrzyknięty skrypt nie wyśle danych fetch-em do obcej domeny. Kafle map i
+ortofotomapy to obrazki z usług zewnętrznych — `img-src` zostaje wolne.
+`SECRET_KEY` podpisuje tylko sesje Flaska, których aplikacja nie używa;
+gdyby kiedyś doszły — klucz trzeba będzie generować przy pierwszym starcie.
+
+**Odrzucone alternatywy:**
+- Pełne CSP z `script-src 'self'` — przeniesienie skryptów z ~40
+  szablonów do plików; duża zmiana przy niewielkim zysku dla aplikacji
+  dostępnej tylko pod 127.0.0.1.
+- Podniesienie limitu 50 MB — kopie przywraca się z listy w folderze bez
+  wgrywania, a pliki RCN — z folderu Pobrane.

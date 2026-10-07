@@ -1141,3 +1141,6 @@
 
 ## ETAP 228 — 2026-10-03
 - Testy: ścieżki błędów usług zewnętrznych (ULDK, PRG, BDL) pokryte testami
+
+## ETAP 229 — 2026-10-07
+- Bezpieczeństwo: nagłówek CSP, polski komunikat o zbyt dużym pliku

@@ -19,7 +19,7 @@ ich przeglądarka na polecenie obcej strony.
 
 from urllib.parse import urlsplit
 
-from flask import abort, request
+from flask import abort, jsonify, request
 
 DOZWOLONE_HOSTY = {"127.0.0.1", "localhost"}
 METODY_ZMIENIAJACE_STAN = {"POST", "PUT", "DELETE", "PATCH"}
@@ -51,4 +51,20 @@ def dodaj_naglowki(odpowiedz):
     odpowiedz.headers.setdefault("X-Frame-Options", "DENY")
     odpowiedz.headers.setdefault("X-Content-Type-Options", "nosniff")
     odpowiedz.headers.setdefault("Referrer-Policy", "same-origin")
+    # ETAP 229: CSP bez blokowania skryptów w szablonach (są w nich bloki
+    # <script>) — za to: fetch tylko do aplikacji (dane nie wyjdą do obcej
+    # domeny), formularze tylko do aplikacji, bez wtyczek, bez <base>, bez ramek.
+    odpowiedz.headers.setdefault(
+        "Content-Security-Policy",
+        "connect-src 'self'; form-action 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+    )
     return odpowiedz
+
+
+def za_duzy_plik(blad):
+    """ETAP 229: plik ponad MAX_CONTENT_LENGTH — po polsku, JSON dla fetch."""
+    komunikat = ("Plik jest za duży (limit 50 MB). Kopię zapasową większą niż limit "
+                 "przywróć z listy kopii w folderze kopii, nie przez wgrywanie.")
+    if "text/html" in request.headers.get("Accept", ""):
+        return f"<!doctype html><meta charset=utf-8><title>Za duży plik</title><p>{komunikat}</p><p><a href=\"/\">Strona główna</a></p>", 413
+    return jsonify({"blad": komunikat}), 413

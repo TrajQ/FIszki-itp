@@ -60,3 +60,22 @@ def test_naglowki_bezpieczenstwa(client):
     assert odpowiedz.headers["X-Frame-Options"] == "DENY"
     assert odpowiedz.headers["X-Content-Type-Options"] == "nosniff"
     assert odpowiedz.headers["Referrer-Policy"] == "same-origin"
+
+
+# ---------- ETAP 229 ----------
+
+
+def test_naglowek_csp(client):
+    csp = client.get("/").headers["Content-Security-Policy"]
+    for dyrektywa in ("connect-src 'self'", "form-action 'self'", "object-src 'none'", "frame-ancestors 'none'"):
+        assert dyrektywa in csp
+
+
+def test_za_duzy_plik_po_polsku(client):
+    client.application.config["MAX_CONTENT_LENGTH"] = 100
+    dane = {"plik": (io.BytesIO(b"x" * 500), "duzy.pdf")}
+    r = client.post("/fiszki/upload", data=dane, content_type="multipart/form-data")
+    assert r.status_code == 413 and "za duży" in r.get_json()["blad"]
+    dane = {"plik": (io.BytesIO(b"x" * 500), "duzy.zip")}
+    r = client.post("/kopia-zapasowa/przywroc", data=dane, content_type="multipart/form-data", headers={"Accept": "text/html"})
+    assert r.status_code == 413 and "za duży" in r.get_data(as_text=True)

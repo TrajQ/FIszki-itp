@@ -65,7 +65,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 228 (Testy: pokrycie najsłabszych plików — zamknięty)
-Ostatni ZIP: releases/warsztat_etap228_20261003.zip
-Testy: 693 passed / 0 failed
+ETAP: 229 (Przegląd bezpieczeństwa — zamknięty)
+Ostatni ZIP: releases/warsztat_etap229_20261007.zip
+Testy: 695 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

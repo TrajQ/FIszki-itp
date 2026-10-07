@@ -14,7 +14,7 @@ from przepisy import przepisy_bp
 from teren import teren_bp
 from ceny import ceny_bp
 from config import Config
-from ochrona import dodaj_naglowki, sprawdz_zapytanie
+from ochrona import dodaj_naglowki, sprawdz_zapytanie, za_duzy_plik
 
 MAKS_TERMINOW = 6  # kalendarz na stronie głównej: tyle najbliższych terminów
 MAKS_OSTATNICH = 6  # ETAP 141: „Wróć do pracy” — tyle ostatnio używanych rzeczy
@@ -44,6 +44,7 @@ def create_app(instance_path=None):
     # Ochrona przed obcymi stronami w tej samej przeglądarce (ochrona.py).
     app.before_request(sprawdz_zapytanie)
     app.after_request(dodaj_naglowki)
+    app.register_error_handler(413, za_duzy_plik)  # ETAP 229
 
     app.register_blueprint(atlas_bp, url_prefix="/atlas")
     app.register_blueprint(mpzp_bp, url_prefix="/mpzp")

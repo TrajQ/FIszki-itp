@@ -4094,3 +4094,32 @@ Status: zamknięty
 - Wynik: `dane/uldk.py` 100%, `atlas/granice.py` 100%,
   `atlas/trasy_raport.py` 97%; całość 95% → 96% (692 testy)
 - `DECISIONS.md`: D-236
+
+## ETAP 229 — Przegląd bezpieczeństwa: ochrona.py, limity plików, CSP
+Data: 2026-10-07
+Status: zamknięty
+
+- Przejrzane i bez zmian (w porządku): Host tylko 127.0.0.1/localhost,
+  Origin/Referer przy POST/PUT/DELETE, X-Frame-Options; trasy GET nie
+  zmieniają danych (wyjątek: znacznik „widziane” w /co-nowego —
+  nieszkodliwy); SQL — wartości zawsze przez `?`, nazwy tabel w
+  f-stringach to stałe z kodu albo cytowane `_id` (pola Terenu); pliki
+  wysyłane tylko przez `send_from_directory` z nazwą z bazy albo wzorca;
+  przywracanie kopii — tylko `instance/…`, bez `..`, limit plików i
+  rozmiaru (Python nie rozpakuje więcej niż zadeklarowany rozmiar), test
+  integralności baz; XML tylko z usług urzędowych, expat 2.6.1 z ochroną
+  przed „billion laughs”; SVG z serwera tylko z liczbami (`Markup` —
+  sprawdzone wszystkie 15 użyć); klucze API w nagłówkach, błędy sieci bez
+  surowych komunikatów; `.env` w `.gitignore`; debug domyślnie wyłączony
+- `SECRET_KEY` ma domyślną wartość, ale aplikacja nie używa sesji ani
+  `flash` — nic nie chroni; zostawione z komentarzem w DECISIONS
+- Poprawione: plik ponad 50 MB dawał angielską stronę 413 (w JS tylko
+  „Błąd 413”) → `ochrona.za_duzy_plik`: JSON z polskim komunikatem dla
+  fetch, krótka strona HTML dla formularza, podpowiedź o przywracaniu
+  dużej kopii z listy
+- Dodane: nagłówek Content-Security-Policy `connect-src 'self';
+  form-action 'self'; object-src 'none'; base-uri 'self';
+  frame-ancestors 'none'` — bez blokowania skryptów w szablonach;
+  przegląd 99 stron: 0 problemów
+- Testy: CSP, 413 po polsku (JSON i HTML)
+- `DECISIONS.md`: D-237
