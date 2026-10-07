@@ -12,6 +12,7 @@ biblioteki do odwzorowań. Podziałka liczona dla środkowej szerokości.
 """
 
 import math
+import textwrap
 from html import escape
 
 SZEROKOSC, WYSOKOSC = 1123, 794  # A4 poziomo w px (96 dpi)
@@ -49,8 +50,10 @@ def kartogram_svg(
     legenda: list[tuple[str, str, int | None]],
     tytul_legendy: str,
     przypisy: list[str],
+    legenda_svg: list[str] | None = None,
 ) -> str:
-    """SVG z kartogramem. kolory: {teryt: kolor}; legenda: [(kolor, opis, liczba gmin)]."""
+    """SVG z kartogramem. kolory: {teryt: kolor}; legenda: [(kolor, opis, liczba gmin)].
+    legenda_svg — gotowa legenda zamiast listy (np. macierz 3 × 3, ETAP 236)."""
     cechy = [c for c in granice["features"] if _pierscienie(c["geometry"])]
     if not cechy:
         raise ValueError("Brak granic gmin do narysowania.")
@@ -89,7 +92,7 @@ def kartogram_svg(
         )
     czesci.append("</g>")
 
-    czesci += _legenda(legenda, tytul_legendy)
+    czesci += legenda_svg if legenda_svg is not None else _legenda(legenda, tytul_legendy)
     czesci += _podzialka(skala)
     czesci += _polnoc()
     for i, przypis in enumerate(przypisy):
@@ -98,6 +101,28 @@ def kartogram_svg(
         )
     czesci.append("</svg>")
     return "\n".join(czesci)
+
+
+def legenda_dwuzmiennowa(paleta: list[list[str]], nazwa_x: str, nazwa_y: str, liczebnosc: list[list[int]]) -> list[str]:
+    """ETAP 236: legenda mapy dwuzmiennowej — kwadrat 3 × 3 (wiersz = klasa Y
+    od dołu, kolumna = klasa X), strzałki osi z nazwami wskaźników i liczby gmin."""
+    bok, x0, y0 = 54, KOLUMNA_LEGENDY + 40, 170
+    wynik = [f'<text x="{KOLUMNA_LEGENDY}" y="140" font-size="14" font-weight="700" fill="#1d1d1f">Dwa wskaźniki — tercyle</text>']
+    for iy in range(3):
+        for ix in range(3):
+            x, y = x0 + ix * bok, y0 + (2 - iy) * bok
+            wynik.append(f'<rect x="{x}" y="{y}" width="{bok}" height="{bok}" fill="{paleta[iy][ix]}" stroke="#ffffff" stroke-width="1"/>')
+            wynik.append(f'<text x="{x + bok / 2}" y="{y + bok / 2 + 5}" font-size="13" text-anchor="middle" fill="#1d1d1f">{liczebnosc[iy][ix]}</text>')
+    dol, prawo = y0 + 3 * bok, x0 + 3 * bok
+    wynik.append(f'<path d="M{x0} {dol + 10} H{prawo + 4} M{prawo - 4} {dol + 6} L{prawo + 4} {dol + 10} L{prawo - 4} {dol + 14}" stroke="#1d1d1f" fill="none"/>')
+    wynik.append(f'<path d="M{x0 - 10} {dol} V{y0 - 4} M{x0 - 14} {y0 + 4} L{x0 - 10} {y0 - 4} L{x0 - 6} {y0 + 4}" stroke="#1d1d1f" fill="none"/>')
+    for i, linia in enumerate(textwrap.wrap(f"→ {nazwa_x}", 36)[:3]):
+        wynik.append(f'<text x="{x0}" y="{dol + 32 + i * 15}" font-size="12" fill="#1d1d1f">{escape(linia)}</text>')
+    for i, linia in enumerate(textwrap.wrap(f"↑ {nazwa_y}", 36)[:3]):
+        wynik.append(f'<text x="{KOLUMNA_LEGENDY}" y="{dol + 82 + i * 15}" font-size="12" fill="#1d1d1f">{escape(linia)}</text>')
+    wynik.append(f'<text x="{KOLUMNA_LEGENDY}" y="{dol + 140}" font-size="11" fill="#6e6e73">Liczby w polach — jednostki w klasie;</text>')
+    wynik.append(f'<text x="{KOLUMNA_LEGENDY}" y="{dol + 155}" font-size="11" fill="#6e6e73">ciemnoszare na mapie — brak danych.</text>')
+    return wynik
 
 
 def _legenda(legenda: list[tuple], tytul_legendy: str) -> list[str]:

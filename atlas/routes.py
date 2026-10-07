@@ -404,32 +404,55 @@ def wojewodztwa_porownanie():
     )
 
 
+def dwa_wskazniki(argumenty) -> dict:
+    """Wskaźnik z mapy (X) i drugi wskaźnik (zmienna2, Y) w tym samym roku i
+    województwie: wynik `statystyki.korelacja` z opisami zmiennych.
+    ValueError — złe parametry, BladBDL — błąd GUS. Wspólne dla korelacji
+    i mapy dwuzmiennowej (ETAP 236)."""
+    parametry = _parametry_zapytania(argumenty)
+    try:
+        zmienna2 = int(argumenty.get("zmienna2", ""))
+    except ValueError:
+        raise ValueError("Wymagany parametr zmienna2 (liczba).") from None
+    if zmienna2 == parametry["zmienna_id"]:
+        raise ValueError("Wybierz inny wskaźnik niż ten na mapie.")
+    gminy_x = _wartosci_wskaznika(
+        parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"], parametry["poziom"]
+    )
+    gminy_y = _wartosci(zmienna2, parametry["rok"], parametry["woj_bdl_id"], parametry["poziom"])
+    wynik = statystyki.korelacja(gminy_x, gminy_y)
+    wynik.update(zmienna_x=_opis_zmiennej(parametry["zmienna_id"], parametry["mianownik"], parametry["mnoznik"]),
+                 zmienna_y=z_cache(f"zmienna:{zmienna2}", lambda: asdict(bdl.pobierz_zmienna(zmienna2))),
+                 rok=parametry["rok"], parametry=parametry)
+    return wynik
+
+
 @atlas_bp.route("/korelacja")
 def korelacja():
     """Korelacja wskaźnika z mapy (zmienna) z drugim (zmienna2) w tym samym
     roku i województwie. Liczby liczy atlas/statystyki.py."""
     try:
-        parametry = _parametry_zapytania(request.args)
+        wynik = dwa_wskazniki(request.args)
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
-    try:
-        zmienna2 = int(request.args.get("zmienna2", ""))
-    except ValueError:
-        return jsonify({"blad": "Wymagany parametr zmienna2 (liczba)."}), 400
-    if zmienna2 == parametry["zmienna_id"]:
-        return jsonify({"blad": "Wybierz inny wskaźnik niż ten na mapie."}), 400
-    try:
-        gminy_x = _wartosci_wskaznika(
-            parametry["zmienna_id"], parametry["rok"], parametry["woj_bdl_id"], parametry["mianownik"], parametry["mnoznik"], parametry["poziom"]
-        )
-        gminy_y = _wartosci(zmienna2, parametry["rok"], parametry["woj_bdl_id"], parametry["poziom"])
-        zmienna_x = _opis_zmiennej(parametry["zmienna_id"], parametry["mianownik"], parametry["mnoznik"])
-        zmienna_y = z_cache(f"zmienna:{zmienna2}", lambda: asdict(bdl.pobierz_zmienna(zmienna2)))
     except BladBDL as e:
         return jsonify({"blad": str(e)}), 502
-    wynik = statystyki.korelacja(gminy_x, gminy_y)
-    wynik.update(zmienna_x=zmienna_x, zmienna_y=zmienna_y, rok=parametry["rok"])
+    wynik.pop("parametry")
     return jsonify(wynik)
+
+
+@atlas_bp.route("/dwuzmiennowa")
+def mapa_dwuzmiennowa():
+    """ETAP 236: klasy 3 × 3 (tercyle obu wskaźników) i kolory gmin do mapy."""
+    try:
+        wynik = dwa_wskazniki(request.args)
+        mapa = statystyki.dwuzmiennowa(wynik["punkty"])
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    return jsonify({**mapa, "n": wynik["n"], "zmienna_x": wynik["zmienna_x"], "zmienna_y": wynik["zmienna_y"], "rok": wynik["rok"],
+                    "wartosci": {p["teryt"]: [p["x"], p["y"]] for p in wynik["punkty"]}})
 
 
 @atlas_bp.route("/eksport.geojson")

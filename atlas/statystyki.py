@@ -450,6 +450,44 @@ def opis_sily(r: float | None) -> str:
     return f"bardzo silna, {'dodatnia' if r > 0 else 'ujemna'}"
 
 
+# ---------- mapa dwuzmiennowa (ETAP 236) ----------
+
+# Paleta 3 × 3 J. Stevensa („pink–blue”): wiersz = klasa Y (0 nisko), kolumna = klasa X.
+# Lewy dolny róg — oba niskie (szary), prawy górny — oba wysokie (ciemny).
+KOLORY_DWUZMIENNOWE = [
+    ["#e8e8e8", "#e4acac", "#c85a5a"],
+    ["#b0d5df", "#ad9ea5", "#985356"],
+    ["#64acbe", "#627f8c", "#574249"],
+]
+MIN_GMIN_DWUZMIENNOWEJ = 6
+
+
+def _klasa_tercylowa(v: float, progi: list[float]) -> int:
+    return 0 if v <= progi[0] else 1 if v <= progi[1] else 2
+
+
+def dwuzmiennowa(punkty: list[dict]) -> dict:
+    """Punkty {teryt, x, y} (z `korelacja`) → klasy 3 × 3 z tercyli każdego
+    wskaźnika osobno, kolor gminy i liczebność każdej z 9 klas."""
+    if len(punkty) < MIN_GMIN_DWUZMIENNOWEJ:
+        raise ValueError(f"Mapa dwuzmiennowa potrzebuje co najmniej {MIN_GMIN_DWUZMIENNOWEJ} gmin z oboma wskaźnikami.")
+    progi_x = statistics.quantiles([p["x"] for p in punkty], n=3, method="inclusive")
+    progi_y = statistics.quantiles([p["y"] for p in punkty], n=3, method="inclusive")
+    klasy, liczebnosc = {}, [[0] * 3 for _ in range(3)]
+    for p in punkty:
+        ix, iy = _klasa_tercylowa(p["x"], progi_x), _klasa_tercylowa(p["y"], progi_y)
+        klasy[p["teryt"]] = [ix, iy]
+        liczebnosc[iy][ix] += 1
+    return {
+        "progi_x": progi_x,
+        "progi_y": progi_y,
+        "klasy": klasy,
+        "kolory": {t: KOLORY_DWUZMIENNOWE[iy][ix] for t, (ix, iy) in klasy.items()},
+        "liczebnosc": liczebnosc,
+        "paleta": KOLORY_DWUZMIENNOWE,
+    }
+
+
 def korelacja(gminy_x: list[dict], gminy_y: list[dict]) -> dict:
     """Korelacja dwóch wskaźników na gminach obecnych w obu zestawach."""
     y_po_teryt = {g["teryt"]: g["wartosc"] for g in gminy_y}

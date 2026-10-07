@@ -89,6 +89,8 @@
 
     // ---------- obliczenie i wykres ----------
 
+    let parametryKorelacji = null; // ETAP 236: te same parametry dla mapy dwuzmiennowej
+
     async function policz(zmienna2) {
         if (!daneMapy) return;
         const numer = ++numerZapytania;
@@ -105,6 +107,8 @@
             parametry.set("mianownik", daneMapy.zmienna.mianownik.id);
             parametry.set("mnoznik", daneMapy.zmienna.mnoznik);
         }
+        parametryKorelacji = parametry;
+        document.getElementById("druk-dwuzmiennowej").href = `${URL_DRUK}?${parametry}`;
         try {
             const odpowiedz = await fetch(`${URL_KORELACJA}?${parametry}`);
             const wynik = await odpowiedz.json();
@@ -197,4 +201,43 @@
         }
         wykresEl.appendChild(dymek);
     }
+
+    // ---------- mapa dwuzmiennowa (ETAP 236) ----------
+    // Klasy i kolory liczy serwer; mapę przekolorowuje atlas.js po zdarzeniu „atlas:kolory”.
+
+    function legendaDwuzmiennowa(w) {
+        const div = el("div", "legenda-dwuzmiennowa");
+        div.appendChild(el("div", "legenda__tytul", "Dwa wskaźniki — tercyle (liczba gmin w polu)"));
+        const siatka = el("div", "legenda-dwuzmiennowa__siatka");
+        for (let iy = 2; iy >= 0; iy -= 1) {
+            for (let ix = 0; ix < 3; ix += 1) {
+                const pole = el("span", "legenda-dwuzmiennowa__pole", String(w.liczebnosc[iy][ix]));
+                pole.style.background = w.paleta[iy][ix];
+                siatka.appendChild(pole);
+            }
+        }
+        div.append(siatka, el("div", "legenda-dwuzmiennowa__os", `→ ${skrot(w.zmienna_x.nazwa, 50)}`),
+            el("div", "legenda-dwuzmiennowa__os", `↑ ${skrot(w.zmienna_y.nazwa, 50)}`));
+        return div;
+    }
+
+    document.getElementById("mapa-dwuzmiennowa").addEventListener("click", async (e) => {
+        if (!parametryKorelacji) return;
+        const guzik = e.currentTarget;
+        guzik.disabled = true;
+        try {
+            const odp = await fetch(`${URL_KORELACJA.replace(/korelacja$/, "dwuzmiennowa")}?${parametryKorelacji}`);
+            const w = await odp.json();
+            if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+            const dymki = {};
+            for (const [teryt, [x, y]] of Object.entries(w.wartosci)) {
+                dymki[teryt] = `${skrot(w.zmienna_x.nazwa, 30)}: ${format.format(x)} · ${skrot(w.zmienna_y.nazwa, 30)}: ${format.format(y)}`;
+            }
+            document.dispatchEvent(new CustomEvent("atlas:kolory", { detail: { kolory: w.kolory, dymki, legenda: legendaDwuzmiennowa(w) } }));
+        } catch (err) {
+            status.textContent = err.message;
+        } finally {
+            guzik.disabled = false;
+        }
+    });
 })();

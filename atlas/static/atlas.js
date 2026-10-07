@@ -911,6 +911,24 @@
     });
     document.getElementById("zakoncz-odtwarzanie").addEventListener("click", () => zakonczOdtwarzanie());
 
+    // ETAP 236: kolory z innego skryptu strony (mapa dwuzmiennowa z korelacja.js)
+    document.addEventListener("atlas:kolory", (e) => {
+        if (!biezaceDane) return;
+        zakonczOdtwarzanie(false);
+        const { kolory, dymki, legenda } = e.detail;
+        for (const [teryt, warstwa] of warstwyPoTeryt) {
+            warstwa.setStyle({ fillColor: kolory[teryt] || KOLOR_BRAK });
+            const dymek = element("div");
+            dymek.append(element("strong", "", warstwa.feature.properties.nazwa), element("br"), dymki[teryt] || "brak danych");
+            warstwa.setTooltipContent(dymek);
+        }
+        const wroc = element("button", "przycisk--tekst", "✕ Wróć do mapy wskaźnika");
+        wroc.type = "button";
+        wroc.addEventListener("click", odswiezWidok);
+        legendaEl.replaceChildren(legenda, wroc);
+        mapa.getContainer().scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
     function pokazLegende() {
         legendaEl.replaceChildren();
         if (tryb === "lq") {

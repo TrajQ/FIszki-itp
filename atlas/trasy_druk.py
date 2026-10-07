@@ -244,6 +244,34 @@ def mapy_w_latach_svg():
 MAKS_LAT_ODTWARZANIA = 15
 
 
+@atlas_bp.route("/dwuzmiennowa.svg")
+def mapa_dwuzmiennowa_svg():
+    """ETAP 236: mapa dwuzmiennowa do druku — kartogram z legendą 3 × 3."""
+    from .routes import _wojewodztwa, dwa_wskazniki
+
+    try:
+        wynik = dwa_wskazniki(request.args)
+        mapa = statystyki.dwuzmiennowa(wynik["punkty"])
+        wojewodztwo = next((w for w in _wojewodztwa() if w["bdl_id"] == wynik["parametry"]["woj_bdl_id"]), None)
+        if wojewodztwo is None:
+            raise ValueError("Nieznane województwo.")
+        kolekcja = _granice_poziomu(wojewodztwo["teryt"], wynik["parametry"]["poziom"])
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except (BladBDL, granice.BladGranic) as e:
+        return jsonify({"blad": str(e)}), 502
+    zx, zy = wynik["zmienna_x"], wynik["zmienna_y"]
+    jednostki = "Powiaty" if wynik["parametry"]["poziom"] == "powiaty" else "Gminy"
+    przypisy = ["Źródło: GUS, Bank Danych Lokalnych; granice: PRG, GUGiK. Opracowanie własne w aplikacji Warsztat.",
+                "Klasy: tercyle każdego wskaźnika osobno (po ok. 1/3 jednostek w klasie niskiej, średniej i wysokiej).",
+                "Mapa pokazuje współwystępowanie, nie przyczynę — zob. korelację na stronie Atlasu."]
+    svg = mapa_svg.kartogram_svg(kolekcja, mapa["kolory"], f"{zx['nazwa']} a {zy['nazwa']}"[:110],
+                                 f"{jednostki} województwa {wojewodztwo['nazwa']}, {wynik['rok']}", [], "", przypisy,
+                                 legenda_svg=mapa_svg.legenda_dwuzmiennowa(mapa["paleta"], zx["nazwa"], zy["nazwa"], mapa["liczebnosc"]))
+    naglowki = {"Content-Disposition": f"attachment; filename=dwuzmiennowa_{wynik['rok']}.svg"} if request.args.get("pobierz") else {}
+    return Response(svg, mimetype="image/svg+xml", headers=naglowki)
+
+
 @atlas_bp.route("/odtwarzanie")
 def odtwarzanie_lat():
     """ETAP 235: wskaźnik rok po roku do odtwarzania na mapie — kolory
@@ -289,4 +317,5 @@ def druk():
     """Strona z mapą do druku: podgląd, „Drukuj / zapisz PDF”, „Pobierz SVG”."""
     parametry = request.args.to_dict()
     parametry.pop("pobierz", None)
-    return render_template("atlas/druk.html", parametry=parametry)
+    svg = "atlas.mapa_dwuzmiennowa_svg" if parametry.get("zmienna2") else "atlas.mapa_do_druku_svg"  # ETAP 236
+    return render_template("atlas/druk.html", parametry=parametry, svg=svg)

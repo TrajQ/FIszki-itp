@@ -1756,3 +1756,36 @@ def test_odtwarzanie_lat(client, monkeypatch):
         assert client.get(f"/atlas/odtwarzanie?{ZAPYTANIE}&{zle}").status_code == 400
     monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", lambda z, rok, woj: [])
     assert client.get(f"/atlas/odtwarzanie?{ZAPYTANIE}&od=2010&do=2012").status_code == 404
+
+
+# ---------- ETAP 236: mapa dwuzmiennowa ----------
+
+
+def test_dwuzmiennowa_tercyle_i_kolory():
+    punkty = [{"teryt": str(i), "x": float(i), "y": float(9 - i)} for i in range(9)]  # X rośnie, Y maleje
+    w = statystyki.dwuzmiennowa(punkty)
+    assert w["klasy"]["0"] == [0, 2] and w["klasy"]["4"] == [1, 1] and w["klasy"]["8"] == [2, 0]
+    assert w["kolory"]["8"] == statystyki.KOLORY_DWUZMIENNOWE[0][2]  # wysoki X, niski Y
+    assert sum(map(sum, w["liczebnosc"])) == 9 and w["liczebnosc"][1][1] == 3
+    with pytest.raises(ValueError, match="co najmniej"):
+        statystyki.dwuzmiennowa(punkty[:5])
+
+
+def test_trasy_dwuzmiennowej(client, monkeypatch):
+    teryty = [f"12610{i:02d}" for i in range(8)]
+    monkeypatch.setattr(atlas_routes, "_wartosci", lambda zid, rok, woj, poziom="gminy": [
+        {"bdl_id": t, "teryt": t, "nazwa": f"G{i}", "wartosc": float(i if zid == 72305 else 10 - i)} for i, t in enumerate(teryty)])
+    monkeypatch.setattr(atlas_routes, "_wojewodztwa", lambda: [{"bdl_id": "011200000000", "nazwa": "małopolskie", "teryt": "12"}])
+    monkeypatch.setattr(atlas_routes.bdl, "pobierz_zmienna", lambda zid: bdl.Zmienna(zid, {72305: "ludność", 60559: "bezrobotni"}[zid], "osoba"))
+    w = client.get(f"/atlas/dwuzmiennowa?{ZAPYTANIE}&zmienna2=60559").get_json()
+    assert w["n"] == 8 and len(w["kolory"]) == 8 and w["zmienna_y"]["nazwa"] == "bezrobotni" and w["wartosci"][teryty[0]] == [0.0, 10.0]
+    assert client.get(f"/atlas/dwuzmiennowa?{ZAPYTANIE}&zmienna2=72305").status_code == 400  # ten sam wskaźnik
+    assert client.get(f"/atlas/korelacja?{ZAPYTANIE}&zmienna2=60559").get_json()["n"] == 8  # korelacja po wydzieleniu bez zmian
+    cechy = [{"type": "Feature", "properties": {"teryt": t, "nazwa": f"G{i}"},
+              "geometry": {"type": "Polygon", "coordinates": [[[19 + i, 50], [20 + i, 50], [20 + i, 51], [19 + i, 50]]]}} for i, t in enumerate(teryty)]
+    monkeypatch.setattr(atlas_routes.granice, "granice_gmin", lambda teryt, folder: {"type": "FeatureCollection", "features": cechy})
+    svg = client.get(f"/atlas/dwuzmiennowa.svg?{ZAPYTANIE}&zmienna2=60559").get_data(as_text=True)
+    assert "ludność a bezrobotni" in svg and "Dwa wskaźniki — tercyle" in svg and svg.count('width="54"') == 9
+    assert "→ ludność" in svg and "↑ bezrobotni" in svg
+    strona = client.get(f"/atlas/druk?{ZAPYTANIE}&zmienna2=60559").get_data(as_text=True)
+    assert "/atlas/dwuzmiennowa.svg?" in strona and "/atlas/mapa.svg" not in strona

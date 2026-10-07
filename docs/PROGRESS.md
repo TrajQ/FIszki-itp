@@ -4287,3 +4287,28 @@ Status: zamknięty
   1300/390 px (start, kolejny rok po czasie, suwak, zakończenie)
 - Pomoc: akapit „Odtwarzanie lat”
 - `DECISIONS.md`: D-243
+
+## ETAP 236 — Atlas: mapa dwuzmiennowa (dwa wskaźniki, 3 × 3 klasy) z wydrukiem
+Data: 2026-10-07
+Status: zamknięty
+
+- `atlas/statystyki.py`: `dwuzmiennowa(punkty)` — tercyle X i Y osobno
+  (`statistics.quantiles`, metoda inclusive), klasa (ix, iy) i kolor
+  każdej gminy, liczebność 9 klas; paleta 3 × 3 J. Stevensa
+  (`KOLORY_DWUZMIENNOWE`); od 6 gmin z oboma wskaźnikami
+- `atlas/routes.py`: `dwa_wskazniki` — wydzielone z korelacji pobranie
+  obu wskaźników (korelacja bez zmiany wyniku); `GET /atlas/dwuzmiennowa`
+  (kolory, klasy, progi, liczebność, wartości do dymków)
+- `atlas/mapa_svg.py`: `kartogram_svg(…, legenda_svg=)` i
+  `legenda_dwuzmiennowa` (kwadrat 3 × 3 z liczbami, strzałki osi z
+  nazwami); `atlas/trasy_druk.py`: `GET /atlas/dwuzmiennowa.svg`; strona
+  „Mapa do druku” z `zmienna2` pokazuje mapę dwuzmiennową
+- Strona: w karcie korelacji „Pokaż na mapie (3 × 3)” i „Do druku ↗”;
+  `korelacja.js` wysyła zdarzenie `atlas:kolory`, `atlas.js`
+  przekolorowuje warstwy, dymki z obiema wartościami, legenda-siatka i
+  „✕ Wróć do mapy wskaźnika”
+- Testy: tercyle i kolory (rosnący X, malejący Y), za mało gmin; trasy
+  JSON i SVG, strona druku, korelacja po wydzieleniu; przeglądarka
+  1300/390 px (8 kolorów na mapie, legenda, powrót, wydruk 1123 px)
+- Pomoc: „Dwa wskaźniki na jednej mapie (mapa dwuzmiennowa)”
+- `DECISIONS.md`: D-244

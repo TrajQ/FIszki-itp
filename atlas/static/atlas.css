@@ -1269,3 +1269,25 @@ button.przelacznik__opcja--aktywna:hover {
     font-size: 1.25rem;
     font-variant-numeric: tabular-nums;
 }
+
+/* ETAP 236: legenda mapy dwuzmiennowej 3 × 3 */
+.legenda-dwuzmiennowa__siatka {
+    display: grid;
+    grid-template-columns: repeat(3, 36px);
+    gap: 2px;
+    margin: 6px 0 4px 14px;
+}
+
+.legenda-dwuzmiennowa__pole {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    color: #1d1d1f;
+    font-size: 12px;
+}
+
+.legenda-dwuzmiennowa__os {
+    color: var(--tekst-drugi);
+    font-size: 12px;
+}

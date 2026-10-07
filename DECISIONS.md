@@ -4871,3 +4871,24 @@ przed długim pierwszym pobieraniem z GUS.
   kilka sekund na krok.
 - Klasy z jednego (wybranego) roku — wartości spoza jego zakresu
   wpadałyby w skrajne klasy.
+
+## D-244 — Mapa dwuzmiennowa: tercyle, paleta Stevensa, zdarzenie między skryptami
+Data: 2026-10-07
+
+**Decyzja:** Klasy to tercyle każdego wskaźnika osobno (3 × 3 = 9
+kolorów, paleta J. Stevensa). Mapa jest częścią karty korelacji — drugi
+wskaźnik wybiera się raz. `korelacja.js` przekazuje kolory do mapy
+zdarzeniem `atlas:kolory` (jak `atlas:dane` w drugą stronę, ETAP 59).
+
+**Uzasadnienie:** Tercyle dają porównywalne klasy niezależnie od
+jednostek i rozkładów obu wskaźników; więcej niż 3 klasy na oś (16+
+kolorów) jest nieczytelne. Paleta Stevensa jest najczęściej używana w
+kartografii dwuzmiennowej i rozróżnialna dla większości osób z
+zaburzeniami widzenia barw (osie: niebieska i czerwona). Zdarzenie
+zamiast wspólnego obiektu — skrypty strony zostają niezależnymi IIFE.
+
+**Odrzucone alternatywy:**
+- Klasy z progów wybranej metody (kwantyle, Jenks) — inna liczba klas na
+  osiach psuje siatkę legendy.
+- Osobna karta „mapa dwuzmiennowa” z własnym wyborem wskaźnika — ten sam
+  wybór co w korelacji, dwa miejsca do utrzymania.

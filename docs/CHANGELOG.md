@@ -1162,3 +1162,6 @@
 
 ## ETAP 235 — 2026-10-07
 - Atlas: odtwarzanie wskaźnika rok po roku na mapie
+
+## ETAP 236 — 2026-10-07
+- Atlas: mapa dwuzmiennowa — dwa wskaźniki na jednej mapie, także do druku
