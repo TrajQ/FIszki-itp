@@ -589,3 +589,55 @@ button.przycisk--niebezpieczny-tekst {
 .podpis-zdjecia {
     font-style: italic;
 }
+
+/* ETAP 240: zmiana stanu w czasie */
+.seria__projekty {
+    margin: 0;
+    padding-left: 1.4em;
+}
+
+.seria__paski svg {
+    display: block;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+}
+
+.seria__legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 4px 0 8px;
+    font-size: 13px;
+}
+
+.seria__probka {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 5px;
+    border-radius: 2px;
+    vertical-align: baseline;
+}
+
+.seria__miejsca td {
+    white-space: nowrap;
+}
+
+.porownaj-w-czasie summary {
+    cursor: pointer;
+}
+
+.porownaj-w-czasie__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 6px 0;
+}
+
+.porownaj-w-czasie__lista label {
+    flex-direction: row; /* globalny label to kolumna (static/style.css) */
+    align-items: center;
+    gap: 8px;
+    font-weight: 400;
+}

@@ -1174,3 +1174,6 @@
 
 ## ETAP 239 — 2026-10-07
 - Osiedle: zielone dachy budynków wliczane do powierzchni biologicznie czynnej (50%, od 10 m²)
+
+## ETAP 240 — 2026-10-07
+- Teren: zmiana stanu w czasie dla 2–6 inwentaryzacji tego samego terenu

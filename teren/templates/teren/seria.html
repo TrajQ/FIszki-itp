@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "_wydruk.html" import stopka_wydruku %}
+
+{% block tytul %}Zmiana w czasie — Warsztat{% endblock %}
+{% block klasa_body %}strona-raportu-terenu{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('teren.static', filename='teren.css') }}">{% endblock %}
+
+{% macro liczba(x) %}{{ ('%.1f' % x).rstrip('0').rstrip('.').replace('.', ',') }}{% endmacro %}
+{% macro pp(x) %}{% if x > 0.05 %}+{% endif %}{{ liczba(x) }} p.p.{% endmacro %}
+
+{% block tresc %}
+<div class="raport-terenu">
+    <div class="raport-terenu__akcje">
+        {% if projekty %}<a class="przycisk przycisk--tekst" href="{{ url_for('teren.widok_projektu', projekt_id=projekty[0].id) }}">‹ {{ projekty[0].nazwa }}</a>{% else %}<a class="przycisk przycisk--tekst" href="{{ url_for('teren.index') }}">‹ Teren</a>{% endif %}
+        {% if not blad %}<button type="button" onclick="window.print()">Drukuj / zapisz PDF</button>{% endif %}
+    </div>
+
+    {# ETAP 240: kilka inwentaryzacji w kolejności pomiarów — liczy teren/seria.py #}
+    <section class="raport-terenu__strona">
+        <h1>Zmiana stanu w czasie</h1>
+        {% if blad %}
+        <p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>
+        {% else %}
+        <ol class="seria__projekty">
+            {% for p in projekty %}<li><strong>{{ p.nazwa }}</strong> — {{ p.data or 'bez daty' }}, {{ p.liczba_punktow }} punktów</li>{% endfor %}
+        </ol>
+        <p class="wyciszony przypis">Kolejność od najwcześniejszego pomiaru; numery 1–{{ projekty | length }} używane niżej.</p>
+        {% if not pola %}
+        <p class="komunikat komunikat--ostrzezenie" role="status">Inwentaryzacje nie mają pól wspólnych dla wszystkich (ta sama nazwa i typ) — nie ma czego zestawić. Do powtórzonej inwentaryzacji użyj „Utwórz podobny”.</p>
+        {% endif %}
+
+        {% for z in zestawienie %}
+        <h3>{{ z.nazwa }}</h3>
+        {% if z.wiersze is defined %}
+        {% if z.svg is defined %}
+        <div class="seria__paski" role="img" aria-label="Udziały odpowiedzi w kolejnych inwentaryzacjach">{{ z.svg }}</div>
+        <p class="seria__legenda">{% for w in z.wiersze %}<span><span class="seria__probka" style="background: {{ w.kolor }}"></span>{{ w.wartosc }}</span>{% endfor %}</p>
+        {% endif %}
+        <div class="raport-terenu__przewijanie"><table class="tabela">
+            <tr><th>Wartość</th>{% for p in projekty %}<th class="liczba">{{ loop.index }}</th>{% endfor %}<th class="liczba">{{ projekty | length }} wobec 1</th></tr>
+            {% for w in z.wiersze %}
+            <tr><td>{{ w.wartosc }}</td>{% for r in w.w_czasie %}<td class="liczba">{{ r.liczba }} ({{ liczba(r.procent) }}%)</td>{% endfor %}<td class="liczba">{{ pp(w.zmiana_pp) }}</td></tr>
+            {% endfor %}
+        </table></div>
+        {% elif z.statystyki is defined %}
+        <div class="raport-terenu__przewijanie"><table class="tabela">
+            <tr><th></th>{% for p in projekty %}<th class="liczba">{{ loop.index }}</th>{% endfor %}</tr>
+            <tr><td>średnia</td>{% for s in z.statystyki %}<td class="liczba">{{ liczba(s.srednia) if s else '—' }}</td>{% endfor %}</tr>
+            <tr><td>mediana</td>{% for s in z.statystyki %}<td class="liczba">{{ liczba(s.mediana) if s else '—' }}</td>{% endfor %}</tr>
+            <tr><td>punktów z wartością</td>{% for poz in z.pozycje %}<td class="liczba">{{ poz.wypelnione }}</td>{% endfor %}</tr>
+        </table></div>
+        {% else %}
+        <p class="wyciszony">wypełnione: {% for poz in z.pozycje %}{{ loop.index }}: {{ poz.wypelnione }} z {{ poz.wszystkie }}{{ ', ' if not loop.last }}{% endfor %}</p>
+        {% endif %}
+        {% endfor %}
+        <p class="wyciszony przypis">Procenty — udział punktów danej inwentaryzacji (bez odpowiedzi = luka do 100%); zmiana ostatniej wobec pierwszej w punktach procentowych (p.p.).</p>
+        {% endif %}
+    </section>
+
+    {% if not blad %}
+    <section class="raport-terenu__strona">
+        <h2>Te same miejsca</h2>
+        <p class="wyciszony">Punkty łączone z najbliższym punktem poprzedniej inwentaryzacji w promieniu {{ prog_m }} m (wzajemnie najbliższe): <strong>{{ liczba_lancuchow }}</strong> miejsc zmierzonych co najmniej dwa razy.</p>
+        {% for z in zmiany %}
+        <h3>{{ z.nazwa }}</h3>
+        <p>od pierwszego do ostatniego pomiaru w miejscu — lepiej: <strong>{{ z.lepiej }}</strong> · gorzej: <strong>{{ z.gorzej }}</strong> · bez zmian: {{ z.bez_zmian }}</p>
+        {% if z.miejsca %}
+        <div class="raport-terenu__przewijanie"><table class="tabela seria__miejsca">
+            <tr><th>Ocena</th>{% for p in projekty %}<th>{{ loop.index }}</th>{% endfor %}</tr>
+            {% for m in z.miejsca %}
+            <tr><td class="{{ 'stan--zle' if m.ocena == 'gorzej' else 'stan--ok' if m.ocena == 'lepiej' else 'wyciszony' }}">{{ m.ocena }}</td>
+                {% for w in m.przebieg %}<td>{% if w %}<span class="seria__probka" style="background: {{ w.kolor }}"></span>{{ w.wartosc }} <span class="wyciszony">nr {{ m.numery[loop.index0] }}</span>{% elif m.numery[loop.index0] %}<span class="wyciszony">nr {{ m.numery[loop.index0] }}, bez odp.</span>{% else %}<span class="wyciszony">—</span>{% endif %}</td>{% endfor %}</tr>
+            {% endfor %}
+        </table></div>
+        {% endif %}
+        {% else %}
+        <p class="wyciszony">Brak wspólnych pól na skali (od najlepszej do najgorszej opcji) — zmian w tych samych miejscach nie da się ocenić.</p>
+        {% endfor %}
+        <p class="wyciszony przypis">„nr” — numer punktu w raporcie danej inwentaryzacji; „—” — w tej inwentaryzacji nie było punktu w tym miejscu. Para to najbliższe sobie punkty — przy gęstych pomiarach sprawdź na mapie, czy to ten sam obiekt.</p>
+    </section>
+    {{ stopka_wydruku("Teren", "pomiary w terenie; położenie — GPS telefonu (WGS84)") }}
+    {% endif %}
+</div>
+{% endblock %}

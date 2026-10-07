@@ -17,7 +17,7 @@ from flask import Blueprint, Response, abort, jsonify, redirect, render_template
 
 from markupsafe import Markup
 
-from . import baza, podklad, porownanie, raport, trasa
+from . import baza, podklad, porownanie, raport, seria, trasa
 from .projekt import FORMAT, KIERUNKI, RODZAJE, TYPY_POL, WZORY, BladDanych, braki, odczytaj_csv, odczytaj_geojson, odczytaj_plik, opis_kierunku, sprawdz_poprawke, sprawdz_pola, sprawdz_tekst
 
 teren_bp = Blueprint(
@@ -511,6 +511,28 @@ def porownanie_projektow():
         zestawienie=porownanie.zestawienie_obok(pola, punkty_a, punkty_b),
         polaczone=polaczone, zmiany=porownanie.zmiany_w_miejscach(pola, polaczone), prog_m=porownanie.PROG_M,
         tylko_a=[p["nazwa"] for p in a["pola"] if p not in pola], tylko_b=[p["nazwa"] for p in b["pola"] if p["nazwa"] not in {x["nazwa"] for x in pola}],
+    )
+
+
+@teren_bp.route("/seria")
+def seria_projektow():
+    """ETAP 240: zmiana stanu w czasie — 2–6 inwentaryzacji (?id=…&id=…)."""
+    projekty = [_projekt_albo_404(i) for i in request.args.getlist("id", type=int)]
+    punkty = {p["id"]: raport.ponumeruj(baza.punkty(p["id"])) for p in projekty}
+    try:
+        projekty = seria.uloz(projekty, punkty)
+    except seria.BladSerii as e:
+        return render_template("teren/seria.html", blad=str(e), projekty=projekty), 400
+    pola = seria.pola_wspolne(projekty)
+    punkty_kolejno = [punkty[p["id"]] for p in projekty]
+    zestawienie = seria.zestawienie_w_czasie(pola, punkty_kolejno)
+    for z in zestawienie:
+        if z["skala"] and "wiersze" in z:
+            z["svg"] = Markup(seria.paski_svg(z))  # tylko liczby i kolory z kodu
+    lancuchy = seria.lancuchy(punkty_kolejno)
+    return render_template(
+        "teren/seria.html", blad=None, projekty=projekty, pola=pola, zestawienie=zestawienie,
+        liczba_lancuchow=len(lancuchy), zmiany=seria.zmiany_w_czasie(pola, lancuchy), prog_m=porownanie.PROG_M,
     )
 
 

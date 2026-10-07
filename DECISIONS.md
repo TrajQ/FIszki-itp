@@ -4956,3 +4956,24 @@ pokrywa się z rzutem, więc nie trzeba niczego rysować drugi raz.
   nowego typu obiektu; na razie można je ująć w PBC % terenu.
 - Udział inny niż 50% (z planu) — plany różnią się zapisem; użytkownik
   może wtedy wpisać PBC terenu ręcznie.
+
+## D-248 — Seria inwentaryzacji: łańcuchy par między kolejnymi pomiarami
+Data: 2026-10-07
+
+**Decyzja:** To samo miejsce w serii to łańcuch par wyznaczonych tak jak
+w porównaniu dwóch projektów (wzajemnie najbliższe punkty do 15 m), ale
+tylko między kolejnymi inwentaryzacjami. Kolejność serii ustala data
+pierwszego pomiaru, nie kolejność wyboru ani numer projektu. Ocena
+miejsca: pierwsza wobec ostatniej znanej wartości na skali.
+
+**Uzasadnienie:** Ponowne użycie `porownanie.pary` daje tę samą
+definicję „tego samego miejsca” co w ETAPie 157. Łączenie tylko
+kolejnych pomiarów jest przewidywalne: przerwa w łańcuchu znaczy, że w
+danym roku punktu nie było. Data pomiaru jest pewniejsza niż nazwa
+projektu („kopia”).
+
+**Odrzucone alternatywy:**
+- Łączenie z dowolną wcześniejszą inwentaryzacją (przeskok luk) — łatwo
+  połączyć różne obiekty przy gęstych pomiarach.
+- Wykres liniowy udziałów — przy 2–6 punktach w czasie paski skumulowane
+  czytelniej pokazują cały rozkład.

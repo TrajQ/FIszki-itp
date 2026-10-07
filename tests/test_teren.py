@@ -884,3 +884,65 @@ def test_geojson_uid_bez_zmian_po_przebudowie():
         {"type": "Feature", "geometry": {"type": "Point", "coordinates": [16.9, 52.4]}, "properties": atr}]}, POLA)
     stary = "gj_" + hashlib.sha1(json.dumps([16.9, 52.4, atr], sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:24]
     assert punkty[0]["uid"] == stary
+
+
+# ---------- ETAP 240: zmiana stanu w czasie (kilka inwentaryzacji) ----------
+
+
+def _seria(client):
+    client.post("/teren/projekty", data={"nazwa": "Zieleń 2026", "wzor": "zielen"})
+    client.post("/teren/projekty/1/podobny")
+    client.post("/teren/projekty/1/podobny")
+    client.post("/teren/projekty", data={"nazwa": "Inny formularz", "wzor": "budynki"})
+
+    def pkt(uid, lat, stan, obwod, rok):
+        return {"uid": uid, "lat": lat, "lng": 16.9, "dokladnosc_m": 4, "czas": f"{rok}-05-01T10:00", "wartosci": {"obiekt": "drzewo", "stan": stan, "obwód pnia [cm]": obwod},
+                "uwagi": "", "zdjecie": None}
+    with client.application.app_context():
+        from teren import baza
+        # projekt 1 zmierzony najpóźniej (2026), projekt 3 najwcześniej (2024) — kolejność z dat pomiaru
+        baza.zapisz_punkty(3, [pkt("c1", 52.40000, "dobry", 100, 2024), pkt("c2", 52.40100, "średni", 80, 2024), pkt("c3", 52.40200, "dobry", 50, 2024)])
+        baza.zapisz_punkty(2, [pkt("b1", 52.40003, "średni", 102, 2025), pkt("b2", 52.40101, "dobry", 82, 2025), pkt("b4", 52.40300, "dobry", 30, 2025)])
+        baza.zapisz_punkty(1, [pkt("a1", 52.40002, "zły", 104, 2026), pkt("a2", 52.40099, "dobry", 84, 2026),
+                               pkt("a3", 52.40200, "zły", 52, 2026), pkt("a4", 52.40301, "dobry", 31, 2026)])
+
+
+def test_seria_lancuchy_i_zmiany(client):
+    from teren import baza, raport, seria
+
+    _seria(client)
+    with client.application.app_context():
+        projekty = [baza.projekt(i) for i in (1, 2, 3)]
+        punkty = {p["id"]: raport.ponumeruj(baza.punkty(p["id"])) for p in projekty}
+        uloz = seria.uloz(projekty, punkty)
+        assert [p["id"] for p in uloz] == [3, 2, 1] and uloz[0]["data"] == "2024-05-01"
+        kolejno = [punkty[p["id"]] for p in uloz]
+        lancuchy = seria.lancuchy(kolejno)
+        # drzewo 1: 3 pomiary; 2: 3 pomiary; 4: 2025 i 2026; drzewo 3 (2024 i 2026, bez 2025) — nie jest łańcuchem
+        assert sorted(sum(p is not None for p in ln) for ln in lancuchy) == [2, 3, 3]
+        zmiany = seria.zmiany_w_czasie(seria.pola_wspolne(uloz), lancuchy)
+        assert len(zmiany) == 1 and (zmiany[0]["lepiej"], zmiany[0]["gorzej"], zmiany[0]["bez_zmian"]) == (1, 1, 1)
+        assert zmiany[0]["miejsca"][0]["ocena"] == "gorzej" and [w["wartosc"] for w in zmiany[0]["miejsca"][0]["przebieg"]] == ["dobry", "średni", "zły"]
+        z = seria.zestawienie_w_czasie(seria.pola_wspolne(uloz), kolejno)
+        stan = next(x for x in z if x["nazwa"] == "stan")
+        assert [r["liczba"] for r in stan["wiersze"][0]["w_czasie"]] == [2, 2, 2]  # „dobry”
+        assert stan["wiersze"][2]["zmiana_pp"] == pytest.approx(50)  # „zły”: 0% → 2/4
+        assert seria.paski_svg(stan).count("<rect") >= 6
+        with pytest.raises(seria.BladSerii):
+            seria.uloz(projekty[:1], punkty)
+        with pytest.raises(seria.BladSerii):
+            seria.uloz([projekty[0], projekty[0]], punkty)
+
+
+def test_strona_serii(client):
+    _seria(client)
+    html = client.get("/teren/seria?id=1&id=2&id=3").get_data(as_text=True)
+    assert "Zmiana stanu w czasie" in html and html.index("Zieleń 2026 (kopia)") < html.index("<strong>Zieleń 2026</strong>")
+    assert "lepiej: <strong>1</strong> · gorzej: <strong>1</strong> · bez zmian: 1" in html
+    assert "<strong>3</strong> miejsc" in html and "<svg" in html and "stopka-wydruku" in html
+    assert "+50 p.p." in html
+    zle = client.get("/teren/seria?id=1")
+    assert zle.status_code == 400 and "od 2 do 6" in zle.get_data(as_text=True)
+    assert client.get("/teren/seria?id=1&id=99").status_code == 404
+    assert "nie mają pól wspólnych" in client.get("/teren/seria?id=1&id=4").get_data(as_text=True)
+    assert 'action="/teren/seria"' in client.get("/teren/projekty/1").get_data(as_text=True)

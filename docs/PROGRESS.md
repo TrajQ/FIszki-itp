@@ -4380,3 +4380,22 @@ Status: zamknięty
   1300/390 px (PBC 20% ✗ → 23% ✓ po wpisaniu 50%)
 - Pomoc: „Zielone dachy w powierzchni biologicznie czynnej”
 - `DECISIONS.md`: D-247
+
+## ETAP 240 — Teren: zmiana stanu w czasie — 2–6 inwentaryzacji
+Data: 2026-10-07
+Status: zamknięty
+
+- `teren/seria.py`: `uloz` (kolejność wg daty pierwszego pomiaru, potem
+  terminu i numeru; 2–6 różnych projektów), `pola_wspolne` (pola
+  wszystkich projektów), `zestawienie_w_czasie` (udziały odpowiedzi i
+  statystyki liczb w każdej inwentaryzacji, zmiana ostatniej wobec
+  pierwszej), `lancuchy` (pary między kolejnymi inwentaryzacjami —
+  `porownanie.pary`), `zmiany_w_czasie` (przebieg pól na skali w
+  miejscu, ocena pierwszy → ostatni pomiar), `paski_svg`
+- `GET /teren/seria?id=…&id=…` i szablon `teren/seria.html` (do druku,
+  ze stopką); na stronie projektu „Zmiana w czasie” z listą projektów
+- Testy: kolejność z dat, łańcuchy (przerwa = brak łańcucha), oceny,
+  udziały i zmiana p.p., błędy (1 projekt, powtórzony, nieistniejący,
+  bez wspólnych pól); przeglądarka 1300/390 px
+- Pomoc: akapit „Zmiana w czasie” w „Import punktów z QGIS”
+- `DECISIONS.md`: D-248

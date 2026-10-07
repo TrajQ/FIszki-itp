@@ -33,6 +33,17 @@
             </select>
             <button type="submit" class="przycisk--tekst" title="Zestawienie obok siebie i zmiany w tych samych miejscach">Porównaj</button>
         </form>
+        {# ETAP 240: kilka inwentaryzacji — zmiana stanu w czasie #}
+        <details class="porownaj-w-czasie">
+            <summary>Zmiana w czasie</summary>
+            <form method="get" action="{{ url_for('teren.seria_projektow') }}">
+                <input type="hidden" name="id" value="{{ projekt.id }}">
+                <div class="porownaj-w-czasie__lista">
+                    {% for p in inne %}<label><input type="checkbox" name="id" value="{{ p.id }}">{{ p.nazwa }}</label>{% endfor %}
+                </div>
+                <button type="submit" class="przycisk--tekst">Pokaż zmianę (2–6 inwentaryzacji)</button>
+            </form>
+        </details>
         {% endif %}
     </div>
 </div>
