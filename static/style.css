@@ -1264,3 +1264,9 @@ h3.h4 {
     letter-spacing: normal;
     line-height: inherit;
 }
+
+/* ETAP 251: strona logowania (tryb serwerowy) */
+.logowanie {
+    max-width: 380px;
+    margin: 12vh auto 0;
+}

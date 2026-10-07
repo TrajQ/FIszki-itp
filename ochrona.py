@@ -19,7 +19,7 @@ ich przeglądarka na polecenie obcej strony.
 
 from urllib.parse import urlsplit
 
-from flask import abort, jsonify, request
+from flask import abort, current_app, jsonify, request
 
 DOZWOLONE_HOSTY = {"127.0.0.1", "localhost"}
 METODY_ZMIENIAJACE_STAN = {"POST", "PUT", "DELETE", "PATCH"}
@@ -32,7 +32,9 @@ def _nazwa_hosta(host_z_portem: str) -> str:
 
 def sprawdz_zapytanie():
     """before_request: odrzuca zapytania, które nie mogą pochodzić od nas."""
-    if _nazwa_hosta(request.host) not in DOZWOLONE_HOSTY:
+    # ETAP 251: na serwerze także domena z WARSZTAT_DOMENA (Caddy przekazuje oryginalny Host)
+    dozwolone = DOZWOLONE_HOSTY | ({current_app.config["WARSZTAT_DOMENA"]} if current_app.config.get("WARSZTAT_DOMENA") else set())
+    if _nazwa_hosta(request.host) not in dozwolone:
         abort(403, "Nieznany nagłówek Host — aplikacja działa tylko pod 127.0.0.1.")
 
     if request.method not in METODY_ZMIENIAJACE_STAN:

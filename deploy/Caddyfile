@@ -1,0 +1,12 @@
+# Warsztat w chmurze (ETAP 251). Caddy sam pobiera i odnawia certyfikat
+# HTTPS (Let's Encrypt) dla domeny i przekierowuje http → https.
+# {$WARSZTAT_DOMENA} podstawia instaluj_serwer.sh.
+{$WARSZTAT_DOMENA} {
+	encode gzip
+	# Warsztat (gunicorn) słucha tylko na 127.0.0.1 — z internetu widać wyłącznie Caddy
+	reverse_proxy 127.0.0.1:8000
+	request_body {
+		max_size 60MB
+	}
+	header Strict-Transport-Security "max-age=31536000"
+}

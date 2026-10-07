@@ -1207,3 +1207,6 @@
 
 ## ETAP 250 — 2026-10-07
 - Koniec projektu: podsumowanie ETAPów 151–250, portfolio i plan dalszy (Oracle Cloud)
+
+## ETAP 251 — 2026-10-07
+- Warsztat w chmurze: logowanie hasłem, HTTPS, instalacja na Oracle Cloud jednym poleceniem (docs/ORACLE_CLOUD.md)

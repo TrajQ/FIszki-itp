@@ -1,0 +1,3 @@
+# Tylko na serwerze (ETAP 251, D-259): serwer WSGI zamiast serwera deweloperskiego Flaska.
+-r requirements.txt
+gunicorn==23.0.0

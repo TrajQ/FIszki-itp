@@ -14,7 +14,7 @@ from przepisy import przepisy_bp
 from teren import teren_bp
 from praca import praca_bp
 from ceny import ceny_bp
-from config import Config
+from config import DOMYSLNY_SECRET_KEY, Config
 from ochrona import dodaj_naglowki, sprawdz_zapytanie, za_duzy_plik
 
 MAKS_TERMINOW = 6  # kalendarz na stronie głównej: tyle najbliższych terminów
@@ -46,6 +46,20 @@ def create_app(instance_path=None):
     app.before_request(sprawdz_zapytanie)
     app.after_request(dodaj_naglowki)
     app.register_error_handler(413, za_duzy_plik)  # ETAP 229
+
+    # ETAP 251: tryb serwerowy — logowanie, ciasteczko tylko przez HTTPS, adres
+    # klienta i protokół od Caddy (jeden serwer pośredniczący przed aplikacją).
+    import logowanie
+
+    if logowanie.tryb_serwerowy(app):
+        if app.config["SECRET_KEY"] == DOMYSLNY_SECRET_KEY or len(app.config["SECRET_KEY"]) < 32:
+            raise RuntimeError("Tryb serwerowy: ustaw w .env losowy SECRET_KEY (co najmniej 32 znaki).")
+        if not app.config.get("WARSZTAT_HASLO_HASH"):
+            raise RuntimeError("Tryb serwerowy: ustaw hasło — python narzedzia/ustaw_haslo.py.")
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+        logowanie.zarejestruj(app)
 
     app.register_blueprint(atlas_bp, url_prefix="/atlas")
     app.register_blueprint(mpzp_bp, url_prefix="/mpzp")

@@ -26,6 +26,9 @@
                 <li><a href="{{ url_for('szukaj') }}" class="{{ 'aktywny' if request.endpoint == 'szukaj' }}" title="Szukaj we wszystkich modułach" aria-label="Szukaj">⌕ Szukaj</a></li>
                 <li><a href="{{ url_for('pomoc') }}" class="{{ 'aktywny' if request.endpoint == 'pomoc' }}" title="Jak zrobić…">Pomoc</a></li>
                 <li><button type="button" id="przelacznik-motywu" class="przelacznik-motywu" aria-label="Zmień motyw">◐</button></li>
+                {% if session.zalogowany %}{# ETAP 251: tryb serwerowy #}
+                <li><form method="post" action="{{ url_for('wylogowanie') }}"><button type="submit" class="przycisk--tekst wyloguj" title="Wyloguj z Warsztatu">Wyloguj</button></form></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

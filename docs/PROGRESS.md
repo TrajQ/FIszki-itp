@@ -4613,3 +4613,37 @@ Status: zamknięty
   repozytorium)
 - Pomiary: pełne testy pod coverage (743, 96%), start aplikacji ok. 0,7 s
 - `DECISIONS.md`: D-258
+
+## ETAP 251 — Warsztat w chmurze: tryb serwerowy z logowaniem, HTTPS przez Caddy, instalacja na Oracle Cloud
+Data: 2026-10-07
+Status: zamknięty
+
+- Na prośbę autora po ETAPie 250: jeden użytkownik, obowiązkowy HTTPS,
+  bez przenoszenia danych
+- `logowanie.py`: tryb serwerowy (`WARSZTAT_DOMENA` w .env) — każda
+  strona wymaga sesji (bez niej: strona logowania, a dla fetch/plików
+  401), hasło sprawdzane ze skrótu `WARSZTAT_HASLO_HASH`, ciasteczko
+  Secure/HttpOnly/SameSite=Lax na 30 dni, blokada 15 min po 5 złych
+  hasłach z jednego IP, powrót po zalogowaniu tylko na adres w
+  aplikacji; `/logowanie`, `/wylogowanie`, „Wyloguj” w menu
+- `app.py`: w trybie serwerowym wymaga losowego SECRET_KEY (≥ 32 znaki)
+  i hasła, `ProxyFix` (adres klienta i https od Caddy); `ochrona.py`
+  przyjmuje Host z domeny; lokalnie bez zmian (test)
+- `wsgi.py`, `requirements-serwer.txt` (gunicorn), `deploy/`: Caddyfile
+  (automatyczny HTTPS, limit 60 MB, HSTS), usługa systemd (gunicorn na
+  127.0.0.1:8000, jeden proces z wątkami), `instaluj_serwer.sh` (pakiety,
+  Caddy z oficjalnego repozytorium, .venv, .env z domeną i hasłem,
+  usługa, porty 80/443 w iptables, kopia z crona), `aktualizuj_serwer.sh`
+- `narzedzia/ustaw_haslo.py` (skrót hasła i losowy SECRET_KEY w .env,
+  prawa 600), `narzedzia/kopia_serwera.py` (kopia co 6 h, 14 ostatnich)
+- `docs/ORACLE_CLOUD.md`: konto i maszyna, porty w Security List,
+  DuckDNS, wgranie przez scp, instalacja jednym poleceniem, na co dzień,
+  gdy coś nie działa
+- Testy: przekierowanie i 401 bez sesji, logowanie i wylogowanie, flagi
+  ciasteczka, bezpieczny powrót, blokada prób, obcy Host i Origin,
+  wymagany klucz i hasło, wersja lokalna bez zmian, zapis w .env;
+  uruchomienie na gunicorn 23.0.0 z nagłówkami jak od Caddy (sesja,
+  fetch, POST z Origin, blokada per IP). Caddy i Oracle nie były dostępne
+  w środowisku — instalację sprawdzi pierwsze uruchomienie
+- Pomoc: „Warsztat w chmurze (Oracle Cloud, HTTPS)”
+- `DECISIONS.md`: D-259

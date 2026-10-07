@@ -5182,3 +5182,27 @@ przed pisaniem kodu — zgodnie z zasadą „najpierw plan, potem kod”.
 **Odrzucone alternatywy:**
 - Dopisanie serwera i logowania w ostatnich ETAPach — zmiana stacku i
   założeń bez zgody autora.
+
+## D-259 — Serwer: Caddy + gunicorn na 127.0.0.1, jedno hasło, zależność gunicorn
+Data: 2026-10-07
+
+**Decyzja:** W chmurze Warsztat dalej słucha tylko na 127.0.0.1 (zasada
+z CLAUDE.md), a z internetu widać Caddy, który sam pobiera i odnawia
+certyfikat HTTPS. Logowanie to jedno hasło (skrót w .env) i sesja
+Flaska, włączane tylko w trybie serwerowym. Nowa zależność — gunicorn —
+tylko w `requirements-serwer.txt`, nie w lokalnej instalacji. Domena z
+DuckDNS (darmowa).
+
+**Uzasadnienie:** Autor potrzebuje Warsztatu z telefonu, sam, z HTTPS.
+Caddy daje HTTPS bez ręcznej obsługi certyfikatów; gunicorn to
+produkcyjny serwer WSGI zamiast serwera deweloperskiego Flaska. Jeden
+proces z wątkami — SQLite i licznik prób logowania wspólne. Jedno hasło
+bez kont i bazy użytkowników wystarcza dla jednej osoby; wersja
+lokalna nie zmienia się, więc nie ma ryzyka dla codziennej pracy na PC.
+
+**Odrzucone alternatywy:**
+- nginx + certbot — więcej konfiguracji i odnawiania do pilnowania.
+- Flask-Login / konta użytkowników — nowa zależność i baza dla jednej
+  osoby.
+- Certyfikat na sam adres IP — wymaga dodatkowego wsparcia urzędu
+  certyfikacji; darmowa subdomena jest prostsza i sprawdzona.
