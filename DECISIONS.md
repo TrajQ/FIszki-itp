@@ -4878,7 +4878,7 @@ Data: 2026-10-07
 **Decyzja:** Klasy to tercyle każdego wskaźnika osobno (3 × 3 = 9
 kolorów, paleta J. Stevensa). Mapa jest częścią karty korelacji — drugi
 wskaźnik wybiera się raz. `korelacja.js` przekazuje kolory do mapy
-zdarzeniem `atlas:kolory` (jak `atlas:dane` w drugą stronę, ETAP 59).
+zdarzeniem `atlas:kolory` (jak `atlas:dane` w drugą stronę, ETAP 25).
 
 **Uzasadnienie:** Tercyle dają porównywalne klasy niezależnie od
 jednostek i rozkładów obu wskaźników; więcej niż 3 klasy na oś (16+
