@@ -237,6 +237,32 @@
             <div id="wynik-cienia" class="stos" hidden></div>
         </section>
 
+        {# ETAP 238: przekrój A–A′ — liczy i rysuje serwer (osiedle/przekroj.py) #}
+        <section id="sekcja-przekroju" class="karta stos" hidden>
+            <h3>Przekrój terenu</h3>
+            <p class="wyciszony opis-panelu">Linia A–A′ przez środek rysunku: budynki z wysokością (kondygnacje × 3 m), odstępy między nimi i dopuszczalna wysokość z planu. Teren płaski.</p>
+            <div class="przekroj__suwaki">
+                <label>Kierunek linii <span id="opis-kata" class="wyciszony"></span>
+                    <input id="kat-przekroju" type="range" min="0" max="175" step="5" value="90">
+                </label>
+                <label>Przesunięcie w bok <span id="opis-przesuniecia" class="wyciszony"></span>
+                    <input id="przesuniecie-przekroju" type="range" min="-100" max="100" step="5" value="0">
+                </label>
+            </div>
+            <div class="rzad">
+                <button id="pokaz-przekroj" type="button" class="przycisk--drugi">Pokaż</button>
+                <button id="ukryj-przekroj" type="button" class="przycisk--tekst" hidden>Ukryj</button>
+            </div>
+            <div id="wynik-przekroju" class="stos" hidden>
+                <img id="rysunek-przekroju" class="przekroj__rysunek" alt="Przekrój terenu z budynkami: wysokości i odstępy">
+                <p id="opis-przekroju" class="wyciszony opis-panelu" aria-live="polite"></p>
+                <div class="rzad">
+                    <a id="pobierz-przekroj" class="przycisk przycisk--tekst" href="#">Pobierz SVG</a>
+                    <a id="raport-przekroju" class="przycisk przycisk--tekst" href="#" target="_blank">W raporcie ↗</a>
+                </div>
+            </div>
+        </section>
+
         <section id="sekcja-cen" class="karta stos" hidden>
             <h3>Ceny w okolicy</h3>
             <p class="wyciszony opis-panelu">Mieszkania i działki sprzedane w obszarze opracowania i wokół niego — z pliku Rejestru Cen Nieruchomości zaimportowanego w module Ceny.</p>

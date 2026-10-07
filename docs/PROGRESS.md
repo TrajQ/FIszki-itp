@@ -4335,3 +4335,27 @@ Status: zamknięty
   odpowiedzią serwera → kalkulator z 2 działkami)
 - Pomoc: „Kalkulator zabudowy dla kilku działek razem”
 - `DECISIONS.md`: D-245
+
+## ETAP 238 — Osiedle: przekrój terenu z wysokością budynków (SVG)
+Data: 2026-10-07
+Status: zamknięty
+
+- `osiedle/przekroj.py`: `przekroj(geojson, kat, przesuniecie_proc,
+  ustawienia)` — linia A–A′ przez środek rysunku (azymut, przesunięcie
+  w bok o % połowy rozpiętości), odcinki terenów, budynki (wysokość =
+  kondygnacje × 3 m jak w analizie cienia), odstępy między budynkami,
+  granice obszaru, dopuszczalna wysokość z planu (maks. kondygnacje);
+  `przekroj_svg` — rysunek z osią odległości, A/A′, wymiarami odstępów
+  i opisem skali pionowej (przewyższenie, gdy budynki byłyby za niskie)
+- Trasy: `GET /osiedle/koncepcje/<id>/przekroj` (JSON z linią do mapy),
+  `…/przekroj.svg` (`?pobierz=1` — plik); raport koncepcji ma sekcję
+  „Przekrój A–A′” z tabelą odstępów, gdy linia przecina budynki
+  (`?przekroj_kat=&przekroj_przes=`)
+- Strona koncepcji: karta „Przekrój terenu” — suwaki kierunku i
+  przesunięcia (odświeżanie na bieżąco), linia z literami A/A′ na mapie,
+  rysunek, opis, „Pobierz SVG”, „W raporcie ↗”
+- Testy: przekrój W–E, N–S i przesunięty (które budynki, odległości,
+  odstępy, plan), SVG, błędy parametrów, trasy i raport; przeglądarka
+  1300/390 px
+- Pomoc: „Przekrój terenu z wysokością budynków”
+- `DECISIONS.md`: D-246

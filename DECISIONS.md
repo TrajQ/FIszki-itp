@@ -4913,3 +4913,25 @@ wysłać; `localStorage` przetrwa przejście między działkami na mapie.
   (to robi moduł Osiedle), tu rzut jest tylko liczbą.
 - Pobieranie powierzchni po identyfikatorze w kalkulatorze — ULDK jest
   już na mapie; dublowanie zapytań bez potrzeby.
+
+## D-246 — Przekrój koncepcji: linia z parametrów, teren płaski
+Data: 2026-10-07
+
+**Decyzja:** Linię przekroju wyznaczają dwa parametry (azymut i
+przesunięcie od środka rysunku), nie osobny obiekt rysowany na mapie.
+Teren jest płaski, wysokość budynku = kondygnacje × 3 m (ta sama stała
+co w analizie cienia). Skala pionowa równa poziomej, chyba że budynki
+byłyby niewidoczne albo się nie mieściły — wtedy przewyższenie
+(najwyżej ×10), podpisane na rysunku.
+
+**Uzasadnienie:** Parametry da się zapisać w adresie raportu i zmieniać
+suwakami; nowy typ obiektu w rysunku wymagałby zmian w bilansie,
+eksportach (DXF, GPKG, GeoJSON) i walidacji. Warsztat nie ma
+numerycznego modelu terenu (NMT z Geoportalu to duże pliki i osobna
+licencja), więc płaski teren jest uczciwym przybliżeniem —
+przekrój służy do oceny wysokości i odstępów zabudowy.
+
+**Odrzucone alternatywy:**
+- Rysowanie linii przekroju na mapie — więcej kodu w największym pliku
+  JS (osiedle.js), a zysk niewielki: linię i tak widać na mapie.
+- Wysokości z NMT — brak danych offline.

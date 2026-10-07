@@ -1,16 +1,16 @@
 """Raport koncepcji do druku, szkic SVG i porównanie wariantów (ETAP 60)."""
 
-from flask import Response, abort, render_template, request
+from flask import Response, abort, jsonify, render_template, request
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
 
-from . import baza, cien
+from . import baza, cien, przekroj
 from .dxf_koncepcji import UKLADY, koncepcja_dxf
-from .bilans import FUNKCJE, OBSZAR, bilans
+from .bilans import FUNKCJE, OBSZAR, BladKoncepcji, bilans
 from .program import ZALOZENIA
 from .routes import _koncepcja_albo_404, osiedle_bp
 from .rysunek_svg import skala_dla, szkic_svg
-from .wskazniki import USTALENIA
+from .wskazniki import USTALENIA, BladParametru
 
 MAKS_WARIANTOW = 4
 
@@ -33,6 +33,7 @@ def raport(koncepcja_id):
             numery=analiza_cienia is not None,
         )),
         cien=analiza_cienia,
+        przekroj=_przekroj_do_raportu(k),
         dzien_cienia=dzien,
         dni_cienia=cien.DNI,
         funkcje=FUNKCJE,
@@ -41,6 +42,20 @@ def raport(koncepcja_id):
         # ETAP 115: ceny w okolicy obszaru opracowania (moduł ceny); bez obszaru — sekcji nie ma
         geometria_okolicy=next((f["geometry"] for f in k["geojson"].get("features", []) if f["properties"].get("funkcja") == OBSZAR), None),
     )
+
+
+def _przekroj_do_raportu(k: dict) -> dict | None:
+    """ETAP 238: przekrój w raporcie, gdy są budynki (?przekroj_kat=&przekroj_przes=
+    — te same wartości co na stronie koncepcji); bez budynków — None."""
+    try:
+        kat = float(request.args.get("przekroj_kat", 90))
+        przes = float(request.args.get("przekroj_przes", 0))
+        p = przekroj.przekroj(k["geojson"], kat, przes, k["ustawienia"])
+    except (ValueError, BladKoncepcji, BladParametru):
+        return None
+    if not p["budynki"]:
+        return None
+    return {"dane": p, "svg": Markup(przekroj.przekroj_svg(p))}  # tylko liczby i kolory z kodu
 
 
 @osiedle_bp.route("/koncepcje/<int:koncepcja_id>.svg")
@@ -107,3 +122,39 @@ def porownanie():
         funkcje=[(kod, f) for kod, f in FUNKCJE.items() if kod in obecne],
         maks=MAKS_WARIANTOW,
     )
+
+
+# ---------- ETAP 238: przekrój terenu z wysokością budynków ----------
+
+
+def _parametry_przekroju() -> tuple[float, float]:
+    try:
+        kat = float(request.args.get("kat", 90))
+        przesuniecie = float(request.args.get("przesuniecie", 0))
+    except ValueError:
+        abort(400)
+    return kat, przesuniecie
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>/przekroj")
+def przekroj_koncepcji(koncepcja_id):
+    """Liczby przekroju (budynki, tereny, odstępy) i linia A–A′ do mapy."""
+    k = _koncepcja_albo_404(koncepcja_id)
+    try:
+        return jsonify(przekroj.przekroj(k["geojson"], *_parametry_przekroju(), k["ustawienia"]))
+    except (przekroj.BladPrzekroju, BladKoncepcji, BladParametru) as e:
+        return jsonify({"blad": str(e)}), 400
+
+
+@osiedle_bp.route("/koncepcje/<int:koncepcja_id>/przekroj.svg")
+def przekroj_svg(koncepcja_id):
+    k = _koncepcja_albo_404(koncepcja_id)
+    try:
+        p = przekroj.przekroj(k["geojson"], *_parametry_przekroju(), k["ustawienia"])
+    except (przekroj.BladPrzekroju, BladKoncepcji, BladParametru) as e:
+        return jsonify({"blad": str(e)}), 400
+    naglowki = {}
+    if request.args.get("pobierz"):
+        nazwa = secure_filename(f"przekroj_{k['id']}_{k['nazwa']}.svg") or "przekroj.svg"
+        naglowki["Content-Disposition"] = f"attachment; filename={nazwa}"
+    return Response(przekroj.przekroj_svg(p), mimetype="image/svg+xml", headers=naglowki)

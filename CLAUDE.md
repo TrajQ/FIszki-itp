@@ -68,7 +68,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 237 (MPZP: kalkulator zabudowy dla kilku działek razem — zamknięty)
-Ostatni ZIP: releases/warsztat_etap237_20261007.zip
-Testy: 723 passed / 0 failed
+ETAP: 238 (Osiedle: przekrój terenu z wysokością budynków — zamknięty)
+Ostatni ZIP: releases/warsztat_etap238_20261007.zip
+Testy: 726 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

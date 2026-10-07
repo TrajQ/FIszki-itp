@@ -543,3 +543,28 @@ button.przycisk--niebezpieczny-tekst {
     align-items: center;
     margin-bottom: 8px;
 }
+
+/* ETAP 238: przekrój terenu */
+.przekroj__suwaki {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.przekroj__suwaki input {
+    width: 100%;
+}
+
+.przekroj__rysunek,
+.raport-osiedla__przekroj svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--linia);
+    border-radius: var(--promien-maly);
+    background: #ffffff;
+}
+
+.przekroj__litera {
+    font-weight: 700;
+}

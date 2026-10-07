@@ -1168,3 +1168,6 @@
 
 ## ETAP 237 — 2026-10-07
 - MPZP: kalkulator zabudowy dla kilku działek razem (zestaw działek z mapy)
+
+## ETAP 238 — 2026-10-07
+- Osiedle: przekrój terenu z wysokością budynków, także w raporcie i jako SVG

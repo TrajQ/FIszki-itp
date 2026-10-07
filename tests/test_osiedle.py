@@ -815,3 +815,66 @@ def test_zestawy_zalozen(client):
     assert client.delete(f"/osiedle/zestawy/{zid}").get_json() == {"ok": True}
     assert client.get("/osiedle/zestawy").get_json() == [] and client.delete(f"/osiedle/zestawy/{zid}").status_code == 404
     assert 'id="zestaw-zalozen"' in client.get("/osiedle/").get_data(as_text=True)
+
+
+# ---------- ETAP 238: przekrój terenu z wysokością budynków ----------
+
+
+def _koncepcja_do_przekroju():
+    return kolekcja(
+        prostokat(0, 0, 200, 100, "obszar"),
+        prostokat(20, 20, 160, 60, "MW"),
+        prostokat(30, 40, 30, 20, "budynek", kondygnacje=5),
+        prostokat(90, 40, 20, 20, "budynek", kondygnacje=2),
+        prostokat(95, 70, 10, 8, "budynek", kondygnacje=1),
+    )
+
+
+def test_przekroj_wschod_zachod_i_polnoc_poludnie():
+    from osiedle import przekroj
+
+    p = przekroj.przekroj(_koncepcja_do_przekroju(), 90, 0, {"plan": {"max_kondygnacje": 4}})
+    assert p["dlugosc_m"] == pytest.approx(210, abs=0.5)  # 200 m + zapas 5 m z obu stron
+    b = {x["nr"]: x for x in p["budynki"]}
+    assert set(b) == {1, 2}  # trzeci budynek leży poza linią przez środek
+    assert b[1]["wysokosc_m"] == 15 and b[1]["od_m"] == pytest.approx(35, abs=0.3) and b[1]["do_m"] == pytest.approx(65, abs=0.3)
+    assert p["odstepy"][0]["miedzy"] == [1, 2] and p["odstepy"][0]["odstep_m"] == pytest.approx(30, abs=0.3)
+    assert p["tereny"][0]["funkcja"] == "MW" and p["tereny"][0]["od_m"] == pytest.approx(25, abs=0.3)
+    assert [o["od_m"] for o in p["obszar"]] == [pytest.approx(5, abs=0.3)]
+    assert p["max_wysokosc_planu_m"] == 12
+    assert p["linia"][0][0] < p["linia"][1][0]  # A na zachodzie
+
+    ns = przekroj.przekroj(_koncepcja_do_przekroju(), 0, 0)
+    b = {x["nr"]: x for x in ns["budynki"]}
+    assert set(b) == {2, 3} and b[3]["od_m"] < b[2]["od_m"]  # A na północy
+    assert ns["max_wysokosc_planu_m"] is None
+    # przesunięcie: linia W–E na wysokości budynku 3 (y = 74 m, czyli +48% połowy wysokości 50 m — w górę)
+    w_bok = przekroj.przekroj(_koncepcja_do_przekroju(), 90, -48)
+    assert {x["nr"] for x in w_bok["budynki"]} == {3}
+
+
+def test_przekroj_svg_i_bledy():
+    from osiedle import przekroj
+
+    svg = przekroj.przekroj_svg(przekroj.przekroj(_koncepcja_do_przekroju(), 90, 0, {"plan": {"max_kondygnacje": 4}}))
+    assert svg.startswith("<svg") and "plan: maks. 12 m" in svg and "30 m</text>" in svg and "15 m</text>" in svg
+    with pytest.raises(przekroj.BladPrzekroju):
+        przekroj.przekroj(_koncepcja_do_przekroju(), 90, 150)
+    with pytest.raises(przekroj.BladPrzekroju):
+        przekroj.przekroj(kolekcja(), 90, 0)
+
+
+def test_trasy_przekroju_i_raport(client):
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Przekrój"}).get_json()
+    client.put(f"/osiedle/koncepcje/{k['id']}", json={"geojson": _koncepcja_do_przekroju()})
+    p = client.get(f"/osiedle/koncepcje/{k['id']}/przekroj?kat=90&przesuniecie=0").get_json()
+    assert len(p["budynki"]) == 2
+    svg = client.get(f"/osiedle/koncepcje/{k['id']}/przekroj.svg?kat=0")
+    assert svg.mimetype == "image/svg+xml" and "Content-Disposition" not in svg.headers
+    assert "attachment" in client.get(f"/osiedle/koncepcje/{k['id']}/przekroj.svg?pobierz=1").headers["Content-Disposition"]
+    assert client.get(f"/osiedle/koncepcje/{k['id']}/przekroj?kat=x").status_code == 400
+    assert client.get(f"/osiedle/koncepcje/{k['id']}/przekroj?przesuniecie=500").status_code == 400
+    html = client.get(f"/osiedle/koncepcje/{k['id']}/raport").get_data(as_text=True)
+    assert "Przekrój A–A′" in html and "<td>1 – 2</td>" in html
+    # linia przesunięta poza budynki — w raporcie nie ma przekroju
+    assert "Przekrój A–A′" not in client.get(f"/osiedle/koncepcje/{k['id']}/raport?przekroj_kat=90&przekroj_przes=90").get_data(as_text=True)

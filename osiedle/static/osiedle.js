@@ -25,6 +25,7 @@
     const polaStawek = document.querySelectorAll("[data-stawka]"); // ETAP 155
     const sekcjaProgramu = document.getElementById("sekcja-programu");
     const sekcjaCienia = document.getElementById("sekcja-cienia");
+    const sekcjaPrzekroju = document.getElementById("sekcja-przekroju");
     const sekcjaCen = document.getElementById("sekcja-cen");
     const formatWsk = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 2 });
     const formatM2 = new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 0 });
@@ -815,6 +816,78 @@
 
     przyciskUkryjCien.addEventListener("click", ukryjCien);
 
+    // ---------- przekrój A–A′ (ETAP 238) — liczy i rysuje serwer (osiedle/przekroj.py) ----------
+
+    const warstwaPrzekroju = L.featureGroup().addTo(mapa);
+    const wynikPrzekroju = document.getElementById("wynik-przekroju");
+    const przyciskUkryjPrzekroj = document.getElementById("ukryj-przekroj");
+    const suwakKata = document.getElementById("kat-przekroju");
+    const suwakPrzesuniecia = document.getElementById("przesuniecie-przekroju");
+    let opoznieniePrzekroju = null;
+    let numerPrzekroju = 0;
+
+    function kierunekSlownie(kat) {
+        const nazwy = ["N–S", "NNE–SSW", "NE–SW", "ENE–WSW", "W–E", "WNW–ESE", "NW–SE", "NNW–SSE"];
+        return nazwy[Math.round(kat / 22.5) % 8];
+    }
+
+    function opiszSuwaki() {
+        document.getElementById("opis-kata").textContent = `${suwakKata.value}° (${kierunekSlownie(Number(suwakKata.value))})`;
+        const p = Number(suwakPrzesuniecia.value);
+        document.getElementById("opis-przesuniecia").textContent = p === 0 ? "przez środek" : `${p > 0 ? "+" : ""}${p}%`;
+    }
+
+    function ukryjPrzekroj() {
+        numerPrzekroju += 1;
+        warstwaPrzekroju.clearLayers();
+        wynikPrzekroju.hidden = true;
+        przyciskUkryjPrzekroj.hidden = true;
+    }
+
+    async function pokazPrzekroj() {
+        if (!koncepcja) return;
+        await dokonczZapis();
+        const moj = ++numerPrzekroju;
+        const parametry = `kat=${suwakKata.value}&przesuniecie=${suwakPrzesuniecia.value}`;
+        let p;
+        try {
+            p = await zapytaj(`${URL_KONCEPCJE}/${koncepcja.id}/przekroj?${parametry}`);
+        } catch (e) {
+            if (moj === numerPrzekroju) pokazKomunikat(e.message);
+            return;
+        }
+        if (moj !== numerPrzekroju) return;
+        warstwaPrzekroju.clearLayers();
+        const [a, b] = p.linia.map(([lon, lat]) => [lat, lon]);
+        L.polyline([a, b], { color: "#0071e3", weight: 3, dashArray: "10 6", interactive: false }).addTo(warstwaPrzekroju);
+        for (const [punkt, litera] of [[a, "A"], [b, "A′"]]) {
+            L.circleMarker(punkt, { radius: 4, color: "#0071e3", fillOpacity: 1, interactive: false })
+                .bindTooltip(litera, { permanent: true, direction: "top", className: "przekroj__litera" }).addTo(warstwaPrzekroju);
+        }
+        const svg = `${URL_KONCEPCJE}/${koncepcja.id}/przekroj.svg?${parametry}`;
+        document.getElementById("rysunek-przekroju").src = svg;
+        document.getElementById("pobierz-przekroj").href = `${svg}&pobierz=1`;
+        document.getElementById("raport-przekroju").href = `${URL_KONCEPCJE}/${koncepcja.id}/raport?przekroj_kat=${suwakKata.value}&przekroj_przes=${suwakPrzesuniecia.value}`;
+        const budynki = new Set(p.budynki.map((x) => x.nr)).size;
+        let opis = `Długość ${formatWsk.format(p.dlugosc_m)} m. ` + (budynki ? `Linia przecina ${budynki} ${budynki === 1 ? "budynek" : budynki < 5 ? "budynki" : "budynków"}` : "Linia nie przecina żadnego budynku — przesuń ją albo zmień kierunek");
+        if (p.odstepy.length) opis += `; najmniejszy odstęp ${formatWsk.format(Math.min(...p.odstepy.map((o) => o.odstep_m)))} m`;
+        document.getElementById("opis-przekroju").textContent = `${opis}.`;
+        wynikPrzekroju.hidden = false;
+        przyciskUkryjPrzekroj.hidden = false;
+    }
+
+    document.getElementById("pokaz-przekroj").addEventListener("click", pokazPrzekroj);
+    przyciskUkryjPrzekroj.addEventListener("click", ukryjPrzekroj);
+    for (const suwak of [suwakKata, suwakPrzesuniecia]) {
+        suwak.addEventListener("input", () => {
+            opiszSuwaki();
+            if (wynikPrzekroju.hidden) return; // przelicza na bieżąco dopiero po „Pokaż”
+            clearTimeout(opoznieniePrzekroju);
+            opoznieniePrzekroju = setTimeout(pokazPrzekroj, 250);
+        });
+    }
+    opiszSuwaki();
+
     async function otworz(id) {
         await dokonczZapis();
         zaznacz(null);
@@ -823,8 +896,9 @@
         if (!id) {
             koncepcja = null;
             mapa.removeControl(kontrolkaRysowania);
-            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, sekcjaCienia, sekcjaCen, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = true));
+            [sekcjaRysowania, sekcjaBilansu, sekcjaWskaznikow, sekcjaProgramu, sekcjaCienia, sekcjaPrzekroju, sekcjaCen, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = true));
             ukryjCien();
+            ukryjPrzekroj();
             projektTerenu.value = "";
             pokazTeren();
             return;
@@ -844,8 +918,9 @@
             },
         });
         kontrolkaRysowania.addTo(mapa);
-        [sekcjaRysowania, sekcjaCienia, sekcjaCen, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = false));
+        [sekcjaRysowania, sekcjaCienia, sekcjaPrzekroju, sekcjaCen, akcjeKoncepcji, linkiKoncepcji, warstwaTerenuEl].forEach((el) => (el.hidden = false));
         ukryjCien();
+        ukryjPrzekroj();
         wynikCen.hidden = true;
         const zapisanyTeren = (dane.ustawienia || {}).teren_projekt;
         // projekt mógł zostać usunięty w module Teren — wtedy nic nie pokazujemy

@@ -62,6 +62,21 @@
     <p class="raport-osiedla__akcje-cienia"><a href="?cien=rownonoc">Pokaż odległości i cień</a></p>
     {% endif %}
 
+    {# ETAP 238: przekrój A–A′ z wysokością budynków (tylko gdy linia przecina budynki) #}
+    {% if przekroj %}
+    <section class="raport-osiedla__strona">
+        <h2>Przekrój A–A′</h2>
+        <div class="raport-osiedla__przekroj" role="img" aria-label="Przekrój terenu z budynkami: wysokość budynków i odstępy między nimi">{{ przekroj.svg }}</div>
+        <p class="wyciszony">Azymut linii {{ m(przekroj.dane.kat, 0) }}°, długość {{ m(przekroj.dane.dlugosc_m, 0) }} m. Wysokość = kondygnacje × {{ m(przekroj.dane.wysokosc_kondygnacji_m, 0) }} m, teren płaski (bez modelu terenu). Numery budynków jak w karcie „Budynki”.</p>
+        {% if przekroj.dane.odstepy %}
+        <table class="tabela">
+            <tr><th>Między budynkami</th><th class="liczba">Odstęp na linii [m]</th></tr>
+            {% for o in przekroj.dane.odstepy %}<tr><td>{{ o.miedzy[0] }} – {{ o.miedzy[1] }}</td><td class="liczba">{{ m(o.odstep_m) }}</td></tr>{% endfor %}
+        </table>
+        {% endif %}
+    </section>
+    {% endif %}
+
     <section class="raport-osiedla__strona">
         <div class="raport-osiedla__kolumny">
             <div>
