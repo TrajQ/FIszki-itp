@@ -29,6 +29,12 @@ OBSZAR = "obszar"
 # Nie jest funkcją terenu: nie wchodzi do bilansu terenu (leży na MN/MW/U).
 BUDYNEK = "budynek"
 DOMYSLNE_KONDYGNACJE_BUDYNKU = 2
+# ETAP 239: zielony dach — do terenu biologicznie czynnego wlicza się 50%
+# powierzchni stropodachów urządzonych jako stałe trawniki lub kwietniki,
+# o powierzchni nie mniejszej niż 10 m² (rozporządzenie o warunkach
+# technicznych, § 3 pkt 22). Plan może mieć własną definicję — wtedy ona.
+UDZIAL_ZIELONEGO_DACHU_W_PBC = 0.5
+MIN_ZIELONY_DACH_M2 = 10.0
 KOLOR_BUDYNKU = "#3a3a3c"
 # ETAP 175: nieprzekraczalna linia zabudowy — łamana; budynek nie może jej przecinać
 LINIA = "linia_zabudowy"
@@ -127,7 +133,17 @@ def wczytaj_budynki(geojson: dict) -> list[dict]:
                 raise BladKoncepcji(str(e)) from None
             if not 1 <= kondygnacje <= wsk.ZAKRESY["kondygnacje"][1]:
                 raise BladKoncepcji(f"Budynek (obiekt {i}): kondygnacje muszą być w zakresie 1–{wsk.ZAKRESY['kondygnacje'][1]}.")
-        budynki.append({"geometria": geometria, "kondygnacje": kondygnacje, "wlasciwosci": wlasciwosci})
+        zielony = wlasciwosci.get("zielony_dach_proc")
+        if zielony is None or zielony == "":
+            zielony = 0.0
+        else:
+            try:
+                zielony = wsk._liczba(zielony, f"Budynek (obiekt {i}), zielony dach")
+            except wsk.BladParametru as e:
+                raise BladKoncepcji(str(e)) from None
+            if not 0 <= zielony <= 100:
+                raise BladKoncepcji(f"Budynek (obiekt {i}): zielony dach musi być w zakresie 0–100% dachu.")
+        budynki.append({"geometria": geometria, "kondygnacje": kondygnacje, "zielony_dach_proc": zielony, "wlasciwosci": wlasciwosci})
     return budynki
 
 
@@ -157,6 +173,10 @@ def _budynki(budynki: list[dict], tereny: list[dict], obszar, pole, linie: list 
             poza_obszarem += 1
         wpis = {"nr": nr, "pole_m2": round(rzut, 1), "kondygnacje": b["kondygnacje"],
                 "calkowita_m2": round(rzut * b["kondygnacje"], 1), "teren": funkcja}
+        # ETAP 239: zielony dach (część rzutu) i jego udział w PBC
+        zielony_m2 = rzut * b.get("zielony_dach_proc", 0) / 100
+        wpis["zielony_dach_m2"] = round(zielony_m2, 1)
+        wpis["pbc_z_dachu_m2"] = round(UDZIAL_ZIELONEGO_DACHU_W_PBC * zielony_m2, 1) if zielony_m2 >= MIN_ZIELONY_DACH_M2 else 0.0
         if linie_m:
             obrys = w_metrach(b["geometria"])
             wpis["przecina_linie"] = any(obrys.intersects(linia) for linia in linie_m)
@@ -167,6 +187,8 @@ def _budynki(budynki: list[dict], tereny: list[dict], obszar, pole, linie: list 
         "liczba": len(lista),
         "zabudowa_m2": round(sum(b["pole_m2"] for b in lista), 1),
         "calkowita_m2": round(sum(b["calkowita_m2"] for b in lista), 1),
+        "zielone_dachy_m2": round(sum(b["zielony_dach_m2"] for b in lista), 1),
+        "pbc_z_dachow_m2": round(sum(b["pbc_z_dachu_m2"] for b in lista), 1),
         "lista": lista,
         "poza_terenem_zabudowy": poza_zabudowa,
         "poza_obszarem": poza_obszarem,
@@ -244,6 +266,8 @@ def bilans(geojson: dict, ustawienia: dict | None = None) -> dict:
     wskazniki = wsk.wskazniki(tereny, podstawa)
     program = prog.program(tereny, obszar_m2, ustawienia)
     zestawienie_budynkow = _budynki(budynki, tereny, obszar, pole, linie, lambda g: _w_metrach(g, szerokosc))
+    if zestawienie_budynkow and zestawienie_budynkow["pbc_z_dachow_m2"] > 0:
+        wsk.dolicz_zielone_dachy(wskazniki, zestawienie_budynkow["pbc_z_dachow_m2"], podstawa)  # ETAP 239
     wskazniki_budynkow = wsk.wskazniki_budynkow(zestawienie_budynkow, podstawa)  # ETAP 174
     return {
         "obszar_m2": round(obszar_m2, 1) if obszar_m2 is not None else None,

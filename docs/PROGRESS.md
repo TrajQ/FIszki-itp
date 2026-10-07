@@ -4359,3 +4359,24 @@ Status: zamknięty
   1300/390 px
 - Pomoc: „Przekrój terenu z wysokością budynków”
 - `DECISIONS.md`: D-246
+
+## ETAP 239 — Osiedle: zielone dachy w powierzchni biologicznie czynnej
+Data: 2026-10-07
+Status: zamknięty
+
+- `osiedle/bilans.py`: właściwość budynku `zielony_dach_proc` (0–100%
+  rzutu, sprawdzana); w zestawieniu budynków `zielony_dach_m2` i
+  `pbc_z_dachu_m2` = 50% zielonego dachu, gdy ma co najmniej 10 m²
+  (`UDZIAL_ZIELONEGO_DACHU_W_PBC`, `MIN_ZIELONY_DACH_M2`, WT § 3 pkt 22);
+  sumy `zielone_dachy_m2`, `pbc_z_dachow_m2`
+- `osiedle/wskazniki.py`: `dolicz_zielone_dachy` — PBC koncepcji = PBC
+  z terenów + z dachów (`pbc_z_dachow_m2`); zgodność z min. PBC planu
+  liczy się już z dachami
+- Strona: pole „Zielony dach %” w parametrach budynku, opis pod tabelą
+  wskaźników, kolumna „Zielony dach m²” i kontrola dachów poniżej 10 m²;
+  raport: „w tym zielone dachy” przy PBC
+- Testy: reguła 50% i 10 m², PBC i zgodność z planem, bez dachów,
+  błędny procent, raport, wartość domyślna w polu; przeglądarka
+  1300/390 px (PBC 20% ✗ → 23% ✓ po wpisaniu 50%)
+- Pomoc: „Zielone dachy w powierzchni biologicznie czynnej”
+- `DECISIONS.md`: D-247

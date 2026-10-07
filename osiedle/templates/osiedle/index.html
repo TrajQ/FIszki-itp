@@ -98,10 +98,12 @@
                         <input type="number" min="0" max="50" step="1" inputmode="decimal"></label>
                     <label data-parametr="pbc_proc" title="Jaka część terenu jest biologicznie czynna">PBC %
                         <input type="number" min="0" max="100" step="1" inputmode="decimal"></label>
+                    <label data-parametr="zielony_dach_proc" title="Jaka część dachu to zielony dach (trawnik, kwietnik); do PBC wlicza się 50% jego powierzchni, gdy ma co najmniej 10 m²">Zielony dach %
+                        <input type="number" min="0" max="100" step="5" inputmode="decimal"></label>
                     <label id="etap-terenu" title="Numer etapu realizacji 1–10 (ETAP 196); puste — bez etapu">Etap
                         <input type="number" min="1" max="10" step="1" inputmode="numeric" placeholder="—"></label>
                 </div>
-                <p class="wyciszony opis-panelu">Procenty powierzchni tego terenu; PBC — powierzchnia biologicznie czynna. Puste pole = wartość typowa (szara podpowiedź).</p>
+                <p class="wyciszony opis-panelu">Procenty powierzchni tego terenu; PBC — powierzchnia biologicznie czynna; zielony dach — procent dachu budynku. Puste pole = wartość typowa (szara podpowiedź).</p>
                 <div class="rzad">
                     <button id="usun-teren" type="button" class="przycisk--tekst przycisk--niebezpieczny-tekst">Usuń teren</button>
                     <button id="odznacz-teren" type="button" class="przycisk--tekst">Gotowe</button>
@@ -154,6 +156,7 @@
                 </tbody>
             </table>
             </div>
+            <p id="zielone-dachy" class="wyciszony opis-panelu" hidden></p>
             <div id="chlonnosc" class="chlonnosc stos" hidden>
                 <h4>Chłonność terenu</h4>
                 <div class="pasek-chlonnosci" aria-hidden="true"><span id="pasek-chlonnosci"></span></div>

@@ -136,6 +136,15 @@ def wskazniki(tereny: list[dict], podstawa_m2: float) -> dict:
     }
 
 
+def dolicz_zielone_dachy(wskazniki_terenow: dict, pbc_z_dachow_m2: float, podstawa_m2: float) -> None:
+    """ETAP 239: PBC z zielonych dachów (już po regule 50% i 10 m², bilans.py)
+    dodane do PBC z terenów; zapisuje też samą część z dachów."""
+    pbc_m2 = wskazniki_terenow["pbc_m2"] + pbc_z_dachow_m2
+    wskazniki_terenow["pbc_m2"] = round(pbc_m2, 1)
+    wskazniki_terenow["pbc_z_dachow_m2"] = round(pbc_z_dachow_m2, 1)
+    wskazniki_terenow["pbc_proc"] = _zaokraglij(pbc_m2 / podstawa_m2 if podstawa_m2 else None, 100, 1)
+
+
 def wskazniki_budynkow(budynki: dict | None, podstawa_m2: float) -> dict | None:
     """ETAP 174: te same wskaźniki z narysowanych budynków (rzut i
     kondygnacje każdego budynku) zamiast z procentów zabudowy terenów.

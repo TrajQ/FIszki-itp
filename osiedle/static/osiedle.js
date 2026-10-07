@@ -585,12 +585,18 @@
         const glowa = element("tr");
         glowa.append(element("th", "", "Nr"), element("th", "", "Teren"), element("th", "liczba", "Rzut m²"), element("th", "liczba", "Kond."), element("th", "liczba", "Całkowita m²"));
         if (bud.linii_zabudowy) glowa.append(element("th", "liczba", "Od linii m"));
+        if (bud.zielone_dachy_m2) glowa.append(element("th", "liczba", "Zielony dach m²")); // ETAP 239
         tabela.replaceChildren(glowa);
         for (const b of bud.lista) {
             const tr = element("tr");
             tr.append(element("td", "", String(b.nr)), element("td", b.teren ? "" : "wyciszony", b.teren || "—"),
                 element("td", "liczba", formatM2.format(b.pole_m2)), element("td", "liczba", String(b.kondygnacje)), element("td", "liczba", formatM2.format(b.calkowita_m2)));
             if (bud.linii_zabudowy) tr.append(element("td", b.przecina_linie ? "liczba stan--zle" : "liczba", b.przecina_linie ? "przecina" : formatWsk.format(b.od_linii_m)));
+            if (bud.zielone_dachy_m2) {
+                const td = element("td", "liczba", b.zielony_dach_m2 ? formatM2.format(b.zielony_dach_m2) : "—");
+                if (b.zielony_dach_m2 && !b.pbc_z_dachu_m2) td.title = "Poniżej 10 m² — nie wlicza się do PBC";
+                tr.append(td);
+            }
             tabela.appendChild(tr);
         }
         const kontrole = document.getElementById("kontrole-budynkow");
@@ -598,6 +604,8 @@
         if (bud.poza_terenem_zabudowy) kontrole.appendChild(element("li", "", `Budynków nie na terenie zabudowy (MN, MW, U): ${bud.poza_terenem_zabudowy}.`));
         if (bud.poza_obszarem) kontrole.appendChild(element("li", "", `Budynków wychodzących poza obszar opracowania: ${bud.poza_obszarem}.`));
         if (bud.przecina_linie) kontrole.appendChild(element("li", "", `Budynków przecinających nieprzekraczalną linię zabudowy: ${bud.przecina_linie}.`));
+        const male = bud.lista.filter((b) => b.zielony_dach_m2 && !b.pbc_z_dachu_m2).length;
+        if (male) kontrole.appendChild(element("li", "", `Zielonych dachów poniżej 10 m² (nie wliczają się do PBC): ${male}.`));
     }
 
     // ETAP 164: podpowiedź stawki gruntu — mediana działek niezabudowanych z RCN (moduł Ceny).
@@ -696,6 +704,12 @@
             td.title = stan === undefined ? "" : stan ? "zgodne z planem" : "niezgodne z planem";
             td.className = `stan ${stan === undefined ? "" : stan ? "stan--ok" : "stan--zle"}`;
         });
+        // ETAP 239: część PBC z zielonych dachów (50% powierzchni, od 10 m²)
+        const zieloneDachy = document.getElementById("zielone-dachy");
+        zieloneDachy.hidden = !w.pbc_z_dachow_m2;
+        if (w.pbc_z_dachow_m2) {
+            zieloneDachy.textContent = `W tym zielone dachy: ${formatM2.format(w.pbc_z_dachow_m2)} m² PBC (50% powierzchni zielonych dachów od 10 m²).`;
+        }
         // ETAP 174: kolumna z narysowanych budynków — wartość i zgodność przy niej
         const wb = b.wskazniki_budynkow;
         sekcjaWskaznikow.querySelectorAll(".kolumna-budynkow").forEach((el) => (el.hidden = !wb));

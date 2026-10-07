@@ -57,7 +57,7 @@ def podsumowanie() -> dict:
 def index():
     return render_template(
         "osiedle/index.html", funkcje=FUNKCJE, obszar=OBSZAR, budynek=BUDYNEK, kolor_budynku=KOLOR_BUDYNKU, linia=LINIA, kolor_linii=KOLOR_LINII,
-        domyslne={**DOMYSLNE, BUDYNEK: {"kondygnacje": DOMYSLNE_KONDYGNACJE_BUDYNKU}},  # ETAP 173: pole kondygnacji budynku
+        domyslne={**DOMYSLNE, BUDYNEK: {"kondygnacje": DOMYSLNE_KONDYGNACJE_BUDYNKU, "zielony_dach_proc": 0}},  # ETAP 173/239: kondygnacje i zielony dach
         zalozenia=ZALOZENIA, stawki=STAWKI,
     )
 

@@ -100,7 +100,7 @@
                     <tr><td>powierzchnia całkowita</td><td class="liczba">{{ m(w.powierzchnia_calkowita_m2, 0) }} m²</td>{% if wb %}<td class="liczba">{{ m(wb.powierzchnia_calkowita_m2, 0) }} m²</td>{% endif %}</tr>
                     <tr><td>wskaźnik zabudowy</td><td class="liczba">{{ m(w.zabudowa_proc) }}%</td>{% if wb %}<td class="liczba">{{ m(wb.zabudowa_proc) }}%</td>{% endif %}</tr>
                     <tr><td>intensywność zabudowy</td><td class="liczba">{{ m(w.intensywnosc, 2) }}</td>{% if wb %}<td class="liczba">{{ m(wb.intensywnosc, 2) }}</td>{% endif %}</tr>
-                    <tr><td>powierzchnia biologicznie czynna</td><td class="liczba">{{ m(w.pbc_proc) }}%</td>{% if wb %}<td class="liczba wyciszony">—</td>{% endif %}</tr>
+                    <tr><td>powierzchnia biologicznie czynna{% if w.pbc_z_dachow_m2 %}<br><span class="wyciszony">w tym zielone dachy: {{ m(w.pbc_z_dachow_m2, 0) }} m² (50% powierzchni)</span>{% endif %}</td><td class="liczba">{{ m(w.pbc_proc) }}%</td>{% if wb %}<td class="liczba wyciszony">—</td>{% endif %}</tr>
                     <tr><td>najwyższa zabudowa</td><td class="liczba">{{ m(w.max_kondygnacje) }} kond.</td>{% if wb %}<td class="liczba">{{ m(wb.max_kondygnacje) }} kond.</td>{% endif %}</tr>
                 </table>
                 {% if b.budynki and b.budynki.przecina_linie %}<p class="komunikat komunikat--ostrzezenie" role="status">Budynków przecinających nieprzekraczalną linię zabudowy: {{ b.budynki.przecina_linie }}.</p>{% endif %}

@@ -4935,3 +4935,24 @@ przekrój służy do oceny wysokości i odstępów zabudowy.
 - Rysowanie linii przekroju na mapie — więcej kodu w największym pliku
   JS (osiedle.js), a zysk niewielki: linię i tak widać na mapie.
 - Wysokości z NMT — brak danych offline.
+
+## D-247 — Zielone dachy: reguła z warunków technicznych, procent dachu budynku
+Data: 2026-10-07
+
+**Decyzja:** Zielony dach to właściwość narysowanego budynku (procent
+jego rzutu). Do PBC wlicza się 50% powierzchni zielonego dachu, gdy ma
+on co najmniej 10 m² — jak w definicji terenu biologicznie czynnego w
+rozporządzeniu o warunkach technicznych (§ 3 pkt 22, ta sama, na którą
+powołuje się już DOMYSLNE dla wód). PBC z dachów dodaje się do PBC z
+terenów; strona i Pomoc mówią, że definicja z planu ma pierwszeństwo.
+
+**Uzasadnienie:** Zielone dachy to częsty sposób spełnienia minimalnej
+PBC na gęstej zabudowie wielorodzinnej — bez nich koncepcja wyglądałaby
+na niezgodną z planem. Procent zamiast osobnego wieloboku dachu: dach
+pokrywa się z rzutem, więc nie trzeba niczego rysować drugi raz.
+
+**Odrzucone alternatywy:**
+- Zielone tarasy na terenie (np. nad garażem podziemnym) — wymagałyby
+  nowego typu obiektu; na razie można je ująć w PBC % terenu.
+- Udział inny niż 50% (z planu) — plany różnią się zapisem; użytkownik
+  może wtedy wpisać PBC terenu ręcznie.

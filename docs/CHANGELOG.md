@@ -1171,3 +1171,6 @@
 
 ## ETAP 238 — 2026-10-07
 - Osiedle: przekrój terenu z wysokością budynków, także w raporcie i jako SVG
+
+## ETAP 239 — 2026-10-07
+- Osiedle: zielone dachy budynków wliczane do powierzchni biologicznie czynnej (50%, od 10 m²)

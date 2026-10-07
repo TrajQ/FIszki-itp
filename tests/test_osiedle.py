@@ -878,3 +878,37 @@ def test_trasy_przekroju_i_raport(client):
     assert "Przekrój A–A′" in html and "<td>1 – 2</td>" in html
     # linia przesunięta poza budynki — w raporcie nie ma przekroju
     assert "Przekrój A–A′" not in client.get(f"/osiedle/koncepcje/{k['id']}/raport?przekroj_kat=90&przekroj_przes=90").get_data(as_text=True)
+
+
+# ---------- ETAP 239: zielone dachy w PBC ----------
+
+
+def test_zielone_dachy_w_pbc(client):
+    geojson = kolekcja(
+        prostokat(0, 0, 100, 100, "obszar"),
+        prostokat(0, 0, 100, 100, "MW", pbc_proc=20),  # 2000 m² PBC z terenu
+        prostokat(10, 10, 40, 30, "budynek", kondygnacje=4, zielony_dach_proc=50),  # 1200 m² dachu → 600 zielonego → 300 PBC
+        prostokat(60, 10, 3, 6, "budynek", zielony_dach_proc=50),  # 9 m² zielonego — poniżej 10 m², nie wlicza się
+        prostokat(60, 50, 20, 20, "budynek"),
+    )
+    b = bilans(geojson, {"plan": {"min_pbc_proc": 21}})
+    lista = {x["nr"]: x for x in b["budynki"]["lista"]}
+    assert lista[1]["zielony_dach_m2"] == pytest.approx(600, abs=1) and lista[1]["pbc_z_dachu_m2"] == pytest.approx(300, abs=0.5)
+    assert lista[2]["zielony_dach_m2"] == pytest.approx(9, abs=0.1) and lista[2]["pbc_z_dachu_m2"] == 0
+    assert lista[3]["zielony_dach_m2"] == 0
+    w = b["wskazniki"]
+    assert w["pbc_z_dachow_m2"] == pytest.approx(300, abs=0.5)
+    assert w["pbc_proc"] == pytest.approx(23, abs=0.05)  # (2000 + 300) / 10 000
+    assert b["zgodnosc"][0]["spelnione"] is True  # bez dachów 20% < 21% — z dachami plan spełniony
+
+    bez = bilans(kolekcja(prostokat(0, 0, 100, 100, "MW", pbc_proc=20), prostokat(10, 10, 40, 30, "budynek")))
+    assert "pbc_z_dachow_m2" not in bez["wskazniki"] and bez["budynki"]["pbc_z_dachow_m2"] == 0
+
+    with pytest.raises(BladKoncepcji, match="zielony dach"):
+        bilans(kolekcja(prostokat(10, 10, 40, 30, "budynek", zielony_dach_proc=120)))
+
+    k = client.post("/osiedle/koncepcje", json={"nazwa": "Dachy"}).get_json()
+    client.put(f"/osiedle/koncepcje/{k['id']}", json={"geojson": geojson})
+    html = client.get(f"/osiedle/koncepcje/{k['id']}/raport").get_data(as_text=True)
+    assert "w tym zielone dachy: 300 m²" in html
+    assert '"zielony_dach_proc": 0' in client.get("/osiedle/").get_data(as_text=True)
