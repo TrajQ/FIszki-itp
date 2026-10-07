@@ -4312,3 +4312,26 @@ Status: zamknięty
   1300/390 px (8 kolorów na mapie, legenda, powrót, wydruk 1123 px)
 - Pomoc: „Dwa wskaźniki na jednej mapie (mapa dwuzmiennowa)”
 - `DECISIONS.md`: D-244
+
+## ETAP 237 — MPZP: kalkulator zabudowy dla kilku działek razem
+Data: 2026-10-07
+Status: zamknięty
+
+- `mpzp/zabudowa.py`: `Dzialka`, `teren_inwestycji(dzialki)` — suma
+  powierzchni i udział każdej działki; najwyżej 20 działek, każda > 0
+- `mpzp/trasy_narzedzia.py`: `/mpzp/kalkulator` przyjmuje powtórzone
+  `dzialka` i `powierzchnia`; `/kalkulator/licz` z listą `dzialki`
+  liczy wskaźniki od sumy i zwraca `teren` (dawne pole
+  `powierzchnia_dzialki` działa dalej)
+- Kalkulator: sekcja „Działki” z wierszami (identyfikator, powierzchnia),
+  „+ Działka”, opis terenu inwestycji z udziałami, przypis o planach
+  wymagających wskaźników na każdej działce osobno
+- Mapa MPZP: w karcie działki „+ Do zestawu działek” (localStorage
+  `mpzp.zestawKalkulatora`) i link „Kalkulator dla N działek razem”, ✕
+  czyści zestaw
+- Testy: suma i udziały, błędy (brak, zero, > 20), trasa z kilkoma
+  działkami i bez nich, strona z powtórzonymi parametrami; przeglądarka
+  1300/390 px (kalkulator 2 → 3 działki, zestaw na mapie z podstawioną
+  odpowiedzią serwera → kalkulator z 2 działkami)
+- Pomoc: „Kalkulator zabudowy dla kilku działek razem”
+- `DECISIONS.md`: D-245

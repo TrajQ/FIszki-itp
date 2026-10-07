@@ -8,19 +8,24 @@
     <div>
         <a class="przycisk przycisk--tekst" href="{{ url_for('mpzp.index') }}">‹ Mapa działek</a>
         <h1>Kalkulator zabudowy</h1>
-        <p>Wskaźniki zabudowy działki i zgodność z ustaleniami planu. Liczy się na bieżąco.</p>
+        <p>Wskaźniki zabudowy działki — albo kilku działek razem — i zgodność z ustaleniami planu. Liczy się na bieżąco.</p>
     </div>
 </div>
 
 <div class="kalkulator">
     <form id="formularz-kalkulatora" class="stos" autocomplete="off">
+        {# ETAP 237: kilka działek razem — wskaźniki liczone dla sumy powierzchni #}
         <section class="karta stos">
-            <h3>Działka</h3>
-            {% if dzialka_id %}<p class="identyfikator wyciszony">{{ dzialka_id }}</p>{% endif %}
+            <div class="rzad rzad--miedzy">
+                <h3>Działki</h3>
+                <button id="dodaj-dzialke" type="button" class="przycisk--drugi">+ Działka</button>
+            </div>
+            <div class="naglowek-dzialek wyciszony">
+                <span>Identyfikator (opcjonalnie)</span><span>Powierzchnia [m²]</span><span></span>
+            </div>
+            <div id="dzialki" class="stos"></div>
+            <p id="teren-inwestycji" class="wyciszony przypis" hidden aria-live="polite"></p>
             <div class="siatka-pol">
-                <label>Powierzchnia działki [m²]
-                    <input name="powierzchnia_dzialki" type="text" inputmode="decimal" value="{{ '%.0f' % powierzchnia if powierzchnia else '' }}" placeholder="np. 1000">
-                </label>
                 <label>Powierzchnia biologicznie czynna [m²]
                     <input name="pbc_m2" type="text" inputmode="decimal" placeholder="np. 450">
                 </label>
@@ -65,12 +70,15 @@
             <h3>Ile jeszcze można zabudować</h3>
             <div id="zapas" class="stos"></div>
         </section>
-        <p class="wyciszony przypis">Uproszczenie: powierzchnia każdej kondygnacji = rzut budynku. Do szybkiej oceny wariantów, nie do projektu budowlanego.</p>
+        <p class="wyciszony przypis">Uproszczenie: powierzchnia każdej kondygnacji = rzut budynku. Przy kilku działkach wskaźniki dotyczą sumy ich powierzchni (terenu inwestycji) — sprawdź w planie, czy nie wymaga ich na każdej działce budowlanej osobno. Do szybkiej oceny wariantów, nie do projektu budowlanego.</p>
     </aside>
 </div>
 {% endblock %}
 
 {% block skrypty %}
-<script>const URL_LICZ = "{{ url_for('mpzp.kalkulator_licz') }}";</script>
+<script>
+    const URL_LICZ = "{{ url_for('mpzp.kalkulator_licz') }}";
+    const DZIALKI = {{ dzialki | tojson }};
+</script>
 <script src="{{ url_for('mpzp.static', filename='kalkulator.js') }}"></script>
 {% endblock %}

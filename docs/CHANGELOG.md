@@ -1165,3 +1165,6 @@
 
 ## ETAP 236 — 2026-10-07
 - Atlas: mapa dwuzmiennowa — dwa wskaźniki na jednej mapie, także do druku
+
+## ETAP 237 — 2026-10-07
+- MPZP: kalkulator zabudowy dla kilku działek razem (zestaw działek z mapy)

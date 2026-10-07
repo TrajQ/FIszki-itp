@@ -107,3 +107,38 @@ def _zapas(dzialka: float, w: dict, u: Ustalenia) -> dict:
     if u.max_intensywnosc is not None:
         zapas["powierzchnia_calkowita_m2"] = max(0.0, u.max_intensywnosc * dzialka - w["powierzchnia_calkowita_m2"])
     return zapas
+
+
+# ---------- ETAP 237: kilka działek jako jeden teren inwestycji ----------
+
+MAKS_DZIALEK = 20
+
+
+@dataclass
+class Dzialka:
+    identyfikator: str
+    powierzchnia_m2: float
+
+
+def teren_inwestycji(dzialki: list[Dzialka]) -> dict:
+    """Suma powierzchni działek i udział każdej z nich.
+
+    Wskaźniki planu liczy się wtedy dla całego terenu inwestycji (suma
+    działek) — tak bywa przy zabudowie na kilku działkach jednego
+    inwestora. Część planów wymaga jednak spełnienia wskaźników na każdej
+    działce budowlanej osobno: to trzeba sprawdzić w tekście planu.
+    """
+    if not dzialki:
+        raise BladDanych("Wpisz powierzchnię co najmniej jednej działki.")
+    if len(dzialki) > MAKS_DZIALEK:
+        raise BladDanych(f"Najwyżej {MAKS_DZIALEK} działek naraz.")
+    if any(d.powierzchnia_m2 <= 0 for d in dzialki):
+        raise BladDanych("Powierzchnia każdej działki musi być większa od zera.")
+    razem = sum(d.powierzchnia_m2 for d in dzialki)
+    return {
+        "powierzchnia_m2": razem,
+        "dzialki": [
+            {"identyfikator": d.identyfikator, "powierzchnia_m2": d.powierzchnia_m2, "udzial_proc": 100 * d.powierzchnia_m2 / razem}
+            for d in dzialki
+        ],
+    }

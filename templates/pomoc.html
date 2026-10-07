@@ -131,6 +131,9 @@
     <details><summary>Jak zobaczyć, co się zmieniało na działce przez lata?</summary>
         <p><a href="{{ url_for('mpzp.kronika') }}">Kronika zmian</a>: archiwalne ortofotomapy GUGiK tego samego miejsca z kolejnych lat, z obrysem obecnej działki.</p>
     </details>
+    <details><summary>Kalkulator zabudowy dla kilku działek razem</summary>
+        <p>Na mapie MPZP w karcie działki kliknij „+ Do zestawu działek”, potem wskaż kolejną działkę i zrób to samo. Od dwóch działek pojawia się link „Kalkulator dla N działek razem” (✕ czyści zestaw; zestaw pamięta przeglądarka). W kalkulatorze działki możesz też dopisać ręcznie („+ Działka”: identyfikator i powierzchnia). Wskaźniki zabudowy, intensywności i powierzchni biologicznie czynnej liczą się wtedy od sumy powierzchni działek (terenu inwestycji), a pod listą widać udział każdej działki. Sprawdź w tekście planu, czy wskaźniki nie obowiązują na każdej działce budowlanej osobno — wtedy policz każdą działkę oddzielnie.</p>
+    </details>
     <details><summary>Kalkulatory</summary>
         <p><a href="{{ url_for('mpzp.kalkulator') }}">Kalkulator zabudowy</a> (wskaźniki działki, zgodność z ustaleniami planu, ile jeszcze można zabudować), <a href="{{ url_for('mpzp.skala_strona') }}">Skala mapy</a> i <a href="{{ url_for('mpzp.symbole') }}">Symbole planu</a>.</p>
     </details>

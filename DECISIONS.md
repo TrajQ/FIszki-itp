@@ -4892,3 +4892,24 @@ zamiast wspólnego obiektu — skrypty strony zostają niezależnymi IIFE.
   osiach psuje siatkę legendy.
 - Osobna karta „mapa dwuzmiennowa” z własnym wyborem wskaźnika — ten sam
   wybór co w korelacji, dwa miejsca do utrzymania.
+
+## D-245 — Kilka działek w kalkulatorze: wskaźniki od sumy powierzchni
+Data: 2026-10-07
+
+**Decyzja:** Kalkulator liczy wskaźniki od sumy powierzchni działek
+(terenu inwestycji) i pokazuje udział każdej działki; strona wyraźnie
+mówi, że część planów wymaga wskaźników na każdej działce budowlanej
+osobno. Zestaw działek z mapy trzyma `localStorage`, do kalkulatora
+trafia w adresie (powtórzone `dzialka`/`powierzchnia`).
+
+**Uzasadnienie:** Inwestycja na kilku sąsiednich działkach to częsty
+przypadek na zajęciach i w praktyce; sposób liczenia zależy od planu,
+więc kalkulator liczy wariant „razem”, a wariant „osobno” to zwykły
+kalkulator dla jednej działki. Adres z parametrami da się zapisać i
+wysłać; `localStorage` przetrwa przejście między działkami na mapie.
+
+**Odrzucone alternatywy:**
+- Rozdzielanie budynków między działki — wymaga geometrii budynków
+  (to robi moduł Osiedle), tu rzut jest tylko liczbą.
+- Pobieranie powierzchni po identyfikatorze w kalkulatorze — ULDK jest
+  już na mapie; dublowanie zapytań bez potrzeby.

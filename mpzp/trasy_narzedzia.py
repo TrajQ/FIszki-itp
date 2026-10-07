@@ -138,11 +138,16 @@ def skala_licz():
 
 @mpzp_bp.route("/kalkulator")
 def kalkulator():
-    return render_template(
-        "mpzp/kalkulator.html",
-        powierzchnia=request.args.get("powierzchnia", type=float),
-        dzialka_id=request.args.get("dzialka", ""),
-    )
+    # ETAP 237: ?dzialka=…&powierzchnia=… można powtórzyć — kilka działek razem
+    identyfikatory = request.args.getlist("dzialka")
+    powierzchnie = request.args.getlist("powierzchnia", type=float)
+    dzialki = [
+        {"identyfikator": identyfikator[:80], "powierzchnia_m2": powierzchnie[i] if i < len(powierzchnie) else None}
+        for i, identyfikator in enumerate(identyfikatory[: zabudowa.MAKS_DZIALEK])
+    ]
+    if not dzialki and powierzchnie:
+        dzialki = [{"identyfikator": "", "powierzchnia_m2": powierzchnie[0]}]
+    return render_template("mpzp/kalkulator.html", dzialki=dzialki)
 
 
 def _liczba_lub_none(slownik: dict, klucz: str, typ=float):
@@ -179,8 +184,19 @@ def kalkulator_licz():
             max_wysokosc_m=_liczba_lub_none(plan, "max_wysokosc_m"),
             max_kondygnacje=_liczba_lub_none(plan, "max_kondygnacje", int),
         )
+        # ETAP 237: kilka działek razem — wskaźniki dla sumy powierzchni
+        teren = None
+        wiersze = [d for d in dane.get("dzialki") or [] if str(d.get("powierzchnia_m2") or "").strip()]
+        if wiersze:
+            teren = zabudowa.teren_inwestycji([
+                zabudowa.Dzialka(str(d.get("identyfikator") or "").strip()[:80], liczba_skonczona(d["powierzchnia_m2"]))
+                for d in wiersze
+            ])
+            powierzchnia = teren["powierzchnia_m2"]
+        else:
+            powierzchnia = liczba_skonczona(dane.get("powierzchnia_dzialki") or 0)
         wynik = zabudowa.policz(
-            liczba_skonczona(dane.get("powierzchnia_dzialki") or 0),
+            powierzchnia,
             budynki,
             liczba_skonczona(dane.get("pbc_m2") or 0),
             ustalenia,
@@ -188,4 +204,6 @@ def kalkulator_licz():
     except (TypeError, ValueError) as e:
         komunikat = str(e) if isinstance(e, zabudowa.BladDanych) else "Wpisz liczby (np. 450 albo 0,6)."
         return jsonify({"blad": komunikat}), 400
+    if teren:
+        wynik["teren"] = teren
     return jsonify(wynik)

@@ -5,6 +5,8 @@
 
     const formularz = document.getElementById("formularz-kalkulatora");
     const listaBudynkow = document.getElementById("budynki");
+    const listaDzialek = document.getElementById("dzialki");
+    const terenEl = document.getElementById("teren-inwestycji");
     const bladEl = document.getElementById("blad-kalkulatora");
     const wskaznikiEl = document.getElementById("wskazniki");
     const zgodnoscEl = document.getElementById("zgodnosc");
@@ -50,10 +52,44 @@
         listaBudynkow.appendChild(wiersz);
     }
 
+    // ETAP 237: wiersz działki — identyfikator i powierzchnia; kilka działek
+    // liczy się razem jako jeden teren inwestycji.
+    function dodajDzialke(identyfikator = "", powierzchnia = "") {
+        const wiersz = el("div", "wiersz-dzialki");
+        const id = el("input");
+        id.type = "text";
+        id.dataset.pole = "identyfikator";
+        id.maxLength = 80;
+        id.value = identyfikator;
+        id.placeholder = "np. 18/14";
+        id.setAttribute("aria-label", "Identyfikator działki");
+        const pow = el("input");
+        pow.type = "text";
+        pow.inputMode = "decimal";
+        pow.dataset.pole = "powierzchnia_m2";
+        pow.value = powierzchnia;
+        pow.placeholder = "np. 1000";
+        pow.setAttribute("aria-label", "Powierzchnia działki [m²]");
+        const usun = el("button", "przycisk--niebezpieczny", "✕");
+        usun.type = "button";
+        usun.title = "Usuń działkę";
+        usun.addEventListener("click", () => {
+            wiersz.remove();
+            if (!listaDzialek.children.length) dodajDzialke();
+            przelicz();
+        });
+        wiersz.append(id, pow, usun);
+        listaDzialek.appendChild(wiersz);
+        return wiersz;
+    }
+
     function zbierz() {
         const pole = (nazwa) => liczba(formularz.elements[nazwa].value);
         return {
-            powierzchnia_dzialki: pole("powierzchnia_dzialki"),
+            dzialki: Array.from(listaDzialek.children).map((w) => ({
+                identyfikator: w.querySelector('[data-pole="identyfikator"]').value.trim(),
+                powierzchnia_m2: liczba(w.querySelector('[data-pole="powierzchnia_m2"]').value),
+            })).filter((d) => d.powierzchnia_m2 !== ""),
             pbc_m2: pole("pbc_m2"),
             budynki: Array.from(listaBudynkow.children).map((w) => {
                 const b = {};
@@ -72,7 +108,17 @@
         return k;
     }
 
+    function pokazTeren(teren) {
+        terenEl.hidden = !teren || teren.dzialki.length < 2;
+        if (terenEl.hidden) return;
+        const czesci = teren.dzialki.map((d, i) => `${d.identyfikator || `działka ${i + 1}`} ${format.format(d.udzial_proc)}%`);
+        const n = teren.dzialki.length;
+        const slowo = n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "działki" : "działek";
+        terenEl.textContent = `Teren inwestycji: ${n} ${slowo}, razem ${format.format(teren.powierzchnia_m2)} m² (${czesci.join(", ")}).`;
+    }
+
     function pokaz(wynik) {
+        pokazTeren(wynik.teren);
         const w = wynik.wskazniki;
         wskaznikiEl.replaceChildren(
             kafelek("Powierzchnia zabudowy", `${format.format(w.zabudowa_proc)}%`),
@@ -109,9 +155,10 @@
     async function przelicz() {
         const dane = zbierz();
         const moj = ++numer; // unieważnia odpowiedzi na wcześniejsze przeliczenia
-        if (dane.powierzchnia_dzialki === "") {
+        if (!dane.dzialki.length) {
             bladEl.hidden = false;
             bladEl.textContent = "Wpisz powierzchnię działki.";
+            terenEl.hidden = true;
             return;
         }
         try {
@@ -129,6 +176,7 @@
             if (moj !== numer) return;
             bladEl.hidden = false;
             bladEl.textContent = e.message;
+            terenEl.hidden = true; // suma działek z poprzedniego wyniku już nie obowiązuje
         }
     }
 
@@ -139,6 +187,10 @@
     formularz.addEventListener("submit", (e) => e.preventDefault());
     document.getElementById("dodaj-budynek").addEventListener("click", () => dodajBudynek());
 
+    document.getElementById("dodaj-dzialke").addEventListener("click", () => dodajDzialke().querySelector("input").focus());
+
+    for (const d of DZIALKI) dodajDzialke(d.identyfikator, d.powierzchnia_m2 ? String(Math.round(d.powierzchnia_m2)) : "");
+    if (!DZIALKI.length) dodajDzialke();
     dodajBudynek();
     przelicz();
 })();

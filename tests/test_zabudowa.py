@@ -65,7 +65,7 @@ def client(tmp_path):
 
 def test_endpoint_kalkulatora(client):
     strona = client.get("/mpzp/kalkulator?powierzchnia=812.4&dzialka=306401_1.0051.AR_18.14").get_data(as_text=True)
-    assert 'value="812"' in strona and "306401_1.0051.AR_18.14" in strona
+    assert '"powierzchnia_m2": 812.4' in strona and "306401_1.0051.AR_18.14" in strona
 
     dane = {
         "powierzchnia_dzialki": "1000",
@@ -89,3 +89,50 @@ def test_brak_kondygnacji_przy_rzucie_to_blad(client):
     dane = {"powierzchnia_dzialki": "1000", "pbc_m2": "", "budynki": [{"rzut_m2": "200", "kondygnacje": "", "wysokosc_m": ""}], "ustalenia": {}}
     odp = client.post("/mpzp/kalkulator/licz", data=json.dumps(dane), content_type="application/json")
     assert odp.status_code == 400 and "kondygnacji" in odp.get_json()["blad"]
+
+
+# ---------- ETAP 237: kilka działek razem ----------
+
+
+def test_teren_inwestycji_sumuje_dzialki():
+    from mpzp.zabudowa import Dzialka, teren_inwestycji
+
+    teren = teren_inwestycji([Dzialka("18/14", 600), Dzialka("18/15", 400)])
+    assert teren["powierzchnia_m2"] == 1000
+    assert [d["udzial_proc"] for d in teren["dzialki"]] == [60, 40]
+    with pytest.raises(BladDanych):
+        teren_inwestycji([])
+    with pytest.raises(BladDanych):
+        teren_inwestycji([Dzialka("a", 500), Dzialka("b", 0)])
+    with pytest.raises(BladDanych):
+        teren_inwestycji([Dzialka(str(i), 10) for i in range(21)])
+
+
+def test_endpoint_kilka_dzialek(client):
+    dane = {
+        "dzialki": [{"identyfikator": "18/14", "powierzchnia_m2": "600"}, {"identyfikator": "18/15", "powierzchnia_m2": "400,0"}, {"identyfikator": "pusta", "powierzchnia_m2": ""}],
+        "pbc_m2": "500",
+        "budynki": [{"rzut_m2": "350", "kondygnacje": "2", "wysokosc_m": ""}],
+        "ustalenia": {"max_zabudowa_proc": "30"},
+    }
+    wynik = client.post("/mpzp/kalkulator/licz", data=json.dumps(dane), content_type="application/json").get_json()
+    # 350 m² na 600 m² łamałoby plan, na sumie 1000 m² to 35% — też łamie, ale liczone od sumy
+    assert wynik["wskazniki"]["zabudowa_proc"] == pytest.approx(35)
+    assert wynik["teren"]["powierzchnia_m2"] == 1000 and len(wynik["teren"]["dzialki"]) == 2
+    assert wynik["zgodnosc"][0]["spelnione"] is False
+
+    dane["dzialki"][1]["powierzchnia_m2"] = "-5"
+    zle = client.post("/mpzp/kalkulator/licz", data=json.dumps(dane), content_type="application/json")
+    assert zle.status_code == 400 and "każdej działki" in zle.get_json()["blad"]
+
+    # bez listy działek działa dawne pole powierzchni — wynik bez „teren”
+    stare = {"powierzchnia_dzialki": "1000", "pbc_m2": "", "budynki": [], "ustalenia": {}}
+    assert "teren" not in client.post("/mpzp/kalkulator/licz", data=json.dumps(stare), content_type="application/json").get_json()
+
+
+def test_strona_kalkulatora_z_kilkoma_dzialkami(client):
+    strona = client.get("/mpzp/kalkulator?dzialka=A_1&powierzchnia=600&dzialka=A_2&powierzchnia=400.6").get_data(as_text=True)
+    assert '"identyfikator": "A_1"' in strona and '"powierzchnia_m2": 400.6' in strona
+    assert 'id="dodaj-dzialke"' in strona
+    # sama powierzchnia bez identyfikatora (ręczny link)
+    assert '"powierzchnia_m2": 812.0' in client.get("/mpzp/kalkulator?powierzchnia=812").get_data(as_text=True)

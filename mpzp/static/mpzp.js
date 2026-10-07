@@ -177,6 +177,58 @@
         return szczegoly;
     }
 
+    // ETAP 237: zestaw działek do wspólnego kalkulatora zabudowy (w localStorage,
+    // żeby przetrwał przejście do kolejnej działki i odświeżenie strony).
+    const KLUCZ_ZESTAWU = "mpzp.zestawKalkulatora";
+    function zestaw() {
+        try {
+            const lista = JSON.parse(localStorage.getItem(KLUCZ_ZESTAWU) || "[]");
+            return Array.isArray(lista) ? lista.filter((d) => d && typeof d.id === "string").slice(0, 20) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    function zapiszZestaw(lista) {
+        try {
+            localStorage.setItem(KLUCZ_ZESTAWU, JSON.stringify(lista));
+        } catch (e) {
+            // bez localStorage zestaw działa tylko do odświeżenia strony
+        }
+    }
+
+    function sekcjaZestawu(dzialka) {
+        const rzad = element("div", "rzad zestaw-dzialek");
+        const dodaj = element("button", "przycisk--drugi", "");
+        dodaj.type = "button";
+        const link = element("a", "przycisk przycisk--tekst", "");
+        const wyczysc = element("button", "przycisk--tekst", "✕");
+        wyczysc.type = "button";
+        wyczysc.title = "Wyczyść zestaw działek";
+        wyczysc.setAttribute("aria-label", "Wyczyść zestaw działek");
+        function odswiez(lista) {
+            const jest = lista.some((d) => d.id === dzialka.id);
+            dodaj.textContent = jest ? "✓ W zestawie" : "+ Do zestawu działek";
+            dodaj.disabled = jest || lista.length >= 20;
+            link.hidden = wyczysc.hidden = lista.length < 2;
+            link.textContent = `Kalkulator dla ${lista.length} działek razem`;
+            link.href = `${URL_KALKULATOR}?` + lista.map((d) => `dzialka=${encodeURIComponent(d.id)}&powierzchnia=${Math.round(d.powierzchnia_m2 || 0)}`).join("&");
+        }
+        dodaj.title = "Kilka działek jednej inwestycji — wskaźniki planu dla sumy ich powierzchni";
+        dodaj.addEventListener("click", () => {
+            const lista = zestaw();
+            if (!lista.some((d) => d.id === dzialka.id)) lista.push({ id: dzialka.id, powierzchnia_m2: dzialka.powierzchnia_m2 || 0 });
+            zapiszZestaw(lista);
+            odswiez(lista);
+        });
+        wyczysc.addEventListener("click", () => {
+            zapiszZestaw([]);
+            odswiez([]);
+        });
+        odswiez(zestaw());
+        rzad.append(dodaj, link, wyczysc);
+        return rzad;
+    }
+
     function sekcjaDzialki(dzialka) {
         const sekcja = element("div", "stos");
         const naglowek = element("div", "rzad rzad--miedzy");
@@ -205,6 +257,7 @@
         naglowek.append(element("h3", "", "Działka"), linki);
         sekcja.append(naglowek, element("div", "identyfikator wyciszony", dzialka.id));
         sekcja.appendChild(sekcjaZapisu(dzialka));
+        sekcja.appendChild(sekcjaZestawu(dzialka));
         if (dzialka.powierzchnia_m2) {
             sekcja.appendChild(
                 element("div", "powierzchnia", `Powierzchnia: ${formatM2.format(dzialka.powierzchnia_m2)} m² (${(dzialka.powierzchnia_m2 / 10000).toLocaleString("pl-PL", { maximumFractionDigits: 4 })} ha)`)
