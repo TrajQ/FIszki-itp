@@ -86,6 +86,8 @@ def transakcje():
         promienie=rcn.PROMIENIE_M,
         min_w_roku=rcn.MIN_W_ROKU,
         tolerancje=rcn.TOLERANCJE,
+        szerokosci_pierscieni=rcn.SZEROKOSCI_PIERSCIENI_M,  # ETAP 241
+        zasiegi_gradientu=rcn.ZASIEGI_GRADIENTU_M,
         minima=rcn.MINIMA_W_KOMORCE,
         opisy_pieter=rcn.OPISY_PIETER,
         krawedzie_h3=[(r, rcn.krawedz_h3_m(r)) for r in rcn.ROZDZIELCZOSCI_H3],
@@ -418,6 +420,24 @@ def karta_wyceny(plik_id):
         mapa=Markup(rcn.mapa_wyceny_svg(wynik, p["lat"], p["lng"])),  # tylko liczby i kolory z kodu
         powrot=url_for("ceny.transakcje", plik=plik_id, co=p["co"]),
     )
+
+
+@ceny_bp.route("/transakcje/<int:plik_id>/gradient")
+def gradient_transakcji(plik_id):
+    """ETAP 241: mediana ceny m² w pierścieniach od klikniętego miejsca (filtry strony)."""
+    if baza.plik_rcn(plik_id) is None:
+        abort(404)
+    lat, lng = request.args.get("lat", type=float), request.args.get("lng", type=float)
+    if lat is None or lng is None:
+        return jsonify({"blad": "Najpierw kliknij na mapie miejsce."}), 400
+    try:
+        co = _co()
+        filtry = _filtry(co)
+        wynik = rcn.gradient(_rekordy(plik_id, co, filtry), lat, lng,
+                             request.args.get("szerokosc", type=int), request.args.get("zasieg", type=int))
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    return jsonify(wynik)
 
 
 # ---------- mapa cen w heksagonach (ETAP 108) ----------

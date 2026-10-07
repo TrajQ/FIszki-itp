@@ -68,7 +68,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 240 (Teren: zmiana stanu w czasie (kilka inwentaryzacji) — zamknięty)
-Ostatni ZIP: releases/warsztat_etap240_20261007.zip
-Testy: 729 passed / 0 failed
+ETAP: 241 (Ceny: cena a odległość od miejsca (gradient) — zamknięty)
+Ostatni ZIP: releases/warsztat_etap241_20261007.zip
+Testy: 731 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

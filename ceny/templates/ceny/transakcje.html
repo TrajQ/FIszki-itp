@@ -182,6 +182,20 @@
             </details>
         </section>
 
+        {# ETAP 241: cena a odległość od klikniętego miejsca — liczy serwer (rcn.gradient) #}
+        <section class="karta stos" id="karta-gradientu">
+            <h3>Cena a odległość od miejsca</h3>
+            <p class="wyciszony opis-cen">Kliknij na mapie miejsce (np. centrum, stację, park) — mediana ceny za m² w pierścieniach coraz dalej od niego, z filtrami strony. Gdy plik ma dość transakcji w latach, ceny są sprowadzone do ostatniego roku (jak w wycenie), żeby różnica dat nie udawała różnicy miejsc.</p>
+            <form id="gradient-form" class="filtry-rcn">
+                <label>Pierścienie co <select name="szerokosc">{% for s in szerokosci_pierscieni %}<option value="{{ s }}" {{ 'selected' if s == 500 }}>{{ s ~ ' m' if s < 1000 else (s // 1000) ~ ' km' }}</option>{% endfor %}</select></label>
+                <label>Do odległości <select name="zasieg">{% for z in zasiegi_gradientu %}<option value="{{ z }}" {{ 'selected' if z == 5000 }}>{{ (z // 1000) ~ ' km' }}</option>{% endfor %}</select></label>
+                <button type="submit">Policz</button>
+            </form>
+            <p id="gradient-status" class="wyciszony opis-cen" aria-live="polite">Miejsce: nie wskazano — kliknij mapę.</p>
+            <div id="wykres-gradientu" class="wykres-cen" hidden></div>
+            <p id="gradient-opis" class="wyciszony opis-cen" hidden></p>
+        </section>
+
         <div class="kolumny-rcn">
             <section class="karta stos">
                 <h3>Mediana ceny za m² co kwartał</h3>

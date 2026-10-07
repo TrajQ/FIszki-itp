@@ -1161,3 +1161,62 @@ def regresja_cen(lokale: list[dict]) -> dict:
                        "efekt": b, "blad": se, "t": t, "istotny": t is not None and abs(t) >= T_ISTOTNOSCI})
     return {"efekty": efekty, "r2": model["r2"], "rmse": model["rmse"], "n": model["n"],
             "pominiete_skrajne": pominiete_skrajne, "od": poczatek.isoformat(), "wyraz_wolny": model["b"][0]}
+
+
+# ---------- cena a odległość od miejsca (ETAP 241) ----------
+
+SZEROKOSCI_PIERSCIENI_M = (250, 500, 1000)
+ZASIEGI_GRADIENTU_M = (2000, 5000, 10000)
+MIN_W_PIERSCIENIU = 5  # mniej transakcji — mediana pierścienia niepewna (pusty słupek)
+MIN_DO_TRENDU = 30
+
+
+def gradient(rekordy: list[dict], lat: float, lng: float, szerokosc_m: int, zasieg_m: int) -> dict:
+    """Mediana ceny za m² w pierścieniach co szerokosc_m od punktu (do zasieg_m)
+    i średnia zmiana ceny na każdy kilometr (regresja liniowa).
+
+    Gdy plik ma dość lat, ceny są najpierw sprowadzone do roku bazowego
+    (wspolczynniki_czasu, ETAP 201) — inaczej pierścień z samymi starszymi
+    transakcjami wyglądałby na tańszy tylko przez datę. To opis danych, nie
+    model wartości lokalizacji: odległość od jednego punktu to nie
+    jedyna cecha miejsca."""
+    if szerokosc_m not in SZEROKOSCI_PIERSCIENI_M or zasieg_m not in ZASIEGI_GRADIENTU_M:
+        raise ValueError("Niepoprawna szerokość pierścieni albo zasięg.")
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        raise ValueError("Niepoprawne miejsce.")
+    czas = wspolczynniki_czasu(rekordy)
+    w_zasiegu = []
+    for r in rekordy:
+        if r["lat"] is None:
+            continue
+        odl = odleglosc_m(lat, lng, r["lat"], r["lng"])
+        if odl > zasieg_m:
+            continue
+        cena = r["cena_m2"]
+        if czas:
+            wsp = czas["wspolczynniki"].get(r["rok"])
+            if wsp is None:
+                continue  # rok z za małą liczbą transakcji — bez korekty nie porównujemy
+            cena *= wsp
+        w_zasiegu.append((odl, cena))
+    pierscienie = []
+    for i in range(zasieg_m // szerokosc_m):
+        od, do = i * szerokosc_m, (i + 1) * szerokosc_m
+        ceny = sorted(c for d, c in w_zasiegu if od <= d < do or (do == zasieg_m and d == zasieg_m))
+        p = {"od_m": od, "do_m": do, "liczba": len(ceny), "mediana_m2": None, "q1_m2": None, "q3_m2": None}
+        if len(ceny) >= MIN_W_PIERSCIENIU:
+            p["q1_m2"], p["mediana_m2"], p["q3_m2"] = _kwartyle(ceny)
+        pierscienie.append(p)
+    trend = None
+    if len(w_zasiegu) >= MIN_DO_TRENDU and len({round(d) for d, _ in w_zasiegu}) > 2:
+        ols = najmniejsze_kwadraty([[d / 1000] for d, _ in w_zasiegu], [c for _, c in w_zasiegu])
+        trend = {"zmiana_na_km": ols["b"][1], "blad": ols["se"][1], "istotny": abs(ols["b"][1]) >= T_ISTOTNOSCI * ols["se"][1],
+                 "r2": ols["r2"], "n": ols["n"]}
+    return {
+        "liczba": len(w_zasiegu),
+        "pierscienie": pierscienie,
+        "trend": trend,
+        "rok_bazowy": czas["rok_bazowy"] if czas else None,
+        "min_w_pierscieniu": MIN_W_PIERSCIENIU,
+        "min_do_trendu": MIN_DO_TRENDU,
+    }

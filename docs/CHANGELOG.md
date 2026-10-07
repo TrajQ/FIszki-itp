@@ -1177,3 +1177,6 @@
 
 ## ETAP 240 — 2026-10-07
 - Teren: zmiana stanu w czasie dla 2–6 inwentaryzacji tego samego terenu
+
+## ETAP 241 — 2026-10-07
+- Ceny: mediana ceny za m² w pierścieniach od wskazanego miejsca i zmiana na kilometr

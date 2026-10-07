@@ -1068,3 +1068,50 @@ def test_zestawienie_ma_mape(client, tmp_path, monkeypatch):
     wynik = client.get("/ceny/transakcje/zestawienie?pliki=1&pliki=2").get_data(as_text=True)
     mapa = wynik.split('id="mapa-zestawienia"')[1].split(">", 1)[1].split("</div>")[0]
     assert mapa.startswith("<svg") and "krakow" not in mapa  # nazwy tylko w tabeli
+
+
+# ---------- ETAP 241: cena a odległość od miejsca ----------
+
+
+def _rekordy_gradientu(lata=(2024,), korekta=False):
+    """Cena maleje o 1000 zł/m² na km od punktu (50,0; 19,9); w każdym pierścieniu 500 m — 6 transakcji."""
+    rekordy = []
+    for rok in lata:
+        for pierscien in range(6):  # 0–3 km
+            for j in range(6):
+                d = pierscien * 500 + 50 + j * 60  # m na północ
+                cena = 15000 - d  # 1 zł/m² na metr = 1000 zł/m² na km
+                if korekta and rok == 2023:
+                    cena *= 0.8  # rok wcześniej o 20% taniej
+                rekordy.append({"data": f"{rok}-03-01", "rok": rok, "rynek": "wtórny", "pow_m2": 50, "cena": cena * 50, "cena_m2": float(cena),
+                                "lat": 50.0 + d / 111_195, "lng": 19.9})
+    return rekordy
+
+
+def test_gradient_pierscienie_i_trend():
+    w = rcn.gradient(_rekordy_gradientu(), 50.0, 19.9, 500, 5000)
+    assert w["liczba"] == 36 and len(w["pierscienie"]) == 10 and w["rok_bazowy"] is None
+    assert w["pierscienie"][0]["liczba"] == 6 and w["pierscienie"][0]["mediana_m2"] == pytest.approx(15000 - 200, abs=2)
+    assert w["pierscienie"][6]["liczba"] == 0 and w["pierscienie"][6]["mediana_m2"] is None
+    assert w["trend"]["zmiana_na_km"] == pytest.approx(-1000, abs=5) and w["trend"]["istotny"] and w["trend"]["r2"] > 0.99
+    # dwa lata, starszy tańszy o 20%: po korekcie do 2024 r. ten sam gradient
+    k = rcn.gradient(_rekordy_gradientu((2023, 2024), korekta=True), 50.0, 19.9, 500, 5000)
+    assert k["rok_bazowy"] == 2024 and k["trend"]["zmiana_na_km"] == pytest.approx(-1000, abs=60)
+    with pytest.raises(ValueError):
+        rcn.gradient([], 50.0, 19.9, 333, 5000)
+    assert rcn.gradient(_rekordy_gradientu()[:10], 50.0, 19.9, 1000, 2000)["trend"] is None  # za mało do trendu
+
+
+def test_trasa_gradientu(client, tmp_path, monkeypatch):
+    pobrane = tmp_path / "Pobrane"
+    pobrane.mkdir()
+    sciezka = str(pobrane / "rcn.gpkg")
+    plik_rcn(sciezka, [lokal(i, lok_pow_uzyt=50, lok_cena_brutto=(600_000 - i * 5000), geom=geometria_gpkg(50.06 + i / 1000, 19.94)) for i in range(1, 41)])
+    monkeypatch.setattr(trasy_rcn, "katalogi_pobranych", lambda: [str(pobrane)])
+    client.post("/ceny/transakcje/import", data={"sciezka": sciezka})
+    w = client.get("/ceny/transakcje/1/gradient?lat=50.06&lng=19.94&szerokosc=1000&zasieg=5000").get_json()
+    assert w["liczba"] == 40 and w["trend"]["zmiana_na_km"] < 0  # dalej na północ — taniej
+    assert client.get("/ceny/transakcje/1/gradient?lat=50.06&lng=19.94&szerokosc=1000&zasieg=7000").status_code == 400
+    assert "kliknij" in client.get("/ceny/transakcje/1/gradient?szerokosc=1000&zasieg=5000").get_json()["blad"]
+    assert client.get("/ceny/transakcje/9/gradient?lat=50&lng=19&szerokosc=1000&zasieg=5000").status_code == 404
+    assert 'id="karta-gradientu"' in client.get("/ceny/transakcje?plik=1").get_data(as_text=True)

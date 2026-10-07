@@ -512,11 +512,69 @@
         else znacznik = L.marker(miejsce, { title: "Miejsce do wyceny porównawczej" }).addTo(mapa);
         document.getElementById("podobne-miejsce").textContent = `Miejsce: ${miejsce.lat.toFixed(5)}, ${miejsce.lng.toFixed(5)}.`;
         szukajPodobnych();
+        if (!wykresGradientu.hidden) policzGradient(); // ETAP 241: gradient już pokazany — liczy dla nowego miejsca
+        else document.getElementById("gradient-status").textContent = `Miejsce: ${miejsce.lat.toFixed(5)}, ${miejsce.lng.toFixed(5)} — kliknij „Policz”.`;
     });
 
     function parametryFiltrow() {
         return new URLSearchParams([...new FormData(filtry)].filter(([, v]) => v));
     }
+
+    // ---------- cena a odległość od miejsca (ETAP 241) — liczy serwer (rcn.gradient) ----------
+    const formGradientu = document.getElementById("gradient-form");
+    const wykresGradientu = document.getElementById("wykres-gradientu");
+    const warstwaPierscieni = L.layerGroup().addTo(mapa);
+    let numerGradientu = 0;
+
+    async function policzGradient() {
+        const status = document.getElementById("gradient-status");
+        const opis = document.getElementById("gradient-opis");
+        if (!miejsce) {
+            status.textContent = "Miejsce: nie wskazano — kliknij mapę.";
+            return;
+        }
+        const moj = ++numerGradientu;
+        const parametry = parametryFiltrow();
+        for (const [k, v] of new FormData(formGradientu)) parametry.set(k, v);
+        parametry.set("lat", miejsce.lat.toFixed(6));
+        parametry.set("lng", miejsce.lng.toFixed(6));
+        status.textContent = "Liczę…";
+        try {
+            const odp = await fetch(`${URL_TRANSAKCJE}/${PLIK_ID}/gradient?${parametry}`);
+            const w = await odp.json().catch(() => ({}));
+            if (moj !== numerGradientu) return;
+            if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+            warstwaPierscieni.clearLayers();
+            for (const p of w.pierscienie) {
+                L.circle(miejsce, { radius: p.do_m, color: "#5e5ce6", weight: 1, dashArray: "4 4", fill: false, interactive: false }).addTo(warstwaPierscieni);
+            }
+            const km = (m) => (m < 1000 ? `${m} m` : `${(m / 1000).toLocaleString("pl-PL", { maximumFractionDigits: 2 })} km`);
+            wykresSlupkowy(wykresGradientu, w.pierscienie.map((p) => ({ ...p, wartosc: p.mediana_m2 ?? 0 })),
+                (p) => km(p.do_m),
+                (p) => `${km(p.od_m)}–${km(p.do_m)}: ` + (p.mediana_m2 === null ? `${p.liczba} transakcji — za mało na medianę` : `mediana ${liczba.format(p.mediana_m2)} zł/m² (kwartyle ${liczba.format(p.q1_m2)}–${liczba.format(p.q3_m2)}), ${p.liczba} transakcji`));
+            wykresGradientu.hidden = false;
+            status.textContent = `Transakcji do ${km(Number(parametry.get("zasieg")))} od miejsca: ${liczba.format(w.liczba)}` + (w.rok_bazowy ? `; ceny sprowadzone do ${w.rok_bazowy} r.` : "; bez korekty na datę (za mało lat w pliku).");
+            const zdania = [];
+            if (w.trend) {
+                const t = w.trend;
+                zdania.push(t.istotny
+                    ? `Średnio o ${liczba.format(Math.abs(t.zmiana_na_km))} zł/m² ${t.zmiana_na_km < 0 ? "taniej" : "drożej"} z każdym kilometrem od miejsca (±${liczba.format(t.blad)}; ${liczba.format(t.n)} transakcji).`
+                    : `Brak wyraźnej zależności ceny od odległości (zmiana ${liczba.format(t.zmiana_na_km)} ± ${liczba.format(t.blad)} zł/m² na km — może być przypadkiem).`);
+                zdania.push(`Odległość wyjaśnia ${liczba.format((t.r2 || 0) * 100)}% zróżnicowania cen — resztę robią inne cechy miejsca i mieszkań.`);
+            } else {
+                zdania.push(`Za mało transakcji na ocenę zależności (potrzeba ${w.min_do_trendu}).`);
+            }
+            zdania.push(`Pusty słupek — mniej niż ${w.min_w_pierscieniu} transakcji w pierścieniu. Najedź na słupek, żeby zobaczyć liczby.`);
+            opis.textContent = zdania.join(" ");
+            opis.hidden = false;
+        } catch (e) {
+            status.textContent = e.message;
+        }
+    }
+    formGradientu.addEventListener("submit", (e) => {
+        e.preventDefault();
+        policzGradient();
+    });
 
     // ---------- co wpływa na cenę m² (ETAP 156) — model liczy serwer (rcn.regresja_cen) ----------
     const przyciskRegresji = document.getElementById("przycisk-regresji");

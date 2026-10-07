@@ -4399,3 +4399,23 @@ Status: zamknięty
   bez wspólnych pól); przeglądarka 1300/390 px
 - Pomoc: akapit „Zmiana w czasie” w „Import punktów z QGIS”
 - `DECISIONS.md`: D-248
+
+## ETAP 241 — Ceny: cena za m² a odległość od wskazanego miejsca
+Data: 2026-10-07
+Status: zamknięty
+
+- `ceny/rcn.py`: `gradient(rekordy, lat, lng, szerokosc_m, zasieg_m)` —
+  pierścienie co 250/500/1000 m do 2/5/10 km: liczba transakcji,
+  mediana i kwartyle ceny m² (od 5 transakcji); trend — regresja
+  liniowa ceny na odległość w km (`najmniejsze_kwadraty`, od 30
+  transakcji, |t| ≥ 1,96 = wyraźny); ceny sprowadzone do roku bazowego
+  (`wspolczynniki_czasu`, ETAP 201), gdy plik ma dość lat
+- `GET /ceny/transakcje/<id>/gradient` (filtry strony, lat/lng)
+- Strona pliku: karta „Cena a odległość od miejsca” — miejsce z
+  kliknięcia mapy (to samo co do wyceny), wykres słupkowy, pierścienie
+  na mapie, opis trendu i R²; kolejne kliknięcie przelicza
+- Testy: pierścienie, mediany, trend −1000 zł/m²/km, korekta na datę
+  (dwa lata), za mało do trendu, błędne parametry, trasa (filtry, brak
+  miejsca, 404); przeglądarka 1300/390 px na 400 transakcjach
+- Pomoc: „Jak cena zależy od odległości od miejsca?”
+- `DECISIONS.md`: D-249

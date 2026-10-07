@@ -4977,3 +4977,26 @@ projektu („kopia”).
   połączyć różne obiekty przy gęstych pomiarach.
 - Wykres liniowy udziałów — przy 2–6 punktach w czasie paski skumulowane
   czytelniej pokazują cały rozkład.
+
+## D-249 — Gradient cen: pierścienie z medianą i prosta regresja, ceny po korekcie na datę
+Data: 2026-10-07
+
+**Decyzja:** Gradient to mediany ceny m² w pierścieniach o stałej
+szerokości (wybór z listy) plus jedna liczba: nachylenie regresji
+liniowej ceny na odległość (zł/m² na km) z błędem i R². Gdy plik ma co
+najmniej dwa lata z 10+ transakcjami, ceny najpierw sprowadzamy do
+ostatniego roku tymi samymi współczynnikami co w wycenie (ETAP 201);
+transakcje z lat bez współczynnika pomijamy.
+
+**Uzasadnienie:** Mediana w pierścieniu jest odporna na pojedyncze
+nietypowe transakcje; regresja daje jedną porównywalną liczbę między
+miastami. Korekta na datę jest konieczna, bo nowe osiedla na obrzeżach
+sprzedają się w innych latach niż kamienice w centrum. Strona mówi
+wprost, ile zróżnicowania wyjaśnia sama odległość — żeby nie czytać
+gradientu jako wartości lokalizacji.
+
+**Odrzucone alternatywy:**
+- Krzywa wygładzona (LOESS) — trudniejsza do wyjaśnienia na pierwszym
+  roku, a przy kilku pierścieniach mediany pokazują kształt.
+- Odległość po drogach — wymaga sieci (moduł Dostępność); tu wystarcza
+  odległość w linii prostej.
