@@ -1,7 +1,7 @@
 # Warsztat — narzędzia do gospodarki przestrzennej
 
 *Projekt studencki (gospodarka przestrzenna, I rok). Lokalna aplikacja
-webowa: 8 modułów, dane publiczne GUS i GUGiK, praca w terenie bez
+webowa: 9 modułów, dane publiczne GUS i GUGiK, praca w terenie bez
 internetu. English summary at the end.*
 
 ## W jednym zdaniu
@@ -23,7 +23,8 @@ do egzaminów.
 | **Przepisy** | Ustawy z PDF podzielone na artykuły, wyszukiwarka, pytania do modelu językowego z cytatami sprawdzanymi w tekście, porównanie wersji aktu po nowelizacji, słowniczek definicji, odesłania jako odnośniki, notatki | praca z prawem planistycznym, kontrola wiarygodności AI |
 | **Teren** | Formularz na telefon działający bez internetu (GPS, zdjęcia, mapa offline z ortofotomapą), import (także GeoJSON z QGIS), poprawki punktów, raport z heksagonami H3 i eksport do QGIS | inwentaryzacja urbanistyczna, zbieranie danych w terenie |
 | **Ceny** | Ceny mieszkań w miastach i powiatach z GUS (szeregi, zmiany, ranking, dostępność cenowa — m² za przeciętne wynagrodzenie); pojedyncze transakcje mieszkań i działek z Rejestru Cen Nieruchomości: mapa, trend, porównanie narysowanych dzielnic, mapa cen i zmian cen w heksagonach H3, wycena porównawcza z kartą do druku, premia rynku pierwotnego, raport porównania miast, ceny w okolicy działki i osiedla, eksport do QGIS | rynek nieruchomości, analiza przestrzenna cen, podejście porównawcze, statystyka publiczna |
-| **Fiszki** | Fiszki z PDF-ów z kotwicą w źródle, fiszki z luką, powtórki metodą pudełek, egzaminy z postępem, nauka na telefonie offline | — (narzędzie do nauki) |
+| **Fiszki** | Fiszki z PDF-ów z kotwicą w źródle, fiszki z luką, powtórki metodą pudełek, egzaminy z postępem i prognozą gotowości, nauka na telefonie offline | — (narzędzie do nauki) |
+| **Praca i notatki** | Godziny z grafiku pracy (PDF z Google Docs albo zdjęcie) z sumą i wypłatą, historia miesięcy; notatki do nauki w Wordzie z PDF-u albo zdjęć, z pytaniami kontrolnymi i eksportem do Fiszek | — (narzędzie codzienne; parser tabeli, plik DOCX budowany bez biblioteki) |
 
 ## Zasady, które wyróżniają projekt
 
@@ -57,12 +58,13 @@ Każda decyzja projektowa ma uzasadnienie i odrzucone alternatywy w
 [DECISIONS.md](../DECISIONS.md), a przebieg prac jest w
 [PROGRESS.md](PROGRESS.md).
 
-## Liczby (stan: ETAP 210)
+## Liczby (stan: ETAP 234)
 
-- 8 modułów, 210 etapów, 218 zapisanych decyzji projektowych
-- ok. 20 100 wierszy Pythona aplikacji (+ 9 800 wierszy testów, pokrycie
-  ok. 95%), 10 000 JavaScriptu, 632 testy automatyczne; przegląd 96 stron
-  (z danymi) w przeglądarce jednym skryptem (`narzedzia/przeglad_stron.py`),
+- 9 modułów, 234 etapy, 242 zapisane decyzje projektowe
+- ok. 22 600 wierszy Pythona aplikacji (+ 11 000 wierszy testów, pokrycie
+  ok. 96%), 10 700 JavaScriptu, 717 testów automatycznych; przegląd 101
+  stron (z danymi) w przeglądarce jednym skryptem
+  (`narzedzia/przeglad_stron.py`) — błędy JS, szerokość telefonu, ARIA;
   kontrast kolorów wg WCAG pilnowany testem
 - architektura opisana w [ARCHITEKTURA.md](ARCHITEKTURA.md)
 - technologie: Python, Flask, SQLite, vanilla JavaScript, Leaflet,

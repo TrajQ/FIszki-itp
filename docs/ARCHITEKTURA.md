@@ -44,7 +44,7 @@ instance/                       DANE UŻYTKOWNIKA (poza repozytorium)
 
 ## Moduł = blueprint
 
-Każdy z ośmiu modułów ma ten sam układ:
+Każdy z dziewięciu modułów ma ten sam układ:
 
 | Plik | Rola |
 |---|---|
@@ -92,6 +92,11 @@ Moduły nie sięgają nawzajem do swoich baz. Wyjątki są nieliczne i jawne:
   (D-184) — jak ceny, przez trasę.
 - Stan trzymany tylko w przeglądarce (dzielnice w Dostępności) trafia do
   raportu POST-em ze strony raportu (D-213) — serwer go nie zapisuje.
+- Praca nie zapisuje do Fiszek: oddaje plik CSV w formacie importu Fiszek
+  (D-241), który użytkownik wczytuje do wybranego PDF-u.
+- Pliki dla innych programów budujemy bez bibliotek, jako ZIP/SQLite z
+  XML-em według specyfikacji: GeoPackage (`dane/geopaczka.py`, D-221),
+  ODS (`dane/arkusz.py`), DOCX (`praca/word.py`, D-239).
 
 ## Warstwa `dane/`
 

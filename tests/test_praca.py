@@ -278,3 +278,43 @@ def test_wklejony_tekst_dlugosc_i_trasa_fiszek(client, monkeypatch):
     assert r.headers["Content-Disposition"].endswith("Planowanie_w_gminie_fiszki.csv")
     bez = {**ODPOWIEDZ, "pojecia": [], "pytania": []}
     assert client.post("/praca/notatki/fiszki.csv", json={"notatki": bez}).status_code == 400
+
+
+# ---------- ETAP 234: warstwa Gemini modułu Praca (bez sieci) ----------
+
+
+class _OdpGemini:
+    def __init__(self, text):
+        self.text = text
+
+
+def test_gemini_grafik_i_notatki_bez_sieci(monkeypatch):
+    from dane import gemini
+    wywolania = []
+    monkeypatch.setattr(gemini.Config, "GEMINI_API_KEY", "test")
+    monkeypatch.setattr(gemini, "_generuj", lambda contents, **k: wywolania.append((contents, k)) or _OdpGemini(" 16.\nPatryk\n15:30-20:00 "))
+    assert gemini.przepisz_grafik(b"\xff\xd8x", "image/jpeg") == "16.\nPatryk\n15:30-20:00"
+    czesci, ustawienia = wywolania[-1]
+    assert czesci[0].inline_data.mime_type == "image/jpeg" and ustawienia["temperature"] == 0
+    with pytest.raises(gemini.BladGemini, match="Obsługiwane"):
+        gemini.przepisz_grafik(b"x", "text/plain")
+    monkeypatch.setattr(gemini, "_generuj", lambda contents, **k: _OdpGemini(""))
+    with pytest.raises(gemini.BladGemini, match="nie odczytał"):
+        gemini.przepisz_grafik(b"x", "image/png")
+
+    monkeypatch.setattr(gemini, "_generuj", lambda contents, **k: wywolania.append((contents, k)) or _OdpGemini('{"tytul": "x"}'))
+    assert gemini.utworz_notatki("Tekst wykładu", dlugosc="zwiezle") == '{"tytul": "x"}'
+    czesci, ustawienia = wywolania[-1]
+    assert czesci == ["Materiał:\nTekst wykładu"] and "ZWIĘZŁE" in ustawienia["system_instruction"]
+    assert ustawienia["response_mime_type"] == "application/json"
+    gemini.utworz_notatki(pliki=[(b"\x89PNG", "image/png")], dlugosc="nieznana")
+    czesci, ustawienia = wywolania[-1]
+    assert czesci[0].inline_data.mime_type == "image/png" and "umiarkowanej" in ustawienia["system_instruction"]
+    with pytest.raises(gemini.BladGemini):
+        gemini.utworz_notatki(pliki=[(b"x", "application/zip")])
+    monkeypatch.setattr(gemini, "_generuj", lambda contents, **k: _OdpGemini("  "))
+    with pytest.raises(gemini.BladGemini, match="nie zwrócił"):
+        gemini.utworz_notatki("x")
+    monkeypatch.setattr(gemini.Config, "GEMINI_API_KEY", "")
+    with pytest.raises(gemini.BladGemini, match="GEMINI_API_KEY"):
+        gemini.utworz_notatki("x")

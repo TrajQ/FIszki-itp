@@ -1156,3 +1156,6 @@
 
 ## ETAP 233 — 2026-10-07
 - Praca: notatki z pytaniami „Sprawdź się”, wyborem długości, z wklejonego tekstu; pytania i pojęcia do Fiszek
+
+## ETAP 234 — 2026-10-07
+- Plan końcowy: projekt kończy się na ETAPie 250

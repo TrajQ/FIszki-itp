@@ -4248,3 +4248,21 @@ Status: zamknięty
   przeglądarka 1300/390 px; przegląd 101 stron — 0 problemów
 - Pomoc: akapit „Tekst, długość, pytania, fiszki”
 - `DECISIONS.md`: D-241
+
+## ETAP 234 — Przegląd i dokumentacja 211–233, plan końcowy do ETAPu 250
+Data: 2026-10-07
+Status: zamknięty
+
+- Autor: „kontynuuj do 250 i to ma być koniec projektu” — plan
+  przepisany: 21 pozycji dawnej serii 231–250 w 17 ETAPach 234–250
+  (pokrewne połączone), tabela z dawnymi numerami w
+  `docs/PLAN_171-250.md`; Oracle Cloud — w planie dalszym (ETAP 250)
+- Przegląd: 717 testów, pokrycie 96% (najsłabszy był `dane/gemini.py`
+  85% — nowe funkcje modułu Praca bez testu warstwy Gemini → test z
+  podstawionym `_generuj`: przepisywanie grafiku i notatki — części
+  obrazów, temperatura, długość, błędy), pyflakes czysto (poza celowymi
+  importami rejestrującymi trasy), przegląd 101 stron — 0 problemów
+- `docs/PORTFOLIO.md`: 9 modułów, wiersz „Praca i notatki”, liczby na
+  ETAP 234; `docs/ARCHITEKTURA.md`: dziewięć modułów, powiązanie Praca →
+  Fiszki przez plik CSV, pliki GeoPackage/ODS/DOCX budowane bez bibliotek
+- `DECISIONS.md`: D-242

@@ -4833,3 +4833,21 @@ który użytkownik importuje do wybranego PDF-u. Moduły zostają niezależne.
   modułów i wybór PDF-u w obcym interfejsie.
 - Odpowiedzi w przypisach Worda — trudniejsze do zasłonięcia i do
   zbudowania bez biblioteki.
+
+## D-242 — Koniec projektu na ETAPie 250: łączenie pozycji planu
+Data: 2026-10-07
+
+**Decyzja:** Na prośbę autora projekt kończy się ETAPem 250. Pozostałe
+21 pozycji planu zmieszczono w 17 ETAPach przez połączenie pokrewnych
+(mapa dwuzmiennowa z wydrukiem, podział plików JS i Pythona, samouczek z
+danymi przykładowymi, fiszki z mapą z quizem). Żadna pozycja nie
+wypadła; Oracle Cloud trafia do planu dalszego poza projektem.
+
+**Uzasadnienie:** Połączone pozycje dzielą kod (wydruk mapy korzysta z tej
+samej funkcji SVG co mapa; samouczek potrzebuje danych przykładowych;
+quiz z mapą korzysta z fiszek z punktem). Rozdzielenie ich dawało
+ETAPy, w których druga połowa byłaby kilkoma wierszami.
+
+**Odrzucone alternatywy:**
+- Wyrzucenie czterech pozycji — autor nie prosił o rezygnację z nich.
+- Przekroczenie numeru 250 — sprzeczne z decyzją autora.
