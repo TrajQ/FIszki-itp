@@ -21,7 +21,7 @@ from werkzeug.utils import secure_filename
 
 from mpzp.uklady import w_polsce
 
-from . import baza, rcn
+from . import baza, modele_cen, rcn, rysunki_rcn
 from .routes import ceny_bp
 
 RYNKI = ("pierwotny", "wtórny", "nieznany")
@@ -86,8 +86,8 @@ def transakcje():
         promienie=rcn.PROMIENIE_M,
         min_w_roku=rcn.MIN_W_ROKU,
         tolerancje=rcn.TOLERANCJE,
-        szerokosci_pierscieni=rcn.SZEROKOSCI_PIERSCIENI_M,  # ETAP 241
-        zasiegi_gradientu=rcn.ZASIEGI_GRADIENTU_M,
+        szerokosci_pierscieni=modele_cen.SZEROKOSCI_PIERSCIENI_M,  # ETAP 241
+        zasiegi_gradientu=modele_cen.ZASIEGI_GRADIENTU_M,
         minima=rcn.MINIMA_W_KOMORCE,
         opisy_pieter=rcn.OPISY_PIETER,
         krawedzie_h3=[(r, rcn.krawedz_h3_m(r)) for r in rcn.ROZDZIELCZOSCI_H3],
@@ -239,8 +239,8 @@ def raport_transakcji(plik_id):
         min_w_roku=rcn.MIN_W_ROKU,
         min_w_rynku=rcn.MIN_W_RYNKU,
         opis_pietra=rcn.OPISY_PIETER.get(request.args.get("pietro")),
-        wykres_lat=Markup(rcn.wykres_lat_svg(porownanie)),  # ETAP 110; tylko liczby i kolory z kodu
-        mapa=Markup(rcn.mapa_svg(lokale, obszary, mapa["progi"], rcn.KOLORY_KLAS)),  # tylko liczby i kolory z kodu
+        wykres_lat=Markup(rysunki_rcn.wykres_lat_svg(porownanie)),  # ETAP 110; tylko liczby i kolory z kodu
+        mapa=Markup(rysunki_rcn.mapa_svg(lokale, obszary, mapa["progi"], rcn.KOLORY_KLAS)),  # tylko liczby i kolory z kodu
         progi=mapa["progi"],
         kolory=rcn.KOLORY_KLAS,
     )
@@ -271,7 +271,7 @@ def zestawienie_plikow():
         rekordy = {i: _rekordy(i, co, filtry) for i in wybrane}
         zestawienie = rcn.zestawienie_plikow([(po_id[i]["nazwa"], rekordy[i], baza.obszary_rcn(i)) for i in wybrane])
         # ETAP 221: mapa schematyczna — gdzie leżą transakcje każdego pliku
-        mapa = rcn.mapa_plikow_svg([{"kolor": p["kolor"], "lokale": rekordy[i]} for i, p in zip(wybrane, zestawienie["pliki"])])
+        mapa = rysunki_rcn.mapa_plikow_svg([{"kolor": p["kolor"], "lokale": rekordy[i]} for i, p in zip(wybrane, zestawienie["pliki"])])
     return render_template(
         "ceny/zestawienie.html",
         pliki=pliki,
@@ -282,7 +282,7 @@ def zestawienie_plikow():
         blad=blad,
         maks=rcn.MAKS_PLIKOW_ZESTAWIENIA,
         zestawienie=zestawienie,
-        wykres=Markup(rcn.wykres_plikow_svg(zestawienie)) if zestawienie else None,  # tylko liczby i kolory z kodu
+        wykres=Markup(rysunki_rcn.wykres_plikow_svg(zestawienie)) if zestawienie else None,  # tylko liczby i kolory z kodu
         mapa=Markup(mapa) if mapa else None,  # jw.
         min_w_roku=rcn.MIN_W_ROKU,
     )
@@ -375,7 +375,7 @@ def regresja_transakcji(plik_id):
     try:
         if _co() != "lokale":
             raise ValueError("Wpływ cech liczymy dla mieszkań.")
-        return jsonify(rcn.regresja_cen(_rekordy(plik_id, "lokale", _filtry("lokale"))))
+        return jsonify(modele_cen.regresja_cen(_rekordy(plik_id, "lokale", _filtry("lokale"))))
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400
 
@@ -417,7 +417,7 @@ def karta_wyceny(plik_id):
         zapisana = None
     return render_template(
         "ceny/wycena.html", plik=plik, p=p, wynik=wynik, opis_filtrow=opis_filtrow, zapisana=zapisana,
-        mapa=Markup(rcn.mapa_wyceny_svg(wynik, p["lat"], p["lng"])),  # tylko liczby i kolory z kodu
+        mapa=Markup(rysunki_rcn.mapa_wyceny_svg(wynik, p["lat"], p["lng"])),  # tylko liczby i kolory z kodu
         powrot=url_for("ceny.transakcje", plik=plik_id, co=p["co"]),
     )
 
@@ -433,7 +433,7 @@ def gradient_transakcji(plik_id):
     try:
         co = _co()
         filtry = _filtry(co)
-        wynik = rcn.gradient(_rekordy(plik_id, co, filtry), lat, lng,
+        wynik = modele_cen.gradient(_rekordy(plik_id, co, filtry), lat, lng,
                              request.args.get("szerokosc", type=int), request.args.get("zasieg", type=int))
     except ValueError as e:
         return jsonify({"blad": str(e)}), 400

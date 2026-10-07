@@ -93,7 +93,7 @@ import struct  # noqa: E402
 
 from shapely.geometry import Point, Polygon  # noqa: E402
 
-from ceny import rcn, trasy_rcn  # noqa: E402
+from ceny import modele_cen, rcn, rysunki_rcn, trasy_rcn  # noqa: E402
 from mpzp import uklady  # noqa: E402
 
 
@@ -234,10 +234,10 @@ def test_obszary_rcn():
     assert c["liczba"] == 0 and "wobec_calosci_proc" not in c
     assert p["lata"] == [2023, 2024]
 
-    svg = rcn.mapa_svg(lokale, [poludnie, polnoc], [11000, 13000, 15000, 21000], rcn.KOLORY_KLAS)
+    svg = rysunki_rcn.mapa_svg(lokale, [poludnie, polnoc], [11000, 13000, 15000, 21000], rcn.KOLORY_KLAS)
     assert svg.startswith("<svg") and svg.count("<circle") == 5 + 2 and svg.count("<path") >= 2 + 1
     assert "Południe" not in svg  # nazwy tylko w legendzie
-    assert "brak transakcji" in rcn.mapa_svg([], [], [], rcn.KOLORY_KLAS)
+    assert "brak transakcji" in rysunki_rcn.mapa_svg([], [], [], rcn.KOLORY_KLAS)
 
 
 def test_trasy_obszarow_i_raport(client, tmp_path, monkeypatch):
@@ -578,7 +578,7 @@ def test_zestawienie_plikow():
     assert wieliczka["wobec_pierwszego_proc"] == pytest.approx(-25.0) and wieliczka["kolor"] != krakow["kolor"]
     assert pusty["liczba"] == 0 and "wobec_pierwszego_proc" not in pusty
     assert z["lata"] == [2023, 2024]
-    svg = rcn.wykres_plikow_svg(z)
+    svg = rysunki_rcn.wykres_plikow_svg(z)
     assert svg.count("<polyline") == 2 and "stroke-dasharray" not in svg  # linia na plik z danymi, bez „całego pliku”
 
 
@@ -612,12 +612,12 @@ def test_wykres_lat():
     obszar = {"id": 1, "nazwa": "A", "geometria": prostokat(19.9, 50.0, 20.0, 50.05)}
     por = rcn.porownanie(lokale, [obszar])
     assert por["obszary"][0]["lata_liczba"] == {2022: 6, 2023: 2, 2024: 5}
-    svg = rcn.wykres_lat_svg(por)
+    svg = rysunki_rcn.wykres_lat_svg(por)
     assert svg.count("<polyline") == 2 and 'stroke-dasharray="6 4"' in svg  # obszar + cały plik
     assert svg.count('fill="#ffffff" stroke="#0071e3"') == 1  # 2023: dwie transakcje — pusty punkt
     assert ">10 000<" in svg and ">2023<" in svg
-    assert "za mało lat" in rcn.wykres_lat_svg(rcn.porownanie(lokale[:6], [obszar]))
-    assert rcn._ladna_os(10234, 13870) == (10000, 14000, 1000)
+    assert "za mało lat" in rysunki_rcn.wykres_lat_svg(rcn.porownanie(lokale[:6], [obszar]))
+    assert rysunki_rcn._ladna_os(10234, 13870) == (10000, 14000, 1000)
 
 
 # ---------- ETAP 111: zmiana cen w heksagonach ----------
@@ -783,7 +783,7 @@ def test_mapa_raportu_tylko_najnowsze(monkeypatch):
     """Mapa raportu rysuje tyle punktów co mapa strony (najnowsze), nie wszystkie transakcje."""
     monkeypatch.setattr(rcn, "MAKS_PUNKTOW_MAPY", 3)
     lokale = [{"data": f"2024-0{m}-01", "cena_m2": 10000.0 + m, "lat": 50.0 + m / 1000, "lng": 19.9} for m in range(1, 8)]
-    svg = rcn.mapa_svg(lokale, [], [10002, 10004, 10006, 10007], rcn.KOLORY_KLAS)
+    svg = rysunki_rcn.mapa_svg(lokale, [], [10002, 10004, 10006, 10007], rcn.KOLORY_KLAS)
     assert svg.count("<circle") == 3
 
 
@@ -819,13 +819,13 @@ def test_najmniejsze_kwadraty_zgodne_z_numpy():
     los = random.Random(2)
     x = [[los.uniform(0, 5), los.uniform(2, 10), float(los.randint(0, 10)), float(los.random() < 0.3)] for _ in range(300)]
     y = [9000 + 500 * a - 120 * b + 40 * c + 900 * d + los.gauss(0, 800) for a, b, c, d in x]
-    m = rcn.najmniejsze_kwadraty(x, y)
+    m = modele_cen.najmniejsze_kwadraty(x, y)
     for wynik, numpy_ in [(m["b"], [9146.19682, 519.048823, -143.845053, 29.288013, 865.258595]),
                           (m["se"], [161.915563, 31.411534, 19.908428, 14.418892, 101.451606])]:
         assert wynik == pytest.approx(numpy_, abs=1e-5)
     assert m["r2"] == pytest.approx(0.59857238, abs=1e-7) and m["n"] == 300
     with pytest.raises(ValueError, match="współliniowe"):
-        rcn.najmniejsze_kwadraty([[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0]], [1, 2, 3, 4])
+        modele_cen.najmniejsze_kwadraty([[1.0, 2.0], [2.0, 4.0], [3.0, 6.0], [4.0, 8.0]], [1, 2, 3, 4])
 
 
 def test_regresja_cen():
@@ -839,17 +839,17 @@ def test_regresja_cen():
         cena = 10000 + 600 * (rok - 2021 + (miesiac - 1) / 12) - 15 * pow_ + 50 * kond + 1200 * pierwotny + los.gauss(0, 300)
         lokale.append({"data": f"{rok}-{miesiac:02d}-01", "pow_m2": pow_, "kondygnacja": kond, "rynek": "pierwotny" if pierwotny else "wtórny", "cena_m2": cena})
     lokale += [{**lokale[0], "cena_m2": 1.0}, {**lokale[1], "cena_m2": 900000.0}]  # błędy w rejestrze
-    w = rcn.regresja_cen(lokale)
+    w = modele_cen.regresja_cen(lokale)
     e = {x["zmienna"]: x for x in w["efekty"]}
     assert list(e) == ["czas", "pow_10m2", "kondygnacja", "pierwotny"]
     assert e["czas"]["efekt"] == pytest.approx(600, rel=0.05) and e["pow_10m2"]["efekt"] == pytest.approx(-150, rel=0.1)
     assert e["kondygnacja"]["efekt"] == pytest.approx(50, rel=0.2) and e["pierwotny"]["efekt"] == pytest.approx(1200, rel=0.05)
     assert all(x["istotny"] for x in e.values()) and w["r2"] > 0.8 and w["pominiete_skrajne"] >= 2
     # bez pięter i z jednym rynkiem — te zmienne znikają
-    bez = rcn.regresja_cen([{**l, "kondygnacja": None, "rynek": "wtórny"} for l in lokale])
+    bez = modele_cen.regresja_cen([{**l, "kondygnacja": None, "rynek": "wtórny"} for l in lokale])
     assert [x["zmienna"] for x in bez["efekty"]] == ["czas", "pow_10m2"]
     with pytest.raises(ValueError, match="Za mało"):
-        rcn.regresja_cen(lokale[:10])
+        modele_cen.regresja_cen(lokale[:10])
 
 
 def test_trasa_regresji(client, tmp_path, monkeypatch):
@@ -1046,7 +1046,7 @@ def test_mapa_plikow_svg():
         if odstajacy:
             wynik.append({"lat": 54.5, "lng": 18.6, "data": "2024-02-01"})  # błędne położenie — Gdańsk w pliku z Krakowa
         return wynik
-    svg = rcn.mapa_plikow_svg([{"kolor": "#0071e3", "lokale": lokale(19.9, 50.0, 40, odstajacy=True)},
+    svg = rysunki_rcn.mapa_plikow_svg([{"kolor": "#0071e3", "lokale": lokale(19.9, 50.0, 40, odstajacy=True)},
                                {"kolor": "#34c759", "lokale": lokale(20.05, 49.98, 20)},
                                {"kolor": "#5e5ce6", "lokale": [{"lat": None, "lng": None, "data": "2024"}]}])
     assert svg.count("stroke-dasharray") == 2  # zasięg dwóch plików z położeniem; trzeci pominięty
@@ -1054,7 +1054,7 @@ def test_mapa_plikow_svg():
     assert svg.count('r="2"') == 40 * 95 // 100 + 1 + 19  # 95% najbliższych środka: 39 z 41 i 19 z 20
     assert "km</text>" in svg  # podziałka w km, nie rozciągnięta do Gdańska (kilkaset km)
     assert ">200 km<" not in svg and ">50 km<" not in svg
-    assert "brak transakcji" in rcn.mapa_plikow_svg([{"kolor": "#000", "lokale": []}])
+    assert "brak transakcji" in rysunki_rcn.mapa_plikow_svg([{"kolor": "#000", "lokale": []}])
 
 
 def test_zestawienie_ma_mape(client, tmp_path, monkeypatch):
@@ -1089,17 +1089,17 @@ def _rekordy_gradientu(lata=(2024,), korekta=False):
 
 
 def test_gradient_pierscienie_i_trend():
-    w = rcn.gradient(_rekordy_gradientu(), 50.0, 19.9, 500, 5000)
+    w = modele_cen.gradient(_rekordy_gradientu(), 50.0, 19.9, 500, 5000)
     assert w["liczba"] == 36 and len(w["pierscienie"]) == 10 and w["rok_bazowy"] is None
     assert w["pierscienie"][0]["liczba"] == 6 and w["pierscienie"][0]["mediana_m2"] == pytest.approx(15000 - 200, abs=2)
     assert w["pierscienie"][6]["liczba"] == 0 and w["pierscienie"][6]["mediana_m2"] is None
     assert w["trend"]["zmiana_na_km"] == pytest.approx(-1000, abs=5) and w["trend"]["istotny"] and w["trend"]["r2"] > 0.99
     # dwa lata, starszy tańszy o 20%: po korekcie do 2024 r. ten sam gradient
-    k = rcn.gradient(_rekordy_gradientu((2023, 2024), korekta=True), 50.0, 19.9, 500, 5000)
+    k = modele_cen.gradient(_rekordy_gradientu((2023, 2024), korekta=True), 50.0, 19.9, 500, 5000)
     assert k["rok_bazowy"] == 2024 and k["trend"]["zmiana_na_km"] == pytest.approx(-1000, abs=60)
     with pytest.raises(ValueError):
-        rcn.gradient([], 50.0, 19.9, 333, 5000)
-    assert rcn.gradient(_rekordy_gradientu()[:10], 50.0, 19.9, 1000, 2000)["trend"] is None  # za mało do trendu
+        modele_cen.gradient([], 50.0, 19.9, 333, 5000)
+    assert modele_cen.gradient(_rekordy_gradientu()[:10], 50.0, 19.9, 1000, 2000)["trend"] is None  # za mało do trendu
 
 
 def test_trasa_gradientu(client, tmp_path, monkeypatch):

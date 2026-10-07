@@ -5080,3 +5080,24 @@ terenie. Ostrzeżenie o eksporcie chroni dane niezależnie od wyniku.
   serwera; to część planu dalszego (Oracle Cloud), nie tego projektu.
 - Emulacja Safari w Chromium — identyfikator przeglądarki zmienia tylko
   tekst, nie silnik; nadaje się do sprawdzenia komunikatów, nie Safari.
+
+## D-254 — Podział plików wg odpowiedzialności, zdarzenia zamiast wspólnego stanu
+Data: 2026-10-07
+
+**Decyzja:** Z `ceny/rcn.py` wydzielamy rysunki (SVG) i modele
+(regresja, gradient) do osobnych modułów, bez warstwy pośredniej —
+wywołania wskazują nowe moduły wprost. Z `osiedle.js` wydzielamy
+analizy (cień, przekrój); wspólne są tylko mapa i kilka funkcji w
+`window.osiedle`, a o zmianach koncepcji drugi skrypt dowiaduje się ze
+zdarzeń DOM (jak w Atlasie, ETAP 236).
+
+**Uzasadnienie:** Plik czytany po trzech miesiącach powinien mieć jedną
+odpowiedzialność; rysunki i modele zmieniają się z innych powodów niż
+czytanie plików RCN. Zdarzenia nie wymagają, by główny skrypt znał
+szczegóły analiz.
+
+**Odrzucone alternatywy:**
+- Ponowny eksport starych nazw z `rcn.py` — dwie drogi do tej samej
+  funkcji utrudniają czytanie.
+- Podział dostepnosc.js, atlas.js i mpzp.js teraz — wymaga szerszego
+  wspólnego stanu; zostaje na później (plan dalszy).

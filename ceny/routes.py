@@ -18,7 +18,7 @@ from markupsafe import Markup
 from dane import bdl
 from dane.bdl import BladBDL
 
-from . import analiza, baza, rcn
+from . import analiza, baza, rcn, rysunki_rcn
 
 ceny_bp = Blueprint(
     "ceny",
@@ -259,7 +259,7 @@ def raport_miast():
     lata = sorted({rok for m in miasta for rok in m["po_roku"]})
     # wykres ten sam co w raporcie transakcji; GUS podaje jedną wartość na rok,
     # więc wszystkie punkty pełne (liczba „transakcji” = próg)
-    wykres = rcn.wykres_lat_svg({
+    wykres = rysunki_rcn.wykres_lat_svg({
         "lata": lata, "calosc": {},
         "obszary": [{"kolor": m["kolor"], "lata": m["po_roku"], "lata_liczba": dict.fromkeys(m["po_roku"], rcn.MIN_W_ROKU)} for m in miasta],
     })

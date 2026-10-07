@@ -68,7 +68,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 245 (Bez internetu i na iPhonie: przegląd, instrukcja, lista testów — zamknięty)
-Ostatni ZIP: releases/warsztat_etap245_20261007.zip
-Testy: 737 passed / 0 failed
+ETAP: 246 (Podział największych plików (ceny/rcn.py, osiedle.js) — zamknięty)
+Ostatni ZIP: releases/warsztat_etap246_20261007.zip
+Testy: 738 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

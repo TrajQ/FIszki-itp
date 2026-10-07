@@ -946,3 +946,10 @@ def test_strona_serii(client):
     assert client.get("/teren/seria?id=1&id=99").status_code == 404
     assert "nie mają pól wspólnych" in client.get("/teren/seria?id=1&id=4").get_data(as_text=True)
     assert 'action="/teren/seria"' in client.get("/teren/projekty/1").get_data(as_text=True)
+
+
+def test_formularz_na_telefon_rozpoznaje_iphone(client):
+    """ETAP 245: na iOS rada „Safari” zamiast „Chrome”, ostrzeżenie o eksporcie."""
+    client.post("/teren/projekty", data={"nazwa": "Zieleń", "wzor": "zielen"})
+    html = client.get("/teren/projekty/1/formularz.html").get_data(as_text=True)
+    assert "NA_IOS" in html and 'id="uwaga-ios"' in html and "isSecureContext" in html

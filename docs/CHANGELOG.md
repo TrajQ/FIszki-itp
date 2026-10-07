@@ -1192,3 +1192,6 @@
 
 ## ETAP 245 — 2026-10-07
 - Pomoc i instrukcja: co działa bez internetu; formularze na telefon na iPhonie (Safari) z listą testów
+
+## ETAP 246 — 2026-10-07
+- Porządki w kodzie: ceny/rcn.py i osiedle.js podzielone na mniejsze pliki (bez zmian w działaniu)

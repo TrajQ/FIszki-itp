@@ -4505,3 +4505,22 @@ Status: zamknięty
   lista testów, nie test
 - Pomoc: „Bez internetu i na iPhonie”
 - `DECISIONS.md`: D-253
+
+## ETAP 246 — Podział największych plików: ceny/rcn.py i osiedle.js
+Data: 2026-10-07
+Status: zamknięty
+
+- `ceny/rcn.py` (1222 → 846 wierszy): rysunki SVG (mapa transakcji,
+  wykresy w latach, mapa zestawienia plików, mapa wyceny, `_ladna_os`)
+  przeniesione do `ceny/rysunki_rcn.py`; regresja cech i gradient od
+  miejsca — do `ceny/modele_cen.py`; rcn.py czyta pliki i liczy
+  statystyki. Wywołania w trasach i testach zmienione na nowe moduły;
+  `MAKS_PUNKTOW_MAPY` czytane przez `rcn.` (jedno źródło)
+- `osiedle/static/osiedle.js` (1180 → 1019 wierszy): odległości, cień i
+  przekrój w `osiedle_analizy.js`; główny skrypt udostępnia mapę i
+  pomocnicze funkcje w `window.osiedle` i wysyła zdarzenia
+  `osiedle:otwarto` i `osiedle:zapisano`
+- Test formularza na telefon pod iPhone'a (ETAP 245)
+- Sprawdzenie: pyflakes czysty, pełne testy, przeglądarka 1300/390 px
+  (przekrój, zielone dachy, cień po zapisie)
+- `DECISIONS.md`: D-254
