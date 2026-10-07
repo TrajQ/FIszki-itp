@@ -69,8 +69,9 @@ odpowiedz `yes`.)
 ## Krok 4. Instalacja (na serwerze, po `ssh`)
 
 ```bash
-mkdir -p ~/warsztat && cd ~/warsztat
-unzip -o ~/warsztat_etap251_*.zip
+cd ~
+unzip -o ~/warsztat_etap251_*.zip      # ZIP ma w środku folder warsztat/ — powstaje ~/warsztat
+cd ~/warsztat
 bash deploy/instaluj_serwer.sh warsztat-patryk.duckdns.org
 ```
 
