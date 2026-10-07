@@ -5206,3 +5206,23 @@ lokalna nie zmienia się, więc nie ma ryzyka dla codziennej pracy na PC.
   osoby.
 - Certyfikat na sam adres IP — wymaga dodatkowego wsparcia urzędu
   certyfikacji; darmowa subdomena jest prostsza i sprawdzona.
+
+## D-260 — Na serwerze autora: Tailscale Serve zamiast publicznej domeny
+Data: 2026-10-07
+
+**Decyzja:** Na maszynie autora (Oracle Linux 9 z Tailscale i innymi
+projektami) Warsztat działa za Tailscale Serve na osobnym porcie HTTPS
+(8443) z certyfikatem `*.ts.net`, gunicorn na 127.0.0.1:8002, usługa
+startowana przez /bin/bash jak istniejące usługi. Wariant publiczny
+(Ubuntu + Caddy + DuckDNS, D-259) zostaje w repozytorium.
+
+**Uzasadnienie:** Autor chce dostępu tylko dla siebie i z HTTPS —
+Tailscale daje oba bez otwierania portów w internecie, bez domeny i bez
+ruszania innych projektów (port 443 Tailscale Serve jest już zajęty,
+stąd 8443). Start przez bash omija ograniczenie SELinux dla programów w
+katalogu domowym w ten sam sposób co działające już usługi.
+
+**Odrzucone alternatywy:**
+- Nowa maszyna z Ubuntu — autor ma na obecnej dwa projekty.
+- Etykiety SELinux dla .venv (semanage fcontext) — więcej poleceń do
+  zrozumienia i utrzymania niż wzór już działający na tym serwerze.

@@ -68,7 +68,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 251 (Warsztat w chmurze: logowanie, HTTPS za Caddy, instalacja na Oracle Cloud — zamknięty)
-Ostatni ZIP: releases/warsztat_etap251_20261007.zip
-Testy: 751 passed / 0 failed
+ETAP: 252 (Warsztat w chmurze przez Tailscale (Oracle Linux 9) — zamknięty)
+Ostatni ZIP: releases/warsztat_etap252_20261007.zip
+Testy: 752 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

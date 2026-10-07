@@ -22,6 +22,39 @@ stronie Oracle przed założeniem konta.
 
 ---
 
+## Wariant z Tailscale (ETAP 252) — gdy maszyna już ma Tailscale
+
+Jeśli na maszynie w Oracle działa już Tailscale (np. dla innych
+projektów), **nie trzeba domeny, Caddy ani otwierania portów**. Warsztat
+dostaje adres `https://NAZWA-MASZYNY.TWOJA-SIEC.ts.net:8443` z
+certyfikatem od Tailscale i jest widoczny tylko na Twoich urządzeniach z
+Tailscale (na iPhonie: aplikacja Tailscale). Logowanie hasłem zostaje.
+Działa na Oracle Linux 9 (skrypt sprawdza Pythona 3.11+, port 8002 i
+wolny port HTTPS 8443; inne usługi i wpisy Tailscale Serve zostają).
+
+Z PC (klucz i IP — swoje):
+
+```bash
+scp -i "ŚCIEŻKA/DO/KLUCZA.key" ~/Pobrane/warsztat_etap252_*.zip opc@IP_MASZYNY:~
+ssh -i "ŚCIEŻKA/DO/KLUCZA.key" opc@IP_MASZYNY
+```
+
+Na serwerze:
+
+```bash
+cd ~
+unzip -o ~/warsztat_etap252_*.zip      # powstaje ~/warsztat
+cd ~/warsztat
+bash deploy/instaluj_tailscale.sh
+```
+
+Skrypt zapyta dwa razy o hasło do Warsztatu i na końcu wypisze adres.
+Inny port: `WARSZTAT_PORT=8003 WARSZTAT_PORT_HTTPS=10000 bash deploy/instaluj_tailscale.sh`.
+Aktualizacja jak niżej (`deploy/aktualizuj_serwer.sh`). Dalsze kroki
+1–5 dotyczą wariantu publicznego (Ubuntu + DuckDNS + Caddy).
+
+---
+
 ## Krok 1. Konto i maszyna w Oracle Cloud (ok. 20 min, raz)
 
 1. Załóż konto na oracle.com/cloud („Free Tier”). Oracle prosi o kartę

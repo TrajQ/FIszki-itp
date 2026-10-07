@@ -93,3 +93,17 @@ def test_ustaw_haslo_w_env():
     modul = importlib.util.module_from_spec(spec); spec.loader.exec_module(modul)
     assert modul.ustaw("A=1\nWARSZTAT_HASLO_HASH=stary\n", "WARSZTAT_HASLO_HASH", "scrypt:x$y$z") == "A=1\nWARSZTAT_HASLO_HASH=scrypt:x$y$z\n"
     assert modul.ustaw("A=1", "SECRET_KEY", "abc") == "A=1\nSECRET_KEY=abc\n"
+
+
+def test_za_tailscale_host_lokalny_origin_domeny(tmp_path, monkeypatch):
+    """ETAP 252: Tailscale Serve może podać Host 127.0.0.1:8002, a przeglądarka Origin z *.ts.net:8443."""
+    monkeypatch.setattr(Config, "WARSZTAT_DOMENA", "serwer.tail1234.ts.net")
+    monkeypatch.setattr(Config, "WARSZTAT_HASLO_HASH", generate_password_hash(HASLO))
+    monkeypatch.setattr(Config, "SECRET_KEY", "z" * 40)
+    logowanie.wyczysc_proby()
+    app = create_app(instance_path=str(tmp_path))
+    with app.test_client() as c:
+        c.environ_base.update({"HTTP_HOST": "127.0.0.1:8002"})
+        odp = c.post("/logowanie", data={"haslo": HASLO}, headers={"Origin": "https://serwer.tail1234.ts.net:8443"})
+        assert odp.status_code == 302
+        assert c.post("/logowanie", data={"haslo": HASLO}, headers={"Origin": "https://zla.strona"}).status_code == 403

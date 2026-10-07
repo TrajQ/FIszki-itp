@@ -44,7 +44,12 @@ def sprawdz_zapytanie():
     if zrodlo is None:
         return
     # Origin „null” wysyłają m.in. ramki sandbox i przekierowania — też obce.
-    if zrodlo == "null" or urlsplit(zrodlo).netloc.lower() != request.host.lower():
+    if zrodlo == "null":
+        abort(403, "Zapytanie z obcej strony zostało zablokowane.")
+    # ETAP 252: za Tailscale Serve aplikacja może dostać Host 127.0.0.1:port,
+    # a przeglądarka wysyła Origin z adresem *.ts.net — ta domena też jest nasza.
+    domena = current_app.config.get("WARSZTAT_DOMENA")
+    if urlsplit(zrodlo).netloc.lower() != request.host.lower() and not (domena and (urlsplit(zrodlo).hostname or "").lower() == domena):
         abort(403, "Zapytanie z obcej strony zostało zablokowane.")
 
 

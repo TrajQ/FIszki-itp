@@ -1210,3 +1210,6 @@
 
 ## ETAP 251 — 2026-10-07
 - Warsztat w chmurze: logowanie hasłem, HTTPS, instalacja na Oracle Cloud jednym poleceniem (docs/ORACLE_CLOUD.md)
+
+## ETAP 252 — 2026-10-07
+- Warsztat na serwerze przez Tailscale (Oracle Linux 9): jeden skrypt, adres https://…ts.net:8443 tylko dla Twoich urządzeń

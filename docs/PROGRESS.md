@@ -4647,3 +4647,28 @@ Status: zamknięty
   w środowisku — instalację sprawdzi pierwsze uruchomienie
 - Pomoc: „Warsztat w chmurze (Oracle Cloud, HTTPS)”
 - `DECISIONS.md`: D-259
+
+## ETAP 252 — Warsztat na serwerze przez Tailscale — Oracle Linux 9 obok innych projektów
+Data: 2026-10-07
+Status: zamknięty
+
+- Maszyna autora: Oracle Linux 9 (aarch64), Python 3.12, dwa inne
+  projekty (porty 5000 i 8001), Tailscale Serve na 443, SELinux
+  włączony, zapora tylko SSH — autor wybrał dostęp przez Tailscale
+- `deploy/instaluj_tailscale.sh`: sprawdza Tailscale, Pythona 3.11+
+  (python3.12 z Oracle Linux; przy braku venv — pakiet pip z dnf), wolny
+  port 8002 i port HTTPS 8443 w Tailscale Serve; .venv,
+  `requirements-serwer.txt`, .env z nazwą `*.ts.net` (z `tailscale status
+  --json`) i hasłem; usługa systemd startowana przez /bin/bash (jak inne
+  usługi na tym serwerze — SELinux); `tailscale serve --bg
+  --https=8443 http://127.0.0.1:8002` (inne wpisy zostają); kopia z crona
+  co 6 h. Bez zmian w zaporze i portach Oracle
+- `ochrona.py`: Origin z adresem `WARSZTAT_DOMENA` przyjmowany także
+  wtedy, gdy Tailscale przekazuje aplikacji Host 127.0.0.1:port (test)
+- `deploy/instaluj_serwer.sh` (Ubuntu): przerywa na systemie bez apt i
+  bez Pythona 3.11+; `docs/ORACLE_CLOUD.md`: wariant Tailscale, wybór
+  obrazu Ubuntu 24.04 i rozpakowanie w katalogu domowym
+- Sprawdzenie: pakiety wszystkich zależności dostępne jako gotowe koła
+  dla aarch64 i Pythona 3.12 (pip download); testy. Samego serwera
+  autora nie było w środowisku — instalację sprawdzi uruchomienie
+- `DECISIONS.md`: D-260
