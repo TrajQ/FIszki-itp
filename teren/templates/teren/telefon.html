@@ -75,6 +75,7 @@
 {% set ankieta = projekt.rodzaj == 'ankieta' %}
 <h1>{{ projekt.nazwa }}</h1>
 <p class="wyciszony" style="margin: 0 4px">Formularz terenowy Warsztatu · działa bez internetu · {{ 'odpowiedzi zostają' if ankieta else 'punkty zostają' }} w tym telefonie, dopóki ich nie wyeksportujesz.</p>
+<p id="uwaga-ios" class="wyciszony" style="margin: 2px 4px" hidden>iPhone: eksportuj wyniki po każdym użyciu — Safari może usunąć dane zapisane przez stronę, której nie otwierasz przez kilka dni.</p>
 
 <form id="formularz" class="karta" autocomplete="off">
     <h2>{{ 'Nowa odpowiedź' if ankieta else 'Nowy punkt' }}</h2>
@@ -158,6 +159,13 @@
     const CZAS_GPS_MS = 30000;
 
     const $ = (id) => document.getElementById(id);
+    // ETAP 245: iPhone/iPad — każda przeglądarka na iOS działa na silniku Safari (WebKit),
+    // więc rada „otwórz w Chrome” nic nie zmienia; iPad z iPadOS przedstawia się jak Mac.
+    const NA_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const RADA_PRZEGLADARKI = NA_IOS
+        ? "Na iPhonie otwórz plik w Safari (Pomoc Warsztatu: „Bez internetu i na iPhonie”)."
+        : "Otwórz plik w Chrome albo Firefoksie.";
+    $("uwaga-ios").hidden = !NA_IOS;
     let polozenie = null; // {lat, lng, dokladnosc_m}
     let zdjecie = null; // data URL JPEG
     let obserwator = null;
@@ -236,7 +244,10 @@
                 // Koniec czasu, gdy odczyt już jest (telefon stoi, dokładność nie
                 // spadła poniżej 10 m) — to nie błąd: zostaje najlepszy odczyt.
                 if (e.code === 3 && polozenie) return;
-                komunikat(e.code === 1 ? "Brak zgody na położenie. Zezwól przeglądarce na lokalizację albo wpisz współrzędne ręcznie." : "Nie udało się ustalić położenia — spróbuj na otwartej przestrzeni albo wpisz ręcznie.", "blad");
+                komunikat(e.code === 1
+                    ? (window.isSecureContext === false
+                        ? "Przeglądarka nie daje położenia stronie otwartej z pliku (wymaga bezpiecznego połączenia). Wpisz współrzędne ręcznie albo odczytaj je z aplikacji mapy."
+                        : "Brak zgody na położenie. Zezwól przeglądarce na lokalizację albo wpisz współrzędne ręcznie.") : "Nie udało się ustalić położenia — spróbuj na otwartej przestrzeni albo wpisz ręcznie.", "blad");
                 $("reczne").open = true;
             },
             { enableHighAccuracy: true, maximumAge: 0, timeout: CZAS_GPS_MS }
@@ -638,7 +649,7 @@
             if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
             return pokazListe();
         })
-        .catch(() => komunikat("Ta przeglądarka nie pozwala zapisywać danych z pliku. Otwórz formularz w Chrome albo Firefoksie.", "blad"));
+        .catch(() => komunikat(`Ta przeglądarka nie pozwala zapisywać danych z pliku. ${RADA_PRZEGLADARKI}`, "blad"));
 })();
 </script>
 </body>

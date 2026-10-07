@@ -4482,3 +4482,26 @@ Status: zamknięty
 - Testy: strona (usługi, ODbL, biblioteki z wersją), odczyt licencji z
   metadanych; przeglądarka 1300/390 px
 - `DECISIONS.md`: D-252
+
+## ETAP 245 — Co działa bez internetu; formularze na telefon w Safari na iPhonie
+Data: 2026-10-07
+Status: zamknięty
+
+- `docs/BEZ_INTERNETU_I_IPHONE.md`: tabela modułów (bez internetu /
+  potrzebuje internetu, z kodu: cache BDL 30 dni, granice w plikach,
+  usługi z „O danych”); przegląd formularzy na telefon pod Safari
+  (IndexedDB, GPS, zdjęcie, eksport, udostępnianie) z ryzykami; jak
+  otworzyć plik na iPhonie; lista testów do odhaczenia na telefonie
+- Formularze Terenu i Fiszek: rozpoznanie iPhone/iPada (`NA_IOS`) —
+  rada „otwórz w Safari” zamiast „Chrome albo Firefox” (na iOS każda
+  przeglądarka to silnik Safari), ostrzeżenie „eksportuj po każdym
+  użyciu”; przy odmowie GPS na stronie niebezpiecznej (`isSecureContext`)
+  — komunikat o ręcznym wpisaniu współrzędnych
+- Teksty o telefonie w Fiszkach, Terenie i Pomocy odsyłają do nowego
+  wpisu Pomocy „Bez internetu i na iPhonie”
+- Sprawdzenie: oba pliki otwarte z dysku w Chromium 390 px z
+  identyfikatorem iPhone'a i bez — ostrzeżenie tylko na iPhonie, bez
+  błędów JS; Safari niedostępne w środowisku — wyniki na iPhonie to
+  lista testów, nie test
+- Pomoc: „Bez internetu i na iPhonie”
+- `DECISIONS.md`: D-253

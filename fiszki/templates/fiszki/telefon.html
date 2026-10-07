@@ -52,6 +52,7 @@
 <body>
 <h1>Fiszki: {{ zakres }}</h1>
 <p class="wyciszony" style="margin: 2px 4px">Działa bez internetu · wyniki zostają w telefonie, dopóki ich nie wyeksportujesz do Warsztatu.</p>
+<p id="uwaga-ios" class="wyciszony" style="margin: 2px 4px" hidden>iPhone: eksportuj wyniki po każdym użyciu — Safari może usunąć dane zapisane przez stronę, której nie otwierasz przez kilka dni.</p>
 
 <section id="start" class="karta">
     <div class="liczby">
@@ -101,6 +102,13 @@
     const FORMAT = {{ format_pliku | tojson }};
     const WYGENEROWANO_MS = {{ wygenerowano_ms | tojson }}; // chwila pobrania pliku z Warsztatu
     const $ = (id) => document.getElementById(id);
+    // ETAP 245: iPhone/iPad — każda przeglądarka na iOS działa na silniku Safari (WebKit),
+    // więc rada „otwórz w Chrome” nic nie zmienia; iPad z iPadOS przedstawia się jak Mac.
+    const NA_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const RADA_PRZEGLADARKI = NA_IOS
+        ? "Na iPhonie otwórz plik w Safari (Pomoc Warsztatu: „Bez internetu i na iPhonie”)."
+        : "Otwórz plik w Chrome albo Firefoksie.";
+    $("uwaga-ios").hidden = !NA_IOS;
 
     let baza = null;
     let stan = new Map(); // id fiszki → {pudelko, nastepna}
@@ -287,7 +295,7 @@
             await odswiezLiczby();
         })
         .catch(() => {
-            $("jutro").textContent = "Ta przeglądarka nie pozwala zapisywać danych z pliku. Otwórz fiszki w Chrome albo Firefoksie.";
+            $("jutro").textContent = `Ta przeglądarka nie pozwala zapisywać danych z pliku. ${RADA_PRZEGLADARKI}`;
         });
 })();
 </script>

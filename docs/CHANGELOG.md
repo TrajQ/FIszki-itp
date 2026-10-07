@@ -1189,3 +1189,6 @@
 
 ## ETAP 244 — 2026-10-07
 - Nowa strona „O danych”: skąd są dane, co wysyłamy na zewnątrz, licencje bibliotek
+
+## ETAP 245 — 2026-10-07
+- Pomoc i instrukcja: co działa bez internetu; formularze na telefon na iPhonie (Safari) z listą testów

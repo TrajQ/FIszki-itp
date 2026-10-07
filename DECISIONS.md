@@ -5059,3 +5059,24 @@ podać nieaktualną (D-218).
 **Odrzucone alternatywy:**
 - Automatyczne zbieranie adresów z kodu — dawałoby też adresy z
   testów i dokumentacji; ręczna lista jest krótka i czytelna.
+
+## D-253 — iPhone: przegląd kodu i lista testów zamiast deklaracji „działa”
+Data: 2026-10-07
+
+**Decyzja:** Bez dostępu do Safari nie piszemy, że formularze działają
+na iPhonie. Kod formularzy rozpoznaje iOS i daje właściwe rady (Safari,
+eksport po każdym użyciu, ręczne współrzędne), a instrukcja zawiera
+listę testów do zrobienia na telefonie. Wynik testów autor dopisze w
+PROGRESS.
+
+**Uzasadnienie:** Zasada z D-218 — tylko sprawdzone twierdzenia o
+zewnętrznych programach. Zachowanie Safari przy plikach HTML otwartych
+z dysku (skrypty, IndexedDB, GPS) zależy od wersji iOS; zgadywanie
+dałoby fałszywe poczucie bezpieczeństwa przy zbieraniu danych w
+terenie. Ostrzeżenie o eksporcie chroni dane niezależnie od wyniku.
+
+**Odrzucone alternatywy:**
+- Wersja formularza jako aplikacja PWA z serwera — wymaga HTTPS i
+  serwera; to część planu dalszego (Oracle Cloud), nie tego projektu.
+- Emulacja Safari w Chromium — identyfikator przeglądarki zmienia tylko
+  tekst, nie silnik; nadaje się do sprawdzenia komunikatów, nie Safari.
