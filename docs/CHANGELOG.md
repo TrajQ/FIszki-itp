@@ -1144,3 +1144,6 @@
 
 ## ETAP 229 — 2026-10-07
 - Bezpieczeństwo: nagłówek CSP, polski komunikat o zbyt dużym pliku
+
+## ETAP 230 — 2026-10-07
+- Nowy moduł Praca i notatki: godziny pracy z grafiku (PDF albo zdjęcie), suma i wypłata

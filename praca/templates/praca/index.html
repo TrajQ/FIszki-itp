@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block tytul %}Praca i notatki — Warsztat{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('praca.static', filename='praca.css') }}">{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <h1>Praca i notatki</h1>
+        <p>Godziny z grafiku pracy: wrzuć PDF albo zdjęcie grafiku, a dostaniesz listę swoich zmian, sumę godzin i wypłatę.</p>
+    </div>
+</div>
+
+{# ETAP 230: liczby liczy praca/grafik.py; Gemini tylko przepisuje zdjęcie do pola tekstu #}
+<section class="karta stos godziny" aria-labelledby="naglowek-godzin">
+    <h2 id="naglowek-godzin">Godziny z grafiku</h2>
+    <form id="formularz-pliku" class="rzad godziny__plik">
+        <label>Grafik (PDF albo zdjęcie)
+            <input id="plik-grafiku" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,application/pdf,image/*" required>
+        </label>
+        <button id="odczytaj" type="submit" class="przycisk--drugi">Odczytaj</button>
+    </form>
+    <p class="wyciszony godziny__opis">PDF z Google Docs czyta Warsztat sam. Zdjęcie albo zrzut ekranu przepisuje Gemini — sprawdź przepisany tekst, zanim policzysz. Tekst grafiku możesz też wkleić ręcznie.</p>
+
+    <label>Tekst grafiku
+        <textarea id="tekst-grafiku" rows="8" placeholder="Październik 2026&#10;16.&#10;Patryk&#10;15:30-20:00&#10;…"></textarea>
+    </label>
+    <p id="zrodlo-tekstu" class="wyciszony godziny__opis" hidden aria-live="polite"></p>
+
+    <div class="godziny__ustawienia">
+        <label>Imię w grafiku <input id="imie" type="text" maxlength="40" autocomplete="given-name"></label>
+        <label>Stawka [zł/h] <input id="stawka" type="text" inputmode="decimal" value="{{ stawka }}"></label>
+        <label>Miesiąc
+            <select id="miesiac">
+                <option value="">z nagłówka grafiku</option>
+                {% for m in miesiace %}<option value="{{ loop.index }}">{{ m }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>Rok <input id="rok" type="number" min="2000" max="2100" placeholder="z grafiku"></label>
+    </div>
+    <div class="rzad">
+        <button id="policz" type="button">Policz godziny</button>
+    </div>
+    <p id="blad-godzin" class="komunikat komunikat--blad" hidden role="alert"></p>
+
+    <div id="wynik-godzin" class="godziny__wynik" hidden>
+        <div class="godziny__liczby">
+            <div><span class="godziny__liczba" id="suma-godzin"></span><span class="wyciszony">godzin</span></div>
+            <div><span class="godziny__liczba" id="kwota"></span><span class="wyciszony" id="opis-kwoty"></span></div>
+        </div>
+        <pre id="tekst-wyniku" class="godziny__tekst" tabindex="0" aria-label="Rozliczenie do skopiowania"></pre>
+        <div class="rzad">
+            <button id="kopiuj" type="button">Kopiuj</button>
+            <button id="pobierz" type="button" class="przycisk--drugi">Pobierz .txt</button>
+            <span id="stan-kopiowania" class="wyciszony" aria-live="polite"></span>
+        </div>
+        <p id="uwagi-wyniku" class="wyciszony godziny__opis"></p>
+    </div>
+</section>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_ODCZYTAJ = "{{ url_for('praca.odczytaj_grafik') }}";
+    const URL_POLICZ = "{{ url_for('praca.policz_grafik') }}";
+</script>
+<script src="{{ url_for('praca.static', filename='praca.js') }}"></script>
+{% endblock %}

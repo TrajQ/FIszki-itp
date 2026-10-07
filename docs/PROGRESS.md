@@ -4123,3 +4123,37 @@ Status: zamknięty
   przegląd 99 stron: 0 problemów
 - Testy: CSP, 413 po polsku (JSON i HTML)
 - `DECISIONS.md`: D-237
+
+## ETAP 230 — Praca i notatki: godziny pracy z grafiku (nowy moduł)
+Data: 2026-10-07
+Status: zamknięty
+
+- Nowy moduł `praca` (prośba autora): blueprint `/praca`, kafel na stronie
+  głównej, pozycja w menu, sekcja w Pomocy; „Dziewięć narzędzi” w opisie
+- `praca/grafik.py`: tokeny tekstu (godziny „15:30-20:00”/„9.00-12.20”,
+  numer dnia z kropką albo bez, słowa); tekst od nagłówka z dniami
+  tygodnia (notatka nad tabelą nie myli się z dniem); układ komórkami
+  (dzień, imię, godziny) i wierszami tabeli; zmiana przez północ; dni
+  z sąsiedniego miesiąca w tabeli (spadek numeru dnia > 20) pomijane;
+  miesiąc i rok z nagłówka („Pazdziernik 2026”, z ogonkami lub bez) albo z
+  formularza; imię bez wielkości liter i ogonków, także „Patryk
+  (zastępstwo)”; wynik w formacie z notatki autora: „4 września
+  15:00-20:00 5h”, suma „5+6+…=70”, „70 h × 31,4 zł = 2 198,00 zł” —
+  kwota w `Decimal` z dokładnych minut
+- `praca/routes.py`: `/praca/grafik/odczytaj` (PDF → pypdf; PDF bez tekstu
+  i zdjęcia JPG/PNG/WebP/HEIC → Gemini, limit 20 MB),
+  `/praca/grafik/policz`
+- `dane/gemini.py`: `przepisz_grafik` — model tylko przepisuje komórki
+  (temperatura 0, „?” dla nieczytelnej cyfry), tekst trafia do pola do
+  sprawdzenia, liczy kod
+- Strona: plik → „Odczytaj” → tekst do poprawienia → imię, stawka
+  (domyślnie 31,4, zapamiętane w przeglądarce), miesiąc/rok → wynik z
+  dużymi liczbami, „Kopiuj”, „Pobierz .txt”, uwagi (inne osoby, pominięte)
+- Testy (12): przykład z notatki autora (70 h → 2 198,00 zł), grafik
+  komórkami z notatką nad tabelą, wierszami, PDF z tabelą (plik w
+  `tests/fixtures`, wydruk tabeli jak z Google Docs), przez północ,
+  minuty, sąsiednie miesiące, błędy, trasy, zdjęcie przez podstawione
+  Gemini, brak klucza; przeglądarka 1300/390 px (schowek, zapamiętanie)
+- Plan: ETAPy 230–231 wstawione, reszta przesunięta o dwa; Oracle Cloud —
+  osobny blok po planie
+- `DECISIONS.md`: D-238

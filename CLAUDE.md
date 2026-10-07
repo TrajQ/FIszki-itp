@@ -1,7 +1,7 @@
 # Warsztat — kontekst projektu
 
 ## Czym to jest
-Lokalna aplikacja desktopowa (Flask + vanilla JS) łącząca osiem niezależnych
+Lokalna aplikacja desktopowa (Flask + vanilla JS) łącząca dziewięć niezależnych
 modułów narzędziowych. Uruchamiana ikoną z pulpitu na Linux Mint, dostępna
 wyłącznie na 127.0.0.1. Ma dostęp do internetu (API GUS, WFS gmin, ULDK, Gemini).
 
@@ -29,6 +29,9 @@ kogoś, kto wróci do niego za trzy miesiące.
                 transakcje mieszkań i działek z Rejestru Cen Nieruchomości:
                 mapa, trend, porównanie obszarów, raport, wycena porównawcza,
                 heksagony H3, ceny w okolicy w MPZP i osiedlu (ETAPy 104–109)
+- praca       — praca i notatki (od ETAPu 230, na prośbę autora): godziny
+                pracy z grafiku (PDF albo zdjęcie) z sumą i wypłatą;
+                notatki w Wordzie z PDF-u albo zdjęcia (ETAP 231)
 
 Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 
@@ -65,7 +68,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 229 (Przegląd bezpieczeństwa — zamknięty)
-Ostatni ZIP: releases/warsztat_etap229_20261007.zip
-Testy: 695 passed / 0 failed
+ETAP: 230 (Praca i notatki: godziny z grafiku — zamknięty)
+Ostatni ZIP: releases/warsztat_etap230_20261007.zip
+Testy: 707 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).

@@ -689,6 +689,7 @@ input[type="file"]::file-selector-button {
 .ikona-modulu--przepisy { background: linear-gradient(135deg, #8e8e93, #5e5ce6); }
 .ikona-modulu--teren { background: linear-gradient(135deg, #30d158, #a2845e); }
 .ikona-modulu--ceny { background: linear-gradient(135deg, #ffd60a, #ff9f0a); }
+.ikona-modulu--praca { background: linear-gradient(135deg, #64d2ff, #5e5ce6); }
 
 .dane-uzytkownika {
     display: flex;

@@ -3,7 +3,7 @@
 {% block tresc %}
 <section class="hero">
     <h1>Warsztat.</h1>
-    <p>Osiem niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
+    <p>Dziewięć niezależnych narzędzi do gospodarki przestrzennej. Działają lokalnie na tym komputerze.</p>
 </section>
 
 {% if nowe_etapy %}
@@ -195,6 +195,13 @@ document.querySelectorAll("[data-przypnij], [data-odepnij]").forEach((przycisk) 
         <h2>Ceny</h2>
         <p class="karta__opis">Ceny mieszkań w miastach i powiatach z GUS: zmiany w czasie, porównanie miast, ranking w województwie.</p>
         {% if p.ceny and p.ceny.zmienna %}<span class="karta__meta">Wskaźnik: {{ p.ceny.zmienna | truncate(60) }}</span>{% endif %}
+    </a>
+    <a class="karta karta--link" href="{{ url_for('praca.index') }}">
+        <span class="ikona-modulu ikona-modulu--praca">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4M16 2v4"/><path d="M12 13v3l2 1"/></svg>
+        </span>
+        <h2>Praca i notatki</h2>
+        <p class="karta__opis">Godziny pracy z grafiku (PDF albo zdjęcie): lista zmian, suma i wypłata.</p>
     </a>
 </section>
 

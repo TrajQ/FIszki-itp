@@ -4743,3 +4743,27 @@ gdyby kiedyś doszły — klucz trzeba będzie generować przy pierwszym starcie
   dostępnej tylko pod 127.0.0.1.
 - Podniesienie limitu 50 MB — kopie przywraca się z listy w folderze bez
   wgrywania, a pliki RCN — z folderu Pobrane.
+
+## D-238 — Moduł Praca: Gemini przepisuje zdjęcie, liczby liczy kod
+Data: 2026-10-07
+
+**Decyzja:** Nowy, dziewiąty moduł `praca` (prośba autora). Grafik z
+PDF-u czyta pypdf; zdjęcie albo skan przepisuje Gemini na tekst, który
+użytkownik widzi i może poprawić. Godziny, sumę i kwotę liczy wyłącznie
+`praca/grafik.py` (kwota w `Decimal` z minut, nie z zaokrąglonych godzin).
+
+**Uzasadnienie:** Zasada projektu: model nie generuje liczb. Przepisanie
+obrazu to odczyt danych, nie ich tworzenie, ale może się pomylić — dlatego
+tekst jest jawny i edytowalny przed liczeniem, a nieczytelna cyfra ma
+być oznaczona „?” (wtedy kod nie rozpozna godziny i zmiana nie zostanie
+policzona po cichu z błędną wartością). PDF z Google Docs ma warstwę
+tekstu, więc najczęstszy przypadek działa bez modelu i bez klucza.
+Parser obsługuje dwa układy tekstu z tabeli, bo kolejność komórek zależy
+od programu tworzącego PDF — sprawdzony na wydruku tabeli z Chromium;
+prawdziwego PDF-u z Google Docs nie było do sprawdzenia.
+
+**Odrzucone alternatywy:**
+- OCR (Tesseract) — nowa zależność systemowa i słabsze wyniki na zrzutach
+  z ciemnym motywem; Gemini już jest w projekcie.
+- Gemini od razu liczy godziny — liczby od modelu, wbrew zasadom.
+- Osobna baza modułu na historię miesięcy — nikt o nią nie prosił.

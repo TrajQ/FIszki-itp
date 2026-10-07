@@ -12,6 +12,7 @@ from dostepnosc import dostepnosc_bp
 from osiedle import osiedle_bp
 from przepisy import przepisy_bp
 from teren import teren_bp
+from praca import praca_bp
 from ceny import ceny_bp
 from config import Config
 from ochrona import dodaj_naglowki, sprawdz_zapytanie, za_duzy_plik
@@ -54,6 +55,7 @@ def create_app(instance_path=None):
     app.register_blueprint(przepisy_bp, url_prefix="/przepisy")
     app.register_blueprint(teren_bp, url_prefix="/teren")
     app.register_blueprint(ceny_bp, url_prefix="/ceny")
+    app.register_blueprint(praca_bp, url_prefix="/praca")  # ETAP 230
 
     from fiszki.baza import init_db as init_db_fiszki, close_db as close_db_fiszki
     from atlas.baza import init_db as init_db_atlas, close_db as close_db_atlas

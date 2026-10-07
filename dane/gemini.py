@@ -337,3 +337,37 @@ def zaproponuj_fiszki_z_przepisu(tekst: str, oznaczenie: str, liczba: int = 4) -
     response = _generuj(tekst, system_instruction=PROMPT_FISZEK_Z_PRZEPISU.format(oznaczenie=oznaczenie, liczba=liczba),
                         response_mime_type="application/json")
     return sparsuj_liste_fiszek(response.text or "")
+
+
+# ---------- Praca: przepisanie grafiku ze zdjęcia albo skanu (ETAP 230) ----------
+
+PROMPT_GRAFIKU = (
+    "Na obrazie jest grafik pracy: tabela miesiąca, w komórkach numer dnia, imię "
+    "i godziny zmiany. Przepisz DOKŁADNIE to, co widać, nic nie licz i nic nie "
+    "dopisuj. Format odpowiedzi, czysty tekst:\n"
+    "- pierwsza linia: nagłówek z nazwą miesiąca i rokiem, jeśli jest na obrazie,\n"
+    "- druga linia: dni tygodnia z nagłówka tabeli, jeśli są,\n"
+    "- potem każda niepusta komórka w trzech liniach: numer dnia z kropką, imię, "
+    "godziny w postaci GG:MM-GG:MM; komórki w kolejności czytania (wierszami, od lewej).\n"
+    "Jeśli jakiejś cyfry nie da się odczytać, wpisz w jej miejsce znak ?. "
+    "Pomiń puste komórki i tekst spoza tabeli poza nagłówkiem miesiąca."
+)
+TYPY_OBRAZOW = ("image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf")
+
+
+def przepisz_grafik(dane: bytes, typ: str) -> str:
+    """Tekst grafiku ze zdjęcia/zrzutu ekranu albo PDF-u bez warstwy tekstu.
+    Model tylko przepisuje — godziny i sumy liczy praca/grafik.py, a
+    użytkownik widzi przepisany tekst i może go poprawić przed liczeniem."""
+    if not Config.GEMINI_API_KEY:
+        raise BladGemini("Brak GEMINI_API_KEY w konfiguracji (.env) — bez niego wklej tekst grafiku ręcznie.")
+    if typ not in TYPY_OBRAZOW:
+        raise BladGemini("Obsługiwane pliki: zdjęcie (JPG, PNG, WebP, HEIC) albo PDF.")
+    from google.genai import types
+
+    odpowiedz = _generuj([types.Part.from_bytes(data=dane, mime_type=typ), "Przepisz grafik."],
+                         system_instruction=PROMPT_GRAFIKU, temperature=0)
+    tekst = (odpowiedz.text or "").strip()
+    if not tekst:
+        raise BladGemini("Gemini nie odczytał grafiku z obrazu.")
+    return tekst
