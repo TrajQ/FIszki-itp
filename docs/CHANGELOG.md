@@ -1150,3 +1150,6 @@
 
 ## ETAP 231 — 2026-10-07
 - Praca i notatki: eleganckie notatki w Wordzie z PDF-u albo zdjęć z telefonu
+
+## ETAP 232 — 2026-10-07
+- Praca: odznaczanie zmian (zamiana z kimś), zapisane miesiące z sumą za rok

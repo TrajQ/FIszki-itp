@@ -52,9 +52,24 @@
         <div class="rzad">
             <button id="kopiuj" type="button">Kopiuj</button>
             <button id="pobierz" type="button" class="przycisk--drugi">Pobierz .txt</button>
+            <button id="zapisz-miesiac" type="button" class="przycisk--drugi" title="Zapisz w historii — ponowne zapisanie miesiąca zastąpi poprzednie">Zapisz miesiąc</button>
             <span id="stan-kopiowania" class="wyciszony" aria-live="polite"></span>
         </div>
+        {# ETAP 232: zmiana odznaczona (np. zamiana z kimś) nie wchodzi do sumy #}
+        <details class="godziny__zmiany">
+            <summary>Twoje zmiany (<span id="liczba-zmian"></span>) — odznacz te, których nie przepracujesz</summary>
+            <ul id="lista-zmian" class="lista-zmian"></ul>
+        </details>
         <p id="uwagi-wyniku" class="wyciszony godziny__opis"></p>
+    </div>
+</section>
+
+{# ETAP 232: zapisane miesiące — kwoty z dokładnych wartości, sumy roczne #}
+<section class="karta stos historia-pracy" aria-labelledby="naglowek-historii">
+    <h2 id="naglowek-historii">Zapisane miesiące</h2>
+    <p id="brak-historii" class="wyciszony godziny__opis"{{ ' hidden' if historia.miesiace }}>Po policzeniu kliknij „Zapisz miesiąc” — tu zobaczysz swoje miesiące i sumę za rok.</p>
+    <div class="przewijanie-tabeli">
+        <table class="tabela historia-pracy__tabela" id="tabela-historii"{{ ' hidden' if not historia.miesiace }}></table>
     </div>
 </section>
 
@@ -90,6 +105,8 @@
     const URL_POLICZ = "{{ url_for('praca.policz_grafik') }}";
     const URL_NOTATKI = "{{ url_for('praca.utworz_notatke') }}";
     const URL_DOCX = "{{ url_for('praca.notatki_word') }}";
+    const URL_ROZLICZENIA = "{{ url_for('praca.lista_rozliczen') }}";
+    const HISTORIA = {{ historia | tojson }};
 </script>
 <script src="{{ url_for('praca.static', filename='praca.js') }}"></script>
 {% endblock %}

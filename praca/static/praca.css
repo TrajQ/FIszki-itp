@@ -195,3 +195,84 @@
 .podglad-notatek .przewijanie-tabeli {
     overflow-x: auto;
 }
+
+/* ETAP 232: lista zmian do odznaczenia i historia miesięcy */
+.godziny__zmiany summary {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.lista-zmian {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 4px 16px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+}
+
+.historia-pracy {
+    max-width: 760px;
+}
+
+.historia-pracy__tabela {
+    width: 100%;
+}
+
+.historia-pracy__akcje {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.historia-pracy__suma td {
+    border-top: 2px solid var(--linia);
+    font-weight: 700;
+}
+
+.historia-pracy .przewijanie-tabeli {
+    overflow-x: auto;
+}
+
+.lista-zmian label {
+    display: flex;
+    flex-direction: row; /* globalny label to kolumna (static/style.css) */
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-weight: 400;
+}
+
+.lista-zmian input {
+    width: auto;
+    margin: 0;
+}
+
+.historia-pracy__tabela .liczba {
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    /* na telefonie bez kolumny „Zmian” — kwota mieści się bez przewijania */
+    .historia-pracy__tabela tr > :nth-child(2) {
+        display: none;
+    }
+
+    .historia-pracy__tabela {
+        font-size: 13px;
+    }
+
+    .historia-pracy__tabela th,
+    .historia-pracy__tabela td {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .historia-pracy__akcje {
+        white-space: normal; /* „Kopiuj” i ✕ jeden pod drugim */
+    }
+
+    .historia-pracy__akcje button {
+        padding: 4px 6px;
+    }
+}

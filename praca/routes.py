@@ -18,7 +18,7 @@ from flask import Blueprint, Response, jsonify, render_template, request
 
 from dane.gemini import BladGemini, przepisz_grafik, utworz_notatki
 
-from . import grafik, notatki, word
+from . import baza, grafik, notatki, word
 
 praca_bp = Blueprint("praca", __name__, template_folder="templates", static_folder="static")
 
@@ -31,7 +31,8 @@ MIN_ZNAKOW_TEKSTU_PDF = 200  # mniej — PDF to najpewniej skan; wtedy Gemini cz
 
 @praca_bp.route("/")
 def index():
-    return render_template("praca/index.html", miesiace=grafik.MIESIACE, stawka=str(grafik.STAWKA_DOMYSLNA).replace(".", ","))
+    return render_template("praca/index.html", miesiace=grafik.MIESIACE, stawka=str(grafik.STAWKA_DOMYSLNA).replace(".", ","),
+                           historia=historia())
 
 
 def tekst_pdf(dane: bytes) -> str:
@@ -69,21 +70,80 @@ def odczytaj_grafik():
         return jsonify({"blad": str(e)}), 502
 
 
-@praca_bp.route("/grafik/policz", methods=["POST"])
-def policz_grafik():
+def _policz_z_zapytania() -> tuple[dict, Decimal]:
+    """Wspólne dla „Policz” i „Zapisz miesiąc”: wynik liczy zawsze serwer z
+    tekstu grafiku — także przy zapisie nie przyjmujemy liczb od strony."""
     dane = request.get_json(silent=True) or {}
     try:
         stawka = Decimal(str(dane.get("stawka") or grafik.STAWKA_DOMYSLNA).replace(",", ".").replace(" ", ""))
         miesiac = int(dane["miesiac"]) if dane.get("miesiac") else None
         rok = int(dane["rok"]) if dane.get("rok") else None
     except (InvalidOperation, ValueError, TypeError):
-        return jsonify({"blad": "Stawka, miesiąc i rok muszą być liczbami."}), 400
+        raise grafik.BladGrafiku("Stawka, miesiąc i rok muszą być liczbami.") from None
     if not stawka.is_finite() or stawka > 10_000:
-        return jsonify({"blad": "Niepoprawna stawka."}), 400
+        raise grafik.BladGrafiku("Niepoprawna stawka.")
+    pominiete = dane.get("pominiete") if isinstance(dane.get("pominiete"), list) else []
+    wynik = grafik.rozliczenie(str(dane.get("tekst") or ""), str(dane.get("imie") or ""), stawka, miesiac, rok,
+                               {str(k) for k in pominiete[:200]})
+    return wynik, stawka
+
+
+@praca_bp.route("/grafik/policz", methods=["POST"])
+def policz_grafik():
     try:
-        return jsonify(grafik.rozliczenie(str(dane.get("tekst") or ""), str(dane.get("imie") or ""), stawka, miesiac, rok))
+        return jsonify(_policz_z_zapytania()[0])
     except grafik.BladGrafiku as e:
         return jsonify({"blad": str(e)}), 400
+
+
+# ---------- historia rozliczeń (ETAP 232) ----------
+
+
+def historia() -> dict:
+    """Zapisane miesiące od najnowszego i sumy w latach (z dokładnych kwot)."""
+    wiersze = baza.rozliczenia()
+    lata: dict[int, dict] = {}
+    for w in wiersze:
+        rok = lata.setdefault(w["rok"], {"rok": w["rok"], "minuty": 0, "kwota": Decimal(0), "miesiecy": 0})
+        rok["minuty"] += w["minuty"]
+        rok["kwota"] += Decimal(w["kwota"])
+        rok["miesiecy"] += 1
+    return {
+        "miesiace": [{**w, "nazwa": f"{grafik.MIESIACE[w['miesiac'] - 1]} {w['rok']}", "godziny": grafik.godziny_tekst(w["minuty"]),
+                      "kwota_tekst": grafik.kwota_tekst(Decimal(w["kwota"]))} for w in wiersze],
+        "lata": [{**r, "godziny": grafik.godziny_tekst(r["minuty"]), "kwota": grafik.kwota_tekst(r["kwota"])}
+                 for r in sorted(lata.values(), key=lambda r: -r["rok"])],
+    }
+
+
+@praca_bp.route("/rozliczenia", methods=["POST"])
+def zapisz_rozliczenie():
+    try:
+        wynik, stawka = _policz_z_zapytania()
+    except grafik.BladGrafiku as e:
+        return jsonify({"blad": str(e)}), 400
+    imie = " ".join(str((request.get_json(silent=True) or {}).get("imie") or "").split())[:40]
+    baza.zapisz(wynik["rok"], wynik["miesiac"], imie, wynik["minuty"], stawka, Decimal(wynik["kwota_dokladna"]),
+                wynik["wliczonych"], wynik["tekst"])
+    return jsonify(historia())
+
+
+@praca_bp.route("/rozliczenia")
+def lista_rozliczen():
+    return jsonify(historia())
+
+
+@praca_bp.route("/rozliczenia/<int:rozliczenie_id>", methods=["DELETE"])
+def usun_rozliczenie(rozliczenie_id):
+    if not baza.usun(rozliczenie_id):
+        return jsonify({"blad": "Nie ma takiego rozliczenia."}), 404
+    return jsonify(historia())
+
+
+def podsumowanie() -> dict:
+    """Na kartę modułu na stronie głównej: ostatni zapisany miesiąc."""
+    h = historia()
+    return {"ostatni": h["miesiace"][0] if h["miesiace"] else None}
 
 
 # ---------- notatki w Wordzie (ETAP 231) ----------

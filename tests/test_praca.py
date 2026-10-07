@@ -204,3 +204,32 @@ def test_trasy_notatek(client, monkeypatch):
     assert r.status_code == 200 and r.data[:2] == b"PK"
     assert r.headers["Content-Disposition"] == "attachment; filename*=UTF-8''Planowanie_w_gminie.docx"
     assert client.post("/praca/notatki.docx", json={"notatki": {"tytul": "x"}}).status_code == 400
+
+
+# ---------- ETAP 232: wyłączanie zmian i historia miesięcy ----------
+
+
+def test_pominiete_zmiany():
+    w = grafik.rozliczenie(KOMORKAMI, "Patryk", pominiete={"17|8:30|12:30"})
+    assert [(z["dzien"], z["wliczona"]) for z in w["zmiany"]] == [(16, True), (17, False), (27, True)]
+    assert (w["wliczonych"], w["godziny"], w["minuty"], w["kwota_dokladna"]) == (2, "9", 540, "282.60")
+    assert "17 października" not in w["tekst"] and w["tekst"].splitlines()[-2] == "4,5+4,5=9"
+
+
+def test_historia_rozliczen(client):
+    cialo = {"tekst": KOMORKAMI, "imie": "Patryk", "stawka": "31,4"}
+    h = client.post("/praca/rozliczenia", json=cialo).get_json()
+    assert [(m["nazwa"], m["godziny"], m["kwota_tekst"], m["zmian"]) for m in h["miesiace"]] == [("październik 2026", "13", "408,20", 3)]
+    # ponowny zapis tego samego miesiąca zastępuje (np. po odznaczeniu zmiany); liczby zawsze z serwera
+    h = client.post("/praca/rozliczenia", json={**cialo, "pominiete": ["17|8:30|12:30"], "kwota": "999999"}).get_json()
+    assert len(h["miesiace"]) == 1 and h["miesiace"][0]["kwota_tekst"] == "282,60"
+    wrzesien = "wrzesień 2026\n4.\nPatryk\n15:00-20:00\n5.\nPatryk\n8:00-14:00"
+    h = client.post("/praca/rozliczenia", json={**cialo, "tekst": wrzesien}).get_json()
+    assert [m["nazwa"] for m in h["miesiace"]] == ["październik 2026", "wrzesień 2026"]
+    assert h["lata"] == [{"rok": 2026, "minuty": 1200, "kwota": "628,00", "miesiecy": 2, "godziny": "20"}]  # 282,60 + 11 h × 31,4 = 345,40
+    assert "październik 2026: 9 h, 282,60 zł" in client.get("/").get_data(as_text=True)
+    assert client.post("/praca/rozliczenia", json={**cialo, "imie": ""}).status_code == 400
+    pierwszy = h["miesiace"][0]["id"]
+    assert len(client.delete(f"/praca/rozliczenia/{pierwszy}").get_json()["miesiace"]) == 1
+    assert client.delete(f"/praca/rozliczenia/{pierwszy}").status_code == 404
+    assert len(client.get("/praca/rozliczenia").get_json()["miesiace"]) == 1

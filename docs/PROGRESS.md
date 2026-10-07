@@ -4194,3 +4194,31 @@ Status: zamknięty
   Gemini (podgląd, pobranie .docx)
 - Pomoc: „Jak zrobić notatki w Wordzie z PDF-u albo zdjęć?”
 - `DECISIONS.md`: D-239
+
+## ETAP 232 — Praca: wyłączanie zmian i historia miesięcy z sumą roczną
+Data: 2026-10-07
+Status: zamknięty
+
+- Prośba autora „make it better” po ETAPie 231 — ulepszenia modułu
+  Praca w dwóch ETAPach (232 godziny, 233 notatki)
+- `praca/grafik.py`: `rozliczenie(…, pominiete)` — zmiany wyłączone
+  ręcznie (klucz „dzień|od|do”) nie wchodzą do linii, sumy ani kwoty;
+  wynik ma listę zmian z `wliczona`, `minuty`, `kwota_dokladna`;
+  `godziny_tekst`, `kwota_tekst` publiczne (historia)
+- `praca/baza.py` (nowa baza modułu `instance/praca/praca.db`): tabela
+  `rozliczenia` — jeden wiersz na miesiąc i osobę, ponowny zapis
+  zastępuje; minuty jako liczba, kwota jako tekst z Decimal
+- `praca/routes.py`: `_policz_z_zapytania` wspólne dla „Policz” i
+  „Zapisz miesiąc” (przy zapisie liczby też liczy serwer — kwota od
+  strony jest ignorowana); `POST/GET /praca/rozliczenia`, `DELETE
+  /praca/rozliczenia/<id>`; `historia()` z sumami w latach;
+  `podsumowanie()` — ostatni miesiąc na kafelku strony głównej
+- Strona: rozwijana lista „Twoje zmiany” z polami wyboru (przeliczenie
+  po odznaczeniu), „Zapisz miesiąc”, sekcja „Zapisane miesiące” (tabela
+  z sumą roczną, Kopiuj, ✕); na telefonie bez kolumny „Zmian”, przyciski
+  jeden pod drugim — tabela mieści się w 390 px
+- Testy: wyłączona zmiana (suma, kwota, tekst), historia (zapis,
+  zastąpienie, kwota ze strony ignorowana, suma roku, kafelek, usuwanie,
+  błędy); przeglądarka 1300/390 px; przegląd 101 stron — 0 problemów
+- Pomoc: akapit „Zamiana zmian i historia”
+- `DECISIONS.md`: D-240

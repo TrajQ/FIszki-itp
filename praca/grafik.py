@@ -155,20 +155,27 @@ def ta_sama_osoba(imie_w_grafiku: str, imie: str) -> bool:
     return _bez_ogonkow(imie).strip() in _bez_ogonkow(imie_w_grafiku).split()
 
 
-def _godziny_tekst(minuty: int) -> str:
+def godziny_tekst(minuty: int) -> str:
     """270 → „4,5”, 240 → „4”, 255 → „4,25”."""
     wynik = (Decimal(minuty) / 60).quantize(Decimal("0.01"), ROUND_HALF_UP).normalize()
     return format(wynik, "f").replace(".", ",")
 
 
-def _kwota(x: Decimal) -> str:
+def kwota_tekst(x: Decimal) -> str:
     tekst = format(x.quantize(Decimal("0.01"), ROUND_HALF_UP), ",.2f")
     return tekst.replace(",", " ").replace(".", ",")
 
 
-def rozliczenie(tekst: str, imie: str, stawka: Decimal = STAWKA_DOMYSLNA, miesiac: int | None = None, rok: int | None = None) -> dict:
+def klucz_zmiany(z: Zmiana) -> str:
+    """„16|15:30|20:00” — do wyłączenia zmiany z rozliczenia (ETAP 232)."""
+    return f"{z.dzien}|{z.od}|{z.do}"
+
+
+def rozliczenie(tekst: str, imie: str, stawka: Decimal = STAWKA_DOMYSLNA, miesiac: int | None = None, rok: int | None = None,
+                pominiete: set[str] | None = None) -> dict:
     """Zmiany wskazanej osoby w miesiącu grafiku → linie jak w notatce,
-    suma godzin i kwota (godziny × stawka)."""
+    suma godzin i kwota (godziny × stawka). `pominiete` — klucze zmian
+    wyłączonych ręcznie (np. zamiana z kimś); nie wchodzą do sumy."""
     if not imie.strip():
         raise BladGrafiku("Podaj imię, którego zmiany liczyć (tak jak w grafiku).")
     if stawka <= 0:
@@ -186,23 +193,30 @@ def rozliczenie(tekst: str, imie: str, stawka: Decimal = STAWKA_DOMYSLNA, miesia
     moje = [z for z in wszystkie if ta_sama_osoba(z.imie, imie)]
     w_miesiacu = [z for z in moje if z.miesiac_przesuniecie == 0]
     pominiete_inny_miesiac = len(moje) - len(w_miesiacu)
-    linie = [f"{z.dzien} {MIESIACE_DOPELNIACZ[miesiac - 1]} {z.od}-{z.do} {_godziny_tekst(z.minuty)}h" for z in w_miesiacu]
+    pominiete = pominiete or set()
+    wszystkie_moje = w_miesiacu
+    w_miesiacu = [z for z in w_miesiacu if klucz_zmiany(z) not in pominiete]
+    linie = [f"{z.dzien} {MIESIACE_DOPELNIACZ[miesiac - 1]} {z.od}-{z.do} {godziny_tekst(z.minuty)}h" for z in w_miesiacu]
     minuty = sum(z.minuty for z in w_miesiacu)
     godziny = Decimal(minuty) / 60
     kwota = godziny * stawka
-    suma = "+".join(_godziny_tekst(z.minuty) for z in w_miesiacu)
+    suma = "+".join(godziny_tekst(z.minuty) for z in w_miesiacu)
     stawka_tekst = format(stawka.normalize(), "f").replace(".", ",")
     tekst_wyniku = "\n".join([f"{MIESIACE[miesiac - 1]} {rok}", *linie, "",
-                              f"{suma}={_godziny_tekst(minuty)}" if w_miesiacu else "brak zmian",
-                              f"{_godziny_tekst(minuty)} h × {stawka_tekst} zł = {_kwota(kwota)} zł"])
+                              f"{suma}={godziny_tekst(minuty)}" if w_miesiacu else "brak zmian",
+                              f"{godziny_tekst(minuty)} h × {stawka_tekst} zł = {kwota_tekst(kwota)} zł"])
     inne_osoby = sorted({z.imie for z in wszystkie if z.imie and not ta_sama_osoba(z.imie, imie)}, key=str.lower)
     return {
         "miesiac": miesiac,
         "rok": rok,
         "miesiac_z_tekstu": rozpoznany is not None,
-        "zmiany": [{"dzien": z.dzien, "od": z.od, "do": z.do, "godziny": _godziny_tekst(z.minuty)} for z in w_miesiacu],
-        "godziny": _godziny_tekst(minuty),
-        "kwota": _kwota(kwota),
+        "zmiany": [{"dzien": z.dzien, "od": z.od, "do": z.do, "godziny": godziny_tekst(z.minuty), "klucz": klucz_zmiany(z),
+                    "wliczona": klucz_zmiany(z) not in pominiete} for z in wszystkie_moje],
+        "wliczonych": len(w_miesiacu),
+        "minuty": minuty,  # do zapisu w historii (ETAP 232)
+        "kwota_dokladna": str(kwota.quantize(Decimal("0.01"), ROUND_HALF_UP)),
+        "godziny": godziny_tekst(minuty),
+        "kwota": kwota_tekst(kwota),
         "stawka": stawka_tekst,
         "tekst": tekst_wyniku,
         "wszystkich_zmian": len(wszystkie),

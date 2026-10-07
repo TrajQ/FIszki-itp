@@ -201,7 +201,8 @@ document.querySelectorAll("[data-przypnij], [data-odepnij]").forEach((przycisk) 
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4M16 2v4"/><path d="M12 13v3l2 1"/></svg>
         </span>
         <h2>Praca i notatki</h2>
-        <p class="karta__opis">Godziny pracy z grafiku (PDF albo zdjęcie): lista zmian, suma i wypłata.</p>
+        <p class="karta__opis">Godziny pracy z grafiku (PDF albo zdjęcie): lista zmian, suma i wypłata; notatki w Wordzie.</p>
+        {% if p.praca and p.praca.ostatni %}<span class="karta__meta">{{ p.praca.ostatni.nazwa }}: {{ p.praca.ostatni.godziny }} h, {{ p.praca.ostatni.kwota_tekst }} zł</span>{% endif %}
     </a>
 </section>
 

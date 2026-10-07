@@ -4793,3 +4793,23 @@ nawigację i spis treści w Wordzie.
   odpowiedzi i ryzyko wstrzyknięcia treści.
 - Zapisywanie notatek w bazie modułu — nikt o to nie prosił; plik .docx
   jest wynikiem.
+
+## D-240 — Historia rozliczeń: serwer liczy jeszcze raz, kwoty w Decimal
+Data: 2026-10-07
+
+**Decyzja:** „Zapisz miesiąc” wysyła te same dane co „Policz” (tekst
+grafiku, imię, stawka, odznaczone zmiany), a serwer liczy wynik od nowa i
+dopiero go zapisuje. Minuty zapisujemy jako liczbę całkowitą, kwotę jako
+tekst wartości Decimal; sumy roczne liczymy z nich, nie z zaokrąglonych
+godzin.
+
+**Uzasadnienie:** Zasada „liczby z danych” obejmuje też zapis — strona
+mogłaby wysłać cokolwiek. Suma roczna z dokładnych kwot miesięcy zgadza
+się z wypłatami co do grosza; godziny z minut nie gubią kwadransów.
+Jeden wiersz na miesiąc i osobę (UNIQUE) — poprawiony grafik zastępuje
+stare rozliczenie zamiast dublować.
+
+**Odrzucone alternatywy:**
+- Zapisywanie wyniku przysłanego przez stronę — liczby spoza kodu.
+- Edycja godzin pojedynczej zmiany na liście — tekst grafiku w polu już
+  na to pozwala; lista służy do wyłączania całych zmian.

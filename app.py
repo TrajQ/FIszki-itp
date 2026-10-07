@@ -64,6 +64,7 @@ def create_app(instance_path=None):
     from przepisy.baza import init_db as init_db_przepisy, close_db as close_db_przepisy
     from teren.baza import init_db as init_db_teren, close_db as close_db_teren
     from ceny.baza import init_db as init_db_ceny, close_db as close_db_ceny
+    from praca.baza import init_db as init_db_praca, close_db as close_db_praca
 
     with app.app_context():
         init_db_fiszki()
@@ -73,6 +74,7 @@ def create_app(instance_path=None):
         init_db_przepisy()
         init_db_teren()
         init_db_ceny()
+        init_db_praca()  # ETAP 232
     app.teardown_appcontext(close_db_fiszki)
     app.teardown_appcontext(close_db_atlas)
     app.teardown_appcontext(close_db_mpzp)
@@ -80,6 +82,7 @@ def create_app(instance_path=None):
     app.teardown_appcontext(close_db_przepisy)
     app.teardown_appcontext(close_db_teren)
     app.teardown_appcontext(close_db_ceny)
+    app.teardown_appcontext(close_db_praca)
 
     # ETAP 142: data i godzina w stopce wydruków (templates/_wydruk.html)
     app.jinja_env.globals["teraz_wydruku"] = lambda: datetime.now().strftime("%d.%m.%Y, %H:%M")
@@ -96,6 +99,7 @@ def create_app(instance_path=None):
         from przepisy.routes import podsumowanie as podsumowanie_przepisow
         from teren.routes import podsumowanie as podsumowanie_terenu
         from ceny.routes import podsumowanie as podsumowanie_cen
+        from praca.routes import podsumowanie as podsumowanie_pracy
 
         podsumowania = {}
         for modul, funkcja in [
@@ -107,6 +111,7 @@ def create_app(instance_path=None):
             ("przepisy", podsumowanie_przepisow),
             ("teren", podsumowanie_terenu),
             ("ceny", podsumowanie_cen),
+            ("praca", podsumowanie_pracy),
         ]:
             try:
                 podsumowania[modul] = funkcja()
