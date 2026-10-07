@@ -450,7 +450,7 @@ def ostatnie(limit: int = 3) -> list[dict]:
 
 # Pozostałe trasy modułu — w osobnych plikach, rejestrują się na fiszki_bp.
 # Import na końcu, bo tamte pliki importują fiszki_bp z tego modułu.
-from . import trasy_nauka, trasy_telefon, trasy_wymiana  # noqa: E402, F401
+from . import trasy_mapa, trasy_nauka, trasy_telefon, trasy_wymiana  # noqa: E402, F401
 
 
 # ---------- wyszukiwarka globalna (ETAP 128) ----------

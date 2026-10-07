@@ -5123,3 +5123,25 @@ plik syntetyczny).
   pracy.
 - Znacznik „przykład” w bazach — wymaga kolumn w kilku modułach;
   prefiks nazwy wystarcza.
+
+## D-256 — Fiszki z miejscem: zwykła fiszka + punkt, ocenia serwer
+Data: 2026-10-07
+
+**Decyzja:** Fiszka „gdzie to jest” to zwykła fiszka (pytanie i nazwa
+miejsca jako odpowiedź) z punktem i promieniem w osobnej tabeli. Quiz
+pobiera pytania bez współrzędnych; odległość i ocenę (trafione /
+blisko / pudło) liczy serwer po kliknięciu.
+
+**Uzasadnienie:** Osobna tabela (jak obrazy i zasłony) nie zmienia
+istniejących baz, a fiszka działa wszędzie tam, gdzie zwykła — w
+powtórce, na telefonie bez internetu, w druku i w koszu. Ocena po
+stronie serwera: liczby z kodu, a odpowiedź nie leży w przeglądarce
+przed kliknięciem. Promień zamiast samej odległości — „gdzie jest
+dzielnica” i „gdzie jest pomnik” wymagają innej dokładności.
+
+**Odrzucone alternatywy:**
+- Obszar (wielobok) jako odpowiedź — dokładniejszy dla dzielnic, ale
+  rysowanie wieloboku przy każdej fiszce spowalnia tworzenie; okrąg
+  z promieniem wystarcza do nauki położenia.
+- Wpisywanie quizu z mapą do pudełek Leitnera — wynik „blisko” nie
+  przekłada się jednoznacznie na „umiem / nie umiem”.

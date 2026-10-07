@@ -100,6 +100,15 @@ CREATE TABLE IF NOT EXISTS wyjasnienia_fiszek (
     data TEXT NOT NULL
 );
 
+-- ETAP 248: fiszka „gdzie to jest” — miejsce odpowiedzi na mapie (WGS84) i
+-- promień, w którym kliknięcie w quizie z mapą liczy się jako trafienie.
+CREATE TABLE IF NOT EXISTS miejsca_fiszek (
+    fiszka_id INTEGER PRIMARY KEY REFERENCES fiszki(id) ON DELETE CASCADE,
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    promien_m INTEGER NOT NULL
+);
+
 -- ETAP 212: kosz — usunięty PDF albo fiszka (wiersze powiązanych tabel jako JSON,
 -- pliki w instance/fiszki/kosz/); przywrócenie wstawia je z powrotem (fiszki/kosz.py).
 CREATE TABLE IF NOT EXISTS kosz (

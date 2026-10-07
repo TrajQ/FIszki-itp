@@ -4548,3 +4548,25 @@ Status: zamknięty
   (12 par w porównaniu, 4 budynki i zgodność z planem), Praca, usunięcie;
   przeglądarka 1300/390 px (cała ścieżka)
 - `DECISIONS.md`: D-255
+
+## ETAP 248 — Fiszki „gdzie to jest” z punktem na mapie i quiz z mapą
+Data: 2026-10-07
+Status: zamknięty
+
+- Tabela `miejsca_fiszek` (punkt WGS84 i promień trafienia; kaskada,
+  w koszu — `TABELE_FISZKI`)
+- `fiszki/miejsca.py`: `sprawdz`, `odleglosc_m` (haversine), `ocen`
+  (trafione ≤ promień, blisko ≤ 3 promienie, pudło), `zapisz`, `lista`,
+  `miejsce`; promienie 50 m – 5 km
+- `fiszki/trasy_mapa.py`: `GET /fiszki/mapa` (mapa, formularz, lista),
+  `POST /fiszki/mapa/fiszki` (zwykła fiszka + miejsce), `GET
+  /fiszki/mapa/quiz`, `/quiz/pytania` (bez miejsca — zna je tylko
+  serwer), `POST /quiz/<id>` (odległość, ocena, odpowiedź)
+- `mapa.js` (kliknięcie, przeciągany znacznik, okrąg promienia, lista),
+  `quiz_mapa.js` (pytanie, kliknięcie, wynik, linia do miejsca,
+  podsumowanie); przycisk „Z mapą” na stronie Fiszek
+- Testy: ocena odległości, zapis i błędy, pytania bez miejsca, ocena
+  odpowiedzi, fiszka w powtórce, kosz z przywróceniem miejsca;
+  przeglądarka 1300/390 px (dodanie kliknięciem, quiz do końca)
+- Pomoc: „Fiszki „gdzie to jest” i quiz z mapą”
+- `DECISIONS.md`: D-256

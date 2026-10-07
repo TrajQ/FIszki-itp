@@ -1198,3 +1198,6 @@
 
 ## ETAP 247 — 2026-10-07
 - Nowy „Samouczek”: przykłady w Terenie, Osiedlu i Pracy, kroki po modułach, bez internetu
+
+## ETAP 248 — 2026-10-07
+- Fiszki: „gdzie to jest” — fiszki z miejscem na mapie i quiz, w którym klikasz odpowiedź na mapie

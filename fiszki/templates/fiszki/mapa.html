@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block tytul %}Fiszki z mapą — Warsztat{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.index') }}">‹ Fiszki</a>
+        <h1>Fiszki „gdzie to jest”</h1>
+        <p>Pytanie o miejsce, odpowiedź na mapie — dzielnice, osiedla, obiekty z wykładu. Działają też w zwykłej powtórce (odpowiedź tekstem), a w quizie z mapą klikasz, gdzie to jest.</p>
+    </div>
+    {% if fiszki %}<a class="przycisk przycisk--duzy" href="{{ url_for('fiszki.quiz_z_mapa') }}">Quiz z mapą</a>{% endif %}
+</div>
+
+{# ETAP 248: odległości i ocenę liczy serwer (fiszki/miejsca.py) #}
+<div class="mapa-fiszek">
+    <section class="karta karta-mapy-fiszek"><div id="mapa-fiszek" role="application" aria-label="Mapa — kliknij, żeby wskazać miejsce"></div></section>
+    <aside class="stos">
+        <section class="karta stos">
+            <h2>Nowa fiszka z miejscem</h2>
+            {% if pliki %}
+            <form id="formularz-miejsca" class="stos">
+                <p id="stan-miejsca" class="wyciszony" aria-live="polite">Kliknij na mapie miejsce odpowiedzi.</p>
+                <label>Pytanie <input name="pytanie" maxlength="500" required placeholder="np. Gdzie jest osiedle Winogrady?"></label>
+                <label>Odpowiedź (nazwa miejsca) <input name="odpowiedz" maxlength="500" required placeholder="np. Winogrady, Poznań (Stare Miasto)"></label>
+                <div class="siatka-pol-fiszek">
+                    <label>Trafienie do
+                        <select name="promien_m">{% for p in promienie %}<option value="{{ p }}" {{ 'selected' if p == promien_domyslny }}>{{ p ~ ' m' if p < 1000 else (p // 1000) ~ ' km' }}</option>{% endfor %}</select>
+                    </label>
+                    <label>Plik (talia)
+                        <select name="pdf_id">{% for p in pliki %}<option value="{{ p.id }}">{{ p.nazwa_oryginalna | truncate(40) }}</option>{% endfor %}</select>
+                    </label>
+                </div>
+                <button type="submit">Zapisz fiszkę</button>
+                <p id="blad-miejsca" class="komunikat komunikat--blad" hidden role="alert"></p>
+            </form>
+            {% else %}
+            <p class="wyciszony">Fiszka należy do pliku (talii) — najpierw wgraj PDF na stronie <a href="{{ url_for('fiszki.index') }}">Fiszek</a>.</p>
+            {% endif %}
+        </section>
+        <section class="karta stos">
+            <h2>Fiszki z miejscem (<span id="liczba-miejsc">{{ fiszki | length }}</span>)</h2>
+            <ol id="lista-miejsc" class="lista-miejsc"></ol>
+            <p class="wyciszony opis-sekcji">Podkład mapy wymaga internetu; zapisane fiszki działają w powtórce także bez niego.</p>
+        </section>
+    </aside>
+</div>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const FISZKI_MIEJSC = {{ fiszki | tojson }};
+    const URL_ZAPISZ = "{{ url_for('fiszki.zapisz_fiszke_z_miejscem') }}";
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('fiszki.static', filename='mapa.js') }}"></script>
+{% endblock %}

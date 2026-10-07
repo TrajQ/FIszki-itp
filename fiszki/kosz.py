@@ -24,7 +24,7 @@ from flask import current_app
 DNI_W_KOSZU = 30
 # kolejność wstawiania przy przywracaniu: najpierw tabele, do których odwołują się inne
 TABELE_PDF = (("pdfy", "id"), ("pdf_skroty", "pdf_id"), ("egzaminy", "pdf_id"), ("fiszki", "pdf_id"))
-TABELE_FISZKI = ("powtorki", "tematy_fiszek", "obrazy_fiszek", "zaslony_fiszek", "wyjasnienia_fiszek")
+TABELE_FISZKI = ("powtorki", "tematy_fiszek", "obrazy_fiszek", "zaslony_fiszek", "wyjasnienia_fiszek", "miejsca_fiszek")
 # Tabele z fiszka_id, które przy usuwaniu zostają (bez ON DELETE CASCADE): historia
 # odpowiedzi (statystyki dni się nie zmieniają) i zastosowane wyniki z telefonu.
 TABELE_ZOSTAJA = ("dziennik_powtorek", "powtorki_z_telefonu")

@@ -1271,3 +1271,64 @@ button.przycisk--ocena-trudne:hover {
 .egzamin__prognoza[open] summary {
     margin-bottom: 4px;
 }
+
+/* ETAP 248: fiszki „gdzie to jest” i quiz z mapą */
+.mapa-fiszek {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.karta-mapy-fiszek {
+    padding: 0;
+    overflow: hidden;
+}
+
+#mapa-fiszek,
+#mapa-quizu {
+    height: 520px;
+}
+
+.siatka-pol-fiszek {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.lista-miejsc {
+    margin: 0;
+    padding-left: 1.3em;
+    font-size: 14px;
+}
+
+.pytanie-mapy {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.quiz-mapa__akcje {
+    margin-top: 12px;
+}
+
+.quiz-mapa__wynik {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-weight: 600;
+}
+
+.quiz-mapa__wynik--trafione { color: #248a3d; }
+.quiz-mapa__wynik--blisko { color: #c93400; }
+.quiz-mapa__wynik--pudlo { color: #d70015; }
+
+@media (max-width: 800px) {
+    .mapa-fiszek {
+        grid-template-columns: 1fr;
+    }
+
+    #mapa-fiszek,
+    #mapa-quizu {
+        height: 360px;
+    }
+}

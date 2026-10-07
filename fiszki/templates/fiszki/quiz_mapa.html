@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block tytul %}Quiz z mapą — Fiszki{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='leaflet/leaflet.css') }}">
+<link rel="stylesheet" href="{{ url_for('fiszki.static', filename='fiszki.css') }}">
+{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.mapa_fiszek') }}">‹ Fiszki z mapą</a>
+        <h1>Quiz z mapą</h1>
+        <p id="pytanie-mapy" class="pytanie-mapy" aria-live="polite">Wczytuję pytania…</p>
+    </div>
+    <span id="postep-mapy" class="etykieta etykieta--akcent"></span>
+</div>
+
+<section class="karta karta-mapy-fiszek"><div id="mapa-quizu" role="application" aria-label="Mapa — kliknij, gdzie to jest"></div></section>
+<div class="rzad quiz-mapa__akcje">
+    <p id="wynik-mapy" class="quiz-mapa__wynik" aria-live="polite"></p>
+    <button id="dalej-mapy" type="button" hidden>Dalej</button>
+</div>
+<p id="blad-mapy" class="komunikat komunikat--blad" hidden role="alert"></p>
+{% endblock %}
+
+{% block skrypty %}
+<script>
+    const URL_PYTANIA = "{{ url_for('fiszki.pytania_quizu_z_mapa', pdf=pdf_id) if pdf_id else url_for('fiszki.pytania_quizu_z_mapa') }}";
+    const URL_ODPOWIEDZ = "{{ url_for('fiszki.odpowiedz_quizu_z_mapa', fiszka_id=0) }}";
+</script>
+<script src="{{ url_for('static', filename='leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('fiszki.static', filename='quiz_mapa.js') }}"></script>
+{% endblock %}

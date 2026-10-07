@@ -68,7 +68,7 @@ Plan rozszerzeń D-062 zrealizowany (ETAPy 57–65).
 - Nie dodawać zależności bez uzasadnienia i wpisu w DECISIONS.md
 
 ## Stan bieżący
-ETAP: 247 (Samouczek z danymi przykładowymi (bez internetu) — zamknięty)
-Ostatni ZIP: releases/warsztat_etap247_20261007.zip
-Testy: 739 passed / 0 failed
+ETAP: 248 (Fiszki „gdzie to jest” z mapą i quiz z mapą — zamknięty)
+Ostatni ZIP: releases/warsztat_etap248_20261007.zip
+Testy: 743 passed / 0 failed
 Tryb pracy: autor zgodził się, by kolejne ETAPy wybierać samodzielnie (D-081).
