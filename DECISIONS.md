@@ -5000,3 +5000,23 @@ gradientu jako wartości lokalizacji.
   roku, a przy kilku pierścieniach mediany pokazują kształt.
 - Odległość po drogach — wymaga sieci (moduł Dostępność); tu wystarcza
   odległość w linii prostej.
+
+## D-250 — Własne miejsca placówek: kolejność użytkownika, zysk krańcowy
+Data: 2026-10-07
+
+**Decyzja:** Obok zachłannych propozycji (ETAP 78) użytkownik wskazuje
+własne miejsca, a serwer liczy dla nich zysk krańcowy w kolejności
+wskazania — tą samą regułą zasięgu (szybki model) z dowolnego punktu.
+Propozycje można przenieść na listę i przesunąć.
+
+**Uzasadnienie:** W planowaniu miejsce wyznacza też dostępność terenu
+(działki gminy, plan), a nie tylko liczba objętych mieszkańców — stąd
+potrzeba sprawdzania konkretnych lokalizacji. Zysk krańcowy w
+kolejności wskazania odpowiada pytaniu „co da kolejna placówka”;
+wspólna reguła zasięgu daje te same liczby co propozycje (test).
+
+**Odrzucone alternatywy:**
+- Liczenie każdej placówki osobno (bez kolejności) — sumy dublowałyby
+  mieszkańców w nakładających się zasięgach.
+- Analiza sieciowa dla nowych miejsc — wymaga przeliczenia w QGIS;
+  szybki model wystarcza do porównania miejsc.

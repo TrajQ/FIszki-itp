@@ -614,3 +614,40 @@ def test_raport_dzielnic(client):
     assert odp.mimetype == "image/svg+xml" and 'stroke-width="2.5"' in svg and "obszar (numer z tabeli)" in svg
     assert "Jeżyce" not in svg  # nazwa obszaru tylko w tabeli HTML
     assert client.post("/dostepnosc/raport-dzielnic.svg", json={"plik": "moje.csv", "kolumna": "czas_przystanek_min", "obszary": []}).status_code == 422
+
+
+# ---------- ETAP 242: własne miejsca nowych placówek po kolei ----------
+
+
+def test_wlasne_placowki_zysk_ponad_poprzednie():
+    srodek = h3.latlng_to_cell(52.40, 16.92, 9)
+    komorki = sorted(h3.grid_disk(srodek, 6))
+    czasy = [5.0 if h3.cell_to_latlng(k)[1] < 16.915 else 40.0 for k in komorki]
+    ludnosc = [100.0] * len(komorki)
+    najlepsza = lokalizacja.najlepsze_lokalizacje(komorki, czasy, ludnosc, prog_min=10, ile=1)["propozycje"][0]
+    # to samo miejsce co propozycja — ten sam zysk; potem drugi raz w tym samym miejscu — zero; potem na zachodzie — zero
+    w = lokalizacja.wlasne_placowki(komorki, czasy, ludnosc, 10, [(najlepsza["lat"], najlepsza["lng"]), (najlepsza["lat"], najlepsza["lng"]), (52.40, 16.905)])
+    m1, m2, m3 = w["miejsca"]
+    assert m1["obejmie"] == najlepsza["obejmie"] and m1["juz_objete"] == 0
+    assert m2["obejmie"] == 0 and m2["juz_objete"] == m1["obejmie"]
+    assert m3["obejmie"] == 0  # zachód jest już w zasięgu obecnej usługi
+    assert w["w_zasiegu_po_proc"] == m3["w_zasiegu_po_proc"] == pytest.approx(w["w_zasiegu_przed_proc"] + m1["obejmie_proc"], abs=0.1)
+    assert w["promien_m"] > 0
+    for zle in ({"prog_min": 0, "punkty": [(52.4, 16.92)]}, {"prog_min": 10, "punkty": []}, {"prog_min": 10, "punkty": [(52.4, 16.92)] * 11},
+                {"prog_min": 10, "punkty": [(95.0, 16.92)]}):
+        with pytest.raises(lokalizacja.BladLokalizacji):
+            lokalizacja.wlasne_placowki(komorki, czasy, ludnosc, **zle)
+
+
+def test_trasa_wlasnych_placowek(client):
+    url = "/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/wlasne-placowki"
+    propozycje = client.get("/dostepnosc/plik/przyklad_poznan_syntetyczny.csv/lokalizacja",
+                            query_string={"kolumna": "czas_przystanek_min", "prog": 15, "ile": 2}).get_json()
+    punkty = [{"lat": p["lat"], "lng": p["lng"]} for p in propozycje["propozycje"]]
+    w = client.post(url, json={"kolumna": "czas_przystanek_min", "prog": 15, "punkty": punkty}).get_json()
+    assert [m["obejmie"] for m in w["miejsca"]] == [p["obejmie"] for p in propozycje["propozycje"]]  # te same miejsca — ten sam wynik
+    assert w["w_zasiegu_po_proc"] == propozycje["w_zasiegu_po_proc"]
+    assert client.post(url, json={"kolumna": "ludnosc", "punkty": punkty}).status_code == 400
+    assert client.post(url, json={"kolumna": "czas_przystanek_min", "punkty": [{"lat": "x"}]}).status_code == 422
+    assert client.post(url, json={"kolumna": "czas_przystanek_min", "punkty": []}).status_code == 422
+    assert 'id="dodaj-wlasne"' in client.get("/dostepnosc/").get_data(as_text=True)

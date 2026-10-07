@@ -410,6 +410,29 @@ def nowa_placowka(nazwa):
     return jsonify(wynik)
 
 
+@dostepnosc_bp.route("/plik/<nazwa>/wlasne-placowki", methods=["POST"])
+def wlasne_placowki(nazwa):
+    """ETAP 242: nowe placówki w miejscach wskazanych po kolei — zysk każdej
+    ponad poprzednie (dostepnosc/lokalizacja.py)."""
+    dane_zapytania = request.get_json(silent=True) or {}
+    kolumna = dane_zapytania.get("kolumna", "")
+    try:
+        punkty = [(float(p["lat"]), float(p["lng"])) for p in dane_zapytania.get("punkty") or []]
+        dane = _wczytaj(nazwa)
+        if kolumna not in dane["kolumny"] or not wyniki_h3.czy_minuty(kolumna):
+            return jsonify({"blad": "Wybierz wskaźnik czasu dojścia (w minutach) jednej usługi."}), 400
+        wynik = lokalizacja.wlasne_placowki(
+            dane["komorki"], dane["kolumny"][kolumna], dane.get("ludnosc"),
+            float(dane_zapytania.get("prog", 15)), punkty,
+            float(dane_zapytania.get("predkosc", model.PREDKOSC_DOMYSLNA_KMH)),
+            float(dane_zapytania.get("kretosc", model.KRETOSC_DOMYSLNA)),
+        )
+    except (KeyError, TypeError, ValueError, BladWynikow) as e:
+        komunikat = str(e) if isinstance(e, (lokalizacja.BladLokalizacji, BladWynikow)) else "Niepoprawne miejsca albo parametry."
+        return jsonify({"blad": komunikat}), 422
+    return jsonify(wynik)
+
+
 @dostepnosc_bp.route("/plik/<nazwa>/zasieg")
 def zasieg_z_punktu(nazwa):
     """Ilu mieszkańców dojdzie z klikniętego punktu w 5, 10 i 15 minut

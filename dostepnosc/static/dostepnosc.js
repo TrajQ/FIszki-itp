@@ -228,6 +228,8 @@
         warstwaLokalizacji.clearLayers();
         document.getElementById("lista-lokalizacji").replaceChildren();
         document.getElementById("wynik-lokalizacji").hidden = true;
+        document.getElementById("edytuj-propozycje").hidden = true;
+        document.dispatchEvent(new Event("dostepnosc:kolumna")); // ETAP 242: własne miejsca liczą się od nowa
         let analiza;
         try {
             const adres = kolumna === WARTOSC_LACZNY ? `${urlPliku}/laczny` : `${urlPliku}/${encodeURIComponent(kolumna)}`;
@@ -252,7 +254,7 @@
                 w.on("mouseover", () => w.setStyle({ weight: 2.5, color: "#1d1d1f" }));
                 w.on("mouseout", () => warstwa.resetStyle(w));
                 w.on("click", (e) => {
-                    if (!wstawianie && !wskazywanieZasiegu) pokazKomorke(cecha.properties.h3, e.latlng);
+                    if (!wstawianie && !wskazywanieZasiegu && !mapa.getContainer().classList.contains("mapa--wstawianie")) pokazKomorke(cecha.properties.h3, e.latlng);
                 });
             },
         }).addTo(mapa);
@@ -458,6 +460,8 @@
             }
             const jednostka = w.z_ludnoscia ? "mieszk." : "komórek";
             wynikEl.textContent = `W zasięgu ${prog} min: dziś ${formatProcentu.format(w.w_zasiegu_przed_proc)}%, z ${w.propozycje.length === 1 ? "nową placówką" : `${w.propozycje.length} nowymi placówkami`} ${formatProcentu.format(w.w_zasiegu_po_proc)}% ${w.z_ludnoscia ? "mieszkańców" : "powierzchni"}.`;
+            ostatniePropozycje = w.propozycje;
+            document.getElementById("edytuj-propozycje").hidden = false;
             for (const p of w.propozycje) {
                 const ikona = L.divIcon({ className: "znacznik-lokalizacji", html: `<span>${p.nr}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
                 L.marker([p.lat, p.lng], { icon: ikona, title: `Propozycja ${p.nr}` }).addTo(warstwaLokalizacji);
@@ -478,6 +482,129 @@
         }
     });
 
+    // ---------- własne miejsca po kolei (ETAP 242) — liczy serwer (lokalizacja.wlasne_placowki) ----------
+
+    const warstwaWlasnych = L.layerGroup().addTo(mapa);
+    const przyciskDodajWlasne = document.getElementById("dodaj-wlasne");
+    const przyciskWyczyscWlasne = document.getElementById("wyczysc-wlasne");
+    const wynikWlasnych = document.getElementById("wynik-wlasnych");
+    const listaWlasnych = document.getElementById("lista-wlasnych");
+    let wlasne = []; // [{latlng, znacznik}]
+    let dodawanieWlasnych = false;
+    let ostatniePropozycje = [];
+    let numerWlasnych = 0;
+
+    function ustawDodawanieWlasnych(wlacz) {
+        dodawanieWlasnych = wlacz;
+        if (wlacz && wskazywanieZasiegu) ustawWskazywanie(false);
+        if (wlacz && wstawianie) ustawWstawianie(false);
+        przyciskDodajWlasne.textContent = wlacz ? "Kliknij na mapie… (Zakończ)" : "Dodaj miejsce";
+        przyciskDodajWlasne.classList.toggle("model__wstawiaj--aktywny", wlacz);
+        mapa.getContainer().classList.toggle("mapa--wstawianie", wlacz);
+    }
+
+    function dodajWlasne(latlng) {
+        if (wlasne.length >= 10) {
+            wynikWlasnych.hidden = false;
+            wynikWlasnych.textContent = "Najwyżej 10 miejsc.";
+            return;
+        }
+        const wpis = { latlng };
+        wpis.znacznik = L.marker(latlng, { draggable: true, keyboard: false, icon: L.divIcon({ className: "znacznik-lokalizacji znacznik-wlasny", html: "<span></span>", iconSize: [30, 30], iconAnchor: [15, 15] }) })
+            .addTo(warstwaWlasnych);
+        wpis.znacznik.on("dragend", () => {
+            wpis.latlng = wpis.znacznik.getLatLng();
+            odswiezWlasne();
+        });
+        wlasne.push(wpis);
+        odswiezWlasne();
+    }
+
+    async function odswiezWlasne() {
+        wlasne.forEach((w, i) => (w.znacznik.getElement().querySelector("span").textContent = String(i + 1)));
+        przyciskWyczyscWlasne.hidden = !wlasne.length;
+        if (!wlasne.length || !biezacaKolumna || biezacaKolumna === WARTOSC_LACZNY) {
+            listaWlasnych.replaceChildren();
+            wynikWlasnych.hidden = !wlasne.length;
+            wynikWlasnych.textContent = "Wybierz czas dojścia do jednej usługi.";
+            return;
+        }
+        const numer = ++numerWlasnych;
+        const prog = Number(suwakProgu.value) || 15;
+        let w;
+        try {
+            const odp = await fetch(`${urlPliku}/wlasne-placowki`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    kolumna: biezacaKolumna, prog,
+                    punkty: wlasne.map((x) => ({ lat: x.latlng.lat, lng: x.latlng.lng })),
+                    predkosc: liczbaZPola(document.getElementById("model-predkosc"), 4.8),
+                    kretosc: liczbaZPola(document.getElementById("model-kretosc"), 1.3),
+                }),
+            });
+            w = await odp.json().catch(() => ({}));
+            if (!odp.ok) throw new Error(w.blad || `Błąd ${odp.status}`);
+        } catch (e) {
+            if (numer !== numerWlasnych) return;
+            wynikWlasnych.hidden = false;
+            wynikWlasnych.textContent = e.message;
+            return;
+        }
+        if (numer !== numerWlasnych) return;
+        const jednostka = w.z_ludnoscia ? "mieszk." : "komórek";
+        wynikWlasnych.hidden = false;
+        wynikWlasnych.textContent = `W zasięgu ${prog} min (ok. ${formatLiczby.format(w.promien_m)} m w linii prostej): dziś ${formatProcentu.format(w.w_zasiegu_przed_proc)}%, z ${w.miejsca.length === 1 ? "tym miejscem" : `tymi ${w.miejsca.length} miejscami`} ${formatProcentu.format(w.w_zasiegu_po_proc)}% ${w.z_ludnoscia ? "mieszkańców" : "powierzchni"}.`;
+        listaWlasnych.replaceChildren();
+        w.miejsca.forEach((m, i) => {
+            const li = document.createElement("li");
+            const pokaz = document.createElement("button");
+            pokaz.type = "button";
+            pokaz.className = "przycisk--tekst";
+            pokaz.textContent = `+${formatLiczby.format(m.obejmie)} ${jednostka} (+${formatProcentu.format(m.obejmie_proc)}%) → ${formatProcentu.format(m.w_zasiegu_po_proc)}%`;
+            pokaz.title = "Pokaż na mapie";
+            pokaz.addEventListener("click", () => mapa.setView([m.lat, m.lng], Math.max(mapa.getZoom(), 15)));
+            li.appendChild(pokaz);
+            if (m.juz_objete > 0 && m.juz_objete >= m.obejmie) {
+                li.appendChild(komorkaTabeli("span", " — za blisko wcześniejszych: większość zasięgu już objęta", "wyciszony"));
+            }
+            const usun = document.createElement("button");
+            usun.type = "button";
+            usun.className = "przycisk--tekst";
+            usun.textContent = "✕";
+            usun.setAttribute("aria-label", `Usuń miejsce ${i + 1}`);
+            usun.addEventListener("click", () => {
+                warstwaWlasnych.removeLayer(wlasne[i].znacznik);
+                wlasne.splice(i, 1);
+                odswiezWlasne();
+            });
+            li.prepend(usun); // przed opisem — na wąskim ekranie nie spada do nowej linii
+            listaWlasnych.appendChild(li);
+        });
+    }
+
+    przyciskDodajWlasne.addEventListener("click", () => ustawDodawanieWlasnych(!dodawanieWlasnych));
+    document.addEventListener("dostepnosc:kolumna", () => {
+        if (wlasne.length) odswiezWlasne();
+    });
+    suwakProgu.addEventListener("change", () => {
+        if (wlasne.length) odswiezWlasne();
+    });
+    przyciskWyczyscWlasne.addEventListener("click", () => {
+        warstwaWlasnych.clearLayers();
+        wlasne = [];
+        odswiezWlasne();
+    });
+    document.getElementById("edytuj-propozycje").addEventListener("click", () => {
+        warstwaLokalizacji.clearLayers();
+        warstwaWlasnych.clearLayers();
+        wlasne = [];
+        for (const p of ostatniePropozycje) dodajWlasne(L.latLng(p.lat, p.lng));
+    });
+    mapa.on("click", (e) => {
+        if (dodawanieWlasnych) dodajWlasne(e.latlng);
+    });
+
     // ---------- zasięg z punktu (ETAP 85) ----------
     // Liczby liczy serwer (dostepnosc/zasieg.py); tu okręgi i tabela.
 
@@ -493,6 +620,7 @@
     function ustawWskazywanie(wlacz) {
         wskazywanieZasiegu = wlacz;
         if (wlacz && wstawianie) ustawWstawianie(false);
+        if (wlacz && dodawanieWlasnych) ustawDodawanieWlasnych(false); // ETAP 242
         przyciskZasieg.textContent = wlacz ? "Kliknij na mapie…" : "Wskaż punkt";
         przyciskZasieg.classList.toggle("model__wstawiaj--aktywny", wlacz);
         mapa.getContainer().classList.toggle("mapa--wstawianie", wlacz);
@@ -950,6 +1078,7 @@
 
     function ustawWstawianie(wlacz) {
         if (wlacz && wskazywanieZasiegu) ustawWskazywanie(false);
+        if (wlacz && dodawanieWlasnych) ustawDodawanieWlasnych(false); // ETAP 242
         wstawianie = wlacz;
         modelWstawiaj.textContent = wlacz ? "Zakończ wstawianie" : "Wstawiaj punkty";
         modelWstawiaj.classList.toggle("model__wstawiaj--aktywny", wlacz);

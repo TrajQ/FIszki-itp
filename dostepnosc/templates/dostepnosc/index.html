@@ -94,6 +94,16 @@
                 </div>
                 <p id="wynik-lokalizacji" class="lokalizacja__wynik" hidden></p>
                 <ol id="lista-lokalizacji" class="lista-luk"></ol>
+                <button id="edytuj-propozycje" type="button" class="przycisk--tekst" hidden title="Przenieś propozycje do własnej listy — możesz je przesuwać i usuwać">Popraw te miejsca ręcznie</button>
+                {# ETAP 242: własne miejsca po kolei — zysk każdego ponad poprzednie liczy serwer #}
+                <h4>Własne miejsca po kolei</h4>
+                <p class="wyciszony">Wskaż na mapie kolejne miejsca nowych placówek (np. działki gminy). Przy każdym: ilu mieszkańców dziś poza progiem obejmie ponad wcześniejsze miejsca. Znaczniki można przeciągać.</p>
+                <div class="rzad">
+                    <button id="dodaj-wlasne" type="button" class="przycisk--drugi">Dodaj miejsce</button>
+                    <button id="wyczysc-wlasne" type="button" class="przycisk--tekst" hidden>Wyczyść</button>
+                </div>
+                <p id="wynik-wlasnych" class="lokalizacja__wynik" hidden aria-live="polite"></p>
+                <ol id="lista-wlasnych" class="lista-luk lista-wlasnych"></ol>
             </div>
             <div class="lokalizacja stos">
                 <h4>Zasięg z punktu</h4>

@@ -696,3 +696,16 @@ button.lista-punktow-modelu__nr {
     padding-top: 10px;
     text-align: left;
 }
+
+/* ETAP 242: własne miejsca nowych placówek */
+.znacznik-wlasny span {
+    background: #0a84ff;
+    cursor: grab;
+}
+
+.lista-wlasnych li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}

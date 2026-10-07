@@ -123,3 +123,71 @@ def najlepsze_lokalizacje(
         "poza_zasiegiem": round(sum(poza.values()), 1),
         "propozycje": propozycje,
     }
+
+
+# ---------- własne miejsca po kolei (ETAP 242) ----------
+
+MAKS_WLASNYCH = 10
+
+
+def wlasne_placowki(
+    komorki: list[str],
+    czasy: list[float | None],
+    ludnosc: list[float] | None,
+    prog_min: float,
+    punkty: list[tuple[float, float]],
+    predkosc_kmh: float = PREDKOSC_DOMYSLNA_KMH,
+    kretosc: float = KRETOSC_DOMYSLNA,
+) -> dict:
+    """Nowe placówki w miejscach wskazanych przez użytkownika, w podanej
+    kolejności: ilu mieszkańców spoza zasięgu obejmie KAŻDA następna ponad
+    poprzednie (ta sama reguła zasięgu co w najlepsze_lokalizacje, ale z
+    dowolnego punktu, nie tylko ze środka komórki)."""
+    if not ZAKRES_PROGU_MIN[0] <= prog_min <= ZAKRES_PROGU_MIN[1]:
+        raise BladLokalizacji(f"Próg od {ZAKRES_PROGU_MIN[0]} do {ZAKRES_PROGU_MIN[1]} minut.")
+    if not 1 <= len(punkty) <= MAKS_WLASNYCH:
+        raise BladLokalizacji(f"Od 1 do {MAKS_WLASNYCH} miejsc.")
+    for lat, lng in punkty:
+        if not (math.isfinite(lat) and math.isfinite(lng) and -90 <= lat <= 90 and -180 <= lng <= 180):
+            raise BladLokalizacji("Współrzędne miejsca poza zakresem.")
+
+    wagi = ludnosc if ludnosc is not None else [1.0] * len(komorki)
+    razem = sum(wagi)
+    poza = {k: w for k, c, w in zip(komorki, czasy, wagi) if (c is None or c > prog_min) and w > 0}
+    przed = razem - sum(poza.values())
+    promien_m = prog_min * (predkosc_kmh * 1000 / 60) / kretosc
+    a_max = math.sin(promien_m / (2 * _R_ZIEMI_M)) ** 2
+    srodki = {k: tuple(math.radians(x) for x in h3.cell_to_latlng(k)) for k in poza}
+
+    obsluzone: set[str] = set()
+    miejsca, narastajaco = [], przed
+    for nr, (lat, lng) in enumerate(punkty, start=1):
+        fi1, la1 = math.radians(lat), math.radians(lng)
+        cos1 = math.cos(fi1)
+        w_zasiegu = []
+        for komorka, (fi2, la2) in srodki.items():
+            a = math.sin((fi2 - fi1) / 2) ** 2 + cos1 * math.cos(fi2) * math.sin((la2 - la1) / 2) ** 2
+            if a <= a_max:
+                w_zasiegu.append(komorka)
+        nowe = [c for c in w_zasiegu if c not in obsluzone]
+        zysk = sum(poza[c] for c in nowe)
+        # ile z tego, co obejmie, już objęły wcześniejsze miejsca — wskazówka „za blisko poprzedniej”
+        wspolne = sum(poza[c] for c in w_zasiegu if c in obsluzone)
+        obsluzone.update(nowe)
+        narastajaco += zysk
+        miejsca.append({
+            "nr": nr, "lat": lat, "lng": lng,
+            "obejmie": round(zysk, 1),
+            "obejmie_proc": round(100 * zysk / razem, 1) if razem else None,
+            "juz_objete": round(wspolne, 1),
+            "w_zasiegu_po_proc": round(100 * narastajaco / razem, 1) if razem else None,
+        })
+    return {
+        "prog_min": prog_min,
+        "promien_m": round(promien_m),
+        "z_ludnoscia": ludnosc is not None,
+        "w_zasiegu_przed_proc": round(100 * przed / razem, 1) if razem else None,
+        "w_zasiegu_po_proc": round(100 * narastajaco / razem, 1) if razem else None,
+        "poza_zasiegiem": round(sum(poza.values()), 1),
+        "miejsca": miejsca,
+    }

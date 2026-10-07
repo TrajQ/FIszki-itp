@@ -4419,3 +4419,26 @@ Status: zamknięty
   miejsca, 404); przeglądarka 1300/390 px na 400 transakcjach
 - Pomoc: „Jak cena zależy od odległości od miejsca?”
 - `DECISIONS.md`: D-249
+
+## ETAP 242 — Dostępność: kilka własnych miejsc nowych placówek po kolei
+Data: 2026-10-07
+Status: zamknięty
+
+- `dostepnosc/lokalizacja.py`: `wlasne_placowki(komorki, czasy, ludnosc,
+  prog, punkty, …)` — 1–10 miejsc w podanej kolejności; dla każdego:
+  ilu spoza zasięgu obejmie ponad wcześniejsze (`obejmie`), ile z jego
+  zasięgu już objęły wcześniejsze (`juz_objete`), udział w zasięgu
+  narastająco; ta sama reguła zasięgu co propozycje (haversine,
+  prędkość, krętość), ale z dowolnego punktu
+- `POST /dostepnosc/plik/<nazwa>/wlasne-placowki` (JSON: kolumna, próg,
+  punkty, parametry modelu)
+- Strona: „Własne miejsca po kolei” — tryb dodawania kliknięciem
+  (wyłącza inne tryby mapy i okienko komórki), przeciągane znaczniki z
+  numerami, lista z zyskiem, ✕, „Wyczyść”; „Popraw te miejsca ręcznie”
+  przenosi propozycje; przelicza po zmianie wskaźnika i progu
+- Testy: ten sam zysk co propozycja w tym samym miejscu, drugi raz w
+  tym samym miejscu = 0, miejsce w zasięgu = 0, błędy; trasa zgodna z
+  propozycjami; przeglądarka 1300/390 px (propozycje → lista, klik,
+  przeciągnięcie)
+- Pomoc: „Kilka własnych miejsc nowych placówek po kolei”
+- `DECISIONS.md`: D-250

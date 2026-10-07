@@ -1180,3 +1180,6 @@
 
 ## ETAP 241 — 2026-10-07
 - Ceny: mediana ceny za m² w pierścieniach od wskazanego miejsca i zmiana na kilometr
+
+## ETAP 242 — 2026-10-07
+- Dostępność: własne miejsca nowych placówek po kolei — zysk każdego ponad poprzednie
