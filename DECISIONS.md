@@ -5163,3 +5163,22 @@ pliku); resztę poprawiono ręcznie, a przegląd stron pilnuje wyniku.
 **Odrzucone alternatywy:**
 - `role="heading" aria-level` — obejście zamiast poprawnej struktury.
 - Ukryte nagłówki h2 dla czytnika — dodatkowa treść do utrzymania.
+
+## D-258 — Koniec projektu na ETAPie 250; chmura jako osobna decyzja
+Data: 2026-10-07
+
+**Decyzja:** Projekt kończy się na ETAPie 250 (decyzja autora). Wdrożenie
+w Oracle Cloud nie jest dopisywane jako kolejne ETAPy, tylko opisane w
+planie dalszym jako zmiana założeń do omówienia z autorem: aplikacja
+przestałaby być dostępna tylko na 127.0.0.1, więc potrzebne są
+logowanie, HTTPS, serwer WSGI i kopie poza serwerem.
+
+**Uzasadnienie:** Zasada „nie bindować na 0.0.0.0” i brak logowania są
+bezpieczne tylko lokalnie. Przeniesienie do internetu bez tych zmian
+udostępniłoby dane i klucz Gemini każdemu. Lista spraw w podsumowaniu
+pozwala autorowi zdecydować o zakresie (sam autor czy więcej osób)
+przed pisaniem kodu — zgodnie z zasadą „najpierw plan, potem kod”.
+
+**Odrzucone alternatywy:**
+- Dopisanie serwera i logowania w ostatnich ETAPach — zmiana stacku i
+  założeń bez zgody autora.

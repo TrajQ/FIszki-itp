@@ -4594,3 +4594,22 @@ Status: zamknięty
   informacji; zrzuty strony głównej, Fiszek i Osiedla bez zmian wyglądu;
   pełne testy
 - `DECISIONS.md`: D-257
+
+## ETAP 250 — Podsumowanie ETAPów 151–250, portfolio i plan dalszy — koniec projektu
+Data: 2026-10-07
+Status: zamknięty
+
+- `docs/PODSUMOWANIE_151-250.md`: liczby (ETAP 150 → 250: 8 → 9
+  modułów, 554 → 743 testy, pokrycie 95% → 96%, 158 → 258 decyzji,
+  przegląd 111 stron × 2 szerokości bez problemów), co doszło w każdym
+  module, co znalazły przeglądy, czego nie dało się sprawdzić (Gemini na
+  prawdziwym kluczu, plik Word w edytorze, iPhone, usługi zewnętrzne),
+  plan dalszy: Warsztat w Oracle Cloud (logowanie, HTTPS, gunicorn,
+  kopie, formularze jako PWA — do decyzji autora) i mniejsze rzeczy
+- `docs/PORTFOLIO.md`: opisy modułów uzupełnione o ETAPy 151–250, liczby
+  na koniec projektu, angielskie streszczenie (9 narzędzi, 743 testy)
+- `README.md`: odnośnik do podsumowania końcowego i samouczka
+- `.gitignore`: plik pomiaru pokrycia `.coverage` (był przypadkiem w
+  repozytorium)
+- Pomiary: pełne testy pod coverage (743, 96%), start aplikacji ok. 0,7 s
+- `DECISIONS.md`: D-258

@@ -7,3 +7,4 @@ instance/
 releases/
 .pytest_cache/
 .pliki_wersji
+.coverage

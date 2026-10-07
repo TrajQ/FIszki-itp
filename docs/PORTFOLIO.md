@@ -16,14 +16,14 @@ do egzaminów.
 
 | Moduł | Co robi | Umiejętności, które pokazuje |
 |---|---|---|
-| **Atlas** | Wskaźniki GUS BDL dla gmin województwa: kartogram, ranking, zmiany w czasie, korelacja, miary zróżnicowania, autokorelacja przestrzenna (I Morana, LISA), wskaźnik złożony (unitaryzacja, standaryzacja), typologia gmin (k-średnich z sylwetką), raport gminy, mapa do druku z legendą, podziałką i źródłem | statystyka regionalna, kartografia tematyczna, metody klasyfikacji (kwantyle, Jenks, GVF), analiza skupień |
-| **MPZP** | Działka → przeznaczenie w planie miejscowym w całej Polsce, karta działki, kronika zmian na ortofotomapach archiwalnych, kalkulator zabudowy, eksport DXF do CAD | usługi ULDK, WMS/WFS, krajowa integracja planów miejscowych, układy PL-2000/PL-1992 |
-| **Dostępność** | Czas dojścia na siatce H3, miasto 15-minutowe, mieszkańcy w zasięgu, porównanie scenariuszy, gdzie postawić nową placówkę (problem maksymalnego pokrycia), zasięg z wybranego punktu | analiza dostępności, siatki heksagonalne, modele lokalizacyjne |
-| **Osiedle** | Koncepcja rysowana na mapie: bilans terenu, wskaźniki zabudowy, zgodność z ustaleniami planu, program osiedla (mieszkańcy, parkingi, przedszkola, szkoły), porównanie wariantów, raport do druku, obszar z pliku QGIS, rysunek do CAD (DXF) | wskaźniki urbanistyczne, programowanie osiedla, wymiana danych GIS/CAD |
-| **Przepisy** | Ustawy z PDF podzielone na artykuły, wyszukiwarka, pytania do modelu językowego z cytatami sprawdzanymi w tekście, porównanie wersji aktu po nowelizacji, słowniczek definicji, odesłania jako odnośniki, notatki | praca z prawem planistycznym, kontrola wiarygodności AI |
-| **Teren** | Formularz na telefon działający bez internetu (GPS, zdjęcia, mapa offline z ortofotomapą), import (także GeoJSON z QGIS), poprawki punktów, raport z heksagonami H3 i eksport do QGIS | inwentaryzacja urbanistyczna, zbieranie danych w terenie |
-| **Ceny** | Ceny mieszkań w miastach i powiatach z GUS (szeregi, zmiany, ranking, dostępność cenowa — m² za przeciętne wynagrodzenie); pojedyncze transakcje mieszkań i działek z Rejestru Cen Nieruchomości: mapa, trend, porównanie narysowanych dzielnic, mapa cen i zmian cen w heksagonach H3, wycena porównawcza z kartą do druku, premia rynku pierwotnego, raport porównania miast, ceny w okolicy działki i osiedla, eksport do QGIS | rynek nieruchomości, analiza przestrzenna cen, podejście porównawcze, statystyka publiczna |
-| **Fiszki** | Fiszki z PDF-ów z kotwicą w źródle, fiszki z luką, powtórki metodą pudełek, egzaminy z postępem i prognozą gotowości, nauka na telefonie offline | — (narzędzie do nauki) |
+| **Atlas** | Wskaźniki GUS BDL dla gmin województwa: kartogram, ranking, zmiany w czasie, korelacja, miary zróżnicowania, autokorelacja przestrzenna (I Morana, LISA), wskaźnik złożony (unitaryzacja, standaryzacja), typologia gmin (k-średnich z sylwetką), gorące punkty Gi*, iloraz lokalizacji, odtwarzanie lat na mapie, mapa dwuzmiennowa, raport gminy, mapa do druku z legendą, podziałką i źródłem | statystyka regionalna, kartografia tematyczna, metody klasyfikacji (kwantyle, Jenks, GVF), analiza skupień |
+| **MPZP** | Działka → przeznaczenie w planie miejscowym w całej Polsce, karta działki, kronika zmian na ortofotomapach archiwalnych, kalkulator zabudowy (także kilku działek razem), hurtowe sprawdzenie listy działek, eksport DXF do CAD | usługi ULDK, WMS/WFS, krajowa integracja planów miejscowych, układy PL-2000/PL-1992 |
+| **Dostępność** | Czas dojścia na siatce H3, miasto 15-minutowe, mieszkańcy w zasięgu, porównanie scenariuszy, wyniki w dzielnicach i grupach wieku, gdzie postawić nową placówkę (problem maksymalnego pokrycia) i ocena własnych miejsc po kolei, zasięg z wybranego punktu | analiza dostępności, siatki heksagonalne, modele lokalizacyjne |
+| **Osiedle** | Koncepcja rysowana na mapie: bilans terenu, wskaźniki zabudowy, zgodność z ustaleniami planu, program osiedla (mieszkańcy, parkingi, przedszkola, szkoły), budynki z kondygnacjami, linia zabudowy, cień, przekrój terenu, zielone dachy w PBC, chłonność, koszty i etapy, porównanie wariantów, raport do druku, obszar z pliku QGIS, rysunek do CAD (DXF) i GeoPackage | wskaźniki urbanistyczne, programowanie osiedla, wymiana danych GIS/CAD |
+| **Przepisy** | Ustawy z PDF podzielone na artykuły, wyszukiwarka, pytania do modelu językowego z cytatami sprawdzanymi w tekście, porównanie wersji aktu po nowelizacji, ustawy zmieniające, filtry rodzaju aktu i roku, słowniczek definicji, odesłania jako odnośniki, notatki | praca z prawem planistycznym, kontrola wiarygodności AI |
+| **Teren** | Formularz na telefon działający bez internetu (GPS, zdjęcia, mapa offline z ortofotomapą), import (także GeoJSON i CSV), poprawki punktów, ankiety z tabelą krzyżową i testem chi-kwadrat, porównanie inwentaryzacji i zmiana stanu w czasie, trasa obchodu, raport z heksagonami H3 i eksport do QGIS | inwentaryzacja urbanistyczna, zbieranie danych w terenie |
+| **Ceny** | Ceny mieszkań w miastach i powiatach z GUS (szeregi, zmiany, ranking, dostępność cenowa — m² za przeciętne wynagrodzenie); pojedyncze transakcje mieszkań i działek z Rejestru Cen Nieruchomości: mapa, trend, porównanie narysowanych dzielnic, mapa cen i zmian cen w heksagonach H3, wycena porównawcza z kartą do druku, premia rynku pierwotnego, raport porównania miast, ceny w okolicy działki i osiedla, wpływ cech na cenę (regresja), cena a odległość od miejsca, eksport do QGIS | rynek nieruchomości, analiza przestrzenna cen, podejście porównawcze, statystyka publiczna |
+| **Fiszki** | Fiszki z PDF-ów z kotwicą w źródle, fiszki z luką, z rysunkiem i zasłonami, „gdzie to jest” z quizem na mapie, krzywa zapominania, powtórki metodą pudełek, egzaminy z postępem i prognozą gotowości, nauka na telefonie offline | — (narzędzie do nauki) |
 | **Praca i notatki** | Godziny z grafiku pracy (PDF z Google Docs albo zdjęcie) z sumą i wypłatą, historia miesięcy; notatki do nauki w Wordzie z PDF-u albo zdjęć, z pytaniami kontrolnymi i eksportem do Fiszek | — (narzędzie codzienne; parser tabeli, plik DOCX budowany bez biblioteki) |
 
 ## Zasady, które wyróżniają projekt
@@ -47,7 +47,7 @@ do egzaminów.
 ## Jak powstał
 
 Projekt powstał w dialogu z asystentem AI do programowania (Claude Code)
-w 150 małych etapach. Moja rola: pomysły i wymagania z perspektywy
+w 250 małych etapach. Moja rola: pomysły i wymagania z perspektywy
 gospodarki przestrzennej, zasady projektu (np. „liczby tylko z
 danych”), akceptacja planów etapów, testowanie na prawdziwych danych i
 decyzje o kierunku. Od etapu 75 asystent za moją zgodą sam proponował i
@@ -58,14 +58,17 @@ Każda decyzja projektowa ma uzasadnienie i odrzucone alternatywy w
 [DECISIONS.md](../DECISIONS.md), a przebieg prac jest w
 [PROGRESS.md](PROGRESS.md).
 
-## Liczby (stan: ETAP 234)
+## Liczby (stan: ETAP 250 — koniec projektu)
 
-- 9 modułów, 234 etapy, 242 zapisane decyzje projektowe
-- ok. 22 600 wierszy Pythona aplikacji (+ 11 000 wierszy testów, pokrycie
-  ok. 96%), 10 700 JavaScriptu, 717 testów automatycznych; przegląd 101
-  stron (z danymi) w przeglądarce jednym skryptem
-  (`narzedzia/przeglad_stron.py`) — błędy JS, szerokość telefonu, ARIA;
-  kontrast kolorów wg WCAG pilnowany testem
+- 9 modułów, 250 etapów, 258 zapisanych decyzji projektowych
+- ok. 23 600 wierszy Pythona aplikacji (+ 11 500 wierszy testów, pokrycie
+  96%), 11 400 JavaScriptu, 743 testy automatyczne; przegląd 111 stron
+  (z danymi) w przeglądarce jednym skryptem
+  (`narzedzia/przeglad_stron.py`) — błędy JS, szerokość telefonu, ARIA,
+  kolejność nagłówków; kontrast kolorów wg WCAG pilnowany testem
+- podsumowanie ostatnich stu etapów i plan dalszy:
+  [PODSUMOWANIE_151-250.md](PODSUMOWANIE_151-250.md); samouczek w
+  aplikacji na danych przykładowych
 - architektura opisana w [ARCHITEKTURA.md](ARCHITEKTURA.md)
 - technologie: Python, Flask, SQLite, vanilla JavaScript, Leaflet,
   shapely, H3, pypdf, Gemini API; bez frameworków frontendowych i buildu
@@ -100,7 +103,7 @@ raport inwentaryzacji, raport cen transakcyjnych) — pokazują efekt, a nie tyl
 ## English summary
 
 **Warsztat** ("Workshop") is a local web application built during my
-first year of Spatial Planning studies. It brings together eight tools
+first year of Spatial Planning studies. It brings together nine tools
 used in planning practice: municipal indicators from Statistics Poland
 (choropleths, composite indices, spatial autocorrelation, k-means typology), local zoning
 plan and cadastral parcel lookup with archival orthophotos, walking
@@ -110,7 +113,7 @@ compliance, housing and land prices from the national transaction price
 register (district comparison, H3 price and price-change maps,
 comparative valuation sheet, export to QGIS), legal acts with LLM answers whose quotes are verified
 against the source text (plus a glossary of statutory definitions and cross-references as links), an offline smartphone field survey form, and
-spaced-repetition flashcards. Numbers always come from data; the
+spaced-repetition flashcards (including map-based "where is it" quizzes), plus a work-hours and study-notes helper. Numbers always come from data; the
 language model only describes. Built with Python/Flask, SQLite, vanilla
-JavaScript and Leaflet, GeoJSON and DXF exchange with QGIS and CAD, 554 automated tests (95% coverage), developed iteratively with
+JavaScript and Leaflet, GeoJSON and DXF exchange with QGIS and CAD, 743 automated tests (96% coverage), developed iteratively with
 an AI coding assistant, with every design decision documented.

@@ -26,7 +26,7 @@ Aktualizacja z pobranego ZIP-a: `./aktualizuj.sh` (kopia zapasowa, dane
 i klucze bez zmian).
 Opis projektu do portfolio: [docs/PORTFOLIO.md](docs/PORTFOLIO.md).
 Jak aplikacja jest poskładana: [docs/ARCHITEKTURA.md](docs/ARCHITEKTURA.md).
-Podsumowanie ETAPów 110–150: [docs/PODSUMOWANIE_110-150.md](docs/PODSUMOWANIE_110-150.md); przegląd po 151–169 i plan ETAPów 171–250: [docs/PLAN_171-250.md](docs/PLAN_171-250.md).
+Podsumowanie ETAPów 110–150: [docs/PODSUMOWANIE_110-150.md](docs/PODSUMOWANIE_110-150.md); przegląd po 151–169 i plan ETAPów 171–250: [docs/PLAN_171-250.md](docs/PLAN_171-250.md); **koniec projektu — podsumowanie ETAPów 151–250 i plan dalszy (Oracle Cloud): [docs/PODSUMOWANIE_151-250.md](docs/PODSUMOWANIE_151-250.md)**. Pierwszy raz? W aplikacji: Pomoc → Samouczek.
 Postęp prac: [docs/PROGRESS.md](docs/PROGRESS.md), decyzje:
 [DECISIONS.md](DECISIONS.md), zasady pracy: [CLAUDE.md](CLAUDE.md).
 

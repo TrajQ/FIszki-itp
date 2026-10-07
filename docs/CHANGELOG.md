@@ -1204,3 +1204,6 @@
 
 ## ETAP 249 — 2026-10-07
 - Dostępność dla czytników ekranu: poprawna kolejność nagłówków na wszystkich stronach (wygląd bez zmian)
+
+## ETAP 250 — 2026-10-07
+- Koniec projektu: podsumowanie ETAPów 151–250, portfolio i plan dalszy (Oracle Cloud)
