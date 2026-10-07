@@ -55,7 +55,7 @@
 
     <aside class="stos panel-terenu">
         <section class="karta stos">
-            <h3>Import z telefonu albo QGIS</h3>
+            <h2 class="h3">Import z telefonu albo QGIS</h2>
             <form id="formularz-importu" class="rzad">
                 <input id="plik-importu" type="file" accept=".json,.geojson,.csv,.txt,application/json,application/geo+json,text/csv" required aria-label="Plik z punktami: z telefonu (JSON), GeoJSON albo CSV">
                 <button type="submit" class="przycisk--drugi">Importuj</button>
@@ -64,7 +64,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Obszar prac</h3>
+            <h2 class="h3">Obszar prac</h2>
             <p id="opis-obszaru" class="wyciszony opis"></p>
             <div class="rzad">
                 <button id="ustaw-obszar" type="button" class="przycisk--drugi">Ustaw z widoku mapy</button>
@@ -74,7 +74,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Rodzaj projektu</h3>
+            <h2 class="h3">Rodzaj projektu</h2>
             <form class="rzad" method="post" action="{{ url_for('teren.ustaw_rodzaj', projekt_id=projekt.id) }}">
                 <select name="rodzaj" aria-label="Rodzaj projektu">
                     <option value="inwentaryzacja" {{ 'selected' if projekt.rodzaj != 'ankieta' }}>inwentaryzacja (punkty na mapie)</option>
@@ -86,7 +86,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Termin w terenie</h3>
+            <h2 class="h3">Termin w terenie</h2>
             <form class="rzad" method="post" action="{{ url_for('teren.ustaw_termin', projekt_id=projekt.id) }}">
                 <input name="termin" type="date" value="{{ projekt.termin or '' }}" aria-label="Termin wyjścia w teren">
                 <button type="submit" class="przycisk--drugi">Zapisz</button>
@@ -97,7 +97,7 @@
 
         <section id="panel-poprawki" class="karta stos panel-poprawki" hidden>
             <div class="rzad rzad--miedzy">
-                <h3>Popraw punkt</h3>
+                <h2 class="h3">Popraw punkt</h2>
                 <span id="poprawka-opis" class="wyciszony"></span>
             </div>
             <div id="poprawka-pola" class="poprawka-pola"></div>
@@ -117,13 +117,13 @@
         </section>
 
         <section class="karta stos">
-            <h3>Filtr</h3>
+            <h2 class="h3">Filtr</h2>
             <select id="filtr-pola" aria-label="Pole do filtrowania"></select>
             <div id="legenda" class="legenda"></div>
         </section>
 
         <section class="karta stos" id="karta-trasy">
-            <h3>Trasa obchodu</h3>
+            <h2 class="h3">Trasa obchodu</h2>
             <p class="wyciszony opis">Kolejność odwiedzenia punktów widocznych na mapie (legenda filtra ukrywa resztę) — krótka droga w linii prostej. Start wybierzesz w dymku punktu („Zacznij trasę tutaj”).</p>
             <div class="rzad">
                 <button id="wyznacz-trase" type="button" class="przycisk--drugi">Wyznacz trasę</button>
@@ -135,7 +135,7 @@
         </section>
 
         <details class="karta stos edycja-pol">
-            <summary><h3>Pola formularza</h3></summary>
+            <summary><h2 class="h3">Pola formularza</h2></summary>
             <p class="wyciszony opis">Po zmianie pól pobierz formularz na telefon jeszcze raz. Punkty z telefonu zachowują wartości pól o tych samych nazwach.</p>
             <label>Nazwa projektu <input id="pole-nazwa" type="text" maxlength="80" value="{{ projekt.nazwa }}"></label>
             <ol id="edytor-pol" class="edytor-pol"></ol>
@@ -149,7 +149,7 @@
 </div>
 
 <section class="karta stos">
-    <h3>Punkty</h3>
+    <h2 class="h3">Punkty</h2>
     <p id="braki-punktow" class="komunikat" hidden role="status"></p>
     <div class="tabela-punktow-wrap">
         <table class="tabela tabela-punktow">

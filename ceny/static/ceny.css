@@ -352,7 +352,8 @@
 
 .raport-cen__strona h1,
 .raport-cen__strona h2,
-.raport-cen__strona h3 {
+.raport-cen__strona h3,
+.raport-cen__strona .h3 {
     margin: 0;
 }
 

@@ -643,6 +643,7 @@ def test_samouczek_przyklady(client):
     assert "<strong>12</strong> par" in porownanie and "gorzej: <strong>" in porownanie
     koncepcja = client.get(f"/osiedle/koncepcje/{linki['osiedle']}").get_json()
     assert koncepcja["bilans"]["budynki"]["liczba"] == 4 and koncepcja["bilans"]["zgodnosc"]
+    assert koncepcja["bilans"]["kontrole"]["nakladanie_m2"] < 1 and koncepcja["bilans"]["budynki"]["poza_terenem_zabudowy"] == 0
     assert "Ty" in client.get("/praca/?przyklad=1").get_data(as_text=True) and "8:30-14:30" in client.get("/praca/?przyklad=1").get_data(as_text=True)
     assert "Przeniesiono do kosza przykłady: 3" in client.post("/samouczek/przyklady/usun", follow_redirects=True).get_data(as_text=True)
     assert "Nie było przykładów" in client.post("/samouczek/przyklady/usun", follow_redirects=True).get_data(as_text=True)

@@ -35,7 +35,7 @@
 <div class="uklad-rcn">
     <aside class="stos">
         <section class="karta stos">
-            <h3>Plik z Rejestru Cen Nieruchomości</h3>
+            <h2 class="h3">Plik z Rejestru Cen Nieruchomości</h2>
             <ol class="instrukcja-rcn">
                 <li>Na <a href="https://www.geoportal.gov.pl/mapy/rejestr-cen-nieruchomosci/" target="_blank" rel="noopener noreferrer">geoportal.gov.pl ↗</a> w module „Rejestr Cen Nieruchomości” wybierz „Dane do pobrania” i pobierz plik <strong>GeoPackage</strong> swojego powiatu (miasta).</li>
                 <li>Plik trafi do katalogu Pobrane — wybierz go poniżej.</li>
@@ -70,7 +70,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Zaimportowane</h3>
+            <h2 class="h3">Zaimportowane</h2>
             {% if pliki %}
             <ul class="pliki-rcn">
                 {% for p in pliki %}
@@ -123,7 +123,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Mapa transakcji</h3>
+            <h2 class="h3">Mapa transakcji</h2>
             <form id="widok-mapy" class="filtry-rcn">
                 <fieldset class="przelacznik-widoku">
                     <legend>Widok</legend>
@@ -151,7 +151,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Obszary do porównania</h3>
+            <h2 class="h3">Obszary do porównania</h2>
             <p class="wyciszony opis-cen">Narysuj na mapie dzielnicę, osiedle albo okolicę (wielobok lub prostokąt w lewym górnym rogu mapy) — do {{ maks_obszarow }} obszarów. Porównanie liczy się z tych samych filtrów co reszta strony.</p>
             <ul id="obszary-rcn" class="obszary-rcn"></ul>
             <div class="przewijanie-cen"><table class="tabela" id="porownanie-rcn"></table></div>
@@ -161,7 +161,7 @@
         </section>
 
         <section class="karta stos" id="karta-podobnych">
-            <h3>Podobne transakcje — wycena porównawcza</h3>
+            <h2 class="h3">Podobne transakcje — wycena porównawcza</h2>
             <p class="wyciszony opis-cen">Kliknij na mapie miejsce {{ 'działki' if co == 'dzialki' else 'mieszkania' }} i podaj powierzchnię. Warsztat znajdzie transakcje w promieniu o podobnej powierzchni (z filtrami strony{{ '' if co == 'dzialki' else ', np. izby' }}) i poda ich medianę ceny za m². To orientacja z danych, nie operat szacunkowy — bez korekt na stan i piętro; korekta na datę pojawi się, gdy plik ma dość transakcji w latach.</p>
             <form id="podobne-form" class="filtry-rcn">
                 <label>Powierzchnia [m²] <input type="number" name="pow" min="1" step="0.1" required value="{{ 1000 if co == 'dzialki' else 50 }}"></label>
@@ -184,7 +184,7 @@
 
         {# ETAP 241: cena a odległość od klikniętego miejsca — liczy serwer (rcn.gradient) #}
         <section class="karta stos" id="karta-gradientu">
-            <h3>Cena a odległość od miejsca</h3>
+            <h2 class="h3">Cena a odległość od miejsca</h2>
             <p class="wyciszony opis-cen">Kliknij na mapie miejsce (np. centrum, stację, park) — mediana ceny za m² w pierścieniach coraz dalej od niego, z filtrami strony. Gdy plik ma dość transakcji w latach, ceny są sprowadzone do ostatniego roku (jak w wycenie), żeby różnica dat nie udawała różnicy miejsc.</p>
             <form id="gradient-form" class="filtry-rcn">
                 <label>Pierścienie co <select name="szerokosc">{% for s in szerokosci_pierscieni %}<option value="{{ s }}" {{ 'selected' if s == 500 }}>{{ s ~ ' m' if s < 1000 else (s // 1000) ~ ' km' }}</option>{% endfor %}</select></label>
@@ -198,24 +198,24 @@
 
         <div class="kolumny-rcn">
             <section class="karta stos">
-                <h3>Mediana ceny za m² co kwartał</h3>
+                <h2 class="h3">Mediana ceny za m² co kwartał</h2>
                 <div id="trend-rcn" class="wykres-cen"></div>
             </section>
             <section class="karta stos">
-                <h3>Rozkład cen za m²</h3>
+                <h2 class="h3">Rozkład cen za m²</h2>
                 <div id="histogram-rcn" class="wykres-cen"></div>
             </section>
         </div>
 
         <section class="karta stos">
-            <h3>{{ 'Według przeznaczenia w planie' if co == 'dzialki' else 'Według liczby izb' }}</h3>
+            <h2 class="h3">{{ 'Według przeznaczenia w planie' if co == 'dzialki' else 'Według liczby izb' }}</h2>
             <div class="przewijanie-cen"><table class="tabela" id="grupy-rcn"></table></div>
             {% if co != 'dzialki' %}
-            <h3>Według piętra</h3>
+            <h2 class="h3">Według piętra</h2>
             <div class="przewijanie-cen"><table class="tabela" id="pietra-rcn"></table></div>
             <p id="pietra-brak" class="wyciszony opis-cen" hidden>Brak numerów kondygnacji — plik zaimportowany przed ETAPem 112 (zaimportuj go ponownie) albo plik ich nie zawiera.</p>
             <div id="premia-lat-rcn" class="stos" hidden>
-                <h3>Premia rynku pierwotnego w latach</h3>
+                <h2 class="h3">Premia rynku pierwotnego w latach</h2>
                 <div class="przewijanie-cen"><table class="tabela" id="tabela-premii-lat"></table></div>
                 <p class="wyciszony opis-cen">O ile mediana ceny za m² na rynku pierwotnym jest wyższa niż na wtórnym w tym samym roku (w nawiasie — liczba transakcji). Liczymy przy co najmniej 5 transakcjach na obu rynkach; to różnica median (inne mieszkania na każdym rynku), nie cena tego samego lokalu.</p>
             </div>
@@ -226,7 +226,7 @@
         {# ETAP 182: transakcje do sprawdzenia — liczy serwer (rcn.nietypowe) #}
         <section class="karta stos" id="karta-nietypowych">
             <div class="rzad rzad--miedzy">
-                <h3>Nietypowe transakcje</h3>
+                <h2 class="h3">Nietypowe transakcje</h2>
                 <button type="button" id="przycisk-nietypowych" class="przycisk--drugi">Pokaż</button>
             </div>
             <p class="wyciszony opis-cen">Ceny za m² mocno odbiegające od mediany swojego roku (poza granicami Tukeya: 1,5 rozstępu kwartylnego od kwartyli, na skali logarytmicznej). Warto je sprawdzić, zanim posłużą do wniosków — bywa to udział w nieruchomości, lokal z garażem, sprzedaż w rodzinie albo błąd w rejestrze.</p>
@@ -237,7 +237,7 @@
         {% if co != 'dzialki' %}
         <section class="karta stos" id="karta-regresji">
             <div class="rzad rzad--miedzy">
-                <h3>Co wpływa na cenę za m²</h3>
+                <h2 class="h3">Co wpływa na cenę za m²</h2>
                 <button type="button" id="przycisk-regresji" class="przycisk--drugi">Policz</button>
             </div>
             <p class="wyciszony opis-cen">Regresja liniowa na transakcjach z filtrami strony: o ile średnio zmienia się cena za m², gdy zmienia się jedna cecha, a pozostałe są takie same. To związek w danych, nie wycena i nie przyczyna — np. nowe mieszkania częściej są w lepszych lokalizacjach.</p>

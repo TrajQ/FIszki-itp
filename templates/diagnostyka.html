@@ -13,7 +13,7 @@
 
 <section class="karta stos">
     <div class="rzad rzad--miedzy">
-        <h3>Usługi zewnętrzne</h3>
+        <h2 class="h3">Usługi zewnętrzne</h2>
         <button id="sprawdz-uslugi" type="button">Sprawdź usługi</button>
     </div>
     <p class="wyciszony">Jedno krótkie zapytanie do każdej usługi (najwyżej {{ limit }} s). Każda odpowiedź serwera — także kod błędu — znaczy, że połączenie działa. Do Gemini nie wysyłamy klucza ani pytań.</p>
@@ -28,7 +28,7 @@
 
 <section class="karta stos">
     <div class="rzad rzad--miedzy">
-        <h3>Ostatnie błędy</h3>
+        <h2 class="h3">Ostatnie błędy</h2>
         {% if wpisy %}<form method="post" action="{{ url_for('wyczysc_dziennik') }}" onsubmit="return confirm('Wyczyścić dziennik błędów?')"><button type="submit" class="przycisk--tekst">Wyczyść dziennik</button></form>{% endif %}
     </div>
     {% if wpisy %}
@@ -47,7 +47,7 @@
 </section>
 
 <section class="karta stos">
-    <h3>Konfiguracja</h3>
+    <h2 class="h3">Konfiguracja</h2>
     <table class="tabela">
         <tr><td>Klucz Gemini (opisy, pytania do przepisów, fiszki)</td><td>{{ '✓ ustawiony' if s.klucz_gemini else '✗ brak — funkcje z Gemini będą niedostępne (zmienna GEMINI_API_KEY w pliku .env)' }}{% if s.klucz_gemini %}, model {{ s.model_gemini }}{% endif %}</td></tr>
         <tr><td>Klucz GUS BDL</td><td>{{ '✓ ustawiony' if s.klucz_gus else 'brak — działa, ale z mniejszym limitem zapytań (GUS_BDL_API_KEY)' }}</td></tr>
@@ -57,7 +57,7 @@
 </section>
 
 <section class="karta stos">
-    <h3>Dane</h3>
+    <h2 class="h3">Dane</h2>
     <p class="wyciszony">Folder danych: <code>{{ s.folder_danych }}</code> · razem {{ s.dane_mb }} MB · wolne miejsce na dysku: {{ s.wolne_gb }} GB</p>
     <div class="przewijanie-poziome"><table class="tabela">
         <tr><th>Moduł</th><th class="liczba">MB</th><th>Bazy</th></tr>
@@ -66,7 +66,7 @@
 </section>
 
 <section class="karta stos">
-    <h3>Wersje</h3>
+    <h2 class="h3">Wersje</h2>
     <p class="wyciszony">Python {{ s.python }} · {{ s.system }} · {% for b, w in s.biblioteki.items() %}{{ b }} {{ w or 'brak!' }}{{ ', ' if not loop.last }}{% endfor %}</p>
 </section>
 {% endblock %}

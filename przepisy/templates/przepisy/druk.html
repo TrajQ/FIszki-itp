@@ -16,7 +16,7 @@
         <p class="wyciszony">{{ 'Artykuły z moimi notatkami' if tryb == 'notatki' else 'Wybrane artykuły' }} · {{ jednostki | length }}</p>
         {% for j in jednostki %}
         <article class="druk-aktu__jednostka">
-            <h3>{{ j.oznaczenie }} <span class="wyciszony">· PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</span></h3>
+            <h2 class="h3">{{ j.oznaczenie }} <span class="wyciszony">· PDF s. {{ j.strona_od }}{% if j.strona_do != j.strona_od %}–{{ j.strona_do }}{% endif %}</span></h2>
             {% if j.naglowek %}<p class="wyciszony">{{ j.naglowek }}</p>{% endif %}
             <p class="jednostka__tekst">{{ j.tekst_html }}</p>
             {% set n = notatki.get(j.id) %}

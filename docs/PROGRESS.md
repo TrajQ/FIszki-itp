@@ -4570,3 +4570,27 @@ Status: zamknięty
   przeglądarka 1300/390 px (dodanie kliknięciem, quiz do końca)
 - Pomoc: „Fiszki „gdzie to jest” i quiz z mapą”
 - `DECISIONS.md`: D-256
+
+## ETAP 249 — Przegląd stron, wydajności i dostępności; kolejność poziomów nagłówków
+Data: 2026-10-07
+Status: zamknięty
+
+- `narzedzia/przeglad_stron.py`: nowe strony z parametrami (seria
+  inwentaryzacji, przykład w Pracy, kalkulator dwóch działek); zmienna
+  `NAGLOWKI=1` wypisuje informacje o kolejności nagłówków
+- Kolejność nagłówków: 33 → 0 informacji na 111 stronach. Tytuły kart
+  pod h1 to teraz h2 z klasą `h3` (wygląd bez zmian), nagłówki w kartach
+  h3 z klasą `h4`; w CSS reguły dla h3/h4 dostały bliźniacze selektory
+  `.h3`/`.h4`, `h3.h4` ma wygląd domyślnego h4. Zmienione: 26
+  szablonów bez h2 (mechanicznie) i pojedyncze nagłówki na stronie
+  głównej, w Fiszkach, raporcie osiedla, porównaniu miast,
+  porównaniu i serii inwentaryzacji („Zestawienie pól”); nagłówki
+  tworzone w JS (cień, aktualność aktu)
+- Wydajność: najwolniejsza strona (raport osiedla) 90 ms po stronie
+  serwera na danych samouczka, pozostałe ≤ 56 ms
+- Samouczek: droga KD w przykładowej koncepcji bez nakładania na tereny
+  (test pilnuje)
+- Sprawdzenie: przegląd 111 stron × 2 szerokości — 0 problemów, 0
+  informacji; zrzuty strony głównej, Fiszek i Osiedla bez zmian wyglądu;
+  pełne testy
+- `DECISIONS.md`: D-257

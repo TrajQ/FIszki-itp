@@ -15,7 +15,7 @@
 <p id="komunikat" class="komunikat komunikat--blad" hidden role="alert"></p>
 
 <section class="karta stos">
-    <h3>1. Wskaźnik ceny</h3>
+    <h2 class="h3">1. Wskaźnik ceny</h2>
     <p id="wybrana-zmienna" class="{{ '' if zmienna else 'wyciszony' }}">
         {% if zmienna %}<strong>{{ zmienna.nazwa }}</strong>{% if zmienna.jednostka %} [{{ zmienna.jednostka }}]{% endif %}{% else %}Nie wybrano — wyszukaj wskaźnik GUS poniżej (raz, zapamięta się).{% endif %}
     </p>
@@ -34,7 +34,7 @@
 </section>
 
 <section class="karta stos" id="sekcja-miast" {{ 'hidden' if not zmienna }}>
-    <h3>2. Miasta i powiaty</h3>
+    <h2 class="h3">2. Miasta i powiaty</h2>
     <div class="rzad">
         <label>Województwo <select id="pole-woj"><option value="">Wczytywanie…</option></select></label>
     </div>
@@ -45,7 +45,7 @@
 
 <section class="karta stos" id="sekcja-wyniku" hidden>
     <div class="rzad rzad--miedzy">
-        <h3>3. Ceny w czasie</h3>
+        <h2 class="h3">3. Ceny w czasie</h2>
         <div class="rzad">
             <a id="link-csv" class="przycisk przycisk--drugi" href="#">CSV</a>
             <a id="link-ods" class="przycisk przycisk--drugi" href="#" title="Arkusz LibreOffice / Excel">ODS</a>
@@ -65,7 +65,7 @@
 
 <section class="karta stos" id="sekcja-rankingu" hidden>
     <div class="rzad rzad--miedzy naglowek-rankingu">
-        <h3>4. Ranking w województwie</h3>
+        <h2 class="h3">4. Ranking w województwie</h2>
         <label>Rok <select id="pole-rok"></select></label>
     </div>
     <p id="opis-rankingu" class="wyciszony"></p>
@@ -73,7 +73,7 @@
 </section>
 
 <section class="karta stos" id="sekcja-dostepnosci" hidden>
-    <h3>5. Dostępność cenowa</h3>
+    <h2 class="h3">5. Dostępność cenowa</h2>
     <p class="wyciszony opis-cen">Ile m² mieszkania kosztuje tyle, co jedno przeciętne miesięczne wynagrodzenie brutto w tym samym powiecie, i ile takich wynagrodzeń kosztuje mieszkanie 50 m². Z dwóch wskaźników GUS — cena z punktu 1, wynagrodzenie wybierz poniżej.</p>
     <p id="wybrane-wynagrodzenie" class="{{ '' if wynagrodzenie else 'wyciszony' }}">
         {% if wynagrodzenie %}Wynagrodzenie: <strong>{{ wynagrodzenie.nazwa }}</strong>{% if wynagrodzenie.jednostka %} [{{ wynagrodzenie.jednostka }}]{% endif %}{% else %}Nie wybrano wskaźnika wynagrodzenia.{% endif %}

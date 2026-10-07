@@ -13,7 +13,7 @@
 
 {% if wynik %}
 <section class="karta stos komunikat-przywracania">
-    <h3>Przywrócono dane z kopii</h3>
+    <h2 class="h3">Przywrócono dane z kopii</h2>
     <p>Plików z kopii: {{ wynik.plikow }}. Odśwież otwarte karty z Warsztatem.</p>
     <p class="wyciszony">Poprzednie dane nie zostały usunięte:{% if wynik.kopia_bezpieczenstwa %} kopia <code>{{ wynik.kopia_bezpieczenstwa }}</code> i{% endif %} folder <code>{{ wynik.stary_folder }}</code> (można go usunąć, gdy wszystko działa).</p>
     <p><a class="przycisk" href="{{ url_for('index') }}">Przejdź do strony głównej</a></p>
@@ -22,7 +22,7 @@
 {% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
 {% if sprawdzenie %}<p class="komunikat {{ 'komunikat--ok' if sprawdzenie.ok else 'komunikat--blad' }}" id="wynik-sprawdzenia" role="status"><strong>{{ sprawdzenie.nazwa }}</strong>: {{ sprawdzenie.opis }}</p>{% endif %}
 <section class="karta stos">
-    <h3>Co się stanie</h3>
+    <h2 class="h3">Co się stanie</h2>
     <ol>
         <li>Warsztat sprawdzi kopię: czy to kopia Warsztatu i czy bazy danych nie są uszkodzone. Przy błędzie nic się nie zmieni. („Tylko sprawdź kopię” robi tylko ten krok.)</li>
         <li>Zrobi kopię obecnych danych do <code>{{ folder_kopii }}</code> (plik <code>warsztat_przed_przywroceniem_…zip</code>).</li>
@@ -31,7 +31,7 @@
 </section>
 
 <form class="karta stos" method="post" enctype="multipart/form-data">
-    <h3>Skąd przywrócić</h3>
+    <h2 class="h3">Skąd przywrócić</h2>
     {% if kopie %}
     <fieldset class="stos lista-kopii">
         <legend>Kopie w folderze <code>{{ folder_kopii }}</code></legend>

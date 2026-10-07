@@ -34,7 +34,7 @@
         </div>
 
         {% if r.progi_raportu %}
-        <h3>Udział w zasięgu</h3>
+        <h2 class="h3">Udział w zasięgu</h2>
         <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Czas dojścia</th>{% for m in progi_minut %}<th class="liczba">≤ {{ m }} min</th>{% endfor %}</tr>
             <tr><td>Powierzchnia (komórki)</td>{% for p in r.progi_raportu %}<td class="liczba">{{ liczba(p.procent) }}%</td>{% endfor %}</tr>
@@ -49,7 +49,7 @@
         {% endif %}
 
         {% if r.analiza.najslabsze_ogniwo %}
-        <h3>Najsłabsze ogniwo</h3>
+        <h2 class="h3">Najsłabsze ogniwo</h2>
         <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Usługa najdalej od komórki</th><th class="liczba">Komórki</th><th class="liczba">Udział</th></tr>
             {% for o in r.analiza.najslabsze_ogniwo %}<tr><td>{{ o.kolumna }}</td><td class="liczba">{{ o.komorki }}</td><td class="liczba">{{ liczba(o.procent) }}%</td></tr>{% endfor %}
@@ -57,7 +57,7 @@
         {% endif %}
 
         {% if r.punkty %}
-        <h3>Obszary obsługi — {{ r.punkty_pliku.usluga }}</h3>
+        <h2 class="h3">Obszary obsługi — {{ r.punkty_pliku.usluga }}</h2>
         <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Punkt</th><th class="liczba">Komórki</th>{% if r.punkty[0].ludnosc is defined %}<th class="liczba">Mieszkańcy</th>{% endif %}<th class="liczba">Śr. czas</th><th class="liczba">Maks. czas</th></tr>
             {% for o in r.punkty %}
@@ -69,7 +69,7 @@
         {% endif %}
 
         {% if s.luki %}
-        <h3>Luki w dostępności (powyżej 15 min)</h3>
+        <h2 class="h3">Luki w dostępności (powyżej 15 min)</h2>
         <div class="przewijanie-dzielnic"><table class="tabela">
             <tr><th>Komórka H3</th><th class="liczba">Czas</th>{% if s.luki[0].ludnosc is defined %}<th class="liczba">Mieszkańcy</th>{% endif %}</tr>
             {% for l in s.luki %}<tr><td class="identyfikator">{{ l.h3 }}</td><td class="liczba">{{ liczba(l.wartosc) }} min</td>{% if l.ludnosc is defined %}<td class="liczba">{{ tys(l.ludnosc) }}</td>{% endif %}</tr>{% endfor %}

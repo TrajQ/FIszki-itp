@@ -67,7 +67,7 @@
 
     <article class="karta tekst-aktu">
         {% for j in jednostki %}
-        {% if j.naglowek and (loop.first or j.naglowek != jednostki[loop.index0 - 1].naglowek) %}<h3 class="tekst-aktu__naglowek">{{ j.naglowek }}</h3>{% endif %}
+        {% if j.naglowek and (loop.first or j.naglowek != jednostki[loop.index0 - 1].naglowek) %}<h2 class="h3 tekst-aktu__naglowek">{{ j.naglowek }}</h2>{% endif %}
         <section class="jednostka" id="j{{ j.id }}">
             <div class="jednostka__pasek">
                 <strong>{{ j.oznaczenie }}</strong>

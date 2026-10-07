@@ -23,6 +23,7 @@
         {% endif %}
         {% if tylko_a or tylko_b %}<p class="wyciszony przypis">Pola tylko w A: {{ tylko_a | join(', ') or '—' }}; tylko w B: {{ tylko_b | join(', ') or '—' }} — pominięte.</p>{% endif %}
 
+        {% if zestawienie %}<h2>Zestawienie pól</h2>{% endif %}
         {% for z in zestawienie %}
         <h3>{{ z.nazwa }}</h3>
         {% if z.wiersze is defined %}

@@ -22,7 +22,7 @@
 {% else %}
 <form id="formularz-zlozony" class="stos">
     <section class="karta stos">
-        <h3>1. Obszar i metoda</h3>
+        <h2 class="h3">1. Obszar i metoda</h2>
         <div class="rzad">
             <label>Województwo <select id="pole-woj" required><option value="">Wczytywanie…</option></select></label>
             <label>Rok <input id="pole-rok" type="number" min="1995" max="2100" value="2023" required></label>
@@ -32,7 +32,7 @@
     </section>
 
     <section class="karta stos">
-        <h3>2. Składowe</h3>
+        <h2 class="h3">2. Składowe</h2>
         <p class="wyciszony opis-raportu">Stymulanta: więcej znaczy lepiej (np. mieszkania oddane na 1000 mieszkańców). Destymulanta: więcej znaczy gorzej (np. bezrobotni). Od 2 do {{ maks }} składowych.</p>
         <div class="zlozony__przewijanie"><table class="tabela tabela-skladowych">
             <thead><tr><th></th><th>Wskaźnik</th><th>Kierunek</th><th>Waga</th></tr></thead>
@@ -53,7 +53,7 @@
 
 <section id="wynik" class="karta stos" hidden>
     <div class="rzad rzad--miedzy">
-        <h3>3. Wynik</h3>
+        <h2 class="h3">3. Wynik</h2>
         <div class="rzad">
             <a id="link-mapy" class="przycisk przycisk--drugi" target="_blank" rel="noopener">Kartogram SVG ↗</a>
             <a id="link-csv" class="przycisk przycisk--drugi">CSV</a>
@@ -63,7 +63,7 @@
     <figure class="zlozony__mapa"><img id="mapa" alt="Kartogram wskaźnika złożonego"><figcaption id="mapa-stan" class="wyciszony"></figcaption></figure>
     <div class="zlozony__przewijanie zlozony__ranking"><table class="tabela" id="ranking"></table></div>
     {# ETAP 194: czy ranking jest stały w czasie #}
-    <h4>Stabilność rankingu w latach</h4>
+    <h3 class="h4">Stabilność rankingu w latach</h3>
     <form id="formularz-lat" class="rzad">
         <label class="rzad">Lata (2–6) <input type="text" id="pole-lat" placeholder="np. 2015,2019,2023" required></label>
         <button type="submit" class="przycisk--drugi">Porównaj</button>

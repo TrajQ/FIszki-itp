@@ -17,7 +17,7 @@
         {# ETAP 237: kilka działek razem — wskaźniki liczone dla sumy powierzchni #}
         <section class="karta stos">
             <div class="rzad rzad--miedzy">
-                <h3>Działki</h3>
+                <h2 class="h3">Działki</h2>
                 <button id="dodaj-dzialke" type="button" class="przycisk--drugi">+ Działka</button>
             </div>
             <div class="naglowek-dzialek wyciszony">
@@ -34,7 +34,7 @@
 
         <section class="karta stos">
             <div class="rzad rzad--miedzy">
-                <h3>Budynki</h3>
+                <h2 class="h3">Budynki</h2>
                 <button id="dodaj-budynek" type="button" class="przycisk--drugi">+ Budynek</button>
             </div>
             <div class="naglowek-budynkow wyciszony">
@@ -44,7 +44,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Ustalenia planu <span class="wyciszony">(puste = plan nie ustala)</span></h3>
+            <h2 class="h3">Ustalenia planu <span class="wyciszony">(puste = plan nie ustala)</span></h2>
             <div class="siatka-pol">
                 <label>Maks. powierzchnia zabudowy [%]<input name="max_zabudowa_proc" type="text" inputmode="decimal" placeholder="np. 30"></label>
                 <label>Min. pow. biologicznie czynna [%]<input name="min_pbc_proc" type="text" inputmode="decimal" placeholder="np. 50"></label>
@@ -58,16 +58,16 @@
 
     <aside class="stos wyniki-kalkulatora">
         <section class="karta stos">
-            <h3>Wskaźniki</h3>
+            <h2 class="h3">Wskaźniki</h2>
             <p id="blad-kalkulatora" class="komunikat komunikat--blad" hidden role="alert"></p>
             <div id="wskazniki" class="kafelki-kalkulatora"></div>
         </section>
         <section class="karta stos">
-            <h3>Zgodność z planem</h3>
+            <h2 class="h3">Zgodność z planem</h2>
             <ul id="zgodnosc" class="zgodnosc"><li class="wyciszony">Wpisz ustalenia planu.</li></ul>
         </section>
         <section class="karta stos">
-            <h3>Ile jeszcze można zabudować</h3>
+            <h2 class="h3">Ile jeszcze można zabudować</h2>
             <div id="zapas" class="stos"></div>
         </section>
         <p class="wyciszony przypis">Uproszczenie: powierzchnia każdej kondygnacji = rzut budynku. Przy kilku działkach wskaźniki dotyczą sumy ich powierzchni (terenu inwestycji) — sprawdź w planie, czy nie wymaga ich na każdej działce budowlanej osobno. Do szybkiej oceny wariantów, nie do projektu budowlanego.</p>

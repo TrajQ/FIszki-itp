@@ -259,7 +259,10 @@ button.przelacznik__opcja--aktywna:hover {
 
 /* ---------- Profil gminy ---------- */
 
-.profil h3 {
+.profil h3,
+/* ---------- Profil gminy ---------- */
+
+.profil .h3 {
     margin: 0;
 }
 
@@ -369,7 +372,8 @@ button.przelacznik__opcja--aktywna:hover {
     justify-content: space-between;
 }
 
-.rzad--miedzy h3 {
+.rzad--miedzy h3,
+.rzad--miedzy .h3 {
     margin: 0;
 }
 
@@ -492,7 +496,8 @@ button.przelacznik__opcja--aktywna:hover {
     margin-bottom: 24px;
 }
 
-.korelacja h3 {
+.korelacja h3,
+.korelacja .h3 {
     margin: 0;
 }
 
@@ -557,7 +562,8 @@ button.przelacznik__opcja--aktywna:hover {
     margin-bottom: 24px;
 }
 
-.rozklad h3 {
+.rozklad h3,
+.rozklad .h3 {
     margin: 0;
 }
 
@@ -934,7 +940,8 @@ button.przelacznik__opcja--aktywna:hover {
     margin-top: 16px;
 }
 
-.raport-gminy__opis h3 {
+.raport-gminy__opis h3,
+.raport-gminy__opis .h3 {
     margin: 0;
 }
 
@@ -1227,7 +1234,8 @@ button.przelacznik__opcja--aktywna:hover {
     gap: 24px;
 }
 
-.raport-trendu h3 {
+.raport-trendu h3,
+.raport-trendu .h3 {
     margin: 0 0 8px;
 }
 

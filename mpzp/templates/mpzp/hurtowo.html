@@ -25,7 +25,7 @@
 {% if wyniki %}
 <section class="karta stos">
     <div class="rzad rzad--miedzy">
-        <h3>Wynik: {{ wyniki | selectattr('stan', 'equalto', 'ok') | list | length }} z {{ wyniki | length }} z przeznaczeniem w planie</h3>
+        <h2 class="h3">Wynik: {{ wyniki | selectattr('stan', 'equalto', 'ok') | list | length }} z {{ wyniki | length }} z przeznaczeniem w planie</h2>
         {# ETAP 192: druk i arkusz #}
         <form method="post" action="{{ url_for('mpzp.hurtowo_ods') }}" class="rzad akcje-listy">
             <input type="hidden" name="lista" value="{{ tekst }}">

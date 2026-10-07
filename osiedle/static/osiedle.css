@@ -23,7 +23,9 @@
 }
 
 .panel-osiedla h3,
-.panel-osiedla h4 {
+.panel-osiedla h4,
+.panel-osiedla .h3,
+.panel-osiedla .h4 {
     margin: 0;
 }
 
@@ -281,7 +283,8 @@ button.przycisk--niebezpieczny-tekst {
 
 .raport-osiedla__strona h1,
 .raport-osiedla__strona h2,
-.raport-osiedla__strona h3 {
+.raport-osiedla__strona h3,
+.raport-osiedla__strona .h3 {
     margin: 12px 0 0;
 }
 
@@ -461,7 +464,8 @@ button.przycisk--niebezpieczny-tekst {
     font-size: 13px;
 }
 
-#sekcja-cienia h4 {
+#sekcja-cienia h4,
+#sekcja-cienia .h4 {
     margin: 4px 0 0;
 }
 
@@ -500,7 +504,9 @@ button.przycisk--niebezpieczny-tekst {
 }
 
 /* ETAP 197: chłonność terenu — wykorzystanie dopuszczalnej powierzchni całkowitej */
-.chlonnosc h4 {
+.chlonnosc h4,
+/* ETAP 197: chłonność terenu — wykorzystanie dopuszczalnej powierzchni całkowitej */
+.chlonnosc .h4 {
     margin: 0;
 }
 

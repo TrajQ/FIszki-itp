@@ -23,7 +23,7 @@
 {% endif %}
 {% for g in grupy %}
 <section class="karta stos">
-    <h3>{{ g.nazwa }} <span class="wyciszony">{{ g.wyniki | length }}{{ '+' if g.wyniki | length >= 10 }}</span></h3>
+    <h2 class="h3">{{ g.nazwa }} <span class="wyciszony">{{ g.wyniki | length }}{{ '+' if g.wyniki | length >= 10 }}</span></h2>
     <ul class="wyniki-globalne">
         {% for w in g.wyniki %}
         <li><a href="{{ w.url }}">{{ w.tytul }}</a><div class="wyciszony">{{ w.opis }}</div></li>

@@ -15,7 +15,7 @@
 <p id="komunikat" class="komunikat komunikat--blad" hidden role="alert"></p>
 
 <section class="karta stos">
-    <h3>1. Gmina</h3>
+    <h2 class="h3">1. Gmina</h2>
     <form id="formularz-gminy" class="wybor-gminy">
         <label>Województwo <select id="pole-woj" required><option value="">Wczytywanie…</option></select></label>
         <label>Gmina <select id="pole-gmina" required disabled><option value="">— najpierw województwo —</option></select></label>
@@ -24,7 +24,7 @@
 </section>
 
 <section class="karta stos">
-    <h3>2. Wskaźniki raportu</h3>
+    <h2 class="h3">2. Wskaźniki raportu</h2>
     <p class="wyciszony opis-raportu">Zestaw jest wspólny dla wszystkich gmin — ułóż go raz. Wskaźniki wybierasz z wyszukiwarki BDL (zobaczysz dokładną nazwę GUS). Żeby liczyć „na 1000 mieszkańców”, dodaj najpierw ludność ogółem, potem wybierz ją jako mianownik.</p>
     <ol id="lista-wskaznikow" class="lista-wskaznikow">
         {% for w in wskazniki %}<li data-id="{{ w.id }}">{{ w.nazwa_pelna }}</li>{% endfor %}

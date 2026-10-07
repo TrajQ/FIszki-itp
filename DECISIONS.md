@@ -5145,3 +5145,21 @@ dzielnica” i „gdzie jest pomnik” wymagają innej dokładności.
   z promieniem wystarcza do nauki położenia.
 - Wpisywanie quizu z mapą do pudełek Leitnera — wynik „blisko” nie
   przekłada się jednoznacznie na „umiem / nie umiem”.
+
+## D-257 — Poziom nagłówka wg struktury, wygląd wg klasy
+Data: 2026-10-07
+
+**Decyzja:** Poziom nagłówka (h1–h4) wynika z miejsca w strukturze
+strony, a wygląd tytułu karty — z klasy (`h2.h3`, `h3.h4`), tak jak
+`h1.tytul-raportu` z ETAPu 227. CSS dostał bliźniacze selektory, więc
+żadna strona nie zmieniła wyglądu.
+
+**Uzasadnienie:** Czytnik ekranu nawiguje po poziomach nagłówków;
+przeskok h1 → h3 gubi strukturę. Zmiana tagów bez klas zmieniłaby
+rozmiary tytułów w całej aplikacji. Mechaniczna zamiana objęła tylko
+szablony bez żadnego h2 (gdzie poziomy przesuwają się o jeden w całym
+pliku); resztę poprawiono ręcznie, a przegląd stron pilnuje wyniku.
+
+**Odrzucone alternatywy:**
+- `role="heading" aria-level` — obejście zamiast poprawnej struktury.
+- Ukryte nagłówki h2 dla czytnika — dodatkowa treść do utrzymania.

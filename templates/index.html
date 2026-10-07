@@ -12,7 +12,7 @@
 
 {% if pierwsze_kroki %}
 <section class="karta stos pierwsze-kroki" aria-labelledby="naglowek-pierwszych-krokow">
-    <h3 id="naglowek-pierwszych-krokow">Pierwsze kroki</h3>
+    <h2 class="h3" id="naglowek-pierwszych-krokow">Pierwsze kroki</h2>
     <ol class="pierwsze-kroki__lista">
         <li class="pierwsze-kroki__krok">
             <span class="pierwsze-kroki__stan {{ 'pierwsze-kroki__stan--ok' if pierwsze_kroki.klucz_gemini }}">{{ '✓' if pierwsze_kroki.klucz_gemini else '1' }}</span>
@@ -53,7 +53,7 @@
 {% if przypiete %}
 {# ETAP 211: przypięte — zostają, dopóki ich nie odepniesz (instance/przypiete.json) #}
 <section class="karta stos ostatnie przypiete" aria-labelledby="naglowek-przypietych">
-    <h3 id="naglowek-przypietych">Przypięte</h3>
+    <h2 class="h3" id="naglowek-przypietych">Przypięte</h2>
     <ol class="ostatnie__lista">
         {% for p in przypiete %}
         <li class="ostatnie__wiersz"><a class="ostatnie__pozycja" href="{{ p.url }}">
@@ -68,7 +68,7 @@
 
 {% if ostatnie %}
 <section class="karta stos ostatnie" aria-labelledby="naglowek-ostatnich">
-    <h3 id="naglowek-ostatnich">Wróć do pracy</h3>
+    <h2 class="h3" id="naglowek-ostatnich">Wróć do pracy</h2>
     <ol class="ostatnie__lista">
         {% for o in ostatnie %}
         <li class="ostatnie__wiersz"><a class="ostatnie__pozycja" href="{{ o.url }}">
@@ -102,7 +102,7 @@ document.querySelectorAll("[data-przypnij], [data-odepnij]").forEach((przycisk) 
 
 {% if terminy %}
 <section class="karta stos kalendarz">
-    <h3>Najbliższe terminy</h3>
+    <h2 class="h3">Najbliższe terminy</h2>
     <ol class="kalendarz__lista">
         {% for t in terminy %}
         <li>
@@ -209,7 +209,7 @@ document.querySelectorAll("[data-przypnij], [data-odepnij]").forEach((przycisk) 
 
 <section id="kopia" class="karta dane-uzytkownika">
     <div>
-        <h3>Twoje dane</h3>
+        <h2 class="h3">Twoje dane</h2>
         <p class="karta__opis">Fiszki, koncepcje osiedli, akty prawne, punkty i zdjęcia z terenu, wgrane PDF-y i pliki wyników są tylko na tym komputerze. Pobieraj kopię od czasu do czasu — np. przed reinstalacją systemu.</p>
         <p class="karta__opis wyciszony">
             {% if auto_kopia_dni > 0 %}Kopia automatyczna co {{ auto_kopia_dni }} dni przy uruchomieniu:

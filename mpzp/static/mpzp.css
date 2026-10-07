@@ -109,7 +109,8 @@
     overflow-y: auto;
 }
 
-.panel-boczny h3 {
+.panel-boczny h3,
+.panel-boczny .h3 {
     margin: 0;
 }
 
@@ -161,7 +162,8 @@ button.wpis-historii:hover {
     background: var(--tlo-wyciszone);
 }
 
-#panel-wyniku h3 {
+#panel-wyniku h3,
+#panel-wyniku .h3 {
     margin: 0;
 }
 
@@ -360,7 +362,8 @@ button.wpis-historii:hover {
     align-items: start;
 }
 
-.kalkulator h3 {
+.kalkulator h3,
+.kalkulator .h3 {
     margin: 0;
 }
 
@@ -499,7 +502,8 @@ button.wpis-historii:hover {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
-.siatka-skali h3 {
+.siatka-skali h3,
+.siatka-skali .h3 {
     margin: 0;
 }
 
@@ -940,7 +944,9 @@ button.wpis-zapisany {
 }
 
 /* ETAP 80: karta działki — ortofotomapa z obrysem */
-.karta-orto h3 {
+.karta-orto h3,
+/* ETAP 80: karta działki — ortofotomapa z obrysem */
+.karta-orto .h3 {
     margin: 0;
 }
 

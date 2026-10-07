@@ -122,7 +122,7 @@
             <section id="profil-gminy" class="karta stos profil" hidden>
                 <div class="rzad rzad--miedzy">
                     <div>
-                        <h3 id="profil-nazwa"></h3>
+                        <h2 class="h3" id="profil-nazwa"></h2>
                         <p id="profil-miejsce" class="wyciszony profil__miejsce"></p>
                     </div>
                     <button id="profil-zamknij" type="button" class="przycisk--tekst" aria-label="Zamknij profil">✕</button>
@@ -142,7 +142,7 @@
 
             <section class="karta stos">
                 <div class="rzad rzad--miedzy">
-                    <h3>Opis</h3>
+                    <h2 class="h3">Opis</h2>
                     <button id="przycisk-opis" type="button" class="przycisk--drugi">✦ Wygeneruj opis</button>
                 </div>
                 <p id="opis" class="wyciszony" aria-live="polite">Gemini opisze wynik słowami. Liczby w opisie są sprawdzane: każda musi pochodzić z danych GUS.</p>
@@ -156,12 +156,12 @@
 
     <section id="rozklad" class="karta rozklad">
         <div class="stos">
-            <h3>Zróżnicowanie</h3>
+            <h2 class="h3">Zróżnicowanie</h2>
             <dl id="miary" class="miary"></dl>
             <p class="wyciszony przypis">Gminy to cała populacja województwa, więc odchylenie jest populacyjne. Gini: 0 — wartości równe we wszystkich gminach, blisko 1 — skupione w jednej.</p>
         </div>
         <div class="stos">
-            <h3>Rozkład gmin</h3>
+            <h2 class="h3">Rozkład gmin</h2>
             <div id="histogram" class="histogram"></div>
         </div>
     </section>
@@ -169,7 +169,7 @@
     <section id="autokorelacja" class="karta stos autokorelacja">
         <div class="rzad rzad--miedzy">
             <div>
-                <h3>Autokorelacja przestrzenna</h3>
+                <h2 class="h3">Autokorelacja przestrzenna</h2>
                 <p class="wyciszony korelacja__opis">Czy gminy o wysokich wartościach sąsiadują z podobnymi? Globalne I Morana, lokalne skupiska LISA (sąsiedztwo „queen”, 999 permutacji) i gorące punkty Getisa-Orda Gi*.</p>
             </div>
             <button id="przycisk-moran" type="button" class="przycisk--drugi">Policz I Morana</button>
@@ -184,7 +184,7 @@
     </section>
 
     <section id="na-tle-kraju" class="karta stos na-tle-kraju" hidden>
-        <h3>Na tle kraju</h3>
+        <h2 class="h3">Na tle kraju</h2>
         <p id="opis-kraju" class="wyciszony"></p>
         <ol id="lista-wojewodztw" class="lista-wojewodztw"></ol>
     </section>
@@ -192,7 +192,7 @@
     <section id="korelacja" class="karta stos korelacja">
         <div class="rzad rzad--miedzy">
             <div>
-                <h3>Korelacja z innym wskaźnikiem</h3>
+                <h2 class="h3">Korelacja z innym wskaźnikiem</h2>
                 <p class="wyciszony korelacja__opis">Czy gminy z wysoką wartością jednego wskaźnika mają też wysoką (albo niską) wartość drugiego?</p>
             </div>
         </div>
@@ -218,7 +218,7 @@
 
     <section class="karta ranking">
         <div class="rzad rzad--miedzy">
-            <h3 id="naglowek-rankingu">Ranking gmin</h3>
+            <h2 class="h3" id="naglowek-rankingu">Ranking gmin</h2>
             <input id="filtr-rankingu" type="search" placeholder="Szukaj gminy…" class="filtr-rankingu">
         </div>
         <ol id="lista-rankingu" class="lista-rankingu"></ol>

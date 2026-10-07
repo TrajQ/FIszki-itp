@@ -87,10 +87,10 @@ def koncepcja_osiedla() -> tuple[dict, dict]:
     """(rysunek GeoJSON, ustawienia) przykładowej koncepcji — ok. 2 ha."""
     rysunek = {"type": "FeatureCollection", "features": [
         _prostokat(300, 300, 200, 100, "obszar"),
-        _prostokat(300, 300, 120, 100, "MW", pbc_proc=30),
+        _prostokat(300, 308, 120, 92, "MW", pbc_proc=30),
         _prostokat(420, 340, 80, 60, "ZP"),
-        _prostokat(420, 300, 80, 40, "U"),
-        _prostokat(300, 300, 200, 8, "KD"),
+        _prostokat(420, 308, 80, 32, "U"),
+        _prostokat(300, 300, 200, 8, "KD"),  # droga wzdłuż południowej granicy, bez nakładania na tereny
         _prostokat(315, 320, 40, 14, "budynek", kondygnacje=5, zielony_dach_proc=50),
         _prostokat(315, 355, 40, 14, "budynek", kondygnacje=5),
         _prostokat(370, 325, 14, 50, "budynek", kondygnacje=4),

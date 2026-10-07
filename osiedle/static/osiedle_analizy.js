@@ -83,7 +83,7 @@
             czesci.push(element("p", "komunikat komunikat--ostrzezenie", "Teren zabudowy sięga granicy obszaru — budynki trzeba będzie odsunąć od granicy działki (minimalne odległości: § 12 warunków technicznych)."));
         }
         if (w.zacienione.length) {
-            czesci.push(element("h4", "", "Tereny w strefie możliwego cienia"));
+            czesci.push(element("h3", "h4", "Tereny w strefie możliwego cienia"));
             const lista = element("ul", "lista-cienia");
             for (const z of w.zacienione) {
                 const li = element("li");

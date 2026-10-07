@@ -121,7 +121,8 @@ body {
 
 h1,
 h2,
-h3 {
+h3,
+.h3 {
     margin: 0 0 0.5em;
     font-weight: 600;
     letter-spacing: -0.03em;
@@ -137,7 +138,8 @@ h2 {
     font-size: 1.5rem;
 }
 
-h3 {
+h3,
+.h3 {
     font-size: 1.15rem;
 }
 
@@ -404,7 +406,8 @@ code {
 }
 
 .karta h2,
-.karta h3 {
+.karta h3,
+.karta .h3 {
     margin-bottom: 0.4em;
 }
 
@@ -701,7 +704,8 @@ input[type="file"]::file-selector-button {
 }
 
 .dane-uzytkownika h3,
-.dane-uzytkownika p {
+.dane-uzytkownika p,
+.dane-uzytkownika .h3 {
     margin: 0;
 }
 
@@ -728,7 +732,8 @@ input[type="file"]::file-selector-button {
     margin-bottom: 24px;
 }
 
-.kalendarz h3 {
+.kalendarz h3,
+.kalendarz .h3 {
     margin: 0;
 }
 
@@ -821,7 +826,8 @@ input[type="file"]::file-selector-button {
     list-style: none;
 }
 
-.co-nowego__etap h3 {
+.co-nowego__etap h3,
+.co-nowego__etap .h3 {
     margin: 0 0 6px;
     font-size: 1.05rem;
 }
@@ -847,7 +853,8 @@ input[type="file"]::file-selector-button {
     margin-bottom: 20px;
 }
 
-.pierwsze-kroki h3 {
+.pierwsze-kroki h3,
+.pierwsze-kroki .h3 {
     margin: 0;
 }
 
@@ -903,7 +910,8 @@ input[type="file"]::file-selector-button {
     margin-bottom: 20px;
 }
 
-.ostatnie h3 {
+.ostatnie h3,
+.ostatnie .h3 {
     margin: 0;
 }
 
@@ -1244,4 +1252,15 @@ summary:focus-visible,
 
 .o-danych__tabela td {
     vertical-align: top;
+}
+
+/* ETAP 249: kolejność nagłówków — tytuł karty to h2 wyglądający jak h3
+   (klasa .h3), a nagłówek wewnątrz karty to h3 wyglądający jak dawny h4
+   (klasa .h4, rozmiar i odstępy jak domyślne h4 przeglądarki). */
+h3.h4 {
+    margin: 1.33em 0;
+    font-size: 1em;
+    font-weight: 700;
+    letter-spacing: normal;
+    line-height: inherit;
 }

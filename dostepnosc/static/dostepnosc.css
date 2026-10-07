@@ -8,7 +8,8 @@
     align-items: start;
 }
 
-.panel-dostepnosci h3 {
+.panel-dostepnosci h3,
+.panel-dostepnosci .h3 {
     margin: 0;
 }
 
@@ -116,7 +117,9 @@
 }
 
 /* Najsłabsze ogniwo: wiersz = nazwa | pasek | procent. */
-.ogniwo h4 {
+.ogniwo h4,
+/* Najsłabsze ogniwo: wiersz = nazwa | pasek | procent. */
+.ogniwo .h4 {
     margin: 0;
     font-size: 0.95rem;
 }
@@ -272,7 +275,10 @@
 
 /* Krzywa dostępności i luki (ETAP 38) */
 .krzywa h4,
-.luki h4 {
+.luki h4,
+/* Krzywa dostępności i luki (ETAP 38) */
+.krzywa .h4,
+.luki .h4 {
     margin: 8px 0 0;
 }
 
@@ -494,7 +500,8 @@ button.model__wstawiaj--aktywny {
 
 .raport-dostepnosci__strona h1,
 .raport-dostepnosci__strona h2,
-.raport-dostepnosci__strona h3 {
+.raport-dostepnosci__strona h3,
+.raport-dostepnosci__strona .h3 {
     margin: 12px 0 0;
 }
 
@@ -553,7 +560,9 @@ button.model__wstawiaj--aktywny {
 }
 
 /* ETAP 78: gdzie nowa placówka */
-.lokalizacja h4 {
+.lokalizacja h4,
+/* ETAP 78: gdzie nowa placówka */
+.lokalizacja .h4 {
     margin: 0;
 }
 

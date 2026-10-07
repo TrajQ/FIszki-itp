@@ -16,7 +16,7 @@
 {# Egzaminy (ETAP 51): ile dni zostało i jak idzie przygotowanie. #}
 <section id="egzaminy" class="karta stos egzaminy">
     <div class="rzad rzad--miedzy">
-        <h3>Egzaminy</h3>
+        <h2 class="h3">Egzaminy</h2>
     </div>
     {% for e in egzaminy %}
     <div class="egzamin {{ 'egzamin--minal' if e.minal }}">
@@ -130,7 +130,7 @@
 
 <form class="karta wgrywanie" action="{{ url_for('fiszki.upload') }}" method="post" enctype="multipart/form-data">
     <div>
-        <h3>Wgraj PDF</h3>
+        <h2 class="h3">Wgraj PDF</h2>
         <p class="karta__opis">Podręcznik, skrypt, notatki z wykładu.</p>
     </div>
     <div class="rzad">
@@ -145,7 +145,7 @@
 {% if tematy %}
 {# Tematy (ETAP 50): powtórka, quiz i druk tylko z jednego tematu. #}
 <section class="karta stos tematy">
-    <h3>Tematy</h3>
+    <h2 class="h3">Tematy</h2>
     <ul class="lista-tematow">
         {% for t in tematy %}
         <li class="temat">
@@ -166,7 +166,7 @@
 
 {% if pdfy %}
 <section class="karta stos na-telefon">
-    <h3>Fiszki na telefon</h3>
+    <h2 class="h3">Fiszki na telefon</h2>
     <p class="wyciszony opis-sekcji">Powtórki bez internetu: pobierz plik, przenieś na telefon i otwórz w Chrome albo Firefoksie (iPhone: Safari — zob. Pomoc, „Bez internetu i na iPhonie”). Po nauce wyeksportuj wyniki z telefonu i zaimportuj je tutaj — pudełka się zaktualizują.</p>
     <form class="rzad" method="get" action="{{ url_for('fiszki.fiszki_na_telefon') }}">
         <select id="zakres-telefonu" aria-label="Które fiszki">
@@ -202,7 +202,7 @@
     {# ETAP 186: krzywa zapominania — liczby z fiszki/statystyki_nauki.py #}
     {% if nauka.krzywa | selectattr('procent') | list %}
     <div class="krzywa-zapominania">
-        <h4>Po ilu dniach pamiętasz</h4>
+        <h3 class="h4">Po ilu dniach pamiętasz</h3>
         <table class="tabela">
             {% for p in nauka.krzywa if p.powtorki %}
             <tr><td>{{ p.od }}{% if p.do is none %}+ dni{% elif p.do != p.od %}–{{ p.do }} dni{% else %} dzień{% endif %}</td>
@@ -232,7 +232,7 @@
 
 {% if najtrudniejsze %}
 <section class="karta stos trudne">
-    <h3>Najtrudniejsze fiszki</h3>
+    <h2 class="h3">Najtrudniejsze fiszki</h2>
     <ul class="wyniki-szukania">
         {% for f in najtrudniejsze %}
         <li>
@@ -250,7 +250,7 @@
 
 <section class="karta stos szukajka">
     <div class="rzad rzad--miedzy">
-        <h3>Szukaj w fiszkach</h3>
+        <h2 class="h3">Szukaj w fiszkach</h2>
         <span class="rzad">
             <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.eksport_csv_wszystkie') }}">Wszystkie do CSV</a>
             <a class="przycisk przycisk--tekst" href="{{ url_for('fiszki.eksport_anki_wszystkie') }}">Wszystkie do Anki</a>

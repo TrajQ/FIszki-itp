@@ -327,7 +327,7 @@
             const nowelizacje = w.nowelizacje || [];
             if (nowelizacje.length) {
                 const po = nowelizacje.filter((a) => a.po_tekscie_jednolitym).length;
-                pole.append(el("h4", "aktualnosc__naglowek", `Ustawy zmieniające ogłoszone po ${w.adres} (${nowelizacje.length})`),
+                pole.append(el("h3", "h4 aktualnosc__naglowek", `Ustawy zmieniające ogłoszone po ${w.adres} (${nowelizacje.length})`),
                     el("p", "wyciszony", po
                         ? `${po} z nich ogłoszono po najnowszym tekście jednolitym — tekst jednolity ich nie obejmuje; sprawdź w nich, co i od kiedy się zmienia.`
                         : "Wszystkie ogłoszono przed najnowszym tekstem jednolitym z listy wyżej — zwykle już go zmieniły."),

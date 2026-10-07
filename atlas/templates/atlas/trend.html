@@ -32,7 +32,7 @@
     <div class="raport-trendu">
         {% for tytul, lista in [('Najszybszy wzrost', wynik.gminy[:10]), ('Najszybszy spadek', (wynik.gminy | reverse | list)[:10])] %}
         <section>
-            <h3>{{ tytul }}</h3>
+            <h2 class="h3">{{ tytul }}</h2>
             <div class="przewijanie-tabeli">
             <table class="tabela tabela-trendu">
                 <tr><th>Gmina</th><th class="liczba">Na rok</th><th class="liczba">% średniej</th><th class="liczba">R²</th></tr>

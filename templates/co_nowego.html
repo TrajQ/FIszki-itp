@@ -12,7 +12,7 @@
 <ol class="co-nowego">
     {% for w in wpisy %}
     <li class="karta co-nowego__etap{{ ' co-nowego__etap--nowy' if poprzedni is not none and w.etap > poprzedni }}">
-        <h3>ETAP {{ w.etap }} <span class="wyciszony">· {{ w.data }}</span>{% if poprzedni is not none and w.etap > poprzedni %} <span class="etykieta etykieta--akcent">nowe</span>{% endif %}</h3>
+        <h2 class="h3">ETAP {{ w.etap }} <span class="wyciszony">· {{ w.data }}</span>{% if poprzedni is not none and w.etap > poprzedni %} <span class="etykieta etykieta--akcent">nowe</span>{% endif %}</h2>
         <ul>{% for p in w.punkty %}<li>{{ p }}</li>{% endfor %}</ul>
     </li>
     {% else %}

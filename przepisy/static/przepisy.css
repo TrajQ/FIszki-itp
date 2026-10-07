@@ -576,7 +576,8 @@ button.przycisk--niebezpieczny-tekst {
     border-bottom: 1px solid var(--linia-slaba);
 }
 
-.druk-aktu__jednostka h3 {
+.druk-aktu__jednostka h3,
+.druk-aktu__jednostka .h3 {
     margin: 0 0 4px;
     font-size: 1rem;
 }
@@ -634,7 +635,8 @@ button.przycisk--niebezpieczny-tekst {
 }
 
 .moje-przepisy__akt a,
-.druk-aktu__jednostka h3 a {
+.druk-aktu__jednostka h3 a,
+.druk-aktu__jednostka .h3 a {
     color: inherit;
 }
 

@@ -33,7 +33,7 @@
     {% if cien %}
     <section class="raport-osiedla__strona">
         <div class="rzad rzad--miedzy">
-            <h3>Odległości i cień</h3>
+            <h2 class="h3">Odległości i cień</h2>
             <form class="raport-osiedla__akcje-cienia" method="get">
                 <select name="cien" aria-label="Dzień" onchange="this.form.submit()">
                     {% for klucz, d in dni_cienia.items() %}<option value="{{ klucz }}" {{ 'selected' if klucz == dzien_cienia }}>{{ d[0] }}</option>{% endfor %}
@@ -80,7 +80,7 @@
     <section class="raport-osiedla__strona">
         <div class="raport-osiedla__kolumny">
             <div>
-                <h3>Bilans terenu</h3>
+                <h2 class="h3">Bilans terenu</h2>
                 <table class="tabela">
                     <tr><th>Funkcja</th><th class="liczba">m²</th><th class="liczba">%</th></tr>
                     {% for f in b.funkcje %}<tr><td><strong>{{ f.funkcja }}</strong> {{ f.nazwa }}</td><td class="liczba">{{ m(f.powierzchnia_m2, 0) }}</td><td class="liczba">{{ m(f.procent) }}</td></tr>{% endfor %}
@@ -91,7 +91,7 @@
                 {% if b.kontrole.poza_obszarem_m2 and b.kontrole.poza_obszarem_m2 >= 1 %}<p class="komunikat komunikat--ostrzezenie" role="status">{{ m(b.kontrole.poza_obszarem_m2, 0) }} m² terenów leży poza obszarem opracowania.</p>{% endif %}
 
                 {% if w %}
-                <h3>Wskaźniki zabudowy</h3>
+                <h2 class="h3">Wskaźniki zabudowy</h2>
                 <p class="wyciszony">Liczone od {{ 'powierzchni obszaru opracowania' if b.obszar_m2 is not none else 'sumy terenów' }}.</p>
                 {% set wb = b.wskazniki_budynkow %}
                 <table class="tabela">
@@ -108,7 +108,7 @@
                 {% endif %}
 
                 {% if b.zgodnosc %}
-                <h3>Zgodność z ustaleniami planu</h3>
+                <h2 class="h3">Zgodność z ustaleniami planu</h2>
                 <table class="tabela">
                     <tr><th>Ustalenie</th><th class="liczba">Plan</th><th class="liczba">Koncepcja</th><th></th></tr>
                     {% for z in b.zgodnosc %}
@@ -125,7 +125,7 @@
 
                 {% set ch = b.chlonnosc %}
                 {% if ch %}
-                <h3>Chłonność terenu</h3>
+                <h2 class="h3">Chłonność terenu</h2>
                 <table class="tabela raport-osiedla__chlonnosc">
                     {% for o in ch.ograniczenia %}
                     <tr><td>pow. całkowita dopuszczalna — z ustalenia: {{ o.z }}</td><td class="liczba">{{ m(o.calkowita_m2, 0) }} m²</td></tr>
@@ -141,7 +141,7 @@
 
             {% if p %}
             <div>
-                <h3>Program osiedla</h3>
+                <h2 class="h3">Program osiedla</h2>
                 <table class="tabela">
                     <tr><td>mieszkania w zabudowie wielorodzinnej (MW)</td><td class="liczba">{{ m(p.mieszkania_mw, 0) }}</td></tr>
                     <tr><td>domy w zabudowie jednorodzinnej (MN)</td><td class="liczba">{{ m(p.mieszkania_mn, 0) }}</td></tr>
@@ -156,7 +156,7 @@
                 </table>
                 {% if p.miejsca_brakuje %}<p class="komunikat komunikat--ostrzezenie" role="status">Na terenach KS brakuje {{ m(p.miejsca_brakuje, 0) }} miejsc postojowych.</p>{% endif %}
 
-                <h3>Przyjęte założenia</h3>
+                <h2 class="h3">Przyjęte założenia</h2>
                 <table class="tabela raport-osiedla__zalozenia">
                     {% for klucz, z in zalozenia.items() %}
                     <tr><td>{{ z[0] }}</td><td class="liczba">{{ m(p.zalozenia[klucz], 2) }}{% if z[2] %} {{ z[2] }}{% endif %}{% if p.zalozenia[klucz] != z[1] %} <span class="wyciszony">(typowo {{ m(z[1], 2) }})</span>{% endif %}</td></tr>
@@ -167,7 +167,7 @@
         </div>
         {% set k = b.koszty %}
         {% if k %}
-        <h3>Szacunek kosztów</h3>
+        <h2 class="h3">Szacunek kosztów</h2>
         <div class="przewijanie-osiedla">
         <table class="tabela raport-osiedla__koszty">
             <tr><th>pozycja</th><th class="liczba">ilość</th><th class="liczba">stawka</th><th class="liczba">koszt [zł]</th></tr>
@@ -181,7 +181,7 @@
         {% endif %}
         {% set e = b.etapy %}
         {% if e %}
-        <h3>Etapy realizacji</h3>
+        <h2 class="h3">Etapy realizacji</h2>
         <div class="przewijanie-osiedla">
         <table class="tabela raport-osiedla__etapy">
             <tr><th>etap</th><th class="liczba">tereny</th><th class="liczba">powierzchnia [m²]</th><th class="liczba">pow. całkowita [m²]</th><th class="liczba">mieszkania</th><th class="liczba">mieszkańcy</th><th class="liczba">brak miejsc post.</th>{% if e.lista[0].koszt is not none %}<th class="liczba">koszt [zł]</th><th class="liczba">narastająco [zł]</th>{% endif %}</tr>

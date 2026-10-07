@@ -22,7 +22,7 @@
 {% else %}
 <form id="formularz-typologii" class="stos">
     <section class="karta stos">
-        <h3>1. Obszar i liczba typów</h3>
+        <h2 class="h3">1. Obszar i liczba typów</h2>
         <div class="rzad">
             <label>Województwo <select id="pole-woj" required><option value="">Wczytywanie…</option></select></label>
             <label>Rok <input id="pole-rok" type="number" min="1995" max="2100" value="2023" required></label>
@@ -32,7 +32,7 @@
     </section>
 
     <section class="karta stos">
-        <h3>2. Wskaźniki</h3>
+        <h2 class="h3">2. Wskaźniki</h2>
         <p class="wyciszony opis-raportu">Od 2 do 12 wskaźników. Lepiej wskaźniki względne (na 1000 mieszkańców, %) niż liczby bezwzględne — inaczej typy pokażą głównie wielkość gminy.</p>
         <ul class="lista-wskaznikow-typologii">
             {% for w in wskazniki %}
@@ -49,7 +49,7 @@
 
 <section id="wynik" class="karta stos" hidden>
     <div class="rzad rzad--miedzy">
-        <h3>3. Typy gmin</h3>
+        <h2 class="h3">3. Typy gmin</h2>
         <div class="rzad">
             <a id="link-mapy" class="przycisk przycisk--drugi" target="_blank" rel="noopener">Kartogram SVG ↗</a>
             <a id="link-csv" class="przycisk przycisk--drugi">CSV</a>
@@ -58,13 +58,13 @@
     <p id="jakosc" class="wyciszony"></p>
     <p id="pominiete" class="wyciszony" hidden></p>
     <figure class="zlozony__mapa"><img id="mapa" alt="Kartogram typów gmin"><figcaption id="mapa-stan" class="wyciszony"></figcaption></figure>
-    <h4>Profile typów</h4>
+    <h3 class="h4">Profile typów</h3>
     <p class="wyciszony opis-raportu">Średnia wartość wskaźnika w typie; w nawiasie — odchylenie od średniej województwa w odchyleniach standardowych (od +0,5 „wysoki”, do −0,5 „niski”).</p>
     <div class="zlozony__przewijanie"><table class="tabela" id="profile"></table></div>
-    <h4>Gminy</h4>
+    <h3 class="h4">Gminy</h3>
     <div class="zlozony__przewijanie zlozony__ranking"><table class="tabela" id="gminy"></table></div>
     {# ETAP 177: najbliższe gminy w przestrzeni tych samych wskaźników #}
-    <h4>Gminy podobne do wybranej</h4>
+    <h3 class="h4">Gminy podobne do wybranej</h3>
     <label class="rzad">Gmina <select id="pole-podobne" aria-label="Gmina, do której szukamy podobnych"></select></label>
     <p id="opis-podobnych" class="wyciszony opis-raportu">Odległość w odchyleniach standardowych wszystkich wskaźników naraz (0 — identyczny profil). „Różni się najbardziej” — wskaźnik o największej różnicy i jej kierunek.</p>
     <div class="zlozony__przewijanie"><table class="tabela" id="podobne"></table></div>

@@ -74,7 +74,8 @@
 }
 
 .wgrywanie h3,
-.wgrywanie p {
+.wgrywanie p,
+.wgrywanie .h3 {
     margin: 0;
 }
 
@@ -140,7 +141,8 @@
     margin-bottom: 40px;
 }
 
-.szukajka h3 {
+.szukajka h3,
+.szukajka .h3 {
     margin: 0;
 }
 
@@ -214,7 +216,8 @@ mark {
     letter-spacing: 0.05em;
 }
 
-.karta--link h3 {
+.karta--link h3,
+.karta--link .h3 {
     overflow-wrap: anywhere;
 }
 
@@ -350,7 +353,8 @@ mark {
     justify-content: space-between;
 }
 
-.naglowek-panelu h3 {
+.naglowek-panelu h3,
+.naglowek-panelu .h3 {
     margin: 0;
 }
 
@@ -646,7 +650,10 @@ button.odpowiedz-quizu--zla {
 
 /* ---------- Najtrudniejsze fiszki ---------- */
 
-.trudne h3 {
+.trudne h3,
+/* ---------- Najtrudniejsze fiszki ---------- */
+
+.trudne .h3 {
     margin: 0;
 }
 
@@ -1202,7 +1209,8 @@ button.przycisk--ocena-trudne:hover {
     margin-top: 16px;
 }
 
-.krzywa-zapominania h4 {
+.krzywa-zapominania h4,
+.krzywa-zapominania .h4 {
     margin: 0 0 6px;
 }
 

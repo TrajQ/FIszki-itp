@@ -1201,3 +1201,6 @@
 
 ## ETAP 248 — 2026-10-07
 - Fiszki: „gdzie to jest” — fiszki z miejscem na mapie i quiz, w którym klikasz odpowiedź na mapie
+
+## ETAP 249 — 2026-10-07
+- Dostępność dla czytników ekranu: poprawna kolejność nagłówków na wszystkich stronach (wygląd bez zmian)

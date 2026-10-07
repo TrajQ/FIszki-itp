@@ -26,7 +26,7 @@
     <aside class="stos panel-osiedla">
         <section class="karta stos">
             <div class="rzad rzad--miedzy">
-                <h3>Koncepcja</h3>
+                <h2 class="h3">Koncepcja</h2>
                 <div id="linki-koncepcji" class="rzad" hidden>
                     <a id="link-raport" class="przycisk przycisk--tekst" href="#">Raport</a>
                     <a id="link-geojson" class="przycisk przycisk--tekst" href="#">GeoJSON</a>
@@ -56,7 +56,7 @@
         </section>
 
         <section id="sekcja-rysowania" class="karta stos" hidden>
-            <h3>Co rysujesz</h3>
+            <h2 class="h3">Co rysujesz</h2>
             <p class="wyciszony opis-panelu">Wybierz funkcję, potem narzędzie wieloboku albo prostokąta na mapie (lewy górny róg). Kliknij narysowany teren, żeby zmienić funkcję. Plan miejscowy i działki pod rysunkiem włączysz w przełączniku warstw (prawy górny róg mapy).</p>
             <div id="funkcje" class="funkcje">
                 <label class="funkcja"><input type="radio" name="funkcja" value="{{ obszar }}" checked>
@@ -85,7 +85,7 @@
                 <button id="obszar-z-pliku" type="button" class="przycisk--drugi">Ustaw obszar z pliku</button>
             </details>
             <div id="wybrany-teren" class="wybrany-teren" hidden>
-                <h4>Zaznaczony teren</h4>
+                <h3 class="h4">Zaznaczony teren</h3>
                 <select id="funkcja-terenu" aria-label="Funkcja zaznaczonego terenu">
                     <option value="{{ obszar }}">obszar opracowania</option>
                     <option value="{{ budynek }}">budynek</option>
@@ -113,7 +113,7 @@
 
         <section id="sekcja-bilansu" class="karta stos" hidden>
             <div class="rzad rzad--miedzy">
-                <h3>Bilans terenu</h3>
+                <h2 class="h3">Bilans terenu</h2>
                 <span id="stan-zapisu" class="wyciszony stan-zapisu"></span>
             </div>
             <div id="pasek-bilansu" class="pasek-bilansu"></div>
@@ -125,14 +125,14 @@
         </section>
 
         <section id="sekcja-budynkow" class="karta stos" hidden>
-            <h3>Budynki</h3>
+            <h2 class="h3">Budynki</h2>
             <p id="podsumowanie-budynkow" class="opis-panelu"></p>
             <div class="przewijanie-osiedla"><table class="tabela tabela-budynkow" id="tabela-budynkow"></table></div>
             <ul id="kontrole-budynkow" class="kontrole"></ul>
         </section>
 
         <section id="sekcja-wskaznikow" class="karta stos" hidden>
-            <h3>Wskaźniki zabudowy</h3>
+            <h2 class="h3">Wskaźniki zabudowy</h2>
             <p id="podstawa-wskaznikow" class="wyciszony opis-panelu"></p>
             <div class="przewijanie-osiedla">
             <table class="tabela tabela-wskaznikow">
@@ -158,7 +158,7 @@
             </div>
             <p id="zielone-dachy" class="wyciszony opis-panelu" hidden></p>
             <div id="chlonnosc" class="chlonnosc stos" hidden>
-                <h4>Chłonność terenu</h4>
+                <h3 class="h4">Chłonność terenu</h3>
                 <div class="pasek-chlonnosci" aria-hidden="true"><span id="pasek-chlonnosci"></span></div>
                 <p id="opis-chlonnosci" class="opis-panelu"></p>
             </div>
@@ -166,7 +166,7 @@
         </section>
 
         <section id="sekcja-programu" class="karta stos" hidden>
-            <h3>Program osiedla</h3>
+            <h2 class="h3">Program osiedla</h2>
             <p class="wyciszony opis-panelu">Szacunek z powierzchni całkowitej terenów MN, MW i U oraz założeń poniżej.</p>
             <table class="tabela tabela-programu">
                 <tbody>
@@ -199,7 +199,7 @@
         </section>
 
         <section id="sekcja-kosztow" class="karta stos" hidden>
-            <h3>Szacunek kosztów</h3>
+            <h2 class="h3">Szacunek kosztów</h2>
             <p class="wyciszony opis-panelu">Wpisz stawki, które znasz (np. z cenników albo wskaźników kosztów budowy na ten rok) — Warsztat sam stawek nie wpisuje (cenę gruntu może podpowiedzieć z transakcji RCN). Ilości liczy z koncepcji; pozycje bez stawki są pomijane.</p>
             <div class="przewijanie-osiedla"><table class="tabela tabela-kosztow" id="tabela-kosztow" hidden></table></div>
             <p id="podsumowanie-kosztow" class="wyciszony opis-panelu" hidden></p>
@@ -219,14 +219,14 @@
         </section>
 
         <section id="sekcja-etapow" class="karta stos" hidden>
-            <h3>Etapy realizacji</h3>
+            <h2 class="h3">Etapy realizacji</h2>
             <p class="wyciszony opis-panelu">Numer etapu wpisujesz przy zaznaczonym terenie (pole „Etap”). Każdy etap liczony osobno: miejsca postojowe z terenów KS tego samego etapu, koszt gruntu tylko w szacunku całości.</p>
             <div class="przewijanie-osiedla"><table class="tabela tabela-etapow" id="tabela-etapow"></table></div>
             <ul id="kontrole-etapow" class="kontrole"></ul>
         </section>
 
         <section id="sekcja-cienia" class="karta stos" hidden>
-            <h3>Odległości i cień</h3>
+            <h2 class="h3">Odległości i cień</h2>
             <p class="wyciszony opis-panelu">Najgorszy przypadek: budynki przy samej krawędzi terenu, wysokość = kondygnacje × 3 m. Strefa możliwego cienia terenów MN, MW i U co godzinę 9–15 (czas słoneczny).</p>
             <div class="rzad">
                 <select id="dzien-cienia" aria-label="Dzień">
@@ -242,7 +242,7 @@
 
         {# ETAP 238: przekrój A–A′ — liczy i rysuje serwer (osiedle/przekroj.py) #}
         <section id="sekcja-przekroju" class="karta stos" hidden>
-            <h3>Przekrój terenu</h3>
+            <h2 class="h3">Przekrój terenu</h2>
             <p class="wyciszony opis-panelu">Linia A–A′ przez środek rysunku: budynki z wysokością (kondygnacje × 3 m), odstępy między nimi i dopuszczalna wysokość z planu. Teren płaski.</p>
             <div class="przekroj__suwaki">
                 <label>Kierunek linii <span id="opis-kata" class="wyciszony"></span>
@@ -267,7 +267,7 @@
         </section>
 
         <section id="sekcja-cen" class="karta stos" hidden>
-            <h3>Ceny w okolicy</h3>
+            <h2 class="h3">Ceny w okolicy</h2>
             <p class="wyciszony opis-panelu">Mieszkania i działki sprzedane w obszarze opracowania i wokół niego — z pliku Rejestru Cen Nieruchomości zaimportowanego w module Ceny.</p>
             <div class="rzad">
                 <select id="promien-cen" aria-label="Promień od obszaru">

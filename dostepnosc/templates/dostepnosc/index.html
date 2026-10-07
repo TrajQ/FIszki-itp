@@ -22,7 +22,7 @@
 <div class="uklad-dostepnosci">
     <aside class="stos panel-dostepnosci">
         <section class="karta stos">
-            <h3>Wyniki</h3>
+            <h2 class="h3">Wyniki</h2>
             <ul class="lista-plikow">
                 {% for plik in pliki %}
                 <li>
@@ -62,17 +62,17 @@
             </div>
             <div id="kafelki" class="kafelki-dostepnosci"></div>
             <div id="grupy-mieszkancow" class="stos" hidden>
-                <h3>Grupy mieszkańców</h3>
+                <h2 class="h3">Grupy mieszkańców</h2>
                 <div class="przewijanie-dzielnic"><table class="tabela" id="tabela-grup"></table></div>
                 <p class="wyciszony">Z kolumn pliku o nazwach zaczynających się od ludnosc_, mieszkancy_ albo wiek_ (np. ludnosc_65+). Mediana — czas, w którym dociera połowa grupy.</p>
             </div>
             <div id="ogniwo" class="ogniwo" hidden>
-                <h4>Najsłabsze ogniwo</h4>
+                <h3 class="h4">Najsłabsze ogniwo</h3>
                 <p class="wyciszony">Usługa, do której z danej komórki idzie się najdłużej.</p>
                 <ul id="lista-ogniw"></ul>
             </div>
             <div id="krzywa-blok" class="krzywa stos" hidden>
-                <h4>Krzywa dostępności</h4>
+                <h3 class="h4">Krzywa dostępności</h3>
                 <p class="wyciszony">Jaka część obszaru (niebieska linia) i mieszkańców (zielona, gdy plik ma ich liczbę) jest w zasięgu danego czasu dojścia. Przesuń suwak, żeby sprawdzić własny próg.</p>
                 <svg id="krzywa" class="krzywa__wykres" viewBox="0 0 320 170" role="img" aria-label="Krzywa dostępności"></svg>
                 <label class="krzywa__suwak">Próg: <strong id="wartosc-progu">15 min</strong>
@@ -81,12 +81,12 @@
                 <p id="wynik-progu" class="krzywa__wynik"></p>
             </div>
             <div id="luki-blok" class="luki stos" hidden>
-                <h4>Luki w dostępności</h4>
+                <h3 class="h4">Luki w dostępności</h3>
                 <p id="opis-luk" class="wyciszony"></p>
                 <ol id="lista-luk" class="lista-luk"></ol>
             </div>
             <div id="lokalizacja-blok" class="lokalizacja stos" hidden>
-                <h4>Gdzie nowa placówka?</h4>
+                <h3 class="h4">Gdzie nowa placówka?</h3>
                 <p class="wyciszony">Miejsca, w których jedna nowa placówka obejmie progiem z suwaka najwięcej mieszkańców dziś poza zasięgiem. Zasięg nowej placówki liczy szybki model (linia prosta × krętość, parametry niżej) — to wskazówka do porównania miejsc, nie projekt.</p>
                 <div class="rzad">
                     <label class="lokalizacja__ile">Placówek <select id="ile-placowek">{% for n in range(1, 6) %}<option value="{{ n }}" {{ 'selected' if n == 3 }}>{{ n }}</option>{% endfor %}</select></label>
@@ -96,7 +96,7 @@
                 <ol id="lista-lokalizacji" class="lista-luk"></ol>
                 <button id="edytuj-propozycje" type="button" class="przycisk--tekst" hidden title="Przenieś propozycje do własnej listy — możesz je przesuwać i usuwać">Popraw te miejsca ręcznie</button>
                 {# ETAP 242: własne miejsca po kolei — zysk każdego ponad poprzednie liczy serwer #}
-                <h4>Własne miejsca po kolei</h4>
+                <h3 class="h4">Własne miejsca po kolei</h3>
                 <p class="wyciszony">Wskaż na mapie kolejne miejsca nowych placówek (np. działki gminy). Przy każdym: ilu mieszkańców dziś poza progiem obejmie ponad wcześniejsze miejsca. Znaczniki można przeciągać.</p>
                 <div class="rzad">
                     <button id="dodaj-wlasne" type="button" class="przycisk--drugi">Dodaj miejsce</button>
@@ -106,7 +106,7 @@
                 <ol id="lista-wlasnych" class="lista-luk lista-wlasnych"></ol>
             </div>
             <div class="lokalizacja stos">
-                <h4>Zasięg z punktu</h4>
+                <h3 class="h4">Zasięg z punktu</h3>
                 <p class="wyciszony">Kliknij miejsce na mapie: okręgi 5, 10 i 15 minut marszu (szybki model, parametry niżej) i liczba mieszkańców w zasięgu. Przy czasie dojścia do usługi — także ilu z nich ma dziś dalej.</p>
                 <div class="rzad">
                     <button id="wskaz-zasieg" type="button" class="przycisk--drugi">Wskaż punkt</button>
@@ -124,7 +124,7 @@
         </section>
 
         <section id="obszary-obslugi" class="karta stos" hidden>
-            <h3>Obszary obsługi</h3>
+            <h2 class="h3">Obszary obsługi</h2>
             <p id="obszary-opis" class="wyciszony model__opis"></p>
             <table class="tabela tabela-obszarow">
                 <thead><tr><th>Punkt</th><th class="liczba">Mieszkańcy</th><th class="liczba">Czas śr. / maks.</th></tr></thead>
@@ -135,7 +135,7 @@
         </section>
 
         <section class="karta stos" id="karta-dzielnic">
-            <h3>Dzielnice</h3>
+            <h2 class="h3">Dzielnice</h2>
             <p class="wyciszony porownanie__opis">Narysuj na mapie dzielnicę albo osiedle (wielobok lub prostokąt w lewym górnym rogu mapy) — do 8 obszarów. Komórka należy do obszaru, gdy jej środek jest w środku; czas średni ważony liczbą mieszkańców, gdy plik ją ma. Obszary pamięta ta przeglądarka, osobno dla każdego pliku.</p>
             <ul id="lista-dzielnic" class="lista-dzielnic"></ul>
             <div class="przewijanie-dzielnic"><table class="tabela" id="tabela-dzielnic" hidden></table></div>
@@ -144,7 +144,7 @@
         </section>
 
         <section class="karta stos">
-            <h3>Porównaj scenariusze</h3>
+            <h2 class="h3">Porównaj scenariusze</h2>
             <p class="wyciszony porownanie__opis">Np. stan obecny i stan po budowie szkoły. Bieżący plik to „przed”, wybrany — „po”.</p>
             <select id="pole-scenariusz" aria-label="Plik scenariusza po zmianie">
                 <option value="">— wybierz plik „po” —</option>
@@ -156,7 +156,7 @@
         </section>
 
         <section class="karta stos model">
-            <h3>Wstaw usługi — szybki model</h3>
+            <h2 class="h3">Wstaw usługi — szybki model</h2>
             <p class="wyciszony model__opis">Kliknij na mapie, gdzie są (albo mają być) np. szkoły. Aplikacja policzy czas dojścia z każdej komórki i zapisze nowy plik — z nim działają wszystkie analizy, także porównanie scenariuszy.</p>
             <label>Usługa
                 <input id="model-usluga" type="text" placeholder="np. szkoła, przedszkole, przystanek" maxlength="40" list="model-uslugi">

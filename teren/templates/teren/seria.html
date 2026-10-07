@@ -29,6 +29,7 @@
         <p class="komunikat komunikat--ostrzezenie" role="status">Inwentaryzacje nie mają pól wspólnych dla wszystkich (ta sama nazwa i typ) — nie ma czego zestawić. Do powtórzonej inwentaryzacji użyj „Utwórz podobny”.</p>
         {% endif %}
 
+        {% if zestawienie %}<h2>Zestawienie pól</h2>{% endif %}
         {% for z in zestawienie %}
         <h3>{{ z.nazwa }}</h3>
         {% if z.wiersze is defined %}

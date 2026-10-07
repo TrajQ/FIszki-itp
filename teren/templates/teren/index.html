@@ -14,7 +14,7 @@
 {% if blad %}<p class="komunikat komunikat--blad" role="alert">{{ blad }}</p>{% endif %}
 
 <section class="karta stos">
-    <h3>Nowy projekt</h3>
+    <h2 class="h3">Nowy projekt</h2>
     <form class="nowy-projekt" method="post" action="{{ url_for('teren.nowy_projekt') }}">
         <label>Nazwa <input name="nazwa" type="text" maxlength="80" required placeholder="np. Zieleń — Park Wilsona"></label>
         <label>Pola formularza
@@ -29,7 +29,7 @@
 </section>
 
 <section class="karta stos">
-    <h3>Twoje projekty</h3>
+    <h2 class="h3">Twoje projekty</h2>
     {% if projekty %}
     <ul class="lista-projektow">
         {% for p in projekty %}
@@ -58,7 +58,7 @@
 </section>
 
 <section class="karta stos">
-    <h3>Jak to działa</h3>
+    <h2 class="h3">Jak to działa</h2>
     <ol class="kroki">
         <li>Utwórz projekt i ustaw pola formularza.</li>
         <li>Na stronie projektu kliknij <strong>Pobierz formularz na telefon</strong> i przenieś plik HTML na telefon (kabel, e-mail, dysk w chmurze).</li>
