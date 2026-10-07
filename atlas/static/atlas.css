@@ -1250,3 +1250,22 @@ button.przelacznik__opcja--aktywna:hover {
         display: none;
     }
 }
+
+/* ETAP 235: odtwarzanie lat na mapie */
+.odtwarzacz {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.odtwarzacz input[type="range"] {
+    flex: 1;
+    min-width: 0;
+}
+
+.odtwarzacz__rok {
+    min-width: 3.2em;
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+}

@@ -4266,3 +4266,24 @@ Status: zamknięty
   ETAP 234; `docs/ARCHITEKTURA.md`: dziewięć modułów, powiązanie Praca →
   Fiszki przez plik CSV, pliki GeoPackage/ODS/DOCX budowane bez bibliotek
 - `DECISIONS.md`: D-242
+
+## ETAP 235 — Atlas: odtwarzanie lat na mapie we wspólnych klasach
+Data: 2026-10-07
+Status: zamknięty
+
+- `atlas/trasy_druk.py`: `_wyniki_w_latach` — wydzielone z „Map w
+  latach” (ETAP 161) dane kilku lat i wspólne klasy z wartości wszystkich
+  lat; `_mapy_w_latach` z niej korzysta (bez zmiany wyniku — test ETAPu
+  161 przechodzi); nowa trasa `GET /atlas/odtwarzanie?…&od=&do=` (2–15
+  kolejnych lat): kolory gmin w każdym roku, wartości do dymków, legenda,
+  lata bez danych
+- Strona Atlasu: „▶ Odtwórz lata” (od roku −9 do wybranego), odtwarzacz
+  nad mapą — ❚❚/▶, suwak lat, rok, „✕ Zakończ”; przekolorowanie
+  istniejących warstw (`setStyle`, dymki z wartością roku) bez
+  przerysowania mapy; legenda wspólnych klas; nowe dane albo „Zakończ” —
+  powrót do zwykłego widoku
+- Test: trasa (wspólne klasy — ta sama wartość ten sam kolor w różnych
+  latach, rok bez danych pominięty, walidacja lat, 404); przeglądarka
+  1300/390 px (start, kolejny rok po czasie, suwak, zakończenie)
+- Pomoc: akapit „Odtwarzanie lat”
+- `DECISIONS.md`: D-243

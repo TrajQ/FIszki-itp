@@ -175,10 +175,10 @@ def _lata_z_zapytania(argumenty) -> list[int]:
     return lata
 
 
-def _mapy_w_latach(argumenty) -> tuple[str, dict]:
-    """ETAP 161: ten sam wskaźnik w kilku latach — wspólne klasy z wartości
-    wszystkich lat razem, żeby kolor znaczył to samo na każdej mapie."""
-    lata = _lata_z_zapytania(argumenty)
+def _wyniki_w_latach(argumenty, lata: list[int]) -> dict:
+    """Ten sam wskaźnik w kilku latach i WSPÓLNE klasy z wartości wszystkich
+    lat razem — kolor znaczy to samo w każdym roku (ETAP 161; wydzielone w
+    ETAPie 235 dla odtwarzania lat na mapie)."""
     metoda, liczba_klas = _parametry_klasyfikacji(argumenty)
     wyniki = {}
     for rok in lata:
@@ -189,18 +189,31 @@ def _mapy_w_latach(argumenty) -> tuple[str, dict]:
             wyniki[rok] = wynik
     if len(wyniki) < 2:
         raise LookupError("Dane GUS są tylko dla jednego z wybranych lat (albo żadnego) — wybierz inne lata.")
-    pierwszy = next(iter(wyniki.values()))
     wszystkie = [g["wartosc"] for w in wyniki.values() for g in w["gminy"]]
     k = statystyki.klasyfikuj(wszystkie, metoda, liczba_klas)
     liczba = len(k["progi"]) + 1
     granice_klas = [min(wszystkie), *k["progi"], max(wszystkie)]
-    mapy = [(str(rok), {g["teryt"]: _kolor_klasy(_numer_klasy(g["wartosc"], k["progi"]), liczba) for g in w["gminy"]})
-            for rok, w in wyniki.items()]
     legenda = [(_kolor_klasy(i, liczba), f"{statystyki.format_liczby(round(granice_klas[i], 2))} – {statystyki.format_liczby(round(granice_klas[i + 1], 2))}", None)
                for i in range(liczba)]
-    legenda.append((mapa_svg.KOLOR_BRAK, "brak danych", None))
+    return {
+        "wyniki": wyniki,
+        "klasyfikacja": k,
+        "kolory": {rok: {g["teryt"]: _kolor_klasy(_numer_klasy(g["wartosc"], k["progi"]), liczba) for g in w["gminy"]} for rok, w in wyniki.items()},
+        "legenda": legenda,
+        "liczba_klas": liczba,
+        "brakujace": [r for r in lata if r not in wyniki],
+    }
+
+
+def _mapy_w_latach(argumenty) -> tuple[str, dict]:
+    """ETAP 161: ten sam wskaźnik w kilku latach — małe mapy we wspólnych klasach."""
+    lata = _lata_z_zapytania(argumenty)
+    w = _wyniki_w_latach(argumenty, lata)
+    wyniki, k, liczba, brakujace = w["wyniki"], w["klasyfikacja"], w["liczba_klas"], w["brakujace"]
+    pierwszy = next(iter(wyniki.values()))
+    mapy = [(str(rok), kolory) for rok, kolory in w["kolory"].items()]
+    legenda = [*w["legenda"], (mapa_svg.KOLOR_BRAK, "brak danych", None)]
     zmienna = pierwszy["zmienna"]
-    brakujace = [r for r in lata if r not in wyniki]
     przypisy = ["Źródło: GUS, Bank Danych Lokalnych; granice: PRG, GUGiK. Opracowanie własne w aplikacji Warsztat.",
                 f"Klasyfikacja: {k['nazwa_metody']}, {liczba} klas wspólnych dla wszystkich lat (z wartości gmin ze wszystkich map)."]
     if brakujace:
@@ -226,6 +239,38 @@ def mapy_w_latach_svg():
     if request.args.get("pobierz"):
         naglowki["Content-Disposition"] = f"attachment; filename=lata_{wynik['wojewodztwo']['teryt']}_{request.args.get('lata', '').replace(',', '-')}.svg"
     return Response(svg, mimetype="image/svg+xml", headers=naglowki)
+
+
+MAKS_LAT_ODTWARZANIA = 15
+
+
+@atlas_bp.route("/odtwarzanie")
+def odtwarzanie_lat():
+    """ETAP 235: wskaźnik rok po roku do odtwarzania na mapie — kolory
+    gmin w każdym roku we wspólnych klasach (jak „Mapy w latach”) i
+    wartości do dymków. Lata: od–do (?od=2014&do=2023), najwyżej 15."""
+    try:
+        od, do = int(request.args.get("od", "")), int(request.args.get("do", ""))
+    except ValueError:
+        return jsonify({"blad": "Podaj lata od i do."}), 400
+    if not (1995 <= od < do <= 2100) or do - od + 1 > MAKS_LAT_ODTWARZANIA:
+        return jsonify({"blad": f"Od 2 do {MAKS_LAT_ODTWARZANIA} kolejnych lat."}), 400
+    try:
+        w = _wyniki_w_latach(request.args, list(range(od, do + 1)))
+    except ValueError as e:
+        return jsonify({"blad": str(e)}), 400
+    except LookupError as e:
+        return jsonify({"blad": str(e)}), 404
+    except BladBDL as e:
+        return jsonify({"blad": str(e)}), 502
+    return jsonify({
+        "lata": list(w["wyniki"]),
+        "kolory": {str(r): k for r, k in w["kolory"].items()},
+        "wartosci": {str(r): {g["teryt"]: g["wartosc"] for g in wynik["gminy"]} for r, wynik in w["wyniki"].items()},
+        "legenda": [[kolor, opis] for kolor, opis, _ in w["legenda"]],
+        "klasyfikacja": w["klasyfikacja"]["nazwa_metody"],
+        "brakujace": w["brakujace"],
+    })
 
 
 @atlas_bp.route("/lata")

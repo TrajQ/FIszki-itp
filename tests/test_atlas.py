@@ -1734,3 +1734,25 @@ def test_raport_gminy_opis_bez_danych(raport_client, monkeypatch):
     monkeypatch.setattr(bdl, "szereg_gminy", lambda zid, gid: [])
     r = c.post(f"/atlas/raport-gminy/{GMINA}/opis")
     assert r.status_code == 404 and "Brak danych" in r.get_json()["blad"]
+
+
+# ---------- ETAP 235: odtwarzanie lat na mapie ----------
+
+
+def test_odtwarzanie_lat(client, monkeypatch):
+    dane = {2021: [("011212161011", "1261011", 10.0), ("011212105033", "1206032", 30.0)],
+            2022: [("011212161011", "1261011", 20.0), ("011212105033", "1206032", 30.0)],
+            2023: [("011212161011", "1261011", 40.0), ("011212105033", "1206032", 35.0)]}
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin",
+                        lambda z, rok, woj: [bdl.Wartosc(i, t, t, w) for i, t, w in dane.get(rok, [])])
+    w = client.get(f"/atlas/odtwarzanie?{ZAPYTANIE}&od=2020&do=2023&klasy=3&metoda=rowne").get_json()
+    assert w["lata"] == [2021, 2022, 2023] and w["brakujace"] == [2020]
+    assert w["wartosci"]["2021"] == {"1261011": 10.0, "1206032": 30.0}
+    # wspólne klasy z wartości wszystkich lat (10–40, równe przedziały): ten sam kolor = ta sama klasa w każdym roku
+    assert w["kolory"]["2021"]["1261011"] != w["kolory"]["2023"]["1261011"]
+    assert w["kolory"]["2021"]["1206032"] == w["kolory"]["2022"]["1206032"]
+    assert len(w["legenda"]) == 3 and w["legenda"][0][1].startswith("10")
+    for zle in ("od=2023&do=2023", "od=2000&do=2023", "od=abc&do=2023", "do=2023"):
+        assert client.get(f"/atlas/odtwarzanie?{ZAPYTANIE}&{zle}").status_code == 400
+    monkeypatch.setattr(atlas_routes.bdl, "wartosci_dla_gmin", lambda z, rok, woj: [])
+    assert client.get(f"/atlas/odtwarzanie?{ZAPYTANIE}&od=2010&do=2012").status_code == 404

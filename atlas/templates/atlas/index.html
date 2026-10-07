@@ -94,6 +94,7 @@
         <div class="rzad">
             <a id="link-druk" class="przycisk przycisk--drugi" href="#" target="_blank" title="Kartogram z legendą, podziałką i źródłem — SVG albo PDF">Mapa do druku ↗</a>
             <a id="link-lata" class="przycisk przycisk--drugi" href="#" target="_blank" title="Ten sam wskaźnik w kilku latach obok siebie, we wspólnych klasach">Mapy w latach ↗</a>
+            <button id="odtworz-lata" type="button" class="przycisk--drugi" title="Mapa rok po roku (do 10 lat wstecz) we wspólnych klasach">▶ Odtwórz lata</button>
             <a id="link-trend" class="przycisk przycisk--drugi" href="#" target="_blank" title="Trend liniowy wskaźnika w każdej gminie na kartogramie">Trend ↗</a>
             <a id="link-gminy-czas" class="przycisk przycisk--drugi" href="#" target="_blank" title="Do 5 gmin na jednym wykresie wskaźnika w latach">Gminy w czasie ↗</a>
             <a id="link-eksport" class="przycisk przycisk--drugi" href="#">Pobierz CSV</a>
@@ -103,6 +104,13 @@
     </div>
     <div class="uklad-atlasu">
         <section class="karta karta-mapy">
+            {# ETAP 235: odtwarzanie lat — kolory we wspólnych klasach liczy serwer (/atlas/odtwarzanie) #}
+            <div id="odtwarzacz" class="odtwarzacz" hidden>
+                <button id="graj-lata" type="button" aria-label="Odtwarzaj albo zatrzymaj">❚❚</button>
+                <input id="suwak-lat" type="range" min="0" max="0" step="1" value="0" aria-label="Rok na mapie">
+                <strong id="rok-odtwarzania" class="odtwarzacz__rok" aria-live="polite"></strong>
+                <button id="zakoncz-odtwarzanie" type="button" class="przycisk--tekst">✕ Zakończ</button>
+            </div>
             <div id="mapa-atlasu"></div>
             <div id="legenda" class="legenda"></div>
             <p id="komunikat-mapy" class="komunikat komunikat--ostrzezenie komunikat-mapy" hidden role="status"></p>

@@ -360,6 +360,7 @@
                 pokazKomunikat(`Brak danych dla ${powiaty ? "powiatów" : "gmin"} w roku ${poleRok.value}. Spróbuj innego roku.`);
                 return;
             }
+            zakonczOdtwarzanie(false); // ETAP 235: nowe dane — odtwarzacz poprzednich znika
             biezaceDane = dane;
             biezaceParametry = parametryDanych;
             ustawJednostki(powiaty);
@@ -817,6 +818,98 @@
         wiersz.append(probka, opis);
         return wiersz;
     }
+
+    // ---------- odtwarzanie lat (ETAP 235) ----------
+    // Kolory gmin w każdym roku we wspólnych klasach liczy serwer; tu tylko
+    // przekolorowujemy istniejące warstwy (bez przerysowania mapy).
+
+    const odtwarzacz = document.getElementById("odtwarzacz");
+    const suwakLat = document.getElementById("suwak-lat");
+    const przyciskGraj = document.getElementById("graj-lata");
+    const LAT_WSTECZ = 9;
+    const KROK_MS = 1300;
+    let lataOdtwarzania = null;
+    let zegarLat = null;
+
+    function pokazRokOdtwarzania(i) {
+        const rok = String(lataOdtwarzania.lata[i]);
+        const kolory = lataOdtwarzania.kolory[rok] || {};
+        const wartosci = lataOdtwarzania.wartosci[rok] || {};
+        suwakLat.value = String(i);
+        document.getElementById("rok-odtwarzania").textContent = rok;
+        for (const [teryt, warstwa] of warstwyPoTeryt) {
+            warstwa.setStyle({ fillColor: kolory[teryt] || KOLOR_BRAK });
+            const dymek = element("div");
+            dymek.append(element("strong", "", warstwa.feature.properties.nazwa), element("br"),
+                `${rok}: ${teryt in wartosci ? zJednostka(wartosci[teryt]) : "brak danych"}`);
+            warstwa.setTooltipContent(dymek);
+        }
+    }
+
+    function legendaOdtwarzania() {
+        legendaEl.replaceChildren(element("div", "legenda__tytul",
+            `${lataOdtwarzania.klasyfikacja}, klasy wspólne dla lat ${lataOdtwarzania.lata[0]}–${lataOdtwarzania.lata.at(-1)}`));
+        for (const [kolor, opis] of lataOdtwarzania.legenda) legendaEl.appendChild(wierszLegendy(kolor, opis));
+        legendaEl.appendChild(wierszLegendy(KOLOR_BRAK, "brak danych"));
+    }
+
+    function grajLata(wlacz) {
+        clearInterval(zegarLat);
+        zegarLat = null;
+        przyciskGraj.textContent = wlacz ? "❚❚" : "▶";
+        if (!wlacz) return;
+        zegarLat = setInterval(() => {
+            const nastepny = Number(suwakLat.value) + 1;
+            if (nastepny >= lataOdtwarzania.lata.length) return grajLata(false);
+            pokazRokOdtwarzania(nastepny);
+        }, KROK_MS);
+    }
+
+    function zakonczOdtwarzanie(przerysuj = true) {
+        if (!lataOdtwarzania) return;
+        grajLata(false);
+        lataOdtwarzania = null;
+        odtwarzacz.hidden = true;
+        if (przerysuj) odswiezWidok(); // mapa, dymki i legenda bieżącego roku
+    }
+
+    document.getElementById("odtworz-lata").addEventListener("click", async (e) => {
+        if (!biezaceDane) return;
+        const guzik = e.currentTarget;
+        const rok = Number(biezaceDane.rok);
+        const p = new URLSearchParams(biezaceParametry);
+        p.set("metoda", poleMetoda.value);
+        p.set("klasy", poleKlasy.value);
+        p.set("od", String(Math.max(PIERWSZY_ROK, rok - LAT_WSTECZ)));
+        p.set("do", String(rok));
+        guzik.disabled = true;
+        guzik.textContent = "Pobieram lata…";
+        try {
+            const w = await pobierzJson(`${URL_DRUK.replace(/druk$/, "odtwarzanie")}?${p}`);
+            if (tryb !== "wartosc") ustawTryb("wartosc");
+            lataOdtwarzania = w;
+            suwakLat.max = String(w.lata.length - 1);
+            odtwarzacz.hidden = false;
+            legendaOdtwarzania();
+            pokazRokOdtwarzania(0);
+            grajLata(true);
+        } catch (err) {
+            pokazKomunikat(err.message);
+        } finally {
+            guzik.disabled = false;
+            guzik.textContent = "▶ Odtwórz lata";
+        }
+    });
+    przyciskGraj.addEventListener("click", () => {
+        if (zegarLat) return grajLata(false);
+        if (Number(suwakLat.value) >= lataOdtwarzania.lata.length - 1) pokazRokOdtwarzania(0); // od początku
+        grajLata(true);
+    });
+    suwakLat.addEventListener("input", () => {
+        grajLata(false);
+        pokazRokOdtwarzania(Number(suwakLat.value));
+    });
+    document.getElementById("zakoncz-odtwarzanie").addEventListener("click", () => zakonczOdtwarzanie());
 
     function pokazLegende() {
         legendaEl.replaceChildren();

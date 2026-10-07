@@ -4851,3 +4851,23 @@ ETAPy, w których druga połowa byłaby kilkoma wierszami.
 **Odrzucone alternatywy:**
 - Wyrzucenie czterech pozycji — autor nie prosił o rezygnację z nich.
 - Przekroczenie numeru 250 — sprzeczne z decyzją autora.
+
+## D-243 — Odtwarzanie lat: jedno zapytanie, wspólne klasy z serwera
+Data: 2026-10-07
+
+**Decyzja:** Odtwarzacz pobiera jednym zapytaniem kolory gmin dla
+wszystkich lat (wspólne klasy liczy serwer, ta sama funkcja co „Mapy w
+latach”) i tylko przekolorowuje warstwy mapy. Nie odpytuje serwera przy
+każdym kroku.
+
+**Uzasadnienie:** Animacja ma sens tylko wtedy, gdy kolor znaczy to samo
+w każdym roku — klasy każdego roku osobno pokazywałyby zawsze podobny
+obraz. Jedno zapytanie = płynne przejścia i działający suwak; dane BDL
+i tak trafiają do pamięci podręcznej (cache) Atlasu. Limit 15 lat chroni
+przed długim pierwszym pobieraniem z GUS.
+
+**Odrzucone alternatywy:**
+- Zmiana pola „Rok” i ponowne „Pokaż” w pętli — inne klasy co rok,
+  kilka sekund na krok.
+- Klasy z jednego (wybranego) roku — wartości spoza jego zakresu
+  wpadałyby w skrajne klasy.

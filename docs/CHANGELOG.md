@@ -1159,3 +1159,6 @@
 
 ## ETAP 234 — 2026-10-07
 - Plan końcowy: projekt kończy się na ETAPie 250
+
+## ETAP 235 — 2026-10-07
+- Atlas: odtwarzanie wskaźnika rok po roku na mapie
