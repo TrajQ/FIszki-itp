@@ -652,3 +652,39 @@ def test_nowelizacje_przed_i_po_tekscie_jednolitym(monkeypatch):
     # bez nowszego tekstu jednolitego — każda nowelizacja po akcie jest „po tekście jednolitym”
     w = sejm.nowsze_teksty_jednolite(tj + " (Dz.U. 2024 poz. 1130)")
     assert w["nowsze"] == [] and [a["po_tekscie_jednolitym"] for a in w["nowelizacje"]] == [True]
+
+
+# ---------- ETAP 243: filtry wyszukiwarki — rodzaj i data aktu ----------
+
+
+def test_metryka_aktu():
+    from przepisy.metryka import metryka
+
+    assert metryka("USTAWA z dnia 27 marca 2003 r. o planowaniu") == {"rodzaj": "ustawa", "data": "2003-03-27"}
+    # tekst jednolity: obwieszczenie przed ustawą — liczy się data ustawy
+    jednolity = ("OBWIESZCZENIE MARSZAŁKA SEJMU RZECZYPOSPOLITEJ POLSKIEJ z dnia 3 stycznia 2024 r. w sprawie ogłoszenia "
+                 "jednolitego tekstu ustawy o planowaniu\nUSTAWA\nz dnia 27 marca 2003 r. o planowaniu")
+    assert metryka("Tekst jednolity", jednolity) == {"rodzaj": "ustawa", "data": "2003-03-27"}
+    assert metryka("x", "ROZPORZĄDZENIE MINISTRA INFRASTRUKTURY\nz dnia 12 kwietnia 2002 r. w sprawie warunków") == {"rodzaj": "rozporządzenie", "data": "2002-04-12"}
+    assert metryka("UCHWAŁA NR XII/123/2019 RADY MIASTA POZNANIA z dnia 31 lutego 2019 r.")["data"] is None  # zła data
+    assert metryka("Rozporządzenie w sprawie czegoś") == {"rodzaj": "rozporządzenie", "data": None}
+    assert metryka("Plan ogólny gminy") == {"rodzaj": "inny", "data": None}
+
+
+def test_szukaj_z_filtrami(client, monkeypatch):
+    wgraj(client)  # ustawa z 2003 r.
+    rozporzadzenie = [s.replace("USTAWA\nz dnia 27 marca 2003 r.", "ROZPORZĄDZENIE MINISTRA INFRASTRUKTURY\nz dnia 12 kwietnia 2002 r.") for s in STRONY]
+    monkeypatch.setattr(routes, "strony_z_pdf", lambda sciezka: rozporzadzenie)
+    wgraj(client, nazwa="rozporzadzenie.pdf")
+
+    def szukaj(**kw):
+        odp = client.get("/przepisy/szukaj", query_string={"q": "intensywność zabudowy", **kw})
+        return odp.status_code, [w["akt_id"] for w in (odp.get_json().get("wyniki") or [])]
+
+    assert sorted(szukaj()[1]) == [1, 2]
+    assert szukaj(rodzaj="ustawa")[1] == [1] and szukaj(rodzaj="rozporządzenie")[1] == [2]
+    assert szukaj(od=2003)[1] == [1] and szukaj(do=2002)[1] == [2] and szukaj(od=2010)[1] == []
+    assert szukaj(rodzaj="uchwała")[1] == []
+    assert szukaj(rodzaj="list")[0] == 400
+    html = client.get("/przepisy/").get_data(as_text=True)
+    assert 'id="filtr-rodzaju"' in html and "ustawa z 27.03.2003" in html and "rozporządzenie z 12.04.2002" in html

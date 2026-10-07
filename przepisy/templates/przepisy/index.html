@@ -39,6 +39,21 @@
             <option value="">we wszystkich aktach</option>
             {% for a in akty %}<option value="{{ a.id }}">{{ a.nazwa | truncate(70) }}</option>{% endfor %}
         </select>
+        {# ETAP 243: filtry — rodzaj i rok wydania z tytułu aktu (przepisy/metryka.py) #}
+        {% set rodzaje = akty | map(attribute='rodzaj') | unique | list %}
+        {% if akty | length > 1 %}
+        <div class="szukajka__filtry">
+            <select id="filtr-rodzaju" aria-label="Rodzaj aktu">
+                <option value="">każdy rodzaj</option>
+                {% for r in ['ustawa', 'rozporządzenie', 'uchwała', 'zarządzenie', 'inny'] if r in rodzaje %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+            </select>
+            <label class="szukajka__lata">wydany w latach
+                <input id="filtr-od" type="number" min="1918" max="2100" step="1" inputmode="numeric" placeholder="od" aria-label="Rok wydania od">
+                –
+                <input id="filtr-do" type="number" min="1918" max="2100" step="1" inputmode="numeric" placeholder="do" aria-label="Rok wydania do">
+            </label>
+        </div>
+        {% endif %}
     </form>
     <p class="wyciszony opis-panelu">Polskie znaki i odmiana nie przeszkadzają („dzialki” znajdzie „działka”). Frazę dokładną wpisz w cudzysłowie. „art. 15” albo „§ 4” otwiera tę jednostkę.</p>
     <p id="stan-szukania" class="wyciszony" hidden></p>
@@ -52,7 +67,7 @@
         {% for a in akty %}
         <li>
             <a href="{{ url_for('przepisy.widok_aktu', akt_id=a.id) }}">{{ a.nazwa }}</a>
-            <span class="wyciszony">{{ a.liczba_jednostek }} jedn. · {{ a.liczba_stron }} s. · dodano {{ a.data_dodania[:10] }}</span>
+            <span class="wyciszony">{{ a.rodzaj }}{% if a.data_aktu %} z {{ a.data_aktu[8:10] }}.{{ a.data_aktu[5:7] }}.{{ a.data_aktu[:4] }}{% endif %} · {{ a.liczba_jednostek }} jedn. · {{ a.liczba_stron }} s. · dodano {{ a.data_dodania[:10] }}</span>
         </li>
         {% endfor %}
     </ul>

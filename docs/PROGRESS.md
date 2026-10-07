@@ -4442,3 +4442,23 @@ Status: zamknięty
   przeciągnięcie)
 - Pomoc: „Kilka własnych miejsc nowych placówek po kolei”
 - `DECISIONS.md`: D-250
+
+## ETAP 243 — Przepisy: wyszukiwarka z filtrami po rodzaju aktu i dacie
+Data: 2026-10-07
+Status: zamknięty
+
+- `przepisy/metryka.py`: `metryka(nazwa, tytul)` — rodzaj (ustawa,
+  rozporządzenie, uchwała, zarządzenie, inny) i data wydania z nagłówka
+  wielkimi literami „… z dnia D miesiąca RRRR r.”; w tekście jednolitym
+  pomija obwieszczenie; bez nagłówka — rodzaj z nazwy, bez daty
+- `przepisy/baza.py`: `lista_aktow` z `rodzaj` i `data_aktu` (z jednostki
+  „Tytuł”, bez zmian w bazie); `akty_wg_filtrow`; `szukaj(…, akty_ids)`
+- `/przepisy/szukaj` przyjmuje `rodzaj`, `od`, `do` (400 dla nieznanego
+  rodzaju)
+- Strona: filtry pod polem wyszukiwania (od dwóch aktów; tylko rodzaje
+  obecne w bazie), rodzaj i data przy aktach na liście
+- Testy: metryka (ustawa, tekst jednolity, rozporządzenie, zła data,
+  rodzaj z nazwy, inny), wyszukiwanie z filtrami na dwóch aktach;
+  przeglądarka 1300/390 px
+- Pomoc: „Szukanie tylko w ustawach albo w aktach z danych lat”
+- `DECISIONS.md`: D-251

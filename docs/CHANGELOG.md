@@ -1183,3 +1183,6 @@
 
 ## ETAP 242 — 2026-10-07
 - Dostępność: własne miejsca nowych placówek po kolei — zysk każdego ponad poprzednie
+
+## ETAP 243 — 2026-10-07
+- Przepisy: filtry wyszukiwarki — rodzaj aktu i lata wydania

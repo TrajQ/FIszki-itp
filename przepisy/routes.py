@@ -10,6 +10,7 @@ from dane import gemini, sejm
 from fiszki import zewnetrzne as fiszki_zewnetrzne
 
 from . import baza, eksport_notatek, porownanie, przeniesienie, pytania
+from .metryka import RODZAJE
 from .odeslania import mapa_jednostek, z_odeslaniami
 from .slowniczek import slowniczek
 from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
@@ -299,7 +300,12 @@ def usun_akt(akt_id):
 def szukaj():
     tekst = (request.args.get("q") or "").strip()[:300]
     akt_id = request.args.get("akt", type=int)
-    return jsonify({"zapytanie": tekst, "wyniki": baza.szukaj(tekst, akt_id) if tekst else []})
+    # ETAP 243: filtry rodzaju aktu i roku wydania
+    rodzaj = request.args.get("rodzaj") or None
+    if rodzaj is not None and rodzaj not in RODZAJE:
+        return jsonify({"blad": "Nieznany rodzaj aktu."}), 400
+    akty_ids = baza.akty_wg_filtrow(rodzaj, request.args.get("od", type=int), request.args.get("do", type=int))
+    return jsonify({"zapytanie": tekst, "wyniki": baza.szukaj(tekst, akt_id, akty_ids) if tekst else []})
 
 
 @przepisy_bp.route("/pytanie", methods=["POST"])

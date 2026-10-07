@@ -658,3 +658,34 @@ button.przycisk--niebezpieczny-tekst {
     margin-top: 10px;
     font-size: 13px;
 }
+
+/* ETAP 243: filtry wyszukiwarki — rodzaj aktu i lata wydania */
+.szukajka {
+    flex-wrap: wrap;
+}
+
+.szukajka__filtry {
+    display: flex;
+    flex-wrap: wrap;
+    flex-basis: 100%;
+    align-items: center;
+    gap: 8px 14px;
+    font-size: 14px;
+}
+
+.szukajka .szukajka__filtry select {
+    max-width: none;
+}
+
+.szukajka__lata {
+    flex-direction: row; /* globalny label to kolumna (static/style.css) */
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+}
+
+.szukajka .szukajka__lata input {
+    flex: 0 0 auto;
+    width: 6.5em;
+    font-size: 14px;
+}

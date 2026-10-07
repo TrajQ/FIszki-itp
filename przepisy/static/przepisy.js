@@ -44,6 +44,11 @@
         const adres = new URL(URL_SZUKAJ, location.href);
         adres.searchParams.set("q", tekst);
         if (filtr.value) adres.searchParams.set("akt", filtr.value);
+        // ETAP 243: rodzaj aktu i lata wydania (pól nie ma przy jednym akcie)
+        for (const [id, parametr] of [["filtr-rodzaju", "rodzaj"], ["filtr-od", "od"], ["filtr-do", "do"]]) {
+            const pole = document.getElementById(id);
+            if (pole && pole.value) adres.searchParams.set(parametr, pole.value);
+        }
         try {
             const odpowiedz = await fetch(adres);
             const dane = await odpowiedz.json();
@@ -71,6 +76,7 @@
 
     pole.addEventListener("input", zaplanuj);
     filtr.addEventListener("change", szukaj);
+    for (const id of ["filtr-rodzaju", "filtr-od", "filtr-do"]) document.getElementById(id)?.addEventListener("input", zaplanuj);
     document.getElementById("formularz-szukania").addEventListener("submit", (e) => {
         e.preventDefault();
         szukaj();

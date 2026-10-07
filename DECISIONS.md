@@ -5020,3 +5020,21 @@ wspólna reguła zasięgu daje te same liczby co propozycje (test).
   mieszkańców w nakładających się zasięgach.
 - Analiza sieciowa dla nowych miejsc — wymaga przeliczenia w QGIS;
   szybki model wystarcza do porównania miejsc.
+
+## D-251 — Rodzaj i data aktu liczone z tytułu, bez nowych kolumn
+Data: 2026-10-07
+
+**Decyzja:** Rodzaj i datę aktu odczytujemy przy każdym wyświetleniu z
+nazwy i jednostki „Tytuł” (wyrażenie regularne na nagłówek wielkimi
+literami z „z dnia”), zamiast zapisywać je w tabeli `akty`.
+
+**Uzasadnienie:** Akty wgrane przed tym ETAPem dostają filtry od razu,
+bez migracji i bez ponownego wgrywania; aktów jest kilka–kilkanaście,
+więc koszt jest pomijalny. Nagłówek wielkimi literami odróżnia ustawę od
+obwieszczenia o tekście jednolitym („…tekstu ustawy…” małymi literami),
+więc data to data aktu, którą zna student („ustawa z 27 marca 2003”).
+
+**Odrzucone alternatywy:**
+- Metryka z API Sejmu (ELI) — działa tylko z internetem i tylko dla
+  aktów z Dziennika Ustaw; uchwały gmin i tak trzeba czytać z tytułu.
+- Kolumny w bazie — szybsze przy setkach aktów, ale wymagają migracji.

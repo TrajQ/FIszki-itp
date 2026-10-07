@@ -18,6 +18,8 @@ from datetime import datetime
 
 from flask import current_app, g
 
+from .metryka import metryka
+
 SCHEMAT = """
 CREATE TABLE IF NOT EXISTS akty (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,12 +142,36 @@ def dodaj_akt(nazwa: str, nazwa_pliku: str, liczba_stron: int, jednostki: list[d
 
 
 def lista_aktow() -> list[dict]:
+    """Akty z liczbą jednostek; ETAP 243: rodzaj i data aktu z tytułu (metryka.py)."""
     wiersze = get_db().execute(
-        """SELECT akty.*, COUNT(jednostki.id) AS liczba_jednostek
+        """SELECT akty.*, COUNT(jednostki.id) AS liczba_jednostek,
+                  (SELECT t.tekst FROM jednostki t WHERE t.akt_id = akty.id AND t.oznaczenie = 'Tytuł' LIMIT 1) AS tytul
            FROM akty LEFT JOIN jednostki ON jednostki.akt_id = akty.id
            GROUP BY akty.id ORDER BY akty.nazwa COLLATE NOCASE"""
     ).fetchall()
-    return [dict(w) for w in wiersze]
+    wynik = []
+    for w in wiersze:
+        a = dict(w)
+        m = metryka(a["nazwa"], (a.pop("tytul") or "")[:2000])
+        wynik.append({**a, "rodzaj": m["rodzaj"], "data_aktu": m["data"]})
+    return wynik
+
+
+def akty_wg_filtrow(rodzaj: str | None, od_roku: int | None, do_roku: int | None) -> list[int] | None:
+    """ETAP 243: numery aktów zgodnych z filtrami; None — bez filtrów (wszystkie).
+    Akt bez rozpoznanej daty nie przechodzi filtra lat."""
+    if not rodzaj and od_roku is None and do_roku is None:
+        return None
+    wynik = []
+    for a in lista_aktow():
+        if rodzaj and a["rodzaj"] != rodzaj:
+            continue
+        if od_roku is not None or do_roku is not None:
+            rok = int(a["data_aktu"][:4]) if a["data_aktu"] else None
+            if rok is None or (od_roku is not None and rok < od_roku) or (do_roku is not None and rok > do_roku):
+                continue
+        wynik.append(a["id"])
+    return wynik
 
 
 def akt(akt_id: int) -> dict | None:
@@ -329,13 +355,18 @@ def podglad(tekst: str, szukane: list[tuple[str, bool]]) -> str:
     return ("… " if poczatek else "") + "".join(czesci).replace("\n", " ") + (" …" if koniec < len(tekst) else "")
 
 
-def szukaj(tekst: str, akt_id: int | None = None) -> list[dict]:
+def szukaj(tekst: str, akt_id: int | None = None, akty_ids: list[int] | None = None) -> list[dict]:
     """Jednostki pasujące do zapytania, najlepsze pierwsze.
 
     „art. 15” albo „§ 4” szuka jednostki o tym oznaczeniu, a nie słów.
+    ETAP 243: akty_ids — tylko w tych aktach (filtry rodzaju i daty).
     """
     db = get_db()
     warunek_aktu = " AND jednostki.akt_id = :akt" if akt_id else ""
+    if akty_ids is not None:
+        if not akty_ids:
+            return []
+        warunek_aktu += f" AND jednostki.akt_id IN ({','.join(str(int(i)) for i in akty_ids)})"
     odwolanie = _ODWOLANIE.match(tekst)
     if odwolanie:
         rodzaj = "Art." if odwolanie.group(1).lower().startswith("art") else "§"
