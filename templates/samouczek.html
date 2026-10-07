@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block tytul %}Samouczek — Warsztat{% endblock %}
+
+{% block tresc %}
+<div class="naglowek-strony">
+    <div>
+        <a class="przycisk przycisk--tekst" href="{{ url_for('pomoc') }}">‹ Pomoc</a>
+        <h1>Samouczek</h1>
+        <p>Kilka kroków po Warsztacie na danych przykładowych — działa bez internetu. Przykłady to dane wymyślone do nauki (okolica Poznania), nie pomiary. Usuniesz je jednym przyciskiem na dole.</p>
+    </div>
+</div>
+
+{% if info %}<p class="komunikat" role="status">{{ info }}</p>{% endif %}
+
+{# ETAP 247: przykłady tworzy samouczek.py zwykłymi funkcjami modułów #}
+<section class="karta stos">
+    <h2>0. Wczytaj przykłady</h2>
+    <p class="wyciszony">Dwie inwentaryzacje zieleni (rok po roku) w Terenie i koncepcja osiedla z budynkami w Osiedlu. Ponowne kliknięcie niczego nie zdubluje.</p>
+    <form method="post" action="{{ url_for('samouczek_wczytaj') }}">
+        <button type="submit">Wczytaj przykłady</button>
+    </form>
+</section>
+
+<ol class="samouczek stos">
+    <li class="karta stos">
+        <h2>1. Teren — mapa punktów i raport</h2>
+        {% if linki.teren %}
+        <p>Otwórz <a href="{{ url_for('teren.widok_projektu', projekt_id=linki.teren) }}">inwentaryzację 2025</a>: kliknij punkt na mapie, w karcie „Filtr” wybierz pole „stan” (kolory i legenda), otwórz „Raport do druku”.</p>
+        <p>Potem rozwiń „Porównaj” albo „Zmiana w czasie” i wybierz inwentaryzację 2026 — zobaczysz, gdzie stan drzew się pogorszył. <a href="{{ url_for('teren.porownanie_projektow', a=linki.teren, b=linki.teren_2) }}">Porównanie gotowe ↗</a></p>
+        {% else %}<p class="wyciszony">Najpierw wczytaj przykłady (krok 0).</p>{% endif %}
+    </li>
+    <li class="karta stos">
+        <h2>2. Osiedle — bilans, wskaźniki, przekrój</h2>
+        {% if linki.osiedle %}
+        <p>Otwórz <a href="{{ url_for('osiedle.index', koncepcja=linki.osiedle) }}">koncepcję osiedla</a>: sprawdź „Bilans terenu” i „Wskaźniki zabudowy” (✓/✗ wobec planu), kliknij budynek i zmień kondygnacje albo „Zielony dach %”. W „Przekrój terenu” kliknij „Pokaż”, w „Odległości i cień” — „Pokaż”. Na koniec „Raport”.</p>
+        {% else %}<p class="wyciszony">Najpierw wczytaj przykłady (krok 0).</p>{% endif %}
+    </li>
+    <li class="karta stos">
+        <h2>3. Dostępność — miasto 15-minutowe</h2>
+        <p>Otwórz <a href="{{ url_for('dostepnosc.index') }}">Dostępność</a> (plik przykładowy jest wybrany), wybierz czas dojścia do przystanku, przesuń suwak progu, potem „Gdzie nowa placówka?” → „Szukaj miejsc”.</p>
+    </li>
+    <li class="karta stos">
+        <h2>4. MPZP — kalkulator zabudowy</h2>
+        <p><a href="{{ url_for('mpzp.kalkulator', dzialka=['przykład 1', 'przykład 2'], powierzchnia=[600, 400]) }}">Kalkulator dla dwóch działek</a>: wpisz budynek (rzut, kondygnacje) i maks. powierzchnię zabudowy z planu — wskaźniki liczą się od razu. Mapa działek i plany potrzebują internetu.</p>
+    </li>
+    <li class="karta stos">
+        <h2>5. Praca — godziny z grafiku</h2>
+        <p><a href="{{ url_for('praca.index', przyklad=1) }}">Grafik przykładowy</a> jest już wklejony, imię to „Ty”: kliknij „Policz godziny”, odznacz jedną zmianę i „Zapisz miesiąc”.</p>
+    </li>
+    <li class="karta stos">
+        <h2>6. Z własnymi plikami</h2>
+        <ul>
+            <li><a href="{{ url_for('fiszki.index') }}">Fiszki</a> — wgraj PDF z wykładu, zaznacz fragment, zrób fiszkę, potem „Powtórka”.</li>
+            <li><a href="{{ url_for('przepisy.index') }}">Przepisy</a> — wgraj ustawę w PDF (np. z ISAP) i wpisz „intensywność zabudowy”.</li>
+            <li><a href="{{ url_for('ceny.transakcje') }}">Ceny</a> — plik Rejestru Cen Nieruchomości z geoportalu.</li>
+            <li><a href="{{ url_for('atlas.index') }}">Atlas</a> — z internetem: wybierz wskaźnik GUS i województwo.</li>
+        </ul>
+    </li>
+</ol>
+
+<section class="karta stos">
+    <h2>Koniec — usuń przykłady</h2>
+    <p class="wyciszony">Przykłady trafią do kosza modułów (jak zwykłe usunięcie) — przez 30 dni można je przywrócić.</p>
+    <form method="post" action="{{ url_for('samouczek_usun') }}">
+        <button type="submit" class="przycisk--drugi">Usuń przykłady</button>
+    </form>
+</section>
+{% endblock %}

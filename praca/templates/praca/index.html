@@ -23,12 +23,12 @@
     <p class="wyciszony godziny__opis">PDF z Google Docs czyta Warsztat sam. Zdjęcie albo zrzut ekranu przepisuje Gemini — sprawdź przepisany tekst, zanim policzysz. Tekst grafiku możesz też wkleić ręcznie.</p>
 
     <label>Tekst grafiku
-        <textarea id="tekst-grafiku" rows="8" placeholder="Październik 2026&#10;16.&#10;Patryk&#10;15:30-20:00&#10;…"></textarea>
+        <textarea id="tekst-grafiku" rows="8" placeholder="Październik 2026&#10;16.&#10;Patryk&#10;15:30-20:00&#10;…">{{ przyklad.tekst if przyklad }}</textarea>
     </label>
     <p id="zrodlo-tekstu" class="wyciszony godziny__opis" hidden aria-live="polite"></p>
 
     <div class="godziny__ustawienia">
-        <label>Imię w grafiku <input id="imie" type="text" maxlength="40" autocomplete="given-name"></label>
+        <label>Imię w grafiku <input id="imie" type="text" maxlength="40" autocomplete="given-name" value="{{ przyklad.imie if przyklad }}"></label>
         <label>Stawka [zł/h] <input id="stawka" type="text" inputmode="decimal" value="{{ stawka }}"></label>
         <label>Miesiąc
             <select id="miesiac">

@@ -624,3 +624,25 @@ def test_licencja_z_metadanych():
     assert o_danych._licencja(Meta({"License": "długi\ntekst licencji", "Classifiers": ["License :: OSI Approved :: BSD License"]})) == "BSD License"
     assert o_danych._licencja(Meta({})) == "zob. pakiet"
     assert all(b["wersja"] for b in o_danych.biblioteki_pythona())
+
+
+# ---------- ETAP 247: samouczek z danymi przykładowymi ----------
+
+
+def test_samouczek_przyklady(client):
+    strona = client.get("/samouczek").get_data(as_text=True)
+    assert "Wczytaj przykłady" in strona and "Najpierw wczytaj przykłady" in strona
+    odp = client.post("/samouczek/przyklady", follow_redirects=True).get_data(as_text=True)
+    assert "Dodano:" in odp and "/teren/porownanie?a=" in odp and "/osiedle/?koncepcja=" in odp
+    assert "Przykłady już są" in client.post("/samouczek/przyklady", follow_redirects=True).get_data(as_text=True)
+    # przykłady działają w modułach: porównanie inwentaryzacji i bilans koncepcji
+    import samouczek
+    with client.application.test_request_context():
+        linki = samouczek.linki()
+    porownanie = client.get(f"/teren/porownanie?a={linki['teren']}&b={linki['teren_2']}").get_data(as_text=True)
+    assert "<strong>12</strong> par" in porownanie and "gorzej: <strong>" in porownanie
+    koncepcja = client.get(f"/osiedle/koncepcje/{linki['osiedle']}").get_json()
+    assert koncepcja["bilans"]["budynki"]["liczba"] == 4 and koncepcja["bilans"]["zgodnosc"]
+    assert "Ty" in client.get("/praca/?przyklad=1").get_data(as_text=True) and "8:30-14:30" in client.get("/praca/?przyklad=1").get_data(as_text=True)
+    assert "Przeniesiono do kosza przykłady: 3" in client.post("/samouczek/przyklady/usun", follow_redirects=True).get_data(as_text=True)
+    assert "Nie było przykładów" in client.post("/samouczek/przyklady/usun", follow_redirects=True).get_data(as_text=True)

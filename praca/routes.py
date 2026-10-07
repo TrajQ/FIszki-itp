@@ -32,8 +32,14 @@ MIN_ZNAKOW_WKLEJONYCH = 50
 
 @praca_bp.route("/")
 def index():
+    # ETAP 247: ?przyklad=1 z samouczka — gotowy tekst grafiku do policzenia
+    przyklad = None
+    if request.args.get("przyklad"):
+        import samouczek
+
+        przyklad = {"tekst": samouczek.GRAFIK, "imie": samouczek.IMIE_W_GRAFIKU}
     return render_template("praca/index.html", miesiace=grafik.MIESIACE, stawka=str(grafik.STAWKA_DOMYSLNA).replace(".", ","),
-                           historia=historia())
+                           historia=historia(), przyklad=przyklad)
 
 
 def tekst_pdf(dane: bytes) -> str:

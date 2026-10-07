@@ -5101,3 +5101,25 @@ szczegóły analiz.
   funkcji utrudniają czytanie.
 - Podział dostepnosc.js, atlas.js i mpzp.js teraz — wymaga szerszego
   wspólnego stanu; zostaje na później (plan dalszy).
+
+## D-255 — Samouczek: przykłady w zwykłych danych modułów, rozpoznawane po nazwie
+Data: 2026-10-07
+
+**Decyzja:** Przykłady są zwykłymi projektami i koncepcjami tworzonymi
+funkcjami baz modułów, z nazwą zaczynającą się od „Przykład — ”.
+Usunięcie przenosi je do kosza modułów jak każde inne. Fiszek,
+Przepisów, Cen i Atlasu nie wypełniamy — wymagają własnych plików albo
+internetu; samouczek to mówi.
+
+**Uzasadnienie:** Student ogląda prawdziwe ekrany modułów (filtry,
+raporty, porównania) na danych, które nie wymagają sieci. Brak osobnej
+„piaskownicy” — nie ma drugiej ścieżki kodu do utrzymania. Dane są
+wyraźnie opisane jako wymyślone (poza Dostępnością, która ma własny
+plik syntetyczny).
+
+**Odrzucone alternatywy:**
+- Przykładowy PDF dla Fiszek i Przepisów — trzeba by dołączyć tekst
+  aktu albo wykładu do repozytorium; własny PDF jest bliżej codziennej
+  pracy.
+- Znacznik „przykład” w bazach — wymaga kolumn w kilku modułach;
+  prefiks nazwy wystarcza.

@@ -13,7 +13,7 @@
 
     try {
         const zapisane = JSON.parse(localStorage.getItem(PAMIEC) || "{}");
-        if (zapisane.imie) $("imie").value = zapisane.imie;
+        if (zapisane.imie && !$("imie").value) $("imie").value = zapisane.imie; // przykład z samouczka ma własne imię (ETAP 247)
         if (zapisane.stawka) $("stawka").value = zapisane.stawka;
     } catch (e) {
         // brak pamięci przeglądarki — pola zostają puste

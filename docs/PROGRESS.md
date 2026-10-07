@@ -4524,3 +4524,27 @@ Status: zamknięty
 - Sprawdzenie: pyflakes czysty, pełne testy, przeglądarka 1300/390 px
   (przekrój, zielone dachy, cień po zapisie)
 - `DECISIONS.md`: D-254
+
+## ETAP 247 — Samouczek dla nowego użytkownika z danymi przykładowymi bez internetu
+Data: 2026-10-07
+Status: zamknięty
+
+- `samouczek.py`: `wczytaj()` — dwie inwentaryzacje zieleni (2025 i
+  2026, po 12 punktów, część drzew w gorszym stanie) w Terenie i
+  koncepcja osiedla (obszar, MW, ZP, U, KD, 4 budynki, zielony dach,
+  ustalenia planu) w Osiedlu, tworzone funkcjami baz modułów, z nazwą
+  „Przykład — …”; bez duplikatów; `linki()`; `usun()` — do kosza
+  modułów; `GRAFIK` — grafik pracy do wklejenia
+- `GET /samouczek`, `POST /samouczek/przyklady`,
+  `POST /samouczek/przyklady/usun`; strona `templates/samouczek.html`:
+  krok 0 (wczytaj), Teren (filtr, raport, porównanie gotowe), Osiedle
+  (bilans, wskaźniki, przekrój, cień, raport), Dostępność (plik
+  przykładowy), MPZP (kalkulator dla dwóch działek), Praca (grafik
+  wklejony: 29 h → 910,60 zł), własne pliki; usunięcie przykładów
+- Praca: `/praca/?przyklad=1` wkleja grafik i imię; zapamiętane imię
+  nie nadpisuje przykładu
+- Linki do samouczka: „Pierwsze kroki” na stronie głównej i Pomoc
+- Testy: wczytanie, brak duplikatów, przykłady działają w modułach
+  (12 par w porównaniu, 4 budynki i zgodność z planem), Praca, usunięcie;
+  przeglądarka 1300/390 px (cała ścieżka)
+- `DECISIONS.md`: D-255

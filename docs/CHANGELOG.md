@@ -1195,3 +1195,6 @@
 
 ## ETAP 246 — 2026-10-07
 - Porządki w kodzie: ceny/rcn.py i osiedle.js podzielone na mniejsze pliki (bez zmian w działaniu)
+
+## ETAP 247 — 2026-10-07
+- Nowy „Samouczek”: przykłady w Terenie, Osiedlu i Pracy, kroki po modułach, bez internetu

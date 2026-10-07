@@ -225,6 +225,29 @@ def create_app(instance_path=None):
         """Krótkie przepisy „jak zrobić…” dla każdego modułu (ETAP 87)."""
         return render_template("pomoc.html")
 
+    # ---------- samouczek z danymi przykładowymi (ETAP 247) ----------
+
+    @app.route("/samouczek")
+    def samouczek_strona():
+        import samouczek
+
+        return render_template("samouczek.html", linki=samouczek.linki(), info=request.args.get("info"))
+
+    @app.route("/samouczek/przyklady", methods=["POST"])
+    def samouczek_wczytaj():
+        import samouczek
+
+        wynik = samouczek.wczytaj()
+        info = f"Dodano: {', '.join(wynik['utworzone'])}." if wynik["utworzone"] else "Przykłady już są."
+        return redirect(url_for("samouczek_strona", info=info))
+
+    @app.route("/samouczek/przyklady/usun", methods=["POST"])
+    def samouczek_usun():
+        import samouczek
+
+        ile = samouczek.usun()
+        return redirect(url_for("samouczek_strona", info=f"Przeniesiono do kosza przykłady: {ile}." if ile else "Nie było przykładów do usunięcia."))
+
     @app.route("/o-danych")
     def o_danych():
         """ETAP 244: źródła danych, usługi i licencje bibliotek."""
