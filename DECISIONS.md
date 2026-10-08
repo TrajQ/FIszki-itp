@@ -5226,3 +5226,22 @@ katalogu domowym w ten sam sposób co działające już usługi.
 - Nowa maszyna z Ubuntu — autor ma na obecnej dwa projekty.
 - Etykiety SELinux dla .venv (semanage fcontext) — więcej poleceń do
   zrozumienia i utrzymania niż wzór już działający na tym serwerze.
+
+## D-261 — Czyszczenie tekstu PDF tylko dla znanych wzorców, reszta — diagnoza
+Data: 2026-10-08
+
+**Decyzja:** Tekst z pypdf czyścimy tylko w sposób pewny: znaki
+diakrytyczne zapisane osobno sklejamy wyłącznie w polskie litery (para
+znak + litera z tabeli), NFC, ligatury, niewidoczne znaki. Liter, których
+PDF nie opisuje (font bez /ToUnicode), nie odgadujemy — strona aktu o
+nich ostrzega, a `narzedzia/sprawdz_pdf.py` pokazuje, co jest w pliku.
+
+**Uzasadnienie:** Zgłoszenie było ogólne, a przyczyna zależy od
+programu, który utworzył PDF. Sklejanie tylko par z tabeli nie psuje
+zwykłego tekstu (test). Zgadywanie brakujących liter dałoby fałszywy
+tekst ustawy — gorsze niż brak, bo cytaty są sprawdzane w tekście.
+
+**Odrzucone alternatywy:**
+- Druga biblioteka do PDF (pdfminer, PyMuPDF) — nowa zależność bez
+  pewności, że rozwiąże problem konkretnego pliku.
+- OCR — ciężka zależność; teksty z ISAP mają warstwę tekstową.

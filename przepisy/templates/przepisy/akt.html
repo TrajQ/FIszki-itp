@@ -10,6 +10,8 @@
         <a class="przycisk przycisk--tekst" href="{{ url_for('przepisy.index') }}">‹ Przepisy</a>
         <h1 class="tytul-aktu" id="nazwa-aktu">{{ akt.nazwa }}</h1>
         <p>{{ jednostki | length }} jednostek · {{ akt.liczba_stron }} stron PDF · dodano {{ akt.data_dodania[:10] }}</p>
+        {# ETAP 253: font PDF-a bez mapy znaków — części liter nie da się odczytać #}
+        {% if nieczytelne %}<p class="komunikat komunikat--ostrzezenie" role="status">W tekście jest {{ nieczytelne }} nieczytelnych znaków — PDF zapisuje część liter tak, że nie da się ich odczytać (font bez mapy znaków). Słowa z tymi literami mogą się nie wyszukiwać. Pobierz tekst z ISAP (isap.sejm.gov.pl) albo „Szukaj w Sejmie” i wgraj go jeszcze raz.</p>{% endif %}
     </div>
     <div class="rzad">
         <a class="przycisk przycisk--drugi" href="{{ url_for('przepisy.plik_aktu', akt_id=akt.id) }}" target="_blank" rel="noopener">Otwórz PDF</a>

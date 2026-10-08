@@ -1213,3 +1213,6 @@
 
 ## ETAP 252 — 2026-10-07
 - Warsztat na serwerze przez Tailscale (Oracle Linux 9): jeden skrypt, adres https://…ts.net:8443 tylko dla Twoich urządzeń
+
+## ETAP 253 — 2026-10-08
+- Przepisy: poprawne polskie litery z PDF-ów, które zapisują ogonki osobno; ostrzeżenie o nieczytelnych znakach

@@ -14,6 +14,7 @@ Ograniczenia (świadome, prosty kod):
 """
 
 import re
+import unicodedata
 
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
@@ -39,6 +40,43 @@ class BladPdf(ValueError):
     """PDF nieczytelny, zaszyfrowany albo bez tekstu."""
 
 
+# ---------- ETAP 253: polskie znaki z PDF-a ----------
+# Część PDF-ów (np. z LaTeX-a, starszych edytorów) zapisuje literę i znak
+# diakrytyczny osobno: „a˛”, „´s”, „˙z” — pypdf oddaje je jako dwa znaki,
+# więc na ekranie są „dziwne literki”, a wyszukiwarka nie znajduje słowa.
+# Ligatury („ﬁ”) i niewidoczne znaki (miękki łącznik) psują wyszukiwanie.
+
+_NIEWIDOCZNE = dict.fromkeys(map(ord, "\u00ad\u200b\u200c\u200d\u2060\ufeff"), None)
+_LIGATURY = str.maketrans({"ﬀ": "ff", "ﬁ": "fi", "ﬂ": "fl", "ﬃ": "ffi", "ﬄ": "ffl", "ﬅ": "st", "ﬆ": "st"})
+# znak diakrytyczny „osobno” → litery, z którymi tworzy polską literę
+_DIAKRYTYKI = {
+    "\u02db": {"a": "ą", "e": "ę", "A": "Ą", "E": "Ę"},  # ogonek ˛
+    "\u00b4": {"c": "ć", "n": "ń", "o": "ó", "s": "ś", "z": "ź", "C": "Ć", "N": "Ń", "O": "Ó", "S": "Ś", "Z": "Ź"},  # ´
+    "\u02ca": {"c": "ć", "n": "ń", "o": "ó", "s": "ś", "z": "ź", "C": "Ć", "N": "Ń", "O": "Ó", "S": "Ś", "Z": "Ź"},  # ˊ
+    "\u02d9": {"z": "ż", "Z": "Ż"},  # kropka ˙
+}
+_PARA_ZNAKOW = re.compile("([" + "".join(_DIAKRYTYKI) + "])([A-Za-z])|([A-Za-z])([" + "".join(_DIAKRYTYKI) + "])")
+
+
+def _sklej_pare(m: re.Match) -> str:
+    znak, litera = (m.group(1), m.group(2)) if m.group(1) else (m.group(4), m.group(3))
+    return _DIAKRYTYKI[znak].get(litera, m.group(0))
+
+
+def oczysc_tekst(tekst: str) -> str:
+    """Tekst strony PDF po wyciągnięciu: polskie litery w jednym znaku
+    (także z rozdzielonych znaków diakrytycznych i znaków łączących),
+    ligatury rozpisane, bez niewidocznych znaków."""
+    tekst = tekst.translate(_NIEWIDOCZNE).translate(_LIGATURY)
+    tekst = _PARA_ZNAKOW.sub(_sklej_pare, tekst)
+    return unicodedata.normalize("NFC", tekst)
+
+
+def nieczytelne_znaki(tekst: str) -> int:
+    """Ile znaków PDF nie dał się odczytać (znak zastępczy, prywatne kody fontu)."""
+    return sum(1 for z in tekst if z == "\ufffd" or "\ue000" <= z <= "\uf8ff")
+
+
 def strony_z_pdf(sciezka: str) -> list[str]:
     """Tekst każdej strony (indeks 0 = strona 1)."""
     try:
@@ -47,7 +85,7 @@ def strony_z_pdf(sciezka: str) -> list[str]:
             raise BladPdf("PDF jest zaszyfrowany — zapisz go bez hasła.")
         if len(czytnik.pages) > MAKS_STRON:
             raise BladPdf(f"PDF ma ponad {MAKS_STRON} stron.")
-        strony = [strona.extract_text() or "" for strona in czytnik.pages]
+        strony = [oczysc_tekst(strona.extract_text() or "") for strona in czytnik.pages]
     except BladPdf:
         raise
     except (PdfReadError, ValueError, KeyError, TypeError) as e:
@@ -62,7 +100,7 @@ def teksty_stron(sciezka: str, od: int, do: int) -> dict[int, str]:
     try:
         czytnik = PdfReader(sciezka)
         do = min(do, len(czytnik.pages))
-        return {nr: czytnik.pages[nr - 1].extract_text() or "" for nr in range(max(1, od), do + 1)}
+        return {nr: oczysc_tekst(czytnik.pages[nr - 1].extract_text() or "") for nr in range(max(1, od), do + 1)}
     except (PdfReadError, ValueError, KeyError, TypeError, OSError):
         return {}
 

@@ -13,7 +13,7 @@ from . import baza, eksport_notatek, porownanie, przeniesienie, pytania
 from .metryka import RODZAJE
 from .odeslania import mapa_jednostek, z_odeslaniami
 from .slowniczek import slowniczek
-from .tekst import BladPdf, podziel, strony_z_pdf, teksty_stron
+from .tekst import BladPdf, nieczytelne_znaki, podziel, strony_z_pdf, teksty_stron
 
 przepisy_bp = Blueprint(
     "przepisy",
@@ -161,7 +161,8 @@ def widok_aktu(akt_id):
            FROM akty a WHERE a.id != ? ORDER BY a.data_dodania DESC""", (akt_id,)) if w["notatek"] or w["moich"]]
     return render_template("przepisy/akt.html", akt=akt, jednostki=jednostki, slowniczek=slowniczek(jednostki),
                            notatki=baza.notatki_aktu(akt_id), maks_notatki=baza.MAKS_NOTATKI, moje=baza.moje_w_akcie(akt_id),
-                           zrodla_przeniesienia=zrodla, z_aktu=request.args.get("z", type=int))
+                           zrodla_przeniesienia=zrodla, z_aktu=request.args.get("z", type=int),
+                           nieczytelne=sum(nieczytelne_znaki(j["tekst"]) for j in jednostki))  # ETAP 253
 
 
 @przepisy_bp.route("/akty/<int:akt_id>/druk")

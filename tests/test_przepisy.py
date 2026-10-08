@@ -688,3 +688,48 @@ def test_szukaj_z_filtrami(client, monkeypatch):
     assert szukaj(rodzaj="list")[0] == 400
     html = client.get("/przepisy/").get_data(as_text=True)
     assert 'id="filtr-rodzaju"' in html and "ustawa z 27.03.2003" in html and "rozporządzenie z 12.04.2002" in html
+
+
+# ---------- ETAP 253: polskie znaki z PDF-a ----------
+
+
+def test_oczysc_tekst_polskie_znaki():
+    from przepisy.tekst import nieczytelne_znaki, oczysc_tekst
+
+    # znaki łączące (NFD) → jedna litera
+    assert oczysc_tekst("działka zabudową świadczenie żółty") == "działka zabudową świadczenie żółty"
+    # osobne znaki diakrytyczne przed albo po literze (PDF-y z LaTeX-a)
+    assert oczysc_tekst("zabudowa˛ ´swiadczenie ˙zaden e˛") == "zabudową świadczenie żaden ę"
+    # ligatury, miękki łącznik, znak zerowej szerokości
+    assert oczysc_tekst("ﬁnanse po­ziom ﬂaga a​b") == "finanse poziom flaga ab"
+    # zwykły tekst bez zmian, apostrof po literze bez polskiego odpowiednika zostaje
+    assert oczysc_tekst("Art. 15. ust. 2 — McDonald´s") == "Art. 15. ust. 2 — McDonald´s"
+    assert nieczytelne_znaki("ab�c") == 2
+
+
+def test_tekst_z_pdf_czyszczony_i_ostrzezenie(client, monkeypatch):
+    from pypdf import PdfReader
+
+    class Strona:
+        def __init__(self, tekst):
+            self.tekst = tekst
+
+        def extract_text(self):
+            return self.tekst
+
+    class Czytnik:
+        is_encrypted = False
+
+        def __init__(self, sciezka):
+            self.pages = [Strona("USTAWA\nz dnia 27 marca 2003 r.\nArt. 1. Zabudowa˛ działki ��.")]
+
+    from przepisy import tekst
+    monkeypatch.setattr(tekst, "PdfReader", Czytnik)
+    strony = tekst.strony_z_pdf("x.pdf")
+    assert "Zabudową" in strony[0]
+    # widok aktu ostrzega o nieczytelnych znakach
+    monkeypatch.setattr(routes, "strony_z_pdf", lambda sciezka: strony)
+    wgraj(client)
+    html = client.get("/przepisy/akty/1").get_data(as_text=True)
+    assert "2 nieczytelnych znaków" in html
+    assert PdfReader  # import prawdziwego czytnika nadal działa

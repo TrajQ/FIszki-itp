@@ -4672,3 +4672,26 @@ Status: zamknięty
   dla aarch64 i Pythona 3.12 (pip download); testy. Samego serwera
   autora nie było w środowisku — instalację sprawdzi uruchomienie
 - `DECISIONS.md`: D-260
+
+## ETAP 253 — Przepisy: polskie znaki z PDF-a — czyszczenie tekstu, ostrzeżenie, narzędzie diagnozy
+Data: 2026-10-08
+Status: zamknięty
+
+- Zgłoszenie autora: przy wczytywaniu PDF-a w Przepisach dziwne albo
+  brakujące polskie litery (PC)
+- `przepisy/tekst.py`: `oczysc_tekst` dla każdej strony z pypdf —
+  sklejanie liter z osobnymi znakami diakrytycznymi przed albo po
+  literze (˛ ´ ˊ ˙ → ą ę ć ń ó ś ź ż), normalizacja NFC (znaki łączące),
+  rozpisanie ligatur, usunięcie miękkiego łącznika i znaków zerowej
+  szerokości; `nieczytelne_znaki` (znak zastępczy, prywatne kody fontu)
+- Strona aktu: ostrzeżenie z liczbą nieczytelnych znaków i radą (ISAP,
+  „Szukaj w Sejmie”)
+- `narzedzia/sprawdz_pdf.py`: nietypowe znaki przed i po czyszczeniu z
+  kontekstem, fonty i czy mają mapę znaków /ToUnicode — do diagnozy
+  konkretnego pliku
+- Testy: znaki łączące, osobne diakrytyki z obu stron, ligatury,
+  niewidoczne znaki, tekst bez zmian, licznik nieczytelnych; odczyt PDF-a
+  z czyszczeniem i ostrzeżenie na stronie aktu. Prawdziwego PDF-a z
+  problemem nie było — przyczyna sprawdzona na znanych wzorcach
+- Pomoc: „Dziwne albo brakujące polskie litery w akcie”
+- `DECISIONS.md`: D-261
